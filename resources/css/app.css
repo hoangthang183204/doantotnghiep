@@ -1,11 +1,25 @@
-@import 'tailwindcss';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+@layer base {
+    body {
+        @apply bg-gray-50 dark:bg-gray-900;
+    }
+}
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+@layer components {
+    .sidebar {
+        transition: transform 0.3s ease-in-out;
+    }
+    
+    .sidebar-hidden {
+        transform: translateX(-100%);
+    }
+    
+    @media (min-width: 1024px) {
+        .sidebar-hidden {
+            transform: translateX(0);
+        }
+    }
 }
