@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\NguoiDung;
 use App\Models\User;
 
 return [
@@ -42,6 +43,10 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'api' => [
+            'driver' => 'jwt',        // Quan trọng: phải là 'jwt'
+            'provider' => 'users',
+        ],
     ],
 
     /*
@@ -64,7 +69,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', User::class),
+            'model' => env('AUTH_MODEL', NguoiDung::class),
         ],
 
         // 'users' => [
