@@ -21,6 +21,33 @@
             font-family: 'Inter', sans-serif;
         }
 
+        /* Ẩn thanh cuộn trong sidebar */
+        .sidebar {
+            overflow-y: auto;
+            scrollbar-width: none;
+            /* Firefox */
+            -ms-overflow-style: none;
+            /* IE/Edge */
+        }
+
+        .sidebar::-webkit-scrollbar {
+            display: none;
+            /* Chrome, Safari, Opera */
+        }
+
+        /* Vẫn giữ chức năng cuộn nhưng ẩn thanh kéo */
+        .sidebar nav {
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .sidebar nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        
+
         .sidebar {
             overflow-y: auto;
             scrollbar-width: none;
