@@ -21,21 +21,16 @@
             font-family: 'Inter', sans-serif;
         }
 
-        /* Ẩn thanh cuộn trong sidebar */
         .sidebar {
             overflow-y: auto;
             scrollbar-width: none;
-            /* Firefox */
             -ms-overflow-style: none;
-            /* IE/Edge */
         }
 
         .sidebar::-webkit-scrollbar {
             display: none;
-            /* Chrome, Safari, Opera */
         }
 
-        /* Vẫn giữ chức năng cuộn nhưng ẩn thanh kéo */
         .sidebar nav {
             overflow-y: auto;
             scrollbar-width: none;
@@ -45,8 +40,6 @@
         .sidebar nav::-webkit-scrollbar {
             display: none;
         }
-
-        
 
         .sidebar {
             overflow-y: auto;
@@ -95,7 +88,6 @@
             display: flex !important;
         }
 
-        /* Sidebar styles */
         .sidebar {
             position: fixed;
             left: 0;
@@ -107,6 +99,12 @@
             box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
             transition: width 0.3s ease-in-out;
             overflow-y: auto;
+            overflow-y: hidden;
+        }
+
+        .submenu {
+            max-height: 300px;
+            overflow-y: auto;
         }
 
         .dark .sidebar {
@@ -117,14 +115,12 @@
             width: 64px;
         }
 
-        /* Main content wrapper */
         .main-wrapper {
             margin-left: 260px;
             transition: margin-left 0.3s ease-in-out;
             min-height: 100vh;
         }
 
-        /* Card styles */
         .card {
             background-color: white;
             border-radius: 0.5rem;
@@ -135,7 +131,6 @@
             background-color: #1f2937;
         }
 
-        /* Dark mode text */
         .dark .text-gray-900 {
             color: #ffffff;
         }
@@ -156,12 +151,10 @@
             background-color: #1f2937;
         }
 
-        /* Submenu hidden */
         .submenu.hidden {
             display: none;
         }
 
-        /* Sidebar text hidden khi thu gọn */
         .sidebar.collapsed .menu-text,
         .sidebar.collapsed .logo-text,
         .sidebar.collapsed .user-text {
@@ -196,7 +189,6 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
-        /* Header */
         header {
             position: sticky;
             top: 0;
