@@ -2,104 +2,16 @@
 
 namespace Database\Seeders;
 
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class TaiLieuSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        DB::table('tai_lieu')->insert([
-            [
-                'nguoi_dung_id' => 1,
-                'ung_vien_id' => null,
-                'loai_tai_lieu' => 'bang_cap',
-                'tieu_de' => 'Bằng Đại học Bách Khoa',
-                'mo_ta' => 'Bằng Cử nhân Công nghệ thông tin',
-                'ten_file_goc' => 'bang_dai_hoc.pdf',
-                'duong_dan_file' => '/documents/bang_dai_hoc_1.pdf',
-                'kich_thuoc_file' => 2048000,
-                'loai_mime' => 'application/pdf',
-                'bao_mat' => 0,
-                'ngay_het_han' => null,
-                'nguoi_tai_len_id' => 1,
-                'thoi_gian_tai_len' => now(),
-                'trang_thai' => 'hoat_dong',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'nguoi_dung_id' => 2,
-                'ung_vien_id' => null,
-                'loai_tai_lieu' => 'chung_chi',
-                'tieu_de' => 'Chứng chỉ Laravel',
-                'mo_ta' => 'Chứng chỉ lập trình Laravel',
-                'ten_file_goc' => 'laravel_cert.pdf',
-                'duong_dan_file' => '/documents/laravel_cert_2.pdf',
-                'kich_thuoc_file' => 1024000,
-                'loai_mime' => 'application/pdf',
-                'bao_mat' => 0,
-                'ngay_het_han' => '2025-12-31',
-                'nguoi_tai_len_id' => 1,
-                'thoi_gian_tai_len' => now(),
-                'trang_thai' => 'hoat_dong',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'nguoi_dung_id' => null,
-                'ung_vien_id' => 1,
-                'loai_tai_lieu' => 'cv',
-                'tieu_de' => 'CV Nguyễn Văn A',
-                'mo_ta' => 'Hồ sơ xin việc',
-                'ten_file_goc' => 'CV_NguyenVanA.pdf',
-                'duong_dan_file' => '/candidates/cv_1.pdf',
-                'kich_thuoc_file' => 512000,
-                'loai_mime' => 'application/pdf',
-                'bao_mat' => 0,
-                'ngay_het_han' => null,
-                'nguoi_tai_len_id' => 2,
-                'thoi_gian_tai_len' => '2024-03-15 09:30:00',
-                'trang_thai' => 'hoat_dong',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'nguoi_dung_id' => null,
-                'ung_vien_id' => 3,
-                'loai_tai_lieu' => 'giay_to',
-                'tieu_de' => 'CCCD Lê Văn C',
-                'mo_ta' => 'Chứng minh nhân dân',
-                'ten_file_goc' => 'CCCD_LeVanC.pdf',
-                'duong_dan_file' => '/candidates/cccd_3.pdf',
-                'kich_thuoc_file' => 768000,
-                'loai_mime' => 'application/pdf',
-                'bao_mat' => 1,
-                'ngay_het_han' => null,
-                'nguoi_tai_len_id' => 3,
-                'thoi_gian_tai_len' => '2024-03-10 14:20:00',
-                'trang_thai' => 'hoat_dong',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'nguoi_dung_id' => 3,
-                'ung_vien_id' => null,
-                'loai_tai_lieu' => 'khac',
-                'tieu_de' => 'Hợp đồng lao động',
-                'mo_ta' => 'Hợp đồng chính thức',
-                'ten_file_goc' => 'hop_dong_lao_dong.pdf',
-                'duong_dan_file' => '/documents/hop_dong_3.pdf',
-                'kich_thuoc_file' => 1536000,
-                'loai_mime' => 'application/pdf',
-                'bao_mat' => 1,
-                'ngay_het_han' => null,
-                'nguoi_tai_len_id' => 1,
-                'thoi_gian_tai_len' => now(),
-                'trang_thai' => 'hoat_dong',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
+        //
     }
 }
