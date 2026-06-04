@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\VaiTroController;
 use App\Http\Controllers\Admin\BaoCaoController;
 use App\Http\Controllers\Admin\LoaiNghiController;
+use App\Http\Controllers\Admin\HoSoController;
 use App\Http\Controllers\Auth\LoginController;  // ← Dùng cái này
 
 /*
@@ -39,9 +40,27 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
 
     // Dashboard - Tất cả user đã login đều xem được
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/cham-cong', [ChamCongController::class, 'index'])->name('cham-cong.index');
 
     // Chấm công & Đơn nghỉ - Tất cả nhân viên
+    Route::get('/cham-cong', [ChamCongController::class, 'index'])->name('cham-cong.index');
+
+    // HO SO
+    Route::get('/ho-so', [HoSoController::class, 'index'])->name('ho-so.index');
+
+    Route::get('/ho-so/{id}/edit', [HoSoController::class, 'edit'])->name('ho-so.edit');
+
+     Route::put('/ho-so/{id}', [HoSoController::class, 'update'])
+        ->name('ho-so.update');
+
+    Route::get('/ho-so/{id}', [HoSoController::class, 'show'])->name('ho-so.show');
+
+    // 🔴 NGHỈ VIỆC (FIX)
+    Route::post('/ho-so/{id}/resign', [HoSoController::class, 'resign'])
+        ->name('ho-so.resign');
+
+    // 🟢 KÍCH HOẠT
+    Route::post('/ho-so/{id}/activate', [HoSoController::class, 'activate'])
+        ->name('ho-so.activate');
 
     Route::get('/don-nghi', [DonNghiController::class, 'index'])->name('don-nghi');
 
@@ -56,7 +75,7 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     Route::middleware('role:Kế toán,Super Admin,Admin')->group(function () {
         Route::resource('bang-luong', BangLuongController::class);
         Route::resource('phu-cap', PhuCapController::class);
-        Route::get('/bao-cao-tai-chinh', [BaoCaoController::class, 'index'])->name('bao-cao');
+        // Route::get('/bao-cao-tai-chinh', [BaoCaoController::class, 'index'])->name('bao-cao');
     });
 
     // Tuyển dụng - Chỉ Admin và Trưởng phòng
@@ -67,8 +86,8 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
 
     // Quản trị hệ thống - Chỉ Admin
     Route::middleware('role:Super Admin,Admin')->group(function () {
-        Route::get('/cai-dat', [SettingController::class, 'index'])->name('settings');
-        Route::resource('vai-tro', VaiTroController::class);
+        // Route::get('/cai-dat', [SettingController::class, 'index'])->name('settings');
+        // Route::resource('vai-tro', VaiTroController::class);
     });
     
     // Quản lý loại nghỉ phép
