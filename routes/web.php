@@ -93,3 +93,14 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     // Quản lý loại nghỉ phép
     Route::resource('loai_nghi_phep', LoaiNghiController::class);
 });
+
+
+// Bảng lương
+Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
+    Route::get('/bang-luong', [BangLuongController::class, 'index'])->name('bang-luong.index');
+    Route::get('/bang-luong/create', [BangLuongController::class, 'create'])->name('bang-luong.create');
+    Route::post('/bang-luong/tinh', [BangLuongController::class, 'tinhLuong'])->name('bang-luong.tinh');
+    Route::get('/bang-luong/{id}', [BangLuongController::class, 'show'])->name('bang-luong.show');
+    Route::put('/bang-luong/{id}/duyet', [BangLuongController::class, 'duyet'])->name('bang-luong.duyet');
+    Route::delete('/bang-luong/{id}', [BangLuongController::class, 'destroy'])->name('bang-luong.destroy');
+});

@@ -6,7 +6,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class NguoiDung extends Authenticatable implements JWTSubject  // Đổi tên class
+class NguoiDung extends Authenticatable implements JWTSubject
 {
     use Notifiable;
 
@@ -49,8 +49,9 @@ class NguoiDung extends Authenticatable implements JWTSubject  // Đổi tên cl
     {
         return [
             'vai_tro_id' => $this->vai_tro_id,
-            'vai_tro' => $this->vai_tro->ten_hien_thi ?? 'user',
-            'ma_nhan_vien' => $this->ho_so->ma_nhan_vien ?? null
+            'vai_tro' => $this->vai_tro->ten_hien_thi ?? null,
+            'phong_ban_id' => $this->phong_ban_id,
+            'chuc_vu_id' => $this->chuc_vu_id,
         ];
     }
     
@@ -90,6 +91,30 @@ class NguoiDung extends Authenticatable implements JWTSubject  // Đổi tên cl
         return $this->hasMany(DonXinNghi::class, 'nguoi_dung_id');
     }
     
+    // THÊM RELATIONSHIP NÀY
+    public function hop_dongs()
+    {
+        return $this->hasMany(HopDongLaoDong::class, 'nguoi_dung_id');
+    }
+    
+    // Lấy hợp đồng hiện tại
+    public function hop_dong_hien_tai()
+    {
+        return $this->hasOne(HopDongLaoDong::class, 'nguoi_dung_id')
+            ->where('trang_thai_hop_dong', 'da_ky')
+            ->where(function($q) {
+                $q->whereNull('ngay_ket_thuc')
+                  ->orWhere('ngay_ket_thuc', '>=', now());
+            })
+            ->latest('ngay_bat_dau');
+    }
+    
+    public function luong_nhan_viens()
+    {
+        return $this->hasMany(LuongNhanVien::class, 'nguoi_dung_id');
+    }
+    
+    // Accessor lấy họ tên đầy đủ
     public function getHoTenAttribute()
     {
         if ($this->ho_so) {
