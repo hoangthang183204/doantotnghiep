@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\UngVienController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\VaiTroController;
 use App\Http\Controllers\Admin\BaoCaoController;
+use App\Http\Controllers\Admin\LoaiNghiController;
 use App\Http\Controllers\Admin\HoSoController;
 use App\Http\Controllers\Auth\LoginController;  // ← Dùng cái này
 
@@ -88,4 +89,7 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
         // Route::get('/cai-dat', [SettingController::class, 'index'])->name('settings');
         // Route::resource('vai-tro', VaiTroController::class);
     });
+    
+    // Quản lý loại nghỉ phép
+    Route::resource('loai_nghi_phep', LoaiNghiController::class);
 });
