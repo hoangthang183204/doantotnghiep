@@ -8,18 +8,40 @@ use Illuminate\Http\Request;
 
 class LoaiNghiController extends Controller
 {
-    public function index()
-    {
-        $dsLoaiNghi = LoaiNghiPhep::latest()->get();
-        
-        // Thống kê nhanh cho các card ở giao diện index
-        $tongLoaiNghi = $dsLoaiNghi->count();
-        $dangHoatDong = $dsLoaiNghi->where('trang_thai', 1)->count(); // Giả định 1 là Hoạt động
-        $coLuong = $dsLoaiNghi->where('co_luong', 1)->count();
-        $khongLuong = $dsLoaiNghi->where('co_luong', 0)->count();
+    public function index(Request $request) // 1. Thêm tham số Request ở đây
+{
+    // 2. Tạo một Query Builder để chuẩn bị lọc dữ liệu
+    $query = LoaiNghiPhep::query();
 
-        return view('admin.loai_nghi_phep.index', compact('dsLoaiNghi', 'tongLoaiNghi', 'dangHoatDong', 'coLuong', 'khongLuong'));
+    // 3. Nếu người dùng có nhập từ khóa tìm kiếm
+    if ($request->has('search') && $request->search != '') {
+        $searchTerm = $request->search;
+        
+        // Tiến hành lọc theo Tên hoặc theo Mã loại nghỉ phép
+        $query->where(function($q) use ($searchTerm) {
+            $q->where('ten', 'LIKE', "%{$searchTerm}%")
+              ->orWhere('ma', 'LIKE', "%{$searchTerm}%");
+        });
     }
+
+    // 4. Lấy danh sách kết quả sau khi đã lọc (Sắp xếp mới nhất lên đầu)
+    $dsLoaiNghi = $query->latest()->get();
+    
+    // 5. Thống kê nhanh: Nên dùng trực tiếp Model đếm từ DB 
+    // Cách này giúp các số liệu ở Card giữ nguyên tổng số hệ thống, không bị nhảy số khi tìm kiếm lẻ
+    $tongLoaiNghi = LoaiNghiPhep::count();
+    $dangHoatDong = LoaiNghiPhep::where('trang_thai', 1)->count();
+    $coLuong      = LoaiNghiPhep::where('co_luong', 1)->count();
+    $khongLuong   = LoaiNghiPhep::where('co_luong', 0)->count();
+
+    return view('admin.loai_nghi_phep.index', compact(
+        'dsLoaiNghi', 
+        'tongLoaiNghi', 
+        'dangHoatDong', 
+        'coLuong', 
+        'khongLuong'
+    ));
+}
 
     // 1. Trang giao diện tạo mới
     public function create()
