@@ -24,11 +24,18 @@
                            class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-400 dark:text-gray-500 font-mono outline-none cursor-not-allowed">
                 </div>
 
-                <div class="lg:col-span-2">
-                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Tên loại nghỉ phép <span class="text-red-500">*</span></label>
-                    <input type="text" name="ten_loai_nghi_phep" value="{{ old('ten_loai_nghi_phep', $loaiNghi->ten_loai_nghi_phep) }}" 
-                           class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none transition @error('ten_loai_nghi_phep') border-red-500 @enderror">
-                    @error('ten_loai_nghi_phep') <p class="text-red-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                        Tên loại nghỉ phép <span class="text-red-500">*</span>
+                    </label>
+                    {{-- ĐÃ SỬA: Thêm $loaiNghi->ten vào hàm old() để tự đổ dữ liệu cũ từ DB ra ô nhập --}}
+                    <input type="text" name="ten" value="{{ old('ten', $loaiNghi->ten) }}" placeholder="Ví dụ: Nghỉ phép năm" 
+                           class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none transition @error('ten') border-red-500 @enderror">
+                    
+                    {{-- Khối hiển thị thông báo lỗi nếu bỏ trống --}}
+                    @error('ten') 
+                        <p class="text-red-500 text-xs mt-1.5 font-medium">{{ $message }}</p> 
+                    @enderror
                 </div>
 
                 <div>
