@@ -9,9 +9,18 @@ use Illuminate\Support\Facades\DB;
 class VaiTroController extends Controller
 {
     // Hiển thị danh sách vai trò
-    public function index()
+    public function index(Request $request)
     {
-        $vaiTros = DB::table('vai_tro')->get();
+        $keyword = $request->input('keyword');
+
+        $vaiTros = DB::table('vai_tro')
+            ->when($keyword, function ($query, $keyword) {
+                return $query->where('name', 'LIKE', "%{$keyword}%")
+                    ->orWhere('ten_hien_thi', 'LIKE', "%{$keyword}%")
+                    ->orWhere('mo_ta', 'LIKE', "%{$keyword}%");
+            })
+            ->get(); // Hoặc ->paginate(10); nếu muốn phân trang
+
         return view('admin.vai_tro.index', compact('vaiTros'));
     }
 

@@ -1,242 +1,186 @@
 @extends('layouts.admin')
 
+@section('title', 'Quản lý Vai trò')
+
 @section('content')
 
 <style>
-/* Đẩy dòng chảy layout và căn giữa khối bảng một cách tự nhiên */
-.role-container {
-    padding: 2rem 1.5rem;
-    min-height: calc(100vh - 160px);
-    display: flex;
-    flex-direction: column;
-    align-items: center; 
-}
+    .role-card {
+        border: none;
+        border-radius: 18px;
+        box-shadow: 0 2px 18px rgba(15,23,42,.05);
+    }
+    
+    .role-table {
+        width: 100%;
+        margin-bottom: 0;
+    }
+    
+    .role-table th,
+    .role-table td {
+        vertical-align: middle !important;
+    }
+    
+    .role-table thead th {
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 15px;
+        white-space: nowrap;
+    }
+    
+    .role-table td {
+        padding: 16px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .role-table tbody tr {
+        transition: .2s;
+    }
+    
+    .role-table tbody tr:hover {
+        background: #f8fbff;
+    }
+    
+    .role-table tbody tr:nth-child(even) {
+        background: #fcfcfd;
+    }
+    
+    .role-name {
+        font-weight: 600;
+        font-size: 15px;
+        color: #1e293b;
+    }
+    
+    .role-code {
+        display: inline-block;
+        margin-top: 4px;
+        padding: 4px 10px;
+        border-radius: 8px;
+        background: #eff6ff;
+        color: #2563eb;
+        font-size: 12px;
+        font-family: monospace;
+        font-weight: 600;
+        border: 1px solid #dbeafe;
+    }
+    
+    .role-desc {
+        color: #475569;
+        line-height: 1.6;
+        white-space: normal;
+    }
+    
+    .custom-badge {
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
 
-.role-card-wrapper {
-    background: #ffffff;
-    border: none;
-    border-radius: 20px;
-    box-shadow: 0 10px 35px rgba(149, 157, 165, 0.08);
-    overflow: hidden;
-    transition: box-shadow 0.3s ease;
-    margin-bottom: 2rem;
-    width: 100%;
-    max-width: 1000px; /* Bóp gọn lại kích thước khung để các cột tự xích lại gần nhau */
-}
-
-.role-card-wrapper:hover {
-    box-shadow: 0 15px 45px rgba(149, 157, 165, 0.12);
-}
-
-/* Header Table Component */
-.role-header-clean {
-    padding: 24px 30px;
-    background: #ffffff;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.role-header-clean h3 {
-    font-size: 20px;
-    font-weight: 700;
-    color: #0f172a;
-    letter-spacing: -0.3px;
-    margin-bottom: 0;
-}
-
-/* Custom Minimalist Table */
-.custom-role-table {
-    margin-bottom: 0;
-    width: 100%;
-    /* Bỏ table-layout: fixed để trình duyệt tự dãn cột thông minh theo độ dài chữ */
-}
-
-.custom-role-table thead th {
-    background: #f8fafc;
-    border: none;
-    padding: 18px 24px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-}
-
-.custom-role-table tbody tr {
-    transition: background-color 0.2s ease;
-}
-
-.custom-role-table tbody tr:hover {
-    background-color: #f8fafc;
-}
-
-.custom-role-table tbody td {
-    padding: 18px 24px;
-    vertical-align: middle;
-    border-top: 1px solid #f1f5f9;
-    color: #334155;
-    font-size: 14.5px;
-}
-
-/* Các class căn lề trục đứng dọc */
-.align-cell-center {
-    text-align: center !important;
-}
-
-.align-cell-left {
-    text-align: left !important;
-}
-
-/* Components inside table */
-.stt-indicator {
-    font-size: 13px;
-    font-weight: 700;
-    color: #94a3b8;
-}
-
-.role-pill-code {
-    display: inline-block;
-    background: #eff6ff;
-    color: #2563eb;
-    padding: 5px 12px;
-    border-radius: 8px;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
-    font-size: 13px;
-    font-weight: 600;
-    border: 1px solid #dbeafe;
-}
-
-.role-display-name {
-    font-weight: 600;
-    color: #1e293b;
-}
-
-.role-text-desc {
-    color: #64748b;
-}
-
-/* Badges Overwrite */
-.badge-clean {
-    padding: 6px 14px;
-    border-radius: 100px;
-    font-size: 12px;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    border-width: 1px;
-    border-style: solid;
-    min-width: 110px;
-}
-
-.badge-clean-system {
-    background-color: #fef2f2;
-    color: #ef4444;
-    border-color: #fee2e2;
-}
-
-.badge-clean-custom {
-    background-color: #f0fdf4;
-    color: #22c55e;
-    border-color: #dcfce7;
-}
-
-.badge-clean-active {
-    background-color: #ecfdf5;
-    color: #10b981;
-    border-color: #d1fae5;
-}
-
-.badge-clean-locked {
-    background-color: #fff7ed;
-    color: #f97316;
-    border-color: #ffedd5;
-}
+    /* Thêm style cho phần header */
+    .page-heading {
+        font-weight: 700;
+        font-size: 1.25rem;
+        color: #0f172a;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
 </style>
-
-<div class="container-fluid role-container">
-
-    <div class="card role-card-wrapper">
-        
-        <div class="role-header-clean">
-            <h3>Danh sách vai trò hệ thống</h3>
+    
+<div class="container-fluid px-4 py-4" style="max-width: 1200px; margin: 0 auto;">
+    
+    <div class="page-heading">
+        📋 Danh Sách Vai Trò
+    </div>
+    
+    <div class="card role-card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table role-table">
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 8%;">STT</th>
+                            <th class="text-start" style="width: 27%;">Vai trò hệ thống</th>
+                            <th class="text-start" style="width: 35%;">Mô tả chi tiết</th>
+                            <th class="text-center" style="width: 15%;">Phân loại</th>
+                            <th class="text-center" style="width: 15%;">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($vaiTros as $key => $vt)
+                            @php
+                                $trangThai = (int)($vt->trang_thai ?? 1);
+                            @endphp
+                            <tr style="{{ $trangThai === 0 ? 'opacity:.65' : '' }}">
+                                <td class="text-center" style="font-weight:600;">
+                                    {{ sprintf('%02d', $key + 1) }}
+                                </td>
+                                <td class="text-start">
+                                    <div class="role-name">
+                                        {{ $vt->ten_hien_thi }}
+                                    </div>
+                                    <div class="role-code">
+                                        {{ $vt->name }}
+                                    </div>
+                                </td>
+                                <td class="text-start">
+                                    <div class="role-desc">
+                                        {{ $vt->mo_ta ?: 'Chưa cập nhật nội dung mô tả cấu hình...' }}
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    @if($vt->la_vai_tro_he_thong)
+                                        <span class="custom-badge" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca;">
+                                            🛡️ Hệ thống
+                                        </span>
+                                    @else
+                                        <span class="custom-badge" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0;">
+                                            ⚙️ Tùy biến
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    @if($trangThai === 1)
+                                        <span class="custom-badge" style="background:#ecfdf5; color:#10b981; border:1px solid #d1fae5;">
+                                            ● Hoạt động
+                                        </span>
+                                    @else
+                                        <span class="custom-badge" style="background:#fff7ed; color:#ea580c; border:1px solid #fed7aa;">
+                                            ● Tạm khóa
+                                        </span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <div style="color:#94a3b8;">
+                                        📭 Không tìm thấy dữ liệu vai trò phù hợp
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
-
-        <div class="table-responsive">
-            <table class="table custom-role-table">
-                <thead>
-                    <tr>
-                        <th class="align-cell-center">STT</th>
-                        <th class="align-cell-left">Mã định danh</th>
-                        <th class="align-cell-left">Tên hiển thị</th>
-                        <th class="align-cell-left">Mô tả chi tiết</th>
-                        <th class="align-cell-center">Phân loại</th>
-                        <th class="align-cell-center">Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @forelse($vaiTros as $key => $vt)
-                    <tr>
-                        <td class="align-cell-center">
-                            <span class="stt-indicator">
-                                {{ sprintf("%02d", $key + 1) }}
-                            </span>
-                        </td>
-
-                        <td class="align-cell-left">
-                            <span class="role-pill-code">
-                                {{ $vt->name }}
-                            </span>
-                        </td>
-
-                        <td class="align-cell-left">
-                            <span class="role-display-name">
-                                {{ $vt->ten_hien_thi }}
-                            </span>
-                        </td>
-
-                        <td class="align-cell-left">
-                            <div class="role-text-desc" title="{{ $vt->mo_ta }}">
-                                {{ $vt->mo_ta ?: 'Chưa cập nhật mô tả...' }}
-                            </div>
-                        </td>
-
-                        <td class="align-cell-center">
-                            @if($vt->la_vai_tro_he_thong)
-                                <span class="badge-clean badge-clean-system">
-                                    <i class="fas fa-shield-alt" style="font-size: 10px;"></i> Hệ thống
-                                </span>
-                            @else
-                                <span class="badge-clean badge-clean-custom">
-                                    <i class="fas fa-user-cog" style="font-size: 10px;"></i> Tùy biến
-                                </span>
-                            @endif
-                        </td>
-
-                        <td class="align-cell-center">
-                            @if($vt->trang_thai)
-                                <span class="badge-clean badge-clean-active">
-                                    <span style="width:6px; height:6px; background:#10b981; border-radius:50%; display:inline-block;"></span> Hoạt động
-                                </span>
-                            @else
-                                <span class="badge-clean badge-clean-locked">
-                                    <span style="width:6px; height:6px; background:#f97316; border-radius:50%; display:inline-block;"></span> Tạm khóa
-                                </span>
-                            @endif
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" class="text-center p-5 text-muted">
-                            <i class="fas fa-inbox fa-3x mb-3"></i>
-                            <h5>Hệ thống hiện tại chưa có dữ liệu cấu hình vai trò</h5>
-                        </td>
-                    </tr>
-                @endforelse
-                </tbody>
-            </table>
-        </div>
-        
+    
+        @if(method_exists($vaiTros, 'links'))
+            <div class="card-footer bg-white border-0 py-3">
+                <div class="d-flex justify-content-end">
+                    {{ $vaiTros->appends(request()->query())->links() }}
+                </div>
+            </div>
+        @endif
     </div>
 
 </div>
