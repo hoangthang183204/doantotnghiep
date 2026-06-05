@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class TinTuyenDung extends Model
 {
-    //
-}
     protected $table = 'tin_tuyen_dung';
 
     public function phongBan()
@@ -20,3 +18,5 @@ class TinTuyenDung extends Model
         return $this->belongsTo(ChucVu::class, 'chuc_vu_id');
     }
 }
+
+   
