@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class TinTuyenDung extends Model
 {
-    //
-}
     protected $table = 'tin_tuyen_dung';
 
     public function phongBan()
