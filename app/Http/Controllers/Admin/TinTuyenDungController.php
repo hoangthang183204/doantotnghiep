@@ -1,11 +1,20 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Models;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Model;
 
-class TinTuyenDungController extends Controller
+class TinTuyenDung extends Model
 {
-    //
+    protected $table = 'tin_tuyen_dung';
+
+    public function phongBan()
+    {
+        return $this->belongsTo(PhongBan::class, 'phong_ban_id');
+    }
+
+    public function chucVu()
+    {
+        return $this->belongsTo(ChucVu::class, 'chuc_vu_id');
+    }
 }
