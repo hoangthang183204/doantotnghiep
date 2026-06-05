@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\VaiTroController;
 use App\Http\Controllers\Admin\BaoCaoController;
 use App\Http\Controllers\Admin\LoaiNghiController;
 use App\Http\Controllers\Admin\HoSoController;
+use App\Http\Controllers\Admin\QuyDinhController;
 use App\Http\Controllers\Auth\LoginController;  // ← Dùng cái này
 use App\Http\Controllers\Admin\HopDongLaoDongController;
 /*
@@ -98,6 +99,8 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     
     // Route cho chức năng vai trò
     Route::resource('vai-tro', VaiTroController::class);
+    // Route cho chức năng quy định
+    Route::get('quy_dinh', [QuyDinhController::class, 'index'])->name('quy_dinh.index');
 });
 
 
