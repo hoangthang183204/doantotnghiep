@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\HoSo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class HoSoController extends Controller
 {
@@ -13,11 +14,19 @@ class HoSoController extends Controller
         $query = HoSo::query();
 
         if ($request->keyword) {
-            $query->where(function ($q) use ($request) {
-                $q->where('ho', 'like', '%' . $request->keyword . '%')
-                    ->orWhere('ten', 'like', '%' . $request->keyword . '%')
-                    ->orWhere('email_cong_ty', 'like', '%' . $request->keyword . '%')
-                    ->orWhere('ma_nhan_vien', 'like', '%' . $request->keyword . '%');
+
+            $keyword = trim($request->keyword);
+
+            $query->where(function ($q) use ($keyword) {
+
+                $q->where('ho', 'like', "%{$keyword}%")
+                    ->orWhere('ten', 'like', "%{$keyword}%")
+                    ->orWhere('email_cong_ty', 'like', "%{$keyword}%")
+                    ->orWhere('ma_nhan_vien', 'like', "%{$keyword}%")
+                    ->orWhereRaw(
+                        "CONCAT(ho,' ',ten) LIKE ?",
+                        ["%{$keyword}%"]
+                    );
             });
         }
 
@@ -48,15 +57,31 @@ class HoSoController extends Controller
             'ho' => 'required|string|max:255',
             'ten' => 'required|string|max:255',
             'email_cong_ty' => 'nullable|email',
-            'ma_nhan_vien' => 'nullable|string',
+            'so_dien_thoai' => 'nullable|string|max:20',
             'ngay_sinh' => 'nullable|date',
             'gioi_tinh' => 'nullable|string',
             'dia_chi_hien_tai' => 'nullable|string',
+            'anh_dai_dien' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
+
+        if ($request->hasFile('anh_dai_dien')) {
+
+            if (
+                $hoSo->anh_dai_dien &&
+                Storage::disk('public')->exists($hoSo->anh_dai_dien)
+            ) {
+                Storage::disk('public')->delete($hoSo->anh_dai_dien);
+            }
+
+            $validated['anh_dai_dien'] = $request
+                ->file('anh_dai_dien')
+                ->store('avatars', 'public');
+        }
 
         $hoSo->update($validated);
 
-        return redirect()->route('admin.ho-so.index')
+        return redirect()
+            ->route('admin.ho-so.index')
             ->with('success', 'Cập nhật thành công');
     }
 
