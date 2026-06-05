@@ -17,7 +17,7 @@ use App\Http\Controllers\Admin\BaoCaoController;
 use App\Http\Controllers\Admin\LoaiNghiController;
 use App\Http\Controllers\Admin\HoSoController;
 use App\Http\Controllers\Auth\LoginController;  // ← Dùng cái này
-
+use App\Http\Controllers\Admin\HopDongLaoDongController;
 /*
 |--------------------------------------------------------------------------
 | Authentication Routes (Chung cho tất cả)
@@ -83,6 +83,8 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     Route::middleware('role:Super Admin,Admin,Trưởng phòng')->group(function () {
         Route::resource('tin-tuyen-dung', TinTuyenDungController::class);
         Route::resource('ung-vien', UngVienController::class);
+        Route::resource('hop-dong', HopDongLaoDongController::class);
+
     });
 
     // Quản trị hệ thống - Chỉ Admin
