@@ -92,6 +92,9 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     
     // Quản lý loại nghỉ phép
     Route::resource('loai_nghi_phep', LoaiNghiController::class);
+    
+    // Route cho chức năng vai trò
+    Route::resource('vai-tro', VaiTroController::class);
 });
 
 
