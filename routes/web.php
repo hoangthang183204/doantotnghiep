@@ -36,6 +36,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 | Admin Routes (Cần đăng nhập và phân quyền)
 |--------------------------------------------------------------------------
 */
+
 Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
 
     // Dashboard - Tất cả user đã login đều xem được
@@ -106,4 +107,18 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     Route::get('/bang-luong/{id}', [BangLuongController::class, 'show'])->name('bang-luong.show');
     Route::put('/bang-luong/{id}/duyet', [BangLuongController::class, 'duyet'])->name('bang-luong.duyet');
     Route::delete('/bang-luong/{id}', [BangLuongController::class, 'destroy'])->name('bang-luong.destroy');
+
 });
+
+//danh sách ứng viên
+Route::prefix('admin/ung-vien')->name('admin.ung_vien.')->group(function () {
+    Route::get('/', [UngVienController::class, 'index'])->name('index');
+    Route::get('/{id}', [UngVienController::class, 'show'])->name('show');
+    Route::get('/create', [UngVienController::class, 'create'])->name('create');
+    Route::post('/store', [UngVienController::class, 'store'])->name('store');
+    Route::get('/{id}/edit', [UngVienController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [UngVienController::class, 'update'])->name('update');
+    Route::delete('/{id}', [UngVienController::class, 'destroy'])->name('destroy');
+
+});
+
