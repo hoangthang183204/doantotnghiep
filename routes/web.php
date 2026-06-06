@@ -43,15 +43,12 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     // Dashboard - Tất cả user đã login đều xem được
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Chấm công & Đơn nghỉ - Tất cả nhân viên
-    Route::get('/cham-cong', [ChamCongController::class, 'index'])->name('cham-cong.index');
-
     // HO SO
     Route::get('/ho-so', [HoSoController::class, 'index'])->name('ho-so.index');
 
     Route::get('/ho-so/{id}/edit', [HoSoController::class, 'edit'])->name('ho-so.edit');
 
-     Route::put('/ho-so/{id}', [HoSoController::class, 'update'])
+    Route::put('/ho-so/{id}', [HoSoController::class, 'update'])
         ->name('ho-so.update');
 
     Route::get('/ho-so/{id}', [HoSoController::class, 'show'])->name('ho-so.show');
@@ -73,6 +70,13 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
         Route::resource('chuc-vu', ChucVuController::class);
     });
 
+    // Chấm công & Đơn nghỉ - Tất cả nhân viên
+    Route::get(
+        'cham-cong/export',
+        [ChamCongController::class, 'export']
+    )->name('cham-cong.export');
+    Route::resource('cham-cong', ChamCongController::class);
+
     // Lương thưởng - Chỉ Kế toán và Admin
     Route::middleware('role:Kế toán,Super Admin,Admin')->group(function () {
         Route::resource('bang-luong', BangLuongController::class);
@@ -82,10 +86,9 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
 
     // Tuyển dụng - Chỉ Admin và Trưởng phòng
     Route::middleware('role:Super Admin,Admin,Trưởng phòng')->group(function () {
-        Route::resource('tin-tuyen-dung', TinTuyenDungController::class);
+        // Route::resource('tin-tuyen-dung', TinTuyenDungController::class);
         Route::resource('ung-vien', UngVienController::class);
         Route::resource('hop-dong', HopDongLaoDongController::class);
-
     });
 
     // Quản trị hệ thống - Chỉ Admin
@@ -93,10 +96,10 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
         // Route::get('/cai-dat', [SettingController::class, 'index'])->name('settings');
         // Route::resource('vai-tro', VaiTroController::class);
     });
-    
+
     // Quản lý loại nghỉ phép
     Route::resource('loai_nghi_phep', LoaiNghiController::class);
-    
+
     // Route cho chức năng vai trò
     Route::resource('vai-tro', VaiTroController::class);
     // Route cho chức năng quy định
@@ -112,7 +115,6 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     Route::get('/bang-luong/{id}', [BangLuongController::class, 'show'])->name('bang-luong.show');
     Route::put('/bang-luong/{id}/duyet', [BangLuongController::class, 'duyet'])->name('bang-luong.duyet');
     Route::delete('/bang-luong/{id}', [BangLuongController::class, 'destroy'])->name('bang-luong.destroy');
-
 });
 
 //danh sách ứng viên
@@ -124,6 +126,4 @@ Route::prefix('admin/ung-vien')->name('admin.ung_vien.')->group(function () {
     Route::get('/{id}/edit', [UngVienController::class, 'edit'])->name('edit');
     Route::put('/{id}', [UngVienController::class, 'update'])->name('update');
     Route::delete('/{id}', [UngVienController::class, 'destroy'])->name('destroy');
-
 });
-
