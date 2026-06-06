@@ -18,5 +18,4 @@ class TinTuyenDung extends Model
         return $this->belongsTo(ChucVu::class, 'chuc_vu_id');
     }
 }
-
    
