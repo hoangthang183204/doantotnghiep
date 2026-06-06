@@ -9,6 +9,7 @@
         border: none;
         border-radius: 18px;
         box-shadow: 0 2px 18px rgba(15,23,42,.05);
+        background-color: #ffffff;
     }
     
     .role-table {
@@ -35,6 +36,7 @@
     .role-table td {
         padding: 16px;
         border-bottom: 1px solid #f1f5f9;
+        color: #334155;
     }
     
     .role-table tbody tr {
@@ -84,7 +86,13 @@
         gap: 4px;
     }
 
-    /* Thêm style cho phần header */
+    /* Đưa inline style thành class để dễ custom Dark Mode */
+    .badge-system { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .badge-custom { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+    .badge-active { background: #ecfdf5; color: #10b981; border: 1px solid #d1fae5; }
+    .badge-locked { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+    .empty-text { color: #94a3b8; }
+
     .page-heading {
         font-weight: 700;
         font-size: 1.25rem;
@@ -94,6 +102,64 @@
         align-items: center;
         gap: 8px;
     }
+
+    /* =========================================
+       DARK MODE OVERRIDES
+       ========================================= */
+    .dark .role-card {
+        background-color: #1f2937;
+        box-shadow: none;
+    }
+
+    .dark .page-heading {
+        color: #f9fafb;
+    }
+
+    .dark .role-table thead th {
+        background: rgba(17, 24, 39, 0.5);
+        color: #e5e7eb;
+        border-bottom-color: #374151;
+    }
+
+    .dark .role-table td {
+        border-bottom-color: #374151;
+        color: #e5e7eb;
+    }
+
+    .dark .role-table tbody tr:hover {
+        background: rgba(55, 65, 81, 0.5);
+    }
+
+    .dark .role-table tbody tr:nth-child(even) {
+        background: rgba(31, 41, 55, 0.5);
+    }
+
+    .dark .role-name {
+        color: #ffffff;
+    }
+
+    .dark .role-desc {
+        color: #9ca3af;
+    }
+
+    .dark .role-code {
+        background: rgba(37, 99, 235, 0.2);
+        color: #93c5fd;
+        border-color: rgba(37, 99, 235, 0.3);
+    }
+
+    .dark .card-footer {
+        background-color: #1f2937 !important;
+        border-top: 1px solid #374151 !important;
+    }
+
+    /* Dark Mode cho các Badge */
+    .dark .badge-system { background: rgba(220, 38, 38, 0.15); color: #f87171; border-color: rgba(220, 38, 38, 0.3); }
+    .dark .badge-custom { background: rgba(22, 163, 74, 0.15); color: #4ade80; border-color: rgba(22, 163, 74, 0.3); }
+    .dark .badge-active { background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
+    .dark .badge-locked { background: rgba(234, 88, 12, 0.15); color: #fb923c; border-color: rgba(234, 88, 12, 0.3); }
+    
+    .dark .empty-text { color: #cbd5e1; }
 </style>
     
 <div class="container-fluid px-4 py-4" style="max-width: 1200px; margin: 0 auto;">
@@ -139,22 +205,22 @@
                                 </td>
                                 <td class="text-center">
                                     @if($vt->la_vai_tro_he_thong)
-                                        <span class="custom-badge" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca;">
+                                        <span class="custom-badge badge-system">
                                             🛡️ Hệ thống
                                         </span>
                                     @else
-                                        <span class="custom-badge" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0;">
+                                        <span class="custom-badge badge-custom">
                                             ⚙️ Tùy biến
                                         </span>
                                     @endif
                                 </td>
                                 <td class="text-center">
                                     @if($trangThai === 1)
-                                        <span class="custom-badge" style="background:#ecfdf5; color:#10b981; border:1px solid #d1fae5;">
+                                        <span class="custom-badge badge-active">
                                             ● Hoạt động
                                         </span>
                                     @else
-                                        <span class="custom-badge" style="background:#fff7ed; color:#ea580c; border:1px solid #fed7aa;">
+                                        <span class="custom-badge badge-locked">
                                             ● Tạm khóa
                                         </span>
                                     @endif
@@ -163,7 +229,7 @@
                         @empty
                             <tr>
                                 <td colspan="5" class="text-center py-5">
-                                    <div style="color:#94a3b8;">
+                                    <div class="empty-text">
                                         📭 Không tìm thấy dữ liệu vai trò phù hợp
                                     </div>
                                 </td>
