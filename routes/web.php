@@ -104,6 +104,11 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     Route::resource('vai-tro', VaiTroController::class);
     // Route cho chức năng quy định
     Route::get('quy_dinh', [QuyDinhController::class, 'index'])->name('quy_dinh.index');
+    // Quản lý duyệt đơn nghỉ phép
+    Route::get('/don-nghi', [DonNghiController::class, 'index'])->name('don_nghi.index');
+    
+    // Xử lý duyệt/từ chối đơn
+    Route::post('/don-nghi/{id}/duyet', [DonNghiController::class, 'capNhatTrangThai'])->name('don_nghi.duyet');
 });
 
 
