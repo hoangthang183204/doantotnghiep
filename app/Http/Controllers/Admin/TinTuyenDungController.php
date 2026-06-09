@@ -1,20 +1,44 @@
 <?php
 
-namespace App\Models;
+namespace App\Http\Controllers\Admin;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 
-class TinTuyenDung extends Model
+class TinTuyenDungController extends Controller
 {
-    protected $table = 'tin_tuyen_dung';
-
-    public function phongBan()
+    public function index()
     {
-        return $this->belongsTo(PhongBan::class, 'phong_ban_id');
+        return view('admin.tin-tuyen-dung.index');
     }
 
-    public function chucVu()
+    public function create()
     {
-        return $this->belongsTo(ChucVu::class, 'chuc_vu_id');
+        //
+    }
+
+    public function store(Request $request)
+    {
+        //
+    }
+
+    public function show($id)
+    {
+        //
+    }
+
+    public function edit($id)
+    {
+        //
+    }
+
+    public function update(Request $request, $id)
+    {
+        //
+    }
+
+    public function destroy($id)
+    {
+        //
     }
 }
