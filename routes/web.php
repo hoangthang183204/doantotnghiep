@@ -108,6 +108,23 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
 
     // Xử lý duyệt/từ chối đơn
     Route::post('/don-nghi/{id}/duyet', [DonNghiController::class, 'capNhatTrangThai'])->name('don_nghi.duyet');
+
+
+    Route::prefix('hop-dong')->name('hop-dong.')->middleware('role:Super Admin,Admin,HR Hành chính')->group(function () {
+        Route::get('/', [HopDongLaoDongController::class, 'index'])->name('index');
+        Route::get('/tao-moi', [HopDongLaoDongController::class, 'create'])->name('create');
+        Route::post('/tao-moi', [HopDongLaoDongController::class, 'store'])->name('store');
+        Route::get('/{id}', [HopDongLaoDongController::class, 'show'])->name('show');
+        Route::get('/{id}/sua', [HopDongLaoDongController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [HopDongLaoDongController::class, 'update'])->name('update');
+        Route::delete('/{id}', [HopDongLaoDongController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/gia-han', [HopDongLaoDongController::class, 'giaHan'])->name('gia-han');
+        Route::post('/{id}/thanh-ly', [HopDongLaoDongController::class, 'thanhLy'])->name('thanh-ly');
+        Route::post('/{id}/gui-ky', [HopDongLaoDongController::class, 'guiYeuCauKy'])->name('gui-ky');
+        Route::get('/sap-het-han', [HopDongLaoDongController::class, 'sapHetHan'])->name('sap-het-han');
+        Route::get('/export/excel', [HopDongLaoDongController::class, 'exportExcel'])->name('export.excel');
+        Route::get('/export/pdf', [HopDongLaoDongController::class, 'exportPdf'])->name('export.pdf');
+    });
 });
 
 // Bảng lương
@@ -121,7 +138,7 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     Route::post('duyetdon/tuyendung/{id}/duyet', [DuyetDonController::class, 'duyet'])->name('duyetdon.tuyendung.duyet');
     Route::post('duyetdon/tuyendung/{id}/tuchoi', [DuyetDonController::class, 'tuChoi'])->name('duyetdon.tuyendung.tuchoi');
 
-    
+
 
     // Alias for don_nghi route used by sidebar
     Route::post('/bang-luong/tinh', [BangLuongController::class, 'tinhLuong'])->name('bang-luong.tinh');

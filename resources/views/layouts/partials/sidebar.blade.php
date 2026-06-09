@@ -178,7 +178,38 @@
             'icon' =>
                 '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
             'visible' => true,
-            'route' => '#',
+            'submenu' => [
+                [
+                    'title' => 'Danh sách hợp đồng',
+                    'route' => 'admin.hop-dong.index',
+                    'icon' =>
+                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>',
+                ],
+                [
+                    'title' => 'Thêm hợp đồng',
+                    'route' => 'admin.hop-dong.create',
+                    'icon' =>
+                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>',
+                ],
+                [
+                    'title' => 'Sắp hết hạn',
+                    'route' => 'admin.hop-dong.sap-het-han',
+                    'icon' =>
+                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+                ],
+                [
+                    'title' => 'Xuất Excel',
+                    'route' => 'admin.hop-dong.export.excel',
+                    'icon' =>
+                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
+                ],
+                [
+                    'title' => 'Xuất PDF',
+                    'route' => 'admin.hop-dong.export.pdf',
+                    'icon' =>
+                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>',
+                ],
+            ],
         ],
         [
             'title' => 'Duyệt đơn',
