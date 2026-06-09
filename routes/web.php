@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\HoSoController;
 use App\Http\Controllers\Admin\QuyDinhController;
 use App\Http\Controllers\Auth\LoginController;  // ← Dùng cái này
 use App\Http\Controllers\Admin\HopDongLaoDongController;
+use App\Http\Controllers\Admin\DuyetDonController;
 /*
 |--------------------------------------------------------------------------
 | Authentication Routes (Chung cho tất cả)
@@ -101,10 +102,10 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
 
     // Route quy định phải nằm trong group này
     Route::get('quy_dinh', [QuyDinhController::class, 'index'])->name('quy_dinh.index');
-    
+
     // Quản lý duyệt đơn nghỉ phép
     Route::get('/don-nghi', [DonNghiController::class, 'index'])->name('don_nghi.index');
-    
+
     // Xử lý duyệt/từ chối đơn
     Route::post('/don-nghi/{id}/duyet', [DonNghiController::class, 'capNhatTrangThai'])->name('don_nghi.duyet');
 });
@@ -113,6 +114,16 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
 Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     Route::get('/bang-luong', [BangLuongController::class, 'index'])->name('bang-luong.index');
     Route::get('/bang-luong/create', [BangLuongController::class, 'create'])->name('bang-luong.create');
+
+    // Tuyển dụng - Duyệt đơn
+    Route::get('duyetdon/tuyendung', [DuyetDonController::class, 'index'])->name('duyetdon.tuyendung.index');
+    Route::get('duyetdon/tuyendung/{id}', [DuyetDonController::class, 'show'])->name('duyetdon.tuyendung.show');
+    Route::post('duyetdon/tuyendung/{id}/duyet', [DuyetDonController::class, 'duyet'])->name('duyetdon.tuyendung.duyet');
+    Route::post('duyetdon/tuyendung/{id}/tuchoi', [DuyetDonController::class, 'tuChoi'])->name('duyetdon.tuyendung.tuchoi');
+
+    
+
+    // Alias for don_nghi route used by sidebar
     Route::post('/bang-luong/tinh', [BangLuongController::class, 'tinhLuong'])->name('bang-luong.tinh');
     Route::get('/bang-luong/{id}', [BangLuongController::class, 'show'])->name('bang-luong.show');
     Route::put('/bang-luong/{id}/duyet', [BangLuongController::class, 'duyet'])->name('bang-luong.duyet');
