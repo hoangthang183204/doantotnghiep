@@ -29,7 +29,7 @@
                 ],
                 [
                     'title' => 'Tài khoản',
-                    'route' => '#',
+                    'route' => 'admin.nguoi-dung.index',
                     'icon' =>
                         '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z"/>',
                 ],
@@ -47,7 +47,7 @@
                 ],
                 [
                     'title' => 'Vai trò',
-                    'route' => '#',
+                    'route' => 'admin.vai-tro.index',
                     'icon' =>
                         '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>',
                 ],
@@ -189,16 +189,18 @@
         ],
         [
             'title' => 'Loại nghỉ phép',
-            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>',
-            'route' => route('admin.loai_nghi_phep.index'), 
+            'icon' =>
+                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>',
+            'route' => route('admin.loai_nghi_phep.index'),
             'active' => $currentRoute == 'admin.loai_nghi_phep.index', // ← Thêm dòng này để tự sáng menu khi click vào
             'visible' => true,
         ],
         [
             'title' => 'Quy định',
+            'route' => route('admin.quy_dinh.index'), // Dùng hàm route() để tạo link
             'icon' =>
-                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>',
-            'route' => '#',
+                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>',
+            'active' => $currentRoute == 'admin.quy_dinh.index', // Thêm dòng này để menu tự sáng lên khi đang ở trang này
             'visible' => true,
         ],
         [
@@ -209,7 +211,7 @@
             'submenu' => [
                 [
                     'title' => 'Đơn xin nghỉ',
-                    'route' => 'admin.don-nghi.index',
+                    'route' => 'admin.don_nghi.index', // Đổi từ don-nghi thành don_nghi
                     'icon' =>
                         '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
                 ],
