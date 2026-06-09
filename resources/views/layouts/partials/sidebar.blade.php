@@ -184,8 +184,15 @@
             'title' => 'Duyệt đơn',
             'icon' =>
                 '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>',
-            'route' => '#',
             'visible' => true,
+            'submenu' => [
+                [
+                    'title' => 'Tuyển dụng',
+                    'route' => 'admin.duyetdon.tuyendung.index',
+                    'icon' =>
+                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/>',
+                ],
+            ],
         ],
         [
             'title' => 'Loại nghỉ phép',
@@ -211,7 +218,7 @@
             'submenu' => [
                 [
                     'title' => 'Đơn xin nghỉ',
-                    'route' => 'admin.don_nghi.index', // Đổi từ don-nghi thành don_nghi
+                    'route' => 'admin.don_nghi.index',
                     'icon' =>
                         '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
                 ],
