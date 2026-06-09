@@ -98,6 +98,7 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
 
     // Quản lý loại nghỉ phép
     Route::resource('loai_nghi_phep', LoaiNghiController::class);
+
     // Route quy định phải nằm trong group này
     Route::get('quy_dinh', [QuyDinhController::class, 'index'])->name('quy_dinh.index');
     
@@ -107,7 +108,6 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     // Xử lý duyệt/từ chối đơn
     Route::post('/don-nghi/{id}/duyet', [DonNghiController::class, 'capNhatTrangThai'])->name('don_nghi.duyet');
 });
-
 
 // Bảng lương
 Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
@@ -122,22 +122,22 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
 //danh sách ứng viên
 Route::prefix('admin/ung-vien')->name('admin.ung_vien.')->group(function () {
 
- Route::get('/email-phong-van', [UngVienController::class, 'emailList'])
-    ->name('email.index');
+    Route::get('/email-phong-van', [UngVienController::class, 'emailList'])
+        ->name('email.index');
 
-Route::get('/email-phong-van/create', [UngVienController::class, 'createEmail'])
-    ->name('email.create');
+    Route::get('/email-phong-van/create', [UngVienController::class, 'createEmail'])
+        ->name('email.create');
 
-Route::post('/email-phong-van/send', [UngVienController::class, 'sendEmail'])
-    ->name('email.send');
+    Route::post('/email-phong-van/send', [UngVienController::class, 'sendEmail'])
+        ->name('email.send');
 
-// các route còn lại
-Route::get('/', [UngVienController::class, 'index'])->name('index');
-Route::get('/create', [UngVienController::class, 'create'])->name('create');
-Route::post('/store', [UngVienController::class, 'store'])->name('store');
+    // các route còn lại
+    Route::get('/', [UngVienController::class, 'index'])->name('index');
+    Route::get('/create', [UngVienController::class, 'create'])->name('create');
+    Route::post('/store', [UngVienController::class, 'store'])->name('store');
 
-Route::get('/{id}', [UngVienController::class, 'show'])->name('show');
+    Route::get('/{id}', [UngVienController::class, 'show'])->name('show');
 
-Route::put('/{id}', [UngVienController::class, 'update'])->name('update');
-Route::delete('/{id}', [UngVienController::class, 'destroy'])->name('destroy');
+    Route::put('/{id}', [UngVienController::class, 'update'])->name('update');
+    Route::delete('/{id}', [UngVienController::class, 'destroy'])->name('destroy');
 });
