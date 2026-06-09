@@ -93,12 +93,20 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     // Quản trị hệ thống - Chỉ Admin
     Route::middleware('role:Super Admin,Admin')->group(function () {
         // Route::get('/cai-dat', [SettingController::class, 'index'])->name('settings');
-        // Route::resource('vai-tro', VaiTroController::class);
+        Route::resource('vai_tro', VaiTroController::class);
     });
 
     // Quản lý loại nghỉ phép
     Route::resource('loai_nghi_phep', LoaiNghiController::class);
 
+    // Route quy định phải nằm trong group này
+    Route::get('quy_dinh', [QuyDinhController::class, 'index'])->name('quy_dinh.index');
+    
+    // Quản lý duyệt đơn nghỉ phép
+    Route::get('/don-nghi', [DonNghiController::class, 'index'])->name('don_nghi.index');
+    
+    // Xử lý duyệt/từ chối đơn
+    Route::post('/don-nghi/{id}/duyet', [DonNghiController::class, 'capNhatTrangThai'])->name('don_nghi.duyet');
 });
 
 // Bảng lương
