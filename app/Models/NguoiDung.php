@@ -122,10 +122,11 @@ class NguoiDung extends Authenticatable implements JWTSubject
     }
 
     // Accessor lấy họ tên đầy đủ
+
     public function getHoTenAttribute()
     {
-        if ($this->hoSo) {
-            return $this->hoSo->ho . ' ' . $this->hoSo->ten;
+        if ($this->hoSo && $this->hoSo->ho) {
+            return trim($this->hoSo->ho . ' ' . $this->hoSo->ten);
         }
 
         return $this->ten_dang_nhap;

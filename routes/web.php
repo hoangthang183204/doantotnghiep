@@ -69,6 +69,9 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
         Route::resource('nguoi-dung', NguoiDungController::class);
         Route::resource('phong-ban', PhongBanController::class);
         Route::resource('chuc-vu', ChucVuController::class);
+
+        Route::get('/admin/nguoi-dung/sync-ho-so', [NguoiDungController::class, 'syncHoSo'])
+            ->name('admin.nguoi-dung.sync-ho-so');
     });
 
     // Chấm công & Đơn nghỉ - Tất cả nhân viên

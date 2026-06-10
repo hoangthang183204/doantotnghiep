@@ -89,13 +89,13 @@
             </div>
 
         </div>
-        
+
         {{-- ALERT SUCCESS --}}
-                @if (session('success'))
-                    <div class="bg-green-100 border border-green-300 text-green-700 px-4 py-3 rounded-lg">
-                        {{ session('success') }}
-                    </div>
-                @endif
+        @if (session('success'))
+            <div class="bg-green-100 border border-green-300 text-green-700 px-4 py-3 rounded-lg">
+                {{ session('success') }}
+            </div>
+        @endif
 
         {{-- TABLE --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
@@ -135,7 +135,7 @@
 
                                         <div>
                                             <div class="font-semibold text-gray-800 dark:text-white">
-                                                {{ $user->ten_dang_nhap }}
+                                                {{ $user->ho_ten }}
                                             </div>
 
                                             <div class="text-xs text-gray-500 dark:text-gray-400">

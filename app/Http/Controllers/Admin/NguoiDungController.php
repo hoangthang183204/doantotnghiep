@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\NguoiDung;
+use App\Models\HoSoNguoiDung;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\PhongBan;
@@ -15,7 +16,7 @@ class NguoiDungController extends Controller
     // Danh sách user
     public function index(Request $request)
     {
-        $query = NguoiDung::with(['vai_tro', 'phong_ban']);
+        $query = NguoiDung::with(['vai_tro', 'phong_ban', 'hoSo']);
 
         if ($request->keyword) {
             $query->where(function ($q) use ($request) {
@@ -33,14 +34,12 @@ class NguoiDungController extends Controller
         }
 
         $users = $query->latest()->paginate(10);
-
-        // 🔥 THIẾU CHỖ NÀY LÀ GÂY LỖI
         $phongBans = PhongBan::all();
 
         return view('admin.nguoi-dung.index', compact('users', 'phongBans'));
     }
-    // Form tạo
 
+    // Form tạo
     public function create()
     {
         $vaiTros = VaiTro::all();
@@ -54,35 +53,60 @@ class NguoiDungController extends Controller
         ));
     }
 
-    // Lưu user
+    // Lưu user - TỰ ĐỘNG TẠO HỒ SƠ
     public function store(Request $request)
     {
         $request->validate([
             'ten_dang_nhap' => 'required|unique:nguoi_dung',
             'email' => 'required|email|unique:nguoi_dung',
             'password' => 'required|min:6',
+            'vai_tro_id' => 'nullable|exists:vai_tro,id',
+            'phong_ban_id' => 'nullable|exists:phong_ban,id',
+            'chuc_vu_id' => 'nullable|exists:chuc_vu,id',
         ]);
 
-        NguoiDung::create([
+        // Tạo user
+        $user = NguoiDung::create([
             'ten_dang_nhap' => $request->ten_dang_nhap,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-
             'vai_tro_id' => $request->vai_tro_id,
             'phong_ban_id' => $request->phong_ban_id,   
             'chuc_vu_id' => $request->chuc_vu_id,       
-
             'trang_thai' => 1,
+            'trang_thai_cong_viec' => 'dang_lam',
+        ]);
+
+        // TỰ ĐỘNG TẠO HỒ SƠ
+        $lastId = HoSoNguoiDung::max('id') ?? 0;
+        $maNhanVien = 'NV' . str_pad($lastId + 1, 3, '0', STR_PAD_LEFT);
+
+        HoSoNguoiDung::create([
+            'nguoi_dung_id' => $user->id,
+            'ma_nhan_vien' => $maNhanVien,
+            'ho' => '',
+            'ten' => $request->ten_dang_nhap,
+            'so_dien_thoai' => null,
+            'ngay_sinh' => null,
+            'gioi_tinh' => null,
+            'dia_chi_hien_tai' => null,
+            'dia_chi_thuong_tru' => null,
+            'cmnd_cccd' => null,
+            'so_ho_chieu' => null,
+            'tinh_trang_hon_nhan' => null,
+            'lien_he_khan_cap' => null,
+            'sdt_khan_cap' => null,
+            'quan_he_khan_cap' => null,
         ]);
 
         return redirect()->route('admin.nguoi-dung.index')
-            ->with('success', 'Tạo người dùng thành công');
+            ->with('success', 'Tạo người dùng thành công! Hồ sơ đã được tự động tạo.');
     }
 
     // Chi tiết
     public function show($id)
     {
-        $user = NguoiDung::with(['vai_tro', 'phong_ban', 'chuc_vu'])->findOrFail($id);
+        $user = NguoiDung::with(['vai_tro', 'phong_ban', 'chuc_vu', 'hoSo'])->findOrFail($id);
 
         return view('admin.nguoi-dung.show', compact('user'));
     }
@@ -90,8 +114,7 @@ class NguoiDungController extends Controller
     // Form sửa
     public function edit($id)
     {
-        $user = NguoiDung::findOrFail($id);
-
+        $user = NguoiDung::with('hoSo')->findOrFail($id);
         $vaiTros = VaiTro::all();
         $phongBans = PhongBan::all();
         $chucVus = ChucVu::all();
@@ -110,8 +133,8 @@ class NguoiDungController extends Controller
         $user = NguoiDung::findOrFail($id);
 
         $request->validate([
-            'ten_dang_nhap' => 'required',
-            'email' => 'required|email',
+            'ten_dang_nhap' => 'required|unique:nguoi_dung,ten_dang_nhap,' . $id,
+            'email' => 'required|email|unique:nguoi_dung,email,' . $id,
         ]);
 
         $data = [
@@ -123,22 +146,68 @@ class NguoiDungController extends Controller
             'trang_thai' => $request->trang_thai ?? 1,
         ];
 
-        // chỉ update password nếu có nhập
+        // Chỉ update password nếu có nhập
         if ($request->filled('password')) {
             $data['password'] = bcrypt($request->password);
         }
 
         $user->update($data);
 
+        // Nếu đổi tên đăng nhập thì cập nhật lại tên trong hồ sơ
+        if ($user->hoSo && $request->ten_dang_nhap != $user->getOriginal('ten_dang_nhap')) {
+            $user->hoSo->update([
+                'ten' => $request->ten_dang_nhap
+            ]);
+        }
+
         return redirect()->route('admin.nguoi-dung.index')
             ->with('success', 'Cập nhật người dùng thành công');
     }
 
-    // Xóa
+    // Xóa - Xóa cả hồ sơ (cascade đã được set trong migration)
     public function destroy($id)
     {
-        NguoiDung::findOrFail($id)->delete();
+        $user = NguoiDung::findOrFail($id);
+        
+        // Xóa user (hồ sơ sẽ tự xóa do cascadeOnDelete)
+        $user->delete();
 
-        return back()->with('success', 'Đã xóa người dùng');
+        return back()->with('success', 'Đã xóa người dùng và hồ sơ liên quan');
     }
+
+    // Đồng bộ hồ sơ cho user cũ (chạy 1 lần)
+    public function syncHoSo()
+    {
+        $users = NguoiDung::doesntHave('hoSo')->get();
+        $count = 0;
+
+        foreach ($users as $user) {
+            $lastId = HoSoNguoiDung::max('id') ?? 0;
+            $maNhanVien = 'NV' . str_pad($lastId + 1, 3, '0', STR_PAD_LEFT);
+
+            HoSoNguoiDung::create([
+                'nguoi_dung_id' => $user->id,
+                'ma_nhan_vien' => $maNhanVien,
+                'ho' => '',
+                'ten' => $user->ten_dang_nhap,
+                'so_dien_thoai' => null,
+                'ngay_sinh' => null,
+                'gioi_tinh' => null,
+                'dia_chi_hien_tai' => null,
+                'dia_chi_thuong_tru' => null,
+                'cmnd_cccd' => null,
+                'so_ho_chieu' => null,
+                'tinh_trang_hon_nhan' => null,
+                'lien_he_khan_cap' => null,
+                'sdt_khan_cap' => null,
+                'quan_he_khan_cap' => null,
+            ]);
+            $count++;
+        }
+
+        return redirect()->route('admin.nguoi-dung.index')
+            ->with('success', "Đã đồng bộ {$count} hồ sơ cho user chưa có hồ sơ.");
+    }
+
+    
 }
