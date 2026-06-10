@@ -100,11 +100,8 @@ body {
                         <input type="number" name="so_tien_mac_dinh" class="form-control" placeholder="VD: 500000" required>
                     </div>
 
-                    {{-- Switch chịu thuế --}}
-                    <div class="mb-3 switch">
-                        <input type="checkbox" name="chiu_thue" value="1">
-                        <label class="label mb-0">Chịu thuế</label>
-                    </div>
+                 
+                    
 
                     {{-- Trạng thái --}}
                     <div class="mb-3">

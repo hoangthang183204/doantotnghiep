@@ -116,14 +116,7 @@ body {
            value="{{ old('loai_phu_cap', $phuCap->loai_phu_cap) }}">
 </div>
 
-{{-- Chịu thuế --}}
-<div class="mb-3">
-    <label class="form-label">Chịu thuế</label>
-    <select name="chiu_thue" class="form-control">
-        <option value="1" {{ $phuCap->chiu_thue ? 'selected' : '' }}>Có</option>
-        <option value="0" {{ !$phuCap->chiu_thue ? 'selected' : '' }}>Không</option>
-    </select>
-</div>
+
 
 {{-- Trạng thái --}}
 <div class="mb-3">

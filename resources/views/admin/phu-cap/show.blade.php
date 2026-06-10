@@ -89,16 +89,7 @@ body {
             </div>
         </div>
 
-        <div class="info-row">
-            <div class="info-label">Chịu thuế</div>
-            <div class="info-value">
-                @if($phuCap->chiu_thue)
-                    <span class="badge badge-yellow">Có</span>
-                @else
-                    <span class="badge badge-green">Không</span>
-                @endif
-            </div>
-        </div>
+        
 
         <div class="info-row">
             <div class="info-label">Trạng thái</div>
