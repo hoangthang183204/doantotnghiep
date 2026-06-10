@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\QuyDinhController;
 use App\Http\Controllers\Auth\LoginController;  // ← Dùng cái này
 use App\Http\Controllers\Admin\HopDongLaoDongController;
 use App\Http\Controllers\Admin\DuyetDonController;
+use App\Http\Controllers\Admin\TangCaController;
 /*
 |--------------------------------------------------------------------------
 | Authentication Routes (Chung cho tất cả)
@@ -171,4 +172,15 @@ Route::prefix('admin/ung-vien')->name('admin.ung_vien.')->group(function () {
 
     Route::put('/{id}', [UngVienController::class, 'update'])->name('update');
     Route::delete('/{id}', [UngVienController::class, 'destroy'])->name('destroy');
+});
+
+// =========================================================================
+// Tăng ca — Phê duyệt
+// =========================================================================
+Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
+    Route::get('tang-ca', [TangCaController::class, 'index'])->name('tang-ca.index');
+    Route::get('tang-ca/{id}', [TangCaController::class, 'show'])->name('tang-ca.show');
+    Route::post('tang-ca/{id}/duyet', [TangCaController::class, 'duyet'])->name('tang-ca.duyet');
+    Route::post('tang-ca/{id}/tu-choi', [TangCaController::class, 'tuChoi'])->name('tang-ca.tu-choi');
+    Route::post('tang-ca/duyet-hang-loat', [TangCaController::class, 'duyetHangLoat'])->name('tang-ca.duyet-hang-loat');
 });
