@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 
 class ChucVuController extends Controller
 {
+
     public function index()
     {
         $chucVus = ChucVu::with('phong_ban')
@@ -28,9 +29,13 @@ class ChucVuController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'ten' => 'required',
-            'ma' => 'required|unique:chuc_vu,ma',
-            'phong_ban_id' => 'required'
+            'ten' => 'required|string|max:255',
+            'ma' => 'required|string|max:255|unique:chuc_vu,ma',
+            'phong_ban_id' => 'required|exists:phong_ban,id',
+            'luong_co_ban' => 'nullable|numeric|min:0',
+            'he_so_luong' => 'nullable|numeric|min:0|max:10',
+            'mo_ta' => 'nullable|string',
+            'trang_thai' => 'boolean',
         ]);
 
         ChucVu::create($request->all());
@@ -40,16 +45,19 @@ class ChucVuController extends Controller
             ->with('success', 'Thêm chức vụ thành công');
     }
 
+    public function show($id)
+    {
+        $chucVu = ChucVu::with(['phong_ban', 'nguoi_dungs'])->findOrFail($id);
+
+        return view('admin.chuc-vu.show', compact('chucVu'));
+    }
+
     public function edit($id)
     {
         $chucVu = ChucVu::findOrFail($id);
-
         $phongBans = PhongBan::where('trang_thai', 1)->get();
 
-        return view('admin.chuc-vu.edit', compact(
-            'chucVu',
-            'phongBans'
-        ));
+        return view('admin.chuc-vu.edit', compact('chucVu', 'phongBans'));
     }
 
     public function update(Request $request, $id)
@@ -57,9 +65,13 @@ class ChucVuController extends Controller
         $chucVu = ChucVu::findOrFail($id);
 
         $request->validate([
-            'ten' => 'required',
-            'ma' => 'required|unique:chuc_vu,ma,' . $id,
-            'phong_ban_id' => 'required'
+            'ten' => 'required|string|max:255',
+            'ma' => 'required|string|max:255|unique:chuc_vu,ma,' . $id,
+            'phong_ban_id' => 'required|exists:phong_ban,id',
+            'luong_co_ban' => 'nullable|numeric|min:0',
+            'he_so_luong' => 'nullable|numeric|min:0|max:10',
+            'mo_ta' => 'nullable|string',
+            'trang_thai' => 'boolean',
         ]);
 
         $chucVu->update($request->all());
@@ -71,11 +83,14 @@ class ChucVuController extends Controller
 
     public function destroy($id)
     {
-        ChucVu::findOrFail($id)->delete();
+        $chucVu = ChucVu::findOrFail($id);
+        
+        if ($chucVu->nguoi_dungs()->count() > 0) {
+            return back()->with('error', 'Không thể xóa vì đang có nhân viên giữ chức vụ này.');
+        }
+        
+        $chucVu->delete();
 
-        return back()->with(
-            'success',
-            'Xóa chức vụ thành công'
-        );
+        return back()->with('success', 'Xóa chức vụ thành công');
     }
 }
