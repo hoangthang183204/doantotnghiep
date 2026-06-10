@@ -34,7 +34,7 @@
                         <th class="text-left py-3 px-4">Tên phụ cấp</th>
                         <th class="text-left py-3 px-4">Loại</th>
                         <th class="text-left py-3 px-4">Số tiền</th>
-                        <th class="text-left py-3 px-4">Chịu thuế</th>
+                        
                         <th class="text-left py-3 px-4">Trạng thái</th>
                         <th class="text-left py-3 px-4">Thao tác</th>
                     </tr>
@@ -60,17 +60,7 @@
                             {{ number_format($pc->so_tien_mac_dinh, 0, ',', '.') }} đ
                         </td>
 
-                        <td class="py-3 px-4">
-                            @if($pc->chiu_thue)
-                            <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
-                                Có
-                            </span>
-                            @else
-                            <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                                Không
-                            </span>
-                            @endif
-                        </td>
+                        
 
                         <td class="py-3 px-4">
                             @if($pc->trang_thai)
