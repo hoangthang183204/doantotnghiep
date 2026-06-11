@@ -16,39 +16,44 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Bảng danh mục
-$this->call(VaiTroSeeder::class);
-$this->call(LoaiNghiPhepSeeder::class);
-$this->call(KyNangSeeder::class);
-$this->call(PhuCapSeeder::class);
-$this->call(ChiNhanhCongTySeeder::class);
-$this->call(PhongBanSeeder::class);
-$this->call(ChucVuSeeder::class);
-$this->call(GioLamViecSeeder::class);
-$this->call(CompanyLocationSeeder::class);
+        $this->call(VaiTroSeeder::class);
+        $this->call(LoaiNghiPhepSeeder::class);
+        $this->call(KyNangSeeder::class);
+        $this->call(PhuCapSeeder::class);
+        $this->call(ChiNhanhCongTySeeder::class);
+        $this->call(PhongBanSeeder::class);
+        $this->call(ChucVuSeeder::class);
+        $this->call(GioLamViecSeeder::class);
+        $this->call(CompanyLocationSeeder::class);
 
-// Người dùng
-$this->call(NguoiDungSeeder::class);
-$this->call(HoSoNguoiDungSeeder::class);
+        // Người dùng
+        $this->call(NguoiDungSeeder::class);
+        $this->call(HoSoNguoiDungSeeder::class);
 
-// Hợp đồng
-$this->call(HopDongLaoDongSeeder::class);
+        // Hợp đồng
+        $this->call(HopDongLaoDongSeeder::class);
 
-// Chấm công
-$this->call(ChamCongSeeder::class);
-$this->call(DonXinNghiSeeder::class);
+        // Chấm công
+        $this->call(ChamCongSeeder::class);
+        $this->call(DonXinNghiSeeder::class);
 
-// Công việc
-$this->call(CongViecSeeder::class);
-$this->call(PhanCongCongViecSeeder::class);
+        // Tăng ca
+        $this->call([DangKyTangCaSeeder::class,]);
+        $this->call([ThucHienTangCaSeeder::class,]);
 
-// Tuyển dụng
-$this->call(TinTuyenDungSeeder::class);
-$this->call(UngVienSeeder::class);
+        // Công việc
+        $this->call(CongViecSeeder::class);
+        $this->call(PhanCongCongViecSeeder::class);
 
-// Lương
-$this->call(BangLuongSeeder::class);
-$this->call(LuongSeeder::class);
-$this->call(LuongNhanVienSeeder::class);
-$this->call(KhauTruLuongSeeder::class);
+        // Tuyển dụng
+        $this->call(TinTuyenDungSeeder::class);
+        $this->call(UngVienSeeder::class);
+
+        // Lương
+        $this->call(BangLuongSeeder::class);
+        $this->call(LuongSeeder::class);
+        $this->call(LuongNhanVienSeeder::class);
+        $this->call(KhauTruLuongSeeder::class);
+
     }
 }
