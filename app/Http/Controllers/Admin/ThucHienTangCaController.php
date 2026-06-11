@@ -17,7 +17,10 @@ class ThucHienTangCaController extends Controller
         $query = ThucHienTangCa::with([
             'dang_ky.nguoi_dung.hoSo',
             'dang_ky.nguoi_duyet.hoSo',
-        ]);
+        ])
+            ->whereHas('dang_ky.nguoi_dung', function ($q) {
+                $q->where('vai_tro_id', '!=', 1);
+            });
 
         // Tìm kiếm nhân viên
         if ($request->filled('keyword')) {
