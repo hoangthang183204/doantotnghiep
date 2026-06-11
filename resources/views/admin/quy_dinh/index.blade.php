@@ -144,7 +144,78 @@
     .hr-timeline-item { padding-bottom: 16px; margin-bottom: 16px; border-bottom: 1px dashed #e2e8f0; }
     .hr-timeline-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
     .hr-timeline-item h6 { margin: 0 0 4px 0; font-size: 15px; }
+
+   /* ===== DARK MODE CHO TRANG QUY ĐỊNH ===== */
+
+html.dark .banner-quy-dinh{
+    background: linear-gradient(135deg,#1f2440,#2f3f8f);
+}
+
+html.dark .card-custom,
+html.dark .stat-card{
+    background:#2c2d48 !important;
+    border:1px solid #404463 !important;
+    box-shadow:none !important;
+}
+
+html.dark .card-header-custom{
+    background:#2c2d48 !important;
+    color:#fff !important;
+    border-bottom:1px solid #404463 !important;
+}
+
+html.dark .accordion-button{
+    background:#2c2d48 !important;
+    color:#fff !important;
+}
+
+html.dark .accordion-button.active{
+    background:#34375a !important;
+    color:#fff !important;
+}
+
+html.dark .accordion-collapse{
+    background:#2c2d48 !important;
+    color:#d1d5db !important;
+}
+
+html.dark .accordion-item{
+    border-color:#404463 !important;
+}
+
+html.dark .text-dark{
+    color:#fff !important;
+}
+
+html.dark .text-muted{
+    color:#a1a1aa !important;
+}
+
+html.dark .sidebar-card{
+    background:#2c2d48 !important;
+}
+
+html.dark .hr-modal-content{
+    background:#2c2d48 !important;
+    color:#fff !important;
+}
+
+html.dark .hr-modal-header{
+    border-color:#404463 !important;
+}
+
+html.dark .hr-timeline-item{
+    border-color:#404463 !important;
+}
+
+html.dark ul li,
+html.dark .small,
+html.dark p,
+html.dark div{
+    color:#d1d5db;
+}
 </style>
+
 
 <div class="hr-wrapper">
     <div class="banner-quy-dinh d-flex justify-content-between align-items-center">
