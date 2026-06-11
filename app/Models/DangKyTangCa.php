@@ -62,7 +62,10 @@ class DangKyTangCa extends Model
 
     public function thuc_hien()
     {
-        return $this->hasOne(ThucHienTangCa::class, 'dang_ky_tang_ca_id');
+        return $this->hasOne(
+            ThucHienTangCa::class,
+            'dang_ky_tang_ca_id'
+        );
     }
 
     // -------------------------------------------------------------------------

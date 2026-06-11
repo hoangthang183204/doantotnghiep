@@ -21,6 +21,8 @@ use App\Http\Controllers\Auth\LoginController;  // ← Dùng cái này
 use App\Http\Controllers\Admin\HopDongLaoDongController;
 use App\Http\Controllers\Admin\DuyetDonController;
 use App\Http\Controllers\Admin\TangCaController;
+use App\Http\Controllers\Admin\ThucHienTangCaController;
+
 /*
 |--------------------------------------------------------------------------
 | Authentication Routes (Chung cho tất cả)
@@ -183,4 +185,11 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     Route::post('tang-ca/{id}/duyet', [TangCaController::class, 'duyet'])->name('tang-ca.duyet');
     Route::post('tang-ca/{id}/tu-choi', [TangCaController::class, 'tuChoi'])->name('tang-ca.tu-choi');
     Route::post('tang-ca/duyet-hang-loat', [TangCaController::class, 'duyetHangLoat'])->name('tang-ca.duyet-hang-loat');
+
+    // Thực hiện tăng ca 
+
+    Route::get('thuc-hien-tang-ca', [ThucHienTangCaController::class, 'index'])->name('thuc-hien-tang-ca.index');
+    Route::get('thuc-hien-tang-ca/{id}', [ThucHienTangCaController::class, 'show'])->name('thuc-hien-tang-ca.show');
+    Route::get('thuc-hien-tang-ca/{id}/edit',[ThucHienTangCaController::class, 'edit'])->name('thuc-hien-tang-ca.edit');
+    Route::put('thuc-hien-tang-ca/{id}',[ThucHienTangCaController::class, 'update'])->name('thuc-hien-tang-ca.update');
 });
