@@ -9,11 +9,11 @@
     {{-- HEADER --}}
     <div class="bg-white rounded-xl shadow-sm p-5">
 
-        <h1 class="text-xl font-bold text-gray-800">
+        <h1 class="text-xl font-bold text-gray-800 dark:text-white">
             Quản lý Email đã gửi
         </h1>
 
-        <p class="text-sm text-gray-500 mt-1">
+        <p class="text-sm text-gray-500 mt-1 dark:text-white">
             Danh sách email mời phỏng vấn đã gửi cho ứng viên.
         </p>
 
@@ -21,7 +21,7 @@
         <div class="mt-5 border-t pt-4 flex justify-end">
 
             <a href="{{ route('admin.ung_vien.email.create') }}"
-               class="bg-blue-700 text-white px-5 py-2 rounded-lg">
+               class="bg-blue-700 text-white px-5 py-2 rounded-lg dark:text-white">
                 + Gửi Email Mới
             </a>
 
@@ -30,14 +30,14 @@
     </div>
 
     {{-- TABLE --}}
-    <div class="bg-white rounded-xl shadow-sm p-5">
+    <div class="bg-white rounded-xl shadow-sm p-5 dark:text-white">
 
         <div class="overflow-x-auto">
 
             <table class="min-w-full">
 
                 <thead>
-                    <tr class="text-left text-sm text-gray-600 border-b">
+                    <tr class="text-left text-sm text-gray-600 border-b dark:text-white">
                         <th class="p-3">ỨNG VIÊN</th>
                         <th class="p-3">EMAIL</th>
                         <th class="p-3">THỜI GIAN PV</th>
