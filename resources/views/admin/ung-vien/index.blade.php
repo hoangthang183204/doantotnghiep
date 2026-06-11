@@ -82,8 +82,6 @@
                             <th class="px-5 py-4 text-left">SĐT</th>
                             <th class="px-5 py-4 text-left">Tin tuyển dụng</th>
                             <th class="px-5 py-4 text-left">Phòng ban</th>
-                            <th class="px-5 py-4 text-left">Chức vụ</th>
-                            <th class="px-5 py-4 text-center">KN</th>
                             <th class="px-5 py-4 text-right">Lương</th>
                             <th class="px-5 py-4 text-center">Trạng thái</th>
                             <th class="px-5 py-4 text-center">Hành động</th>
@@ -120,9 +118,7 @@
                                 </td>
 
 
-                                <td class="px-5 py-4 text-center font-semibold text-gray-900 dark:text-white">
-                                    {{ $item->so_nam_kinh_nghiem }} năm
-                                </td>
+
 
                                 <td class="px-5 py-4 text-right font-semibold font-semibold text-gray-900 dark:text-white">
                                     {{ number_format($item->luong_mong_muon) }}
@@ -143,7 +139,7 @@
                                     @elseif($item->trang_thai == 'phong_van')
                                         <span
                                             class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
-                                            Phỏng vẫn
+                                            Phỏng vấn
                                         </span>
                                     @elseif($item->trang_thai == 'tu_choi')
                                         <span class="px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
