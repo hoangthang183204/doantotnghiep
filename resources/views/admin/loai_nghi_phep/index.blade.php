@@ -23,7 +23,7 @@
             </div>
 
             {{-- ĐÃ SỬA: Chuyển từ Button Modal sang Thẻ A điều hướng --}}
-            <a href="{{ route('admin.loai_nghi_phep.create') }}"
+            <a href="{{ route('admin.loai-nghi-phep.create') }}"
                 class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all duration-200 transform hover:-translate-y-0.5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -65,7 +65,7 @@
 
         {{-- Search --}}
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4">
-            <form action="{{ route('admin.loai_nghi_phep.index') }}" method="GET" class="max-w-2xl flex gap-3">
+            <form action="{{ route('admin.loai-nghi-phep.index') }}" method="GET" class="max-w-2xl flex gap-3">
 
                 {{-- Khung chứa ô nhập liệu --}}
                 <div class="relative flex-1">
@@ -92,7 +92,7 @@
 
                 {{-- Nút Xóa bộ lọc (Chỉ hiển thị khi đang có từ khóa tìm kiếm để reset nhanh về danh sách tổng) --}}
                 @if (request('search'))
-                    <a href="{{ route('admin.loai_nghi_phep.index') }}"
+                    <a href="{{ route('admin.loai-nghi-phep.index') }}"
                         class="inline-flex items-center px-4 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-200 font-medium transition whitespace-nowrap"
                         title="Xóa bộ lọc">
                         Xóa lọc
@@ -137,7 +137,7 @@
                                     </span>
                                 </td>
 
-                                {{-- Tên (ĐÃ SỬA: từ $item->ten thành $item->ten_loai_nghi_phep cho đồng bộ cột DB) --}}
+                                {{-- Tên (ĐÃ SỬA: từ $item->ten thành $item->ten_loai-nghi-phep cho đồng bộ cột DB) --}}
                                 <td class="px-5 py-4">
                                     <div class="font-semibold text-gray-900 dark:text-white">
                                         {{ $item->ten_loai_nghi_phep ?? $item->ten }}
@@ -186,14 +186,14 @@
                                 <td class="px-5 py-4">
                                     <div class="flex justify-center gap-2">
                                         {{-- ĐÃ SỬA: Nút xem chi tiết --}}
-                                        <a href="{{ route('admin.loai_nghi_phep.show', $item->id) }}"
+                                        <a href="{{ route('admin.loai-nghi-phep.show', $item->id) }}"
                                             class="w-9 h-9 flex items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all shadow-sm"
                                             title="Xem chi tiết">
                                             👁
                                         </a>
 
                                         {{-- ĐÃ SỬA: Nút chỉnh sửa --}}
-                                        <a href="{{ route('admin.loai_nghi_phep.edit', $item->id) }}"
+                                        <a href="{{ route('admin.loai-nghi-phep.edit', $item->id) }}"
                                             class="w-9 h-9 flex items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-all shadow-sm"
                                             title="Chỉnh sửa">
                                             ✏
