@@ -17,7 +17,7 @@
                     Phân quyền và quản lý các vai trò trong hệ thống
                 </p>
             </div>
-            <a href="{{ route('admin.vai_tro.create') }}" 
+            <a href="{{ route('admin.vai-tro.create') }}" 
                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition flex items-center gap-2">
                Thêm vai trò
             </a>
@@ -25,7 +25,7 @@
 
         {{-- SEARCH --}}
         <div class="mt-4">
-            <form method="GET" action="{{ route('admin.vai_tro.index') }}">
+            <form method="GET" action="{{ route('admin.vai-tro.index') }}">
                 <div class="flex gap-3">
                     <input type="text" name="keyword" value="{{ request('keyword') }}" 
                         placeholder="Tìm kiếm theo tên, mã vai trò..."
@@ -33,7 +33,7 @@
                     <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
                         🔍 Tìm kiếm
                     </button>
-                    <a href="{{ route('admin.vai_tro.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
+                    <a href="{{ route('admin.vai-tro.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
                         ↻ Làm mới
                     </a>
                 </div>
@@ -116,12 +116,12 @@
                             <td class="px-4 py-3 text-center">
                                 @if(!$vt->la_vai_tro_he_thong)
                                     <div class="flex items-center justify-center gap-2">
-                                        <a href="{{ route('admin.vai_tro.edit', $vt->id) }}" 
+                                        <a href="{{ route('admin.vai-tro.edit', $vt->id) }}" 
                                            class="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300 transition"
                                            title="Sửa">
                                             ✏️
                                         </a>
-                                        <form action="{{ route('admin.vai_tro.destroy', $vt->id) }}" 
+                                        <form action="{{ route('admin.vai-tro.destroy', $vt->id) }}" 
                                               method="POST" 
                                               onsubmit="return confirm('Xóa vai trò {{ $vt->ten_hien_thi }}?')"
                                               class="inline">

@@ -98,14 +98,14 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     // Quản trị hệ thống - Chỉ Admin
     Route::middleware('role:Super Admin,Admin')->group(function () {
         // Route::get('/cai-dat', [SettingController::class, 'index'])->name('settings');
-        Route::resource('vai_tro', VaiTroController::class);
+        Route::resource('vai-tro', VaiTroController::class);
     });
 
     // Quản lý loại nghỉ phép
-    Route::resource('loai_nghi_phep', LoaiNghiController::class);
+    Route::resource('loai-nghi-phep', LoaiNghiController::class);
 
     // Route quy định phải nằm trong group này
-    Route::get('quy_dinh', [QuyDinhController::class, 'index'])->name('quy_dinh.index');
+    Route::get('quy-dinh', [QuyDinhController::class, 'index'])->name('quy-dinh.index');
 
     // Quản lý duyệt đơn nghỉ phép
     Route::get('/don-nghi', [DonNghiController::class, 'index'])->name('don_nghi.index');

@@ -17,7 +17,7 @@
                         Cập nhật thông tin vai trò: <strong>{{ $vaiTro->ten_hien_thi }}</strong>
                     </p>
                 </div>
-                <a href="{{ route('admin.vai_tro.index') }}"
+                <a href="{{ route('admin.vai-tro.index') }}"
                     class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
                     ← Quay lại
                 </a>
@@ -34,7 +34,7 @@
 
         {{-- FORM --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-            <form method="POST" action="{{ route('admin.vai_tro.update', $vaiTro->id) }}" class="space-y-5">
+            <form method="POST" action="{{ route('admin.vai-tro.update', $vaiTro->id) }}" class="space-y-5">
                 @csrf
                 @method('PUT')
 
@@ -106,7 +106,7 @@
 
                 {{-- Button --}}
                 <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <a href="{{ route('admin.vai_tro.index') }}"
+                    <a href="{{ route('admin.vai-tro.index') }}"
                         class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-white transition">
                         Hủy bỏ
                     </a>

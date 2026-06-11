@@ -53,7 +53,7 @@ class VaiTroController extends Controller
             'guard_name' => 'web',
         ]);
 
-        return redirect()->route('admin.vai_tro.index')
+        return redirect()->route('admin.vai-tro.index')
             ->with('success', 'Thêm vai trò thành công!');
     }
 
@@ -92,7 +92,7 @@ class VaiTroController extends Controller
 
         $vaiTro->update($request->only(['name', 'ten_hien_thi', 'mo_ta', 'trang_thai']));
 
-        return redirect()->route('admin.vai_tro.index')
+        return redirect()->route('admin.vai-tro.index')
             ->with('success', 'Cập nhật vai trò thành công!');
     }
 
@@ -113,7 +113,7 @@ class VaiTroController extends Controller
 
         $vaiTro->delete();
 
-        return redirect()->route('admin.vai_tro.index')
+        return redirect()->route('admin.vai-tro.index')
             ->with('success', 'Xóa vai trò thành công!');
     }
 }

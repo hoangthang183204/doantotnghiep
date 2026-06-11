@@ -12,7 +12,7 @@
             </div>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Xem chi tiết toàn bộ cấu hình thuộc tính của danh mục.</p>
         </div>
-        <a href="{{ route('admin.loai_nghi_phep.index') }}" class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl text-sm font-semibold transition">
+        <a href="{{ route('admin.loai-nghi-phep.index') }}" class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl text-sm font-semibold transition">
             ← Danh sách loại nghỉ
         </a>
     </div>
@@ -63,7 +63,7 @@
         </div>
 
         <div class="p-5 bg-gray-50 dark:bg-gray-800/50 flex justify-end gap-2 border-t border-gray-100 dark:border-gray-700">
-            <a href="{{ route('admin.loai_nghi_phep.edit', $loaiNghi->id) }}" class="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl transition shadow-md shadow-amber-100 dark:shadow-none transform hover:-translate-y-0.5">
+            <a href="{{ route('admin.loai-nghi-phep.edit', $loaiNghi->id) }}" class="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl transition shadow-md shadow-amber-100 dark:shadow-none transform hover:-translate-y-0.5">
                 Chỉnh sửa thông tin ngay
             </a>
         </div>

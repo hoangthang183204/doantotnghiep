@@ -7,7 +7,7 @@
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Tạo loại nghỉ phép mới</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Thêm mới danh mục loại nghỉ phép vào hệ thống cấu hình HR Flow.</p>
         </div>
-        <a href="{{ route('admin.loai_nghi_phep.index') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl text-sm font-semibold transition-all shadow-sm">
+        <a href="{{ route('admin.loai-nghi-phep.index') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl text-sm font-semibold transition-all shadow-sm">
             ← Quay lại danh sách
         </a>
     </div>
@@ -17,7 +17,7 @@
             <h3 class="font-bold text-gray-900 dark:text-white text-base">Thông tin danh mục</h3>
         </div>
 
-        <form action="{{ route('admin.loai_nghi_phep.store') }}" method="POST" class="p-6 space-y-6">
+        <form action="{{ route('admin.loai-nghi-phep.store') }}" method="POST" class="p-6 space-y-6">
             @csrf
             
             {{-- Thiết kế 2 hàng rộng rãi --}}

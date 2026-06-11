@@ -67,7 +67,7 @@ class LoaiNghiController extends Controller
     // 2. Lưu vào database
     LoaiNghiPhep::create($request->all());
 
-    return redirect()->route('admin.loai_nghi_phep.index')
+    return redirect()->route('admin.loai-nghi-phep.index')
                      ->with('success', 'Thêm mới loại nghỉ phép thành công!');
 }
 
@@ -104,7 +104,7 @@ class LoaiNghiController extends Controller
 
     $loaiNghi->update($request->all());
 
-    return redirect()->route('admin.loai_nghi_phep.index')
+    return redirect()->route('admin.loai-nghi-phep.index')
                      ->with('success', 'Cập nhật loại nghỉ phép thành công!');
 }
 }

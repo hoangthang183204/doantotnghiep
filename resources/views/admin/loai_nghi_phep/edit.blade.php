@@ -7,13 +7,13 @@
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Chỉnh sửa thông tin loại nghỉ phép</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Cập nhật và thay đổi các thông số áp dụng cho danh mục.</p>
         </div>
-        <a href="{{ route('admin.loai_nghi_phep.index') }}" class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl text-sm font-semibold transition">
+        <a href="{{ route('admin.loai-nghi-phep.index') }}" class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl text-sm font-semibold transition">
             ← Hủy bỏ thay đổi
         </a>
     </div>
 
     <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
-        <form action="{{ route('admin.loai_nghi_phep.update', $loaiNghi->id) }}" method="POST" class="space-y-6">
+        <form action="{{ route('admin.loai-nghi-phep.update', $loaiNghi->id) }}" method="POST" class="space-y-6">
             @csrf
             @method('PUT')
             
@@ -56,7 +56,7 @@
             </div>
 
             <div class="flex justify-end gap-3 pt-6 border-t border-gray-100 dark:border-gray-700">
-                <a href="{{ route('admin.loai_nghi_phep.index') }}" class="px-5 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-200 rounded-xl text-sm font-semibold transition">
+                <a href="{{ route('admin.loai-nghi-phep.index') }}" class="px-5 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-200 rounded-xl text-sm font-semibold transition">
                     Hủy sửa
                 </a>
                 <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition shadow-md shadow-blue-200 dark:shadow-none transform hover:-translate-y-0.5">
