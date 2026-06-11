@@ -9,18 +9,18 @@
     {{-- HEADER --}}
     <div class="bg-white rounded-xl shadow-sm p-5">
 
-        <h1 class="text-xl font-bold text-gray-800">
+        <h1 class="text-xl font-bold text-gray-800 dark:text-white">
             Gửi Email Phỏng Vấn
         </h1>
 
-        <p class="text-sm text-gray-500 mt-1">
+        <p class="text-sm text-gray-500 mt-1 dark:text-white">
             Chọn ứng viên và nhập thông tin lịch phỏng vấn để gửi email.
         </p>
 
     </div>
 
     {{-- FORM --}}
-    <div class="bg-white rounded-xl shadow-sm p-5">
+    <div class="bg-white rounded-xl shadow-sm p-5 ">
 
         <form method="POST" action="{{ route('admin.ung_vien.email.send') }}"
               class="space-y-5">
@@ -29,13 +29,13 @@
 
             {{-- ỨNG VIÊN --}}
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
+                <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-white">
                     Ứng viên
                 </label>
 
                 <select name="ung_vien_id"
                         required
-                        class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                        class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 ">
 
                     <option value="">-- Chọn ứng viên --</option>
 
@@ -50,7 +50,7 @@
 
             {{-- THỜI GIAN --}}
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
+                <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-white">
                     Thời gian phỏng vấn
                 </label>
 
@@ -62,7 +62,7 @@
 
             {{-- ĐỊA ĐIỂM --}}
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
+                <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-white">
                     Địa điểm
                 </label>
 
