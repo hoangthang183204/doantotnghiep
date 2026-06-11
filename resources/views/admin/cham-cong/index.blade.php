@@ -8,33 +8,15 @@
 
         {{-- HEADER --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800 dark:text-white">
+                    Danh sách chấm công
+                </h1>
 
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-800 dark:text-white">
-                        Quản lý chấm công
-                    </h1>
-
-                    <p class="text-gray-500 dark:text-gray-400 mt-1">
-                        Theo dõi và quản lý dữ liệu chấm công nhân viên
-                    </p>
-                </div>
-
-                <a href="{{ route('admin.cham-cong.create') }}"
-                    class="inline-flex items-center px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
-
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-
-                    Thêm chấm công
-                </a>
-
+                <p class="text-gray-500 dark:text-gray-400 mt-1">
+                    Theo dõi và tra cứu dữ liệu chấm công nhân viên
+                </p>
             </div>
-
         </div>
 
         {{-- THỐNG KÊ --}}
@@ -267,7 +249,7 @@
                             </th>
 
                             <th class="px-4 py-3 text-center text-gray-700 dark:text-gray-200">
-                                Thao tác
+                                Chi tiết
                             </th>
 
                         </tr>
@@ -345,27 +327,8 @@
                                         <a href="{{ route('admin.cham-cong.show', $item->id) }}"
                                             class="px-3 py-2 text-sm rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300">
 
-                                            Xem
+                                           Chi tiết 
                                         </a>
-
-                                        <a href="{{ route('admin.cham-cong.edit', $item->id) }}"
-                                            class="px-3 py-2 text-sm rounded-lg bg-yellow-100 text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-900 dark:text-yellow-300">
-
-                                            Sửa
-                                        </a>
-
-                                        <form action="{{ route('admin.cham-cong.destroy', $item->id) }}" method="POST"
-                                            onsubmit="return confirm('Bạn có chắc muốn xóa bản ghi này?')">
-
-                                            @csrf
-                                            @method('DELETE')
-
-                                            <button type="submit"
-                                                class="px-3 py-2 text-sm rounded-lg bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900 dark:text-red-300">
-
-                                                Xóa
-
-                                            </button>
 
                                         </form>
 
