@@ -159,4 +159,39 @@ class ChamCongController extends Controller
             );
         }
     }
+
+    // Thêm vào App\Http\Controllers\Admin\ChamCongController.php
+    public function bulkAction(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:cham_cong,id',
+            'action' => 'required|in:1,2,4',
+            'reason' => 'nullable|string'
+        ]);
+
+        $ids = is_array($request->ids) ? $request->ids : json_decode($request->ids, true);
+        $action = $request->action;
+        $reason = $request->reason;
+
+        $count = ChamCong::whereIn('id', $ids)->update([
+            'trang_thai_duyet' => $action,
+            'ghi_chu_duyet' => $reason,
+            'nguoi_phe_duyet_id' => auth()->id(),
+            'thoi_gian_phe_duyet' => now(),
+        ]);
+
+        $message = match ($action) {
+            1 => 'Phê duyệt',
+            2 => 'Từ chối',
+            4 => 'Hủy',
+            default => 'Cập nhật'
+        };
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$message} {$count} bản ghi thành công!",
+            'affected_count' => $count
+        ]);
+    }
 }
