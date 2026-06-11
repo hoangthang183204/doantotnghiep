@@ -17,11 +17,12 @@ use App\Http\Controllers\Admin\BaoCaoController;
 use App\Http\Controllers\Admin\LoaiNghiController;
 use App\Http\Controllers\Admin\HoSoController;
 use App\Http\Controllers\Admin\QuyDinhController;
-use App\Http\Controllers\Auth\LoginController;  // ← Dùng cái này
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\HopDongLaoDongController;
 use App\Http\Controllers\Admin\DuyetDonController;
 use App\Http\Controllers\Admin\TangCaController;
 use App\Http\Controllers\Admin\ThucHienTangCaController;
+use App\Http\Controllers\Admin\YeuCauDieuChinhCongAdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -116,6 +117,9 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     Route::post('/don-nghi/{id}/duyet', [DonNghiController::class, 'capNhatTrangThai'])->name('don_nghi.duyet');
 
 
+    Route::post('/admin/phe-duyet/bulk-action', [App\Http\Controllers\Admin\ChamCongController::class, 'bulkAction'])
+        ->name('admin.phe-duyet.bulk-action');
+
     Route::prefix('hop-dong')->name('hop-dong.')->middleware('role:Super Admin,Admin,HR Hành chính')->group(function () {
         Route::get('/', [HopDongLaoDongController::class, 'index'])->name('index');
         Route::get('/tao-moi', [HopDongLaoDongController::class, 'create'])->name('create');
@@ -130,6 +134,18 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
         Route::get('/sap-het-han', [HopDongLaoDongController::class, 'sapHetHan'])->name('sap-het-han');
         Route::get('/export/excel', [HopDongLaoDongController::class, 'exportExcel'])->name('export.excel');
         Route::get('/export/pdf', [HopDongLaoDongController::class, 'exportPdf'])->name('export.pdf');
+    });
+
+    // Yêu cầu điều chỉnh công
+    Route::prefix('yeu-cau-dieu-chinh-cong')->name('yeu-cau-dieu-chinh-cong.')->middleware('role')->group(function () {
+        Route::get('/', [YeuCauDieuChinhCongAdminController::class, 'index'])->name('index');
+        Route::get('/bao-cao', [YeuCauDieuChinhCongAdminController::class, 'baoCao'])->name('bao-cao');
+        Route::get('/export-bao-cao', [YeuCauDieuChinhCongAdminController::class, 'exportBaoCao'])->name('export-bao-cao'); // ← Thêm dòng này
+        Route::get('/{id}', [YeuCauDieuChinhCongAdminController::class, 'show'])->name('show');
+        Route::post('/{id}/duyet', [YeuCauDieuChinhCongAdminController::class, 'duyet'])->name('duyet');
+        Route::post('/duyet-hang-loat', [YeuCauDieuChinhCongAdminController::class, 'duyetHangLoat'])->name('duyet-hang-loat');
+        Route::delete('/{id}', [YeuCauDieuChinhCongAdminController::class, 'destroy'])->name('destroy');
+        Route::get('/{id}/download', [YeuCauDieuChinhCongAdminController::class, 'downloadFile'])->name('download');
     });
 });
 
@@ -190,6 +206,6 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
 
     Route::get('thuc-hien-tang-ca', [ThucHienTangCaController::class, 'index'])->name('thuc-hien-tang-ca.index');
     Route::get('thuc-hien-tang-ca/{id}', [ThucHienTangCaController::class, 'show'])->name('thuc-hien-tang-ca.show');
-    Route::get('thuc-hien-tang-ca/{id}/edit',[ThucHienTangCaController::class, 'edit'])->name('thuc-hien-tang-ca.edit');
-    Route::put('thuc-hien-tang-ca/{id}',[ThucHienTangCaController::class, 'update'])->name('thuc-hien-tang-ca.update');
+    Route::get('thuc-hien-tang-ca/{id}/edit', [ThucHienTangCaController::class, 'edit'])->name('thuc-hien-tang-ca.edit');
+    Route::put('thuc-hien-tang-ca/{id}', [ThucHienTangCaController::class, 'update'])->name('thuc-hien-tang-ca.update');
 });

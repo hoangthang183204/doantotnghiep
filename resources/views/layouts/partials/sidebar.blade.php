@@ -97,7 +97,7 @@
                 ],
                 [
                     'title' => 'Yêu cầu chỉnh công',
-                    'route' => '#',
+                    'route' => 'admin.yeu-cau-dieu-chinh-cong.index',
                     'icon' =>
                         '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>',
                 ],
@@ -371,3 +371,46 @@
         </ul>
     </nav>
 </aside>
+
+<style>
+    /* Căn chỉnh icon menu thẳng hàng - bình thường */
+    .sidebar .menu-toggle,
+    .sidebar>ul>li>a {
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    .sidebar .menu-toggle .w-5,
+    .sidebar>ul>li>a .w-5 {
+        width: 24px !important;
+        min-width: 24px !important;
+        height: 24px !important;
+        margin-right: 12px !important;
+    }
+
+    /* Khi sidebar thu gọn */
+    .sidebar.collapsed {
+        width: 70px !important;
+    }
+
+    .sidebar.collapsed .menu-toggle,
+    .sidebar.collapsed>ul>li>a {
+        justify-content: center !important;
+        padding: 10px 0 !important;
+    }
+
+    .sidebar.collapsed .menu-toggle .w-5,
+    .sidebar.collapsed>ul>li>a .w-5 {
+        margin-right: 0 !important;
+    }
+
+    .sidebar.collapsed .menu-text,
+    .sidebar.collapsed .logo-text,
+    .sidebar.collapsed .arrow-icon {
+        display: none !important;
+    }
+
+    .sidebar.collapsed .submenu {
+        display: none !important;
+    }
+</style>
