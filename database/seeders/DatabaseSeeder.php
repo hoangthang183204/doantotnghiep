@@ -55,5 +55,6 @@ class DatabaseSeeder extends Seeder
         $this->call(LuongNhanVienSeeder::class);
         $this->call(KhauTruLuongSeeder::class);
 
+        $this->call(QuyenSeeder::class);
     }
 }
