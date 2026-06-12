@@ -9,9 +9,20 @@ use Illuminate\Http\Request;
 
 class PhongBanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $phongBans = PhongBan::with('truong_phong')
+        $query = PhongBan::with(['truong_phong.hoSo']);
+
+        if ($request->filled('keyword')) {
+            $keyword = $request->keyword;
+
+            $query->where(function ($q) use ($keyword) {
+                $q->where('ma_phong_ban', 'like', "%{$keyword}%")
+                    ->orWhere('ten_phong_ban', 'like', "%{$keyword}%");
+            });
+        }
+
+        $phongBans = $query
             ->orderBy('id', 'asc')
             ->paginate(10);
 
@@ -21,7 +32,7 @@ class PhongBanController extends Controller
     public function create()
     {
         $nguoiDungs = NguoiDung::where('trang_thai', 1)->get();
-        
+
         return view('admin.phong-ban.create', compact('nguoiDungs'));
     }
 
@@ -79,15 +90,15 @@ class PhongBanController extends Controller
     public function destroy($id)
     {
         $phongBan = PhongBan::findOrFail($id);
-        
+
         if ($phongBan->nguoi_dungs()->count() > 0) {
             return back()->with('error', 'Không thể xóa vì phòng ban đang có nhân viên.');
         }
-        
+
         if ($phongBan->chuc_vus()->count() > 0) {
             return back()->with('error', 'Không thể xóa vì phòng ban đang có chức vụ.');
         }
-        
+
         $phongBan->delete();
 
         return back()->with('success', 'Xóa thành công');
