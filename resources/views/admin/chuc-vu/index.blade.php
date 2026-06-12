@@ -66,14 +66,6 @@
                             </th>
 
                             <th class="px-4 py-3 text-left font-semibold text-gray-800 dark:text-gray-100">
-                                Lương cơ bản
-                            </th>
-
-                            <th class="px-4 py-3 text-left font-semibold text-gray-800 dark:text-gray-100">
-                                Hệ số
-                            </th>
-
-                            <th class="px-4 py-3 text-left font-semibold text-gray-800 dark:text-gray-100">
                                 Trạng thái
                             </th>
 
@@ -107,14 +99,6 @@
                                     {{ $chucVu->phong_ban->ten_phong_ban ?? '-' }}
                                 </td>
 
-                                <td class="px-4 py-3 text-gray-700 dark:text-gray-300">
-                                    {{ number_format($chucVu->luong_co_ban, 0, ',', '.') }} VNĐ
-                                </td>
-
-                                <td class="px-4 py-3 text-gray-700 dark:text-gray-300">
-                                    {{ $chucVu->he_so_luong }}
-                                </td>
-
                                 <td class="px-4 py-3">
 
                                     @if ($chucVu->trang_thai)
@@ -140,16 +124,25 @@
                                             Sửa
                                         </a>
 
+                                        {{-- NÚT ẨN / HIỂN THỊ CHỨC VỤ --}}
                                         <form action="{{ route('admin.chuc-vu.destroy', $chucVu->id) }}" method="POST">
 
                                             @csrf
                                             @method('DELETE')
 
-                                            <button type="submit"
-                                                onclick="return confirm('Bạn có chắc muốn xóa chức vụ này?')"
-                                                class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition">
-                                                Xóa
-                                            </button>
+                                            @if($chucVu->trang_thai == 1)
+                                                <button type="submit"
+                                                    onclick="return confirm('Bạn có chắc muốn ẩn chức vụ này khỏi hệ thống?')"
+                                                    class="px-3 py-1.5 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-sm transition">
+                                                    Ẩn
+                                                </button>
+                                            @else
+                                                <button type="submit"
+                                                    onclick="return confirm('Bạn có chắc muốn hiển thị lại chức vụ này?')"
+                                                    class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition">
+                                                    Hiển thị
+                                                </button>
+                                            @endif
 
                                         </form>
 
@@ -162,8 +155,7 @@
                         @empty
 
                             <tr>
-
-                                <td colspan="8" class="py-8 text-center text-gray-500 dark:text-gray-400">
+                                <td colspan="6" class="py-8 text-center text-gray-500 dark:text-gray-400">
                                     Chưa có dữ liệu chức vụ
                                 </td>
 

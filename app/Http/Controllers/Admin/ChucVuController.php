@@ -28,12 +28,11 @@ class ChucVuController extends Controller
 
     public function store(Request $request)
     {
+        // Đã gỡ bỏ validate của 'luong_co_ban' và 'he_so_luong'
         $request->validate([
             'ten' => 'required|string|max:255',
             'ma' => 'required|string|max:255|unique:chuc_vu,ma',
             'phong_ban_id' => 'required|exists:phong_ban,id',
-            'luong_co_ban' => 'nullable|numeric|min:0',
-            'he_so_luong' => 'nullable|numeric|min:0|max:10',
             'mo_ta' => 'nullable|string',
             'trang_thai' => 'boolean',
         ]);
@@ -64,12 +63,11 @@ class ChucVuController extends Controller
     {
         $chucVu = ChucVu::findOrFail($id);
 
+        // Đã gỡ bỏ validate của 'luong_co_ban' và 'he_so_luong'
         $request->validate([
             'ten' => 'required|string|max:255',
             'ma' => 'required|string|max:255|unique:chuc_vu,ma,' . $id,
             'phong_ban_id' => 'required|exists:phong_ban,id',
-            'luong_co_ban' => 'nullable|numeric|min:0',
-            'he_so_luong' => 'nullable|numeric|min:0|max:10',
             'mo_ta' => 'nullable|string',
             'trang_thai' => 'boolean',
         ]);
@@ -82,15 +80,19 @@ class ChucVuController extends Controller
     }
 
     public function destroy($id)
-    {
-        $chucVu = ChucVu::findOrFail($id);
-        
-        if ($chucVu->nguoi_dungs()->count() > 0) {
-            return back()->with('error', 'Không thể xóa vì đang có nhân viên giữ chức vụ này.');
-        }
-        
-        $chucVu->delete();
+{
+    $chucVu = ChucVu::findOrFail($id);
+    
+    // Nếu trạng thái đang là 1 thì chuyển thành 0, ngược lại đang 0 thì chuyển thành 1
+    $newStatus = $chucVu->trang_thai == 1 ? 0 : 1;
+    
+    $chucVu->update([
+        'trang_thai' => $newStatus
+    ]);
 
-        return back()->with('success', 'Xóa chức vụ thành công');
-    }
+    // Tùy chỉnh câu thông báo trả về
+    $message = $newStatus == 1 ? 'Đã hiển thị lại chức vụ thành công' : 'Đã ẩn chức vụ thành công';
+
+    return back()->with('success', $message);
+}
 }
