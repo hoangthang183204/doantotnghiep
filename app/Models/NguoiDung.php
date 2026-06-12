@@ -131,4 +131,26 @@ class NguoiDung extends Authenticatable implements JWTSubject
 
         return $this->ten_dang_nhap;
     }
+
+    public function hasPermission($permissionName)
+    {
+        // Kiểm tra qua vai trò
+        foreach ($this->vaiTros as $vaiTro) {
+            if ($vaiTro->hasPermission($permissionName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function canAccess($permissionName)
+    {
+        return $this->hasPermission($permissionName);
+    }
+
+    public function vaiTros()
+    {
+        return $this->belongsToMany(VaiTro::class, 'nguoi_dung_vai_tro', 'nguoi_dung_id', 'vai_tro_id')
+            ->withTimestamps();
+    }
 }
