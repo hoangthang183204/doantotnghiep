@@ -90,36 +90,6 @@
                 </select>
             </div>
 
-            {{-- LƯƠNG + HỆ SỐ --}}
-            <div class="grid md:grid-cols-2 gap-5">
-
-                <div>
-                    <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
-                        Lương cơ bản
-                    </label>
-
-                    <input
-                        type="number"
-                        name="luong_co_ban"
-                        value="{{ old('luong_co_ban', $chucVu->luong_co_ban) }}"
-                        class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-3">
-                </div>
-
-                <div>
-                    <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
-                        Hệ số lương
-                    </label>
-
-                    <input
-                        type="number"
-                        step="0.01"
-                        name="he_so_luong"
-                        value="{{ old('he_so_luong', $chucVu->he_so_luong) }}"
-                        class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-3">
-                </div>
-
-            </div>
-
             {{-- MÔ TẢ --}}
             <div>
                 <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">

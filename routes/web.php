@@ -114,12 +114,15 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     // ========== CHỨC VỤ ==========
     Route::middleware('permission:chucvu.view')->group(function () {
         Route::get('/chuc-vu', [ChucVuController::class, 'index'])->name('chuc-vu.index');
-        Route::get('/chuc-vu/{id}', [ChucVuController::class, 'show'])->name('chuc-vu.show');
+        
     });
 
     Route::middleware('permission:chucvu.create')->group(function () {
         Route::get('/chuc-vu/create', [ChucVuController::class, 'create'])->name('chuc-vu.create');
         Route::post('/chuc-vu', [ChucVuController::class, 'store'])->name('chuc-vu.store');
+    });
+    Route::middleware('permission:chucvu.view')->group(function () {
+        Route::get('/chuc-vu/{id}', [ChucVuController::class, 'show'])->name('chuc-vu.show');
     });
 
     Route::middleware('permission:chucvu.edit')->group(function () {
