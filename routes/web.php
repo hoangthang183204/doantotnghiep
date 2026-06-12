@@ -92,14 +92,15 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     });
 
     // ========== PHÒNG BAN ==========
-    Route::middleware('permission:department.view')->group(function () {
-        Route::get('/phong-ban', [PhongBanController::class, 'index'])->name('phong-ban.index');
-        Route::get('/phong-ban/{id}', [PhongBanController::class, 'show'])->name('phong-ban.show');
-    });
 
     Route::middleware('permission:department.create')->group(function () {
         Route::get('/phong-ban/create', [PhongBanController::class, 'create'])->name('phong-ban.create');
         Route::post('/phong-ban', [PhongBanController::class, 'store'])->name('phong-ban.store');
+    });
+    
+    Route::middleware('permission:department.view')->group(function () {
+        Route::get('/phong-ban', [PhongBanController::class, 'index'])->name('phong-ban.index');
+        Route::get('/phong-ban/{id}', [PhongBanController::class, 'show'])->name('phong-ban.show');
     });
 
     Route::middleware('permission:department.edit')->group(function () {

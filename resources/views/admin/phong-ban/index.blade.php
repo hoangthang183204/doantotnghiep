@@ -15,6 +15,7 @@
                         Danh sách phòng ban trong hệ thống nhân sự
                     </p>
                 </div>
+
                 <a href="{{ route('admin.phong-ban.create') }}"
                     class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition">
                     + Thêm phòng ban
@@ -27,11 +28,12 @@
                     <div class="flex gap-3">
                         <input type="text" name="keyword" value="{{ request('keyword') }}"
                             placeholder="Tìm theo mã, tên phòng ban..."
-                            class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 dark:bg-gray-700">
+                            class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2bg-white dark:bg-gray-700text-gray-800 dark:text-whiteplaceholder-gray-400 dark:placeholder-gray-300focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <button type="submit"
                             class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
                             🔍 Tìm
                         </button>
+
                         <a href="{{ route('admin.phong-ban.index') }}"
                             class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
                             ↻ Reset
@@ -49,13 +51,14 @@
             </div>
         @endif
 
+        {{-- ERROR --}}
         @if (session('error'))
             <div class="px-4 py-3 rounded-lg bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200">
                 {{ session('error') }}
             </div>
         @endif
 
-        {{-- TABLE CARD --}}
+        {{-- TABLE --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
 
             <div class="overflow-x-auto">
@@ -69,7 +72,7 @@
                             <th class="p-3">NGÂN SÁCH</th>
                             <th class="p-3">TRƯỞNG PHÒNG</th>
                             <th class="p-3">TRẠNG THÁI</th>
-                            <th class="p-3 text-center">THAO TÁC</th>
+                            <th class="p-3 text-center">HÀNH ĐỘNG</th>
                         </tr>
                     </thead>
 
@@ -94,12 +97,15 @@
                                 <td class="p-3">
                                     @if ($pb->truong_phong_id)
                                         @if ($pb->truong_phong && $pb->truong_phong->hoSo)
-                                            {{ $pb->truong_phong->hoSo->ho }} {{ $pb->truong_phong->hoSo->ten }}
+                                            {{ $pb->truong_phong->hoSo->ho }}
+                                            {{ $pb->truong_phong->hoSo->ten }}
                                         @else
                                             {{ $pb->truong_phong->ten_dang_nhap ?? '---' }}
                                         @endif
                                     @else
-                                        <span class="text-gray-400 italic">Chưa cập nhật</span>
+                                        <span class="text-gray-400 italic">
+                                            Chưa cập nhật
+                                        </span>
                                     @endif
                                 </td>
 
@@ -115,23 +121,62 @@
                                     @endif
                                 </td>
 
+                                {{-- ACTION --}}
                                 <td class="p-3 text-center">
-                                    <div class="flex justify-center gap-2">
-                                        <a href="{{ route('admin.phong-ban.edit', $pb->id) }}"
-                                            class="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded-lg text-xs transition">
-                                            ✏️ Sửa
-                                        </a>
 
-                                        <form method="POST" action="{{ route('admin.phong-ban.destroy', $pb->id) }}"
-                                            onsubmit="return confirm('Xóa phòng ban {{ $pb->ten_phong_ban }}? Dữ liệu liên quan cũng sẽ bị ảnh hưởng.')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"
-                                                class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs transition">
-                                                🗑️ Xóa
-                                            </button>
-                                        </form>
+                                    <div class="relative inline-block text-left">
+
+                                        <button type="button" onclick="toggleDropdown({{ $pb->id }})"
+                                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+
+                                            ⋮
+
+                                        </button>
+
+                                        @if ($loop->last)
+                                            {{-- Dòng cuối mở lên trên --}}
+                                            <div id="dropdown-{{ $pb->id }}"
+                                                class="hidden absolute right-0 bottom-full mb-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[9999]">
+
+                                                <a href="{{ route('admin.phong-ban.show', $pb->id) }}"
+                                                    class="block px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+
+                                                    👁️ Xem chi tiết
+
+                                                </a>
+
+                                                <a href="{{ route('admin.phong-ban.edit', $pb->id) }}"
+                                                    class="block px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+
+                                                    ✏️ Chỉnh sửa
+
+                                                </a>
+
+                                            </div>
+                                        @else
+                                            {{-- Các dòng khác mở xuống --}}
+                                            <div id="dropdown-{{ $pb->id }}"
+                                                class="hidden absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[9999]">
+
+                                                <a href="{{ route('admin.phong-ban.show', $pb->id) }}"
+                                                    class="block px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+
+                                                    👁️ Xem chi tiết
+
+                                                </a>
+
+                                                <a href="{{ route('admin.phong-ban.edit', $pb->id) }}"
+                                                    class="block px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+
+                                                    ✏️ Chỉnh sửa
+
+                                                </a>
+
+                                            </div>
+                                        @endif
+
                                     </div>
+
                                 </td>
 
                             </tr>
@@ -159,4 +204,32 @@
         </div>
 
     </div>
+
+    <script>
+        function toggleDropdown(id) {
+
+            document.querySelectorAll('[id^="dropdown-"]').forEach(function(item) {
+
+                if (item.id !== 'dropdown-' + id) {
+                    item.classList.add('hidden');
+                }
+
+            });
+
+            document.getElementById('dropdown-' + id).classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', function(event) {
+
+            if (!event.target.closest('.relative')) {
+
+                document.querySelectorAll('[id^="dropdown-"]').forEach(function(item) {
+                    item.classList.add('hidden');
+                });
+
+            }
+
+        });
+    </script>
+
 @endsection
