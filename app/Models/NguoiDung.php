@@ -93,6 +93,11 @@ class NguoiDung extends Authenticatable implements JWTSubject
         return $this->hasMany(ChamCong::class, 'nguoi_dung_id');
     }
 
+    public function taiLieus()
+    {
+        return $this->hasMany(TaiLieu::class, 'nguoi_dung_id');
+    }
+
     public function don_xin_nghis()
     {
         return $this->hasMany(DonXinNghi::class, 'nguoi_dung_id');

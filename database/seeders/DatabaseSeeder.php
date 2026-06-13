@@ -30,6 +30,9 @@ class DatabaseSeeder extends Seeder
         $this->call(NguoiDungSeeder::class);
         $this->call(HoSoNguoiDungSeeder::class);
 
+        // CV
+        $this->call(TaiLieuSeeder::class);
+
         // Hợp đồng
         $this->call(HopDongLaoDongSeeder::class);
 

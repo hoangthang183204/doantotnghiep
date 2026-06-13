@@ -77,7 +77,8 @@
 
                     {{-- THÔNG TIN CƠ BẢN --}}
                     <div class="mb-6">
-                        <h3 class="text-md font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
+                        <h3
+                            class="text-md font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
                             📋 Thông tin cơ bản
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -105,7 +106,7 @@
                             <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                                 <div class="text-sm text-gray-500 dark:text-gray-400">Giới tính</div>
                                 <div class="font-medium text-gray-800 dark:text-white">
-                                    @if($hoSo->gioi_tinh == 'nam')
+                                    @if ($hoSo->gioi_tinh == 'nam')
                                         Nam
                                     @elseif($hoSo->gioi_tinh == 'nu')
                                         Nữ
@@ -133,7 +134,8 @@
 
                     {{-- ĐỊA CHỈ --}}
                     <div class="mb-6">
-                        <h3 class="text-md font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
+                        <h3
+                            class="text-md font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
                             🏠 Địa chỉ
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -155,7 +157,8 @@
 
                     {{-- GIẤY TỜ TÙY THÂN --}}
                     <div class="mb-6">
-                        <h3 class="text-md font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
+                        <h3
+                            class="text-md font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
                             🪪 Giấy tờ tùy thân
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -192,7 +195,8 @@
 
                     {{-- LIÊN HỆ KHẨN CẤP --}}
                     <div class="mb-6">
-                        <h3 class="text-md font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
+                        <h3
+                            class="text-md font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
                             📞 Liên hệ khẩn cấp
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -220,27 +224,67 @@
                     </div>
 
                     {{-- ẢNH CCCD --}}
-                    @if($hoSo->anh_cccd_truoc || $hoSo->anh_cccd_sau)
-                    <div>
-                        <h3 class="text-md font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
-                            🖼️ Ảnh CCCD
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            @if($hoSo->anh_cccd_truoc)
-                            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
-                                <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">Mặt trước</div>
-                                <img src="{{ asset('storage/' . $hoSo->anh_cccd_truoc) }}" alt="CCCD mặt trước" class="max-w-full h-auto rounded-lg shadow">
-                            </div>
-                            @endif
+                    @if ($hoSo->anh_cccd_truoc || $hoSo->anh_cccd_sau)
+                        <div>
+                            <h3
+                                class="text-md font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
+                                🖼️ Ảnh CCCD
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                @if ($hoSo->anh_cccd_truoc)
+                                    <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
+                                        <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">Mặt trước</div>
+                                        <img src="{{ asset('storage/' . $hoSo->anh_cccd_truoc) }}" alt="CCCD mặt trước"
+                                            class="max-w-full h-auto rounded-lg shadow">
+                                    </div>
+                                @endif
 
-                            @if($hoSo->anh_cccd_sau)
-                            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
-                                <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">Mặt sau</div>
-                                <img src="{{ asset('storage/' . $hoSo->anh_cccd_sau) }}" alt="CCCD mặt sau" class="max-w-full h-auto rounded-lg shadow">
+                                @if ($hoSo->anh_cccd_sau)
+                                    <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
+                                        <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">Mặt sau</div>
+                                        <img src="{{ asset('storage/' . $hoSo->anh_cccd_sau) }}" alt="CCCD mặt sau"
+                                            class="max-w-full h-auto rounded-lg shadow">
+                                    </div>
+                                @endif
                             </div>
-                            @endif
                         </div>
-                    </div>
+                    @endif
+
+                    @if (isset($cv) && $cv)
+                        <div class="mt-6">
+                            <h3
+                                class="text-md font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
+                                📄 Hồ sơ CV
+                            </h3>
+
+                            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+
+                                <div class="mb-3">
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                                        Tên tài liệu
+                                    </div>
+
+                                    <div class="font-medium text-gray-800 dark:text-white">
+                                        {{ $cv->tieu_de }}
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-3">
+
+                                    <a href="{{ Storage::url($cv->duong_dan_file) }}" target="_blank"
+                                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                                        👁 Xem CV
+                                    </a>
+
+                                    <a href="{{ Storage::url($cv->duong_dan_file) }}" download
+                                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+                                        ⬇ Tải xuống
+                                    </a>
+
+                                </div>
+
+                            </div>
+                        </div>
                     @endif
 
                 </div>

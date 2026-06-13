@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\HoSo;
 use App\Models\NguoiDung;
 use App\Models\PhongBan;
+use App\Models\TaiLieu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -66,11 +67,35 @@ class HoSoController extends Controller
      */
     public function show($id)
     {
-        $hoSo = HoSo::with('nguoi_dung.vai_tro', 'nguoi_dung.phong_ban', 'nguoi_dung.chuc_vu')
-            ->findOrFail($id);
+        $hoSo = HoSo::with(
+            'nguoi_dung.vai_tro',
+            'nguoi_dung.phong_ban',
+            'nguoi_dung.chuc_vu'
+        )->findOrFail($id);
 
-        return view('admin.ho-so.show', compact('hoSo'));
+        $cv = TaiLieu::where('nguoi_dung_id', $hoSo->nguoi_dung_id)
+            ->where('loai_tai_lieu', 'cv')
+            ->latest()
+            ->first();
+
+        return view('admin.ho-so.show', compact('hoSo', 'cv'));
     }
+
+    public function viewCv($id)
+{
+    $cv = TaiLieu::findOrFail($id);
+
+    $path = storage_path('app/public/' . $cv->duong_dan_file);
+
+    if (!file_exists($path)) {
+        abort(404);
+    }
+
+    return response()->file($path, [
+        'Content-Type' => 'application/pdf',
+        'Content-Disposition' => 'inline; filename="'.basename($path).'"',
+    ]);
+}
 
     /**
      * Form sửa hồ sơ
@@ -184,5 +209,4 @@ class HoSoController extends Controller
         // TODO: Implement export to Excel
         return redirect()->back()->with('info', 'Tính năng đang phát triển');
     }
-    
 }

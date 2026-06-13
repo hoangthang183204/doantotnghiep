@@ -65,6 +65,7 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
         Route::get('/{id}', [HoSoController::class, 'show'])->name('show');
         Route::post('/{id}/resign', [HoSoController::class, 'resign'])->name('resign');
         Route::post('/{id}/activate', [HoSoController::class, 'activate'])->name('activate');
+        Route::get('/cv/view/{id}', [HoSoController::class, 'viewCv'])->name('cv.view');
     });
 
     // ========== QUẢN LÝ NGƯỜI DÙNG ==========
