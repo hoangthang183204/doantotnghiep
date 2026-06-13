@@ -8,14 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 class HopDongLaoDong extends Model
 {
     use HasFactory;
-    
-    // Chỉ định đúng tên bảng
+
     protected $table = 'hop_dong_lao_dong';
-    
+
     protected $fillable = [
-        'created_by',
         'nguoi_dung_id',
         'chuc_vu_id',
+        'chuc_vu',
         'so_hop_dong',
         'loai_hop_dong',
         'ngay_bat_dau',
@@ -24,47 +23,79 @@ class HopDongLaoDong extends Model
         'phu_cap',
         'hinh_thuc_lam_viec',
         'dia_diem_lam_viec',
-        'ghi_chu',
-        'ly_do_huy',
         'duong_dan_file',
         'file_dinh_kem',
         'file_hop_dong_da_ky',
         'dieu_khoan',
         'trang_thai_hop_dong',
         'trang_thai_ky',
-        'trang_thai_tai_ky',
         'nguoi_ky_id',
         'thoi_gian_ky',
+        'ghi_chu',
+        'ly_do_huy',
         'nguoi_huy_id',
-        'thoi_gian_huy'
+        'thoi_gian_huy',
+        'trang_thai_tai_ky',
+        'created_by',
     ];
-    
-    protected $casts = [
-        'ngay_bat_dau' => 'date',
-        'ngay_ket_thuc' => 'date',
-        'thoi_gian_ky' => 'datetime',
-        'thoi_gian_huy' => 'datetime',
-        'luong_co_ban' => 'decimal:2',
-        'phu_cap' => 'decimal:2',
-    ];
-    
-    public function nguoi_dung()
+
+    // ========== THÊM CÁC QUAN HỆ SAU ==========
+
+    /**
+     * Quan hệ với NguoiDung (nhân viên)
+     */
+    public function nguoiDung()
     {
         return $this->belongsTo(NguoiDung::class, 'nguoi_dung_id');
     }
-    
-    public function chuc_vu()
+
+    /**
+     * Quan hệ với HoSoNguoiDung (thông qua nguoi_dung_id)
+     */
+    public function hoSoNguoiDung()
     {
-        return $this->belongsTo(ChucVu::class, 'chuc_vu_id');
+        return $this->belongsTo(HoSoNguoiDung::class, 'nguoi_dung_id', 'nguoi_dung_id');
     }
-    
-    public function created_by_user()
-    {
-        return $this->belongsTo(NguoiDung::class, 'created_by');
-    }
-    
-    public function nguoi_ky()
+
+    /**
+     * Quan hệ với NguoiDung (người ký hợp đồng)
+     */
+    public function nguoiKy()
     {
         return $this->belongsTo(NguoiDung::class, 'nguoi_ky_id');
     }
+
+    /**
+     * Quan hệ với NguoiDung (người hủy hợp đồng)
+     */
+    public function nguoiHuy()
+    {
+        return $this->belongsTo(NguoiDung::class, 'nguoi_huy_id');
+    }
+
+    /**
+     * Quan hệ với ChucVu (chức vụ)
+     */
+    public function chucVu()
+    {
+        return $this->belongsTo(ChucVu::class, 'chuc_vu_id');
+    }
+
+    /**
+     * Quan hệ với NguoiDung (người tạo hợp đồng)
+     */
+    public function nguoiGuiHopDong()
+    {
+        return $this->belongsTo(NguoiDung::class, 'created_by');
+    }
+
+    /**
+     * Quan hệ với Luong (bảng lương)
+     */
+    public function luong()
+    {
+        return $this->hasOne(Luong::class, 'hop_dong_lao_dong_id');
+    }
+
+    // ========== KẾT THÚC ==========
 }

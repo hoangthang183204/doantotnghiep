@@ -233,42 +233,41 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
         Route::put('/quy-dinh', [QuyDinhController::class, 'update'])->name('quy-dinh.update');
     });
 
-    // ========== HỢP ĐỒNG ==========
-    Route::middleware('permission:contract.view')->group(function () {
-        Route::get('/hop-dong', [HopDongLaoDongController::class, 'index'])->name('hop-dong.index');
-        Route::get('/hop-dong/{id}', [HopDongLaoDongController::class, 'show'])->name('hop-dong.show');
-        Route::get('/hop-dong/sap-het-han', [HopDongLaoDongController::class, 'sapHetHan'])->name('hop-dong.sap-het-han');
-    });
+    Route::prefix('hop-dong')->group(function () {
 
-    Route::middleware('permission:contract.create')->group(function () {
-        Route::get('/hop-dong/tao-moi', [HopDongLaoDongController::class, 'create'])->name('hop-dong.create');
-        Route::post('/hop-dong/tao-moi', [HopDongLaoDongController::class, 'store'])->name('hop-dong.store');
-    });
+        Route::get('/cua-toi', [HopDongLaoDongController::class, 'cuaToi'])->name('hop-dong.cua-toi');
+        Route::get('/luu-tru', [HopDongLaoDongController::class, 'luuTru'])->name('hop-dong.luu-tru');
+        Route::get('/thong-ke', [HopDongLaoDongController::class, 'thongKe'])->name('hop-dong.thong-ke');
+        Route::get('/export', [HopDongLaoDongController::class, 'export'])->name('hop-dong.export');
 
-    Route::middleware('permission:contract.edit')->group(function () {
-        Route::get('/hop-dong/{id}/sua', [HopDongLaoDongController::class, 'edit'])->name('hop-dong.edit');
-        Route::put('/hop-dong/{id}', [HopDongLaoDongController::class, 'update'])->name('hop-dong.update');
-    });
 
-    Route::middleware('permission:contract.delete')->group(function () {
-        Route::delete('/hop-dong/{id}', [HopDongLaoDongController::class, 'destroy'])->name('hop-dong.destroy');
-    });
+        Route::get('/', [HopDongLaoDongController::class, 'index'])->name('hop-dong.index');
 
-    Route::middleware('permission:contract.renew')->group(function () {
-        Route::post('/hop-dong/{id}/gia-han', [HopDongLaoDongController::class, 'giaHan'])->name('hop-dong.gia-han');
-    });
+        // Đưa lên trước
+        Route::get('/tao-moi', [HopDongLaoDongController::class, 'create'])
+            ->name('hop-dong.create');
 
-    Route::middleware('permission:contract.terminate')->group(function () {
-        Route::post('/hop-dong/{id}/thanh-ly', [HopDongLaoDongController::class, 'thanhLy'])->name('hop-dong.thanh-ly');
-    });
+        Route::post('/tao-moi', [HopDongLaoDongController::class, 'store'])
+            ->name('hop-dong.store');
 
-    Route::middleware('permission:contract.sign')->group(function () {
-        Route::post('/hop-dong/{id}/gui-ky', [HopDongLaoDongController::class, 'guiYeuCauKy'])->name('hop-dong.gui-ky');
-    });
+        // Để xuống dưới cùng
+        Route::get('/{id}', [HopDongLaoDongController::class, 'show'])
+            ->name('hop-dong.show');
 
-    Route::middleware('permission:contract.export')->group(function () {
-        Route::get('/hop-dong/export/excel', [HopDongLaoDongController::class, 'exportExcel'])->name('hop-dong.export.excel');
-        Route::get('/hop-dong/export/pdf', [HopDongLaoDongController::class, 'exportPdf'])->name('hop-dong.export.pdf');
+        Route::get('/{id}/sua', [HopDongLaoDongController::class, 'edit'])
+            ->name('hop-dong.edit');
+
+        Route::put('/{id}', [HopDongLaoDongController::class, 'update'])
+            ->name('hop-dong.update');
+
+        Route::delete('/{id}', [HopDongLaoDongController::class, 'destroy'])
+            ->name('hop-dong.destroy');
+
+        Route::post('/{id}/gui-ky', [HopDongLaoDongController::class, 'guiKy'])
+            ->name('hop-dong.gui-ky');
+
+        Route::post('/{id}/huy', [HopDongLaoDongController::class, 'huy'])
+            ->name('hop-dong.huy');
     });
 
     // ========== YÊU CẦU ĐIỀU CHỈNH CÔNG ==========

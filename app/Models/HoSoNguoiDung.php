@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class HoSoNguoiDung extends Model
 {
     use HasFactory;
-    
+
     protected $table = 'ho_so_nguoi_dung';
-    
+
     protected $fillable = [
         'nguoi_dung_id',
         'ma_nhan_vien',
@@ -30,20 +30,25 @@ class HoSoNguoiDung extends Model
         'sdt_khan_cap',
         'quan_he_khan_cap',
         'anh_cccd_truoc',
-        'anh_cccd_sau'
+        'anh_cccd_sau',
     ];
-    
+
     protected $casts = [
         'ngay_sinh' => 'date',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
-    
-    public function nguoi_dung()
+
+    // Quan hệ với NguoiDung
+    public function nguoiDung()
     {
         return $this->belongsTo(NguoiDung::class, 'nguoi_dung_id');
     }
-    
-    public function getHoTenAttribute()
+
+    // ========== THÊM QUAN HỆ NÀY ==========
+    public function hopDongLaoDong()
     {
-        return $this->ho . ' ' . $this->ten;
+        return $this->hasMany(HopDongLaoDong::class, 'nguoi_dung_id', 'nguoi_dung_id');
     }
+    // ========== KẾT THÚC ==========
 }
