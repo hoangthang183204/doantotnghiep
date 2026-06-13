@@ -122,69 +122,29 @@
                                 </td>
 
                                 {{-- ACTION --}}
-                                <td class="p-3 text-center">
-
-                                    <div class="relative inline-block text-left">
+                                <td class="px-4 py-3">
+                                    <div class="flex justify-center gap-1.5">
+                                        
+                                        {{-- Nút Xem chi tiết (Icon Con mắt) --}}
+                                        <a href="{{ route('admin.phong-ban.show', $pb->id) }}" 
+                                           class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition" 
+                                           title="Xem chi tiết">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                        </a>
                                 
-                                        <button type="button" onclick="toggleDropdown({{ $pb->id }})"
-                                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition">
-                                            ⋮
-                                        </button>
-                                
-                                        @if ($loop->last)
-                                            {{-- Dòng cuối mở lên trên --}}
-                                            <div id="dropdown-{{ $pb->id }}"
-                                                class="hidden absolute right-0 bottom-full mb-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[9999] overflow-hidden">
-                                
-                                                <a href="{{ route('admin.phong-ban.show', $pb->id) }}"
-                                                    class="flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                                                    {{-- Icon Con mắt (Xem chi tiết) --}}
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-4 h-4 mr-2 text-gray-600 dark:text-gray-400">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    </svg>
-                                                    Xem chi tiết
-                                                </a>
-                                
-                                                <a href="{{ route('admin.phong-ban.edit', $pb->id) }}"
-                                                    class="flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                                                    {{-- Icon Bút chì (Chỉnh sửa) --}}
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-4 h-4 mr-2 text-yellow-500">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                                                    </svg>
-                                                    Chỉnh sửa
-                                                </a>
-                                
-                                            </div>
-                                        @else
-                                            {{-- Các dòng khác mở xuống --}}
-                                            <div id="dropdown-{{ $pb->id }}"
-                                                class="hidden absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[9999] overflow-hidden">
-                                
-                                                <a href="{{ route('admin.phong-ban.show', $pb->id) }}"
-                                                    class="flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                                                    {{-- Icon Con mắt (Xem chi tiết) --}}
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-4 h-4 mr-2 text-gray-600 dark:text-gray-400">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    </svg>
-                                                    Xem chi tiết
-                                                </a>
-                                
-                                                <a href="{{ route('admin.phong-ban.edit', $pb->id) }}"
-                                                    class="flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                                                    {{-- Icon Bút chì (Chỉnh sửa) --}}
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-4 h-4 mr-2 text-yellow-500">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                                                    </svg>
-                                                    Chỉnh sửa
-                                                </a>
-                                
-                                            </div>
-                                        @endif
+                                        {{-- Nút Sửa (Icon Bút chì) --}}
+                                        <a href="{{ route('admin.phong-ban.edit', $pb->id) }}" 
+                                           class="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded-lg transition" 
+                                           title="Chỉnh sửa">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                        </a>
                                 
                                     </div>
-                                
                                 </td>
 
                             </tr>
