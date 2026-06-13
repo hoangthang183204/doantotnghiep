@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\TangCaController;
 use App\Http\Controllers\Admin\ThucHienTangCaController;
 use App\Http\Controllers\Admin\YeuCauDieuChinhCongAdminController;
 use App\Http\Controllers\Admin\PhanQuyenController;
+use App\Http\Controllers\Admin\HoSoCaNhanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -65,6 +66,7 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
         Route::get('/{id}', [HoSoController::class, 'show'])->name('show');
         Route::post('/{id}/resign', [HoSoController::class, 'resign'])->name('resign');
         Route::post('/{id}/activate', [HoSoController::class, 'activate'])->name('activate');
+        Route::get('/cv/view/{id}', [HoSoController::class, 'viewCv'])->name('cv.view');
     });
 
     // ========== QUẢN LÝ NGƯỜI DÙNG ==========
@@ -92,14 +94,15 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     });
 
     // ========== PHÒNG BAN ==========
-    Route::middleware('permission:department.view')->group(function () {
-        Route::get('/phong-ban', [PhongBanController::class, 'index'])->name('phong-ban.index');
-        Route::get('/phong-ban/{id}', [PhongBanController::class, 'show'])->name('phong-ban.show');
-    });
 
     Route::middleware('permission:department.create')->group(function () {
         Route::get('/phong-ban/create', [PhongBanController::class, 'create'])->name('phong-ban.create');
         Route::post('/phong-ban', [PhongBanController::class, 'store'])->name('phong-ban.store');
+    });
+    
+    Route::middleware('permission:department.view')->group(function () {
+        Route::get('/phong-ban', [PhongBanController::class, 'index'])->name('phong-ban.index');
+        Route::get('/phong-ban/{id}', [PhongBanController::class, 'show'])->name('phong-ban.show');
     });
 
     Route::middleware('permission:department.edit')->group(function () {
@@ -114,12 +117,15 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     // ========== CHỨC VỤ ==========
     Route::middleware('permission:chucvu.view')->group(function () {
         Route::get('/chuc-vu', [ChucVuController::class, 'index'])->name('chuc-vu.index');
-        Route::get('/chuc-vu/{id}', [ChucVuController::class, 'show'])->name('chuc-vu.show');
+        
     });
 
     Route::middleware('permission:chucvu.create')->group(function () {
         Route::get('/chuc-vu/create', [ChucVuController::class, 'create'])->name('chuc-vu.create');
         Route::post('/chuc-vu', [ChucVuController::class, 'store'])->name('chuc-vu.store');
+    });
+    Route::middleware('permission:chucvu.view')->group(function () {
+        Route::get('/chuc-vu/{id}', [ChucVuController::class, 'show'])->name('chuc-vu.show');
     });
 
     Route::middleware('permission:chucvu.edit')->group(function () {
@@ -130,6 +136,13 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     Route::middleware('permission:chucvu.delete')->group(function () {
         Route::delete('/chuc-vu/{id}', [ChucVuController::class, 'destroy'])->name('chuc-vu.destroy');
     });
+    // ========== HỒ SƠ CÁ NHÂN ==========
+
+    Route::get('/ho-so-ca-nhan', [HoSoCaNhanController::class, 'index'])->name('ho-so-ca-nhan.index');
+
+    // Thêm 2 route mới này:
+    Route::put('/ho-so-ca-nhan/update', [HoSoCaNhanController::class, 'update'])->name('ho-so-ca-nhan.update');
+    Route::post('/ho-so-ca-nhan/change-password', [HoSoCaNhanController::class, 'changePassword'])->name('ho-so-ca-nhan.change-password');
 
     // ========== CHẤM CÔNG ==========
     Route::middleware('permission:attendance.index')->group(function () {
