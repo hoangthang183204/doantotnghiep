@@ -91,12 +91,6 @@
                         '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>',
                 ],
                 [
-                    'title' => 'Quản lý vị trí',
-                    'route' => '#',
-                    'icon' =>
-                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>',
-                ],
-                [
                     'title' => 'Quản lý thời gian',
                     'route' => '#',
                     'icon' =>

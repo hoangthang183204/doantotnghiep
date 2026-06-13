@@ -36,8 +36,6 @@ class ChamCong extends Model
 
     protected $casts = [
         'ngay_cham_cong'      => 'date',
-        // gio_vao / gio_ra là kiểu TIME trong DB → KHÔNG cast sang datetime
-        // tránh Laravel tự gắn phần date vào gây lỗi khi lưu/đọc
         'thoi_gian_phe_duyet' => 'datetime',
         'trang_thai_duyet'    => 'integer',
         'so_gio_lam'          => 'float',
@@ -59,6 +57,66 @@ class ChamCong extends Model
     public function nguoi_phe_duyet()
     {
         return $this->belongsTo(NguoiDung::class, 'nguoi_phe_duyet_id');
+    }
+
+    // ========== CÁC METHOD MỚI THÊM CHO VIEW ==========
+
+    /**
+     * Kiểm tra đi muộn
+     */
+    public function kiemTraDiMuon(): bool
+    {
+        return $this->phut_di_muon > 0;
+    }
+
+    /**
+     * Kiểm tra về sớm
+     */
+    public function kiemTraVeSom(): bool
+    {
+        return $this->phut_ve_som > 0;
+    }
+
+    /**
+     * Getter cho giờ vào format (H:i)
+     */
+    public function getGioVaoFormatAttribute(): string
+    {
+        if (!$this->gio_vao) {
+            return '--:--';
+        }
+        // Nếu gio_vao đã là string 'H:i' hoặc 'H:i:s'
+        $parts = explode(':', $this->gio_vao);
+        return count($parts) >= 2 ? $parts[0] . ':' . $parts[1] : $this->gio_vao;
+    }
+
+    /**
+     * Getter cho giờ ra format (H:i)
+     */
+    public function getGioRaFormatAttribute(): string
+    {
+        if (!$this->gio_ra) {
+            return '--:--';
+        }
+        $parts = explode(':', $this->gio_ra);
+        return count($parts) >= 2 ? $parts[0] . ':' . $parts[1] : $this->gio_ra;
+    }
+
+    /**
+     * Getter trạng thái text tiếng Việt
+     */
+    public function getTrangThaiTextAttribute(): string
+    {
+        $statuses = [
+            'dung_gio' => 'Đúng giờ',
+            'di_muon' => 'Đi muộn',
+            've_som' => 'Về sớm',
+            'vang_mat' => 'Vắng mặt',
+            'nghi_phep' => 'Nghỉ phép',
+            'khong_cham_cong' => 'Không chấm công',
+        ];
+        
+        return $statuses[$this->trang_thai] ?? $this->trang_thai;
     }
 
     // -------------------------------------------------------------------------
