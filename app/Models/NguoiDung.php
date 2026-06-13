@@ -153,4 +153,6 @@ class NguoiDung extends Authenticatable implements JWTSubject
         return $this->belongsToMany(VaiTro::class, 'nguoi_dung_vai_tro', 'nguoi_dung_id', 'vai_tro_id')
             ->withTimestamps();
     }
+    
+    
 }
