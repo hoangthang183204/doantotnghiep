@@ -3,199 +3,248 @@
 @section('title', 'Chi tiết đơn tăng ca')
 
 @section('content')
-<div class="space-y-6 max-w-4xl mx-auto">
+<div class="space-y-6">
 
     {{-- HEADER --}}
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Chi tiết đơn tăng ca #{{ $dangKy->id }}</h1>
-            <p class="text-gray-500 mt-1">Xem thông tin và xét duyệt đơn tăng ca</p>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-1">
+                    <a href="{{ route('admin.dashboard') }}" class="hover:text-gray-700 dark:hover:text-gray-300">Dashboard</a>
+                    <span>/</span>
+                    <a href="{{ route('admin.tang-ca.index') }}" class="hover:text-gray-700 dark:hover:text-gray-300">Tăng ca</a>
+                    <span>/</span>
+                    <span class="text-gray-700 dark:text-gray-300">Chi tiết #{{ $dangKy->id }}</span>
+                </div>
+                <h1 class="text-xl font-bold text-gray-800 dark:text-white">Chi tiết đơn tăng ca</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Xem thông tin và xét duyệt đơn đăng ký tăng ca</p>
+            </div>
+            <a href="{{ route('admin.tang-ca.index') }}" 
+               class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition text-sm flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Quay lại
+            </a>
         </div>
-        <a href="{{ route('admin.tang-ca.index') }}"
-            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition text-sm">
-            ← Quay lại
-        </a>
     </div>
 
     {{-- THÔNG BÁO --}}
     @if(session('success'))
-        <div id="alert-success" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg flex justify-between">
+        <div class="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg shadow-sm flex justify-between items-center">
             <span>{{ session('success') }}</span>
-            <button onclick="document.getElementById('alert-success').remove()" class="font-bold">×</button>
+            <button onclick="this.parentElement.remove()" class="text-green-700 dark:text-green-400">×</button>
         </div>
     @endif
     @if($errors->any())
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">{{ $errors->first() }}</div>
+        <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg shadow-sm">
+            {{ $errors->first() }}
+        </div>
     @endif
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {{-- THÔNG TIN ĐĂNG KÝ --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 space-y-4">
-            <h2 class="text-lg font-semibold text-gray-800 dark:text-white border-b pb-2">Thông tin đăng ký</h2>
-
-            @php
-                $hoTen = optional($dangKy->nguoi_dung->hoSo)
-                    ? $dangKy->nguoi_dung->hoSo->ho . ' ' . $dangKy->nguoi_dung->hoSo->ten
-                    : $dangKy->nguoi_dung->ten_dang_nhap;
-            @endphp
-
-            <div class="flex justify-between">
-                <span class="text-gray-500 text-sm">Nhân viên</span>
-                <span class="font-medium text-gray-800 dark:text-white">{{ $hoTen }}</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-gray-500 text-sm">Ngày tăng ca</span>
-                <span class="font-medium text-gray-800 dark:text-white">
-                    {{ $dangKy->ngay_tang_ca->format('d/m/Y') }}
-                    ({{ ['CN','T2','T3','T4','T5','T6','T7'][$dangKy->ngay_tang_ca->dayOfWeek] }})
-                </span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-gray-500 text-sm">Giờ bắt đầu</span>
-                <span class="font-medium text-gray-800 dark:text-white">{{ $dangKy->gio_bat_dau }}</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-gray-500 text-sm">Giờ kết thúc</span>
-                <span class="font-medium text-gray-800 dark:text-white">{{ $dangKy->gio_ket_thuc }}</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-gray-500 text-sm">Số giờ tăng ca</span>
-                <span class="font-semibold text-blue-600 text-lg">{{ $dangKy->so_gio_tang_ca }}h</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-gray-500 text-sm">Loại tăng ca</span>
-                @php
-                    $loaiClass = match($dangKy->loai_tang_ca) {
-                        'ngay_thuong' => 'bg-blue-100 text-blue-700',
-                        'ngay_nghi'   => 'bg-purple-100 text-purple-700',
-                        'le_tet'      => 'bg-red-100 text-red-700',
-                        default       => 'bg-gray-100 text-gray-700',
-                    };
-                @endphp
-                <span class="px-2 py-1 rounded-full text-xs font-medium {{ $loaiClass }}">
-                    {{ \App\Models\DangKyTangCa::$loaiLabels[$dangKy->loai_tang_ca] ?? $dangKy->loai_tang_ca }}
-                </span>
-            </div>
-            <div>
-                <span class="text-gray-500 text-sm">Lý do tăng ca</span>
-                <p class="mt-1 text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 rounded-lg p-3 text-sm">
-                    {{ $dangKy->ly_do_tang_ca }}
-                </p>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-gray-500 text-sm">Ngày tạo</span>
-                <span class="text-gray-700 dark:text-gray-300 text-sm">{{ $dangKy->created_at->format('d/m/Y H:i') }}</span>
-            </div>
-        </div>
-
-        {{-- TRẠNG THÁI & DUYỆT --}}
-        <div class="space-y-5">
-
-            {{-- Trạng thái hiện tại --}}
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                <h2 class="text-lg font-semibold text-gray-800 dark:text-white border-b pb-2 mb-4">Trạng thái duyệt</h2>
-
-                @php
-                    $ttClass = match($dangKy->trang_thai) {
-                        'cho_duyet' => 'bg-yellow-100 text-yellow-700 border-yellow-300',
-                        'da_duyet'  => 'bg-green-100 text-green-700 border-green-300',
-                        'tu_choi'   => 'bg-red-100 text-red-700 border-red-300',
-                        'huy'       => 'bg-gray-100 text-gray-600 border-gray-300',
-                        default     => 'bg-gray-100 text-gray-600 border-gray-300',
-                    };
-                @endphp
-                <div class="border rounded-lg p-4 {{ $ttClass }} text-center font-semibold text-lg">
-                    {{ \App\Models\DangKyTangCa::$trangThaiLabels[$dangKy->trang_thai] ?? $dangKy->trang_thai }}
+        {{-- COLUMN LEFT --}}
+        <div class="lg:col-span-2 space-y-6">
+            
+            {{-- THÔNG TIN NHÂN VIÊN --}}
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+                    <h2 class="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        Thông tin nhân viên
+                    </h2>
                 </div>
+                <div class="p-6">
+                    <div class="flex items-center gap-4">
+                        @php
+                            $hoTen = optional($dangKy->nguoi_dung->hoSo)
+                                ? $dangKy->nguoi_dung->hoSo->ho . ' ' . $dangKy->nguoi_dung->hoSo->ten
+                                : $dangKy->nguoi_dung->ten_dang_nhap ?? 'N/A';
+                            $initial = strtoupper(substr($hoTen, 0, 1));
+                        @endphp
+                        <div class="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold text-lg">
+                            {{ $initial }}
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800 dark:text-white">{{ $hoTen }}</h3>
+                            <p class="text-xs text-gray-500">Mã NV: {{ optional($dangKy->nguoi_dung->hoSo)->ma_nhan_vien ?? 'N/A' }}</p>
+                            <p class="text-xs text-gray-500">Phòng ban: {{ optional($dangKy->nguoi_dung->phongBan)->ten_phong_ban ?? 'N/A' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                @if($dangKy->nguoi_duyet)
-                    <div class="mt-4 space-y-2 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Người duyệt</span>
-                            <span class="font-medium">
-                                {{ optional($dangKy->nguoi_duyet->hoSo)
-                                    ? $dangKy->nguoi_duyet->hoSo->ho . ' ' . $dangKy->nguoi_duyet->hoSo->ten
-                                    : $dangKy->nguoi_duyet->ten_dang_nhap }}
+            {{-- THÔNG TIN TĂNG CA --}}
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+                    <h2 class="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Thông tin tăng ca
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div>
+                            <p class="text-xs text-gray-500">Ngày tăng ca</p>
+                            <p class="font-medium text-gray-800 dark:text-white">{{ $dangKy->ngay_tang_ca->format('d/m/Y') }}</p>
+                            <p class="text-xs text-gray-400">{{ ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][$dangKy->ngay_tang_ca->dayOfWeek] }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Thời gian</p>
+                            <p class="font-medium text-gray-800 dark:text-white">{{ \Carbon\Carbon::parse($dangKy->gio_bat_dau)->format('H:i') }} - {{ \Carbon\Carbon::parse($dangKy->gio_ket_thuc)->format('H:i') }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Số giờ</p>
+                            <p class="font-semibold text-blue-600 dark:text-blue-400 text-lg">{{ number_format($dangKy->so_gio_tang_ca, 1) }}<span class="text-sm"> giờ</span></p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Loại tăng ca</p>
+                            @php
+                                $loaiLabels = ['ngay_thuong' => 'Ngày thường', 'ngay_nghi' => 'Ngày nghỉ', 'le_tet' => 'Lễ / Tết'];
+                                $loaiColors = ['ngay_thuong' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', 'ngay_nghi' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', 'le_tet' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'];
+                            @endphp
+                            <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ $loaiColors[$dangKy->loai_tang_ca] ?? 'bg-gray-100' }}">
+                                {{ $loaiLabels[$dangKy->loai_tang_ca] ?? $dangKy->loai_tang_ca }}
                             </span>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Thời gian duyệt</span>
-                            <span>{{ $dangKy->thoi_gian_duyet?->format('d/m/Y H:i') }}</span>
-                        </div>
-                        @if($dangKy->ly_do_tu_choi)
-                            <div>
-                                <span class="text-gray-500">Lý do từ chối</span>
-                                <p class="mt-1 bg-red-50 text-red-700 rounded-lg p-3">{{ $dangKy->ly_do_tu_choi }}</p>
-                            </div>
-                        @endif
                     </div>
-                @endif
+
+                    <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4">
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">📝 Lý do tăng ca</p>
+                        <p class="text-gray-700 dark:text-gray-300 text-sm">{{ $dangKy->ly_do_tang_ca }}</p>
+                    </div>
+
+                    <div class="mt-4 flex justify-between text-xs text-gray-400">
+                        <span>Ngày tạo: {{ $dangKy->created_at->format('d/m/Y H:i') }}</span>
+                        <span>Mã đơn: #{{ $dangKy->id }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- KẾT QUẢ THỰC HIỆN --}}
+            @if($dangKy->thuc_hien)
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+                    <h2 class="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Kết quả thực hiện
+                    </h2>
+                </div>
+                <div class="p-6">
+                    @php $th = $dangKy->thuc_hien; @endphp
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                            <p class="text-xs text-gray-500">Giờ bắt đầu</p>
+                            <p class="font-medium text-gray-800 dark:text-white">{{ \Carbon\Carbon::parse($th->gio_bat_dau_thuc_te)->format('H:i') }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Giờ kết thúc</p>
+                            <p class="font-medium text-gray-800 dark:text-white">{{ \Carbon\Carbon::parse($th->gio_ket_thuc_thuc_te)->format('H:i') }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Số giờ thực tế</p>
+                            <p class="font-semibold text-blue-600 dark:text-blue-400">{{ number_format($th->so_gio_tang_ca_thuc_te, 1) }} giờ</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Công tăng ca</p>
+                            <p class="font-semibold text-green-600 dark:text-green-400">{{ $th->so_cong_tang_ca }}</p>
+                        </div>
+                    </div>
+                    @if($th->cong_viec_da_thuc_hien)
+                        <div class="mt-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3">
+                            <p class="text-xs text-gray-500 mb-1">Công việc đã thực hiện</p>
+                            <p class="text-sm text-gray-700 dark:text-gray-300">{{ $th->cong_viec_da_thuc_hien }}</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+            @endif
+        </div>
+
+        {{-- COLUMN RIGHT --}}
+        <div class="space-y-6">
+            
+            {{-- TRẠNG THÁI DUYỆT --}}
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+                    <h2 class="font-semibold text-gray-800 dark:text-white">Trạng thái duyệt</h2>
+                </div>
+                <div class="p-6">
+                    @php
+                        $statusConfig = [
+                            'cho_duyet' => ['bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400', '🟡 Chờ duyệt'],
+                            'da_duyet' => ['bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', '✅ Đã duyệt'],
+                            'tu_choi' => ['bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', '❌ Từ chối'],
+                            'huy' => ['bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400', '🗑️ Đã huỷ'],
+                        ];
+                        $config = $statusConfig[$dangKy->trang_thai] ?? $statusConfig['cho_duyet'];
+                    @endphp
+                    <div class="rounded-lg p-3 text-center {{ $config[0] }}">
+                        <span class="font-medium">{{ $config[1] }}</span>
+                    </div>
+
+                    @if($dangKy->nguoi_duyet)
+                        <div class="mt-4 space-y-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">Người duyệt</span>
+                                <span class="font-medium text-gray-700 dark:text-gray-300">
+                                    {{ optional($dangKy->nguoi_duyet->hoSo)
+                                        ? $dangKy->nguoi_duyet->hoSo->ho . ' ' . $dangKy->nguoi_duyet->hoSo->ten
+                                        : $dangKy->nguoi_duyet->ten_dang_nhap }}
+                                </span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">Thời gian duyệt</span>
+                                <span class="text-gray-700 dark:text-gray-300">{{ $dangKy->thoi_gian_duyet?->format('d/m/Y H:i') }}</span>
+                            </div>
+                            @if($dangKy->ly_do_tu_choi)
+                                <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 mt-2">
+                                    <p class="text-xs text-red-600 dark:text-red-400 font-medium">Lý do từ chối</p>
+                                    <p class="text-sm text-red-700 dark:text-red-300 mt-1">{{ $dangKy->ly_do_tu_choi }}</p>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+                </div>
             </div>
 
             {{-- ACTION BUTTONS --}}
             @if($dangKy->trang_thai === 'cho_duyet')
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 space-y-3">
-                    <h2 class="text-lg font-semibold text-gray-800 dark:text-white border-b pb-2 mb-4">Xét duyệt</h2>
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+                        <h2 class="font-semibold text-gray-800 dark:text-white">Xét duyệt</h2>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <form method="POST" action="{{ route('admin.tang-ca.duyet', $dangKy->id) }}">
+                            @csrf
+                            <button type="submit" onclick="return confirm('Xác nhận phê duyệt đơn tăng ca này?')"
+                                class="w-full py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center justify-center gap-2 text-sm font-medium">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Phê duyệt
+                            </button>
+                        </form>
 
-                    {{-- Duyệt --}}
-                    <form method="POST" action="{{ route('admin.tang-ca.duyet', $dangKy->id) }}">
-                        @csrf
-                        <button type="submit"
-                            onclick="return confirm('Xác nhận phê duyệt đơn tăng ca này?')"
-                            class="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition">
-                            ✓ Phê duyệt
-                        </button>
-                    </form>
-
-                    {{-- Từ chối --}}
-                    <form method="POST" action="{{ route('admin.tang-ca.tu-choi', $dangKy->id) }}" id="form-tu-choi-detail">
-                        @csrf
-                        <div class="mb-3">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Lý do từ chối <span class="text-red-500">*</span>
-                            </label>
-                            <textarea name="ly_do_tu_choi" rows="3"
-                                placeholder="Nhập lý do từ chối..."
-                                class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-400"></textarea>
-                        </div>
-                        <button type="submit"
-                            onclick="return xacNhanTuChoi()"
-                            class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition">
-                            ✗ Từ chối
-                        </button>
-                    </form>
-                </div>
-            @endif
-
-            {{-- Thực hiện tăng ca --}}
-            @if($dangKy->thuc_hien)
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                    <h2 class="text-lg font-semibold text-gray-800 dark:text-white border-b pb-2 mb-4">Kết quả thực hiện</h2>
-                    @php $th = $dangKy->thuc_hien; @endphp
-                    <div class="space-y-2 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Giờ thực tế</span>
-                            <span>{{ $th->gio_bat_dau_thuc_te }} – {{ $th->gio_ket_thuc_thuc_te }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Số giờ thực tế</span>
-                            <span class="font-semibold text-blue-600">{{ $th->so_gio_tang_ca_thuc_te }}h</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Công tăng ca</span>
-                            <span class="font-semibold text-green-600">{{ $th->so_cong_tang_ca }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Trạng thái</span>
-                            <span>{{ \App\Models\ThucHienTangCa::$trangThaiLabels[$th->trang_thai] ?? $th->trang_thai }}</span>
-                        </div>
-                        @if($th->cong_viec_da_thuc_hien)
-                            <div>
-                                <span class="text-gray-500">Công việc đã thực hiện</span>
-                                <p class="mt-1 bg-gray-50 dark:bg-gray-700 rounded-lg p-3">{{ $th->cong_viec_da_thuc_hien }}</p>
-                            </div>
-                        @endif
+                        <form method="POST" action="{{ route('admin.tang-ca.tu-choi', $dangKy->id) }}" id="form-tu-choi-detail">
+                            @csrf
+                            <textarea name="ly_do_tu_choi" rows="3" placeholder="Nhập lý do từ chối..." 
+                                class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 dark:bg-gray-800 dark:text-white"></textarea>
+                            <button type="submit" onclick="return xacNhanTuChoi()"
+                                class="w-full mt-3 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition flex items-center justify-center gap-2 text-sm font-medium">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                Từ chối
+                            </button>
+                        </form>
                     </div>
                 </div>
             @endif

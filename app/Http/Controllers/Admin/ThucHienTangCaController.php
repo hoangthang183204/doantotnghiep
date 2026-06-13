@@ -16,29 +16,31 @@ class ThucHienTangCaController extends Controller
     {
         $query = ThucHienTangCa::with([
             'dang_ky.nguoi_dung.hoSo',
+            'dang_ky.nguoi_dung.phongBan',
             'dang_ky.nguoi_duyet.hoSo',
-        ])
-            ->whereHas('dang_ky.nguoi_dung', function ($q) {
-                $q->where('vai_tro_id', '!=', 1);
-            });
+        ]);
 
-        // Tìm kiếm nhân viên
-        if ($request->filled('keyword')) {
+        $danhSachTangCa = $query->latest('id')->paginate(15)->appends($request->query());
 
-            $keyword = trim($request->keyword);
 
+
+        // Tìm theo tên nhân viên
+        if ($request->filled('ten_nhan_vien')) {
+            $keyword = trim($request->ten_nhan_vien);
             $query->whereHas('dang_ky.nguoi_dung', function ($q) use ($keyword) {
-
                 $q->where('ten_dang_nhap', 'like', "%{$keyword}%")
                     ->orWhereHas('hoSo', function ($hs) use ($keyword) {
-
                         $hs->where('ho', 'like', "%{$keyword}%")
                             ->orWhere('ten', 'like', "%{$keyword}%")
-                            ->orWhereRaw(
-                                "CONCAT(ho, ' ', ten) LIKE ?",
-                                ["%{$keyword}%"]
-                            );
+                            ->orWhereRaw("CONCAT(ho, ' ', ten) LIKE ?", ["%{$keyword}%"]);
                     });
+            });
+        }
+
+        // Lọc theo phòng ban
+        if ($request->filled('phong_ban_id')) {
+            $query->whereHas('dang_ky.nguoi_dung', function ($q) use ($request) {
+                $q->where('phong_ban_id', $request->phong_ban_id);
             });
         }
 
@@ -47,58 +49,63 @@ class ThucHienTangCaController extends Controller
             $query->where('trang_thai', $request->trang_thai);
         }
 
-        // Lọc ngày tăng ca
+        // Lọc theo ngày tăng ca
+        if ($request->filled('ngay_tang_ca')) {
+            $query->whereHas('dang_ky', function ($q) use ($request) {
+                $q->whereDate('ngay_tang_ca', $request->ngay_tang_ca);
+            });
+        }
+
+        // Lọc theo tháng
+        if ($request->filled('thang')) {
+            $query->whereHas('dang_ky', function ($q) use ($request) {
+                $q->whereMonth('ngay_tang_ca', $request->thang);
+            });
+        }
+
+        // Lọc theo năm
+        if ($request->filled('nam')) {
+            $query->whereHas('dang_ky', function ($q) use ($request) {
+                $q->whereYear('ngay_tang_ca', $request->nam);
+            });
+        }
+
+        // Lọc từ ngày - đến ngày
         if ($request->filled('tu_ngay')) {
             $query->whereHas('dang_ky', function ($q) use ($request) {
                 $q->whereDate('ngay_tang_ca', '>=', $request->tu_ngay);
             });
         }
-
         if ($request->filled('den_ngay')) {
             $query->whereHas('dang_ky', function ($q) use ($request) {
                 $q->whereDate('ngay_tang_ca', '<=', $request->den_ngay);
             });
         }
 
-        $danhSach = $query
-            ->latest('id')
-            ->paginate(15)
-            ->appends($request->query());
-
         // Thống kê
-        $tongSo = ThucHienTangCa::count();
+        $soLuongTangCa = ThucHienTangCa::count();
 
-        $chuaLam = ThucHienTangCa::where(
-            'trang_thai',
-            'chua_lam'
-        )->count();
+        $hoanThanh = ThucHienTangCa::where('trang_thai', 'hoan_thanh')->count();
+        $khongHoanThanh = ThucHienTangCa::where('trang_thai', 'khong_hoan_thanh')->count();
 
-        $dangLam = ThucHienTangCa::where(
-            'trang_thai',
-            'dang_lam'
-        )->count();
+        $tyLeHoanThanh = $soLuongTangCa > 0 ? round(($hoanThanh / $soLuongTangCa) * 100) : 0;
+        $tyLeChuaHoanThanh = $soLuongTangCa > 0 ? round(($khongHoanThanh / $soLuongTangCa) * 100) : 0;
 
-        $hoanThanh = ThucHienTangCa::where(
-            'trang_thai',
-            'hoan_thanh'
-        )->count();
+        $soGioTangCa = ThucHienTangCa::sum('so_gio_tang_ca_thuc_te');
+        $tongCongTangCa = ThucHienTangCa::sum('so_cong_tang_ca');
 
-        $khongHoanThanh = ThucHienTangCa::where(
-            'trang_thai',
-            'khong_hoan_thanh'
-        )->count();
+        // Lấy danh sách phòng ban
+        $phongBan = \App\Models\PhongBan::all();
 
-        return view(
-            'admin.thuc-hien-tang-ca.index',
-            compact(
-                'danhSach',
-                'tongSo',
-                'chuaLam',
-                'dangLam',
-                'hoanThanh',
-                'khongHoanThanh'
-            )
-        );
+        return view('admin.thuc-hien-tang-ca.index', compact(
+            'danhSachTangCa',
+            'soLuongTangCa',
+            'tyLeHoanThanh',
+            'tyLeChuaHoanThanh',
+            'soGioTangCa',
+            'tongCongTangCa',
+            'phongBan'
+        ));
     }
 
     // =========================================================================

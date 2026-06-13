@@ -4,23 +4,22 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\DangKyTangCa;
-use App\Models\NguoiDung;
+use App\Models\PhongBan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class TangCaController extends Controller
 {
-    // =========================================================================
-    // INDEX — Danh sách đăng ký tăng ca
-    // =========================================================================
-
+    /**
+     * Danh sách đăng ký tăng ca
+     */
     public function index(Request $request)
     {
-        $query = DangKyTangCa::with(['nguoi_dung.hoSo', 'nguoi_duyet.hoSo', 'thuc_hien']);
+        $query = DangKyTangCa::with(['nguoi_dung.hoSo', 'nguoi_dung.phongBan', 'nguoi_duyet.hoSo', 'thuc_hien']);
 
-        // Tìm theo tên nhân viên
-        if ($request->filled('keyword')) {
-            $keyword = trim($request->keyword);
+        // Lọc theo tên nhân viên
+        if ($request->filled('ten_nhan_vien')) {
+            $keyword = trim($request->ten_nhan_vien);
             $query->whereHas('nguoi_dung', function ($q) use ($keyword) {
                 $q->where('ten_dang_nhap', 'like', "%{$keyword}%")
                     ->orWhereHas('hoSo', function ($hs) use ($keyword) {
@@ -31,14 +30,21 @@ class TangCaController extends Controller
             });
         }
 
+        // Lọc theo phòng ban
+        if ($request->filled('phong_ban_id')) {
+            $query->whereHas('nguoi_dung', function ($q) use ($request) {
+                $q->where('phong_ban_id', $request->phong_ban_id);
+            });
+        }
+
         // Lọc trạng thái
         if ($request->filled('trang_thai')) {
             $query->where('trang_thai', $request->trang_thai);
         }
 
-        // Lọc loại tăng ca
-        if ($request->filled('loai_tang_ca')) {
-            $query->where('loai_tang_ca', $request->loai_tang_ca);
+        // Lọc theo ngày tăng ca
+        if ($request->filled('ngay_tang_ca')) {
+            $query->whereDate('ngay_tang_ca', $request->ngay_tang_ca);
         }
 
         // Lọc từ ngày / đến ngày
@@ -49,35 +55,40 @@ class TangCaController extends Controller
             $query->whereDate('ngay_tang_ca', '<=', $request->den_ngay);
         }
 
-        // Thống kê nhanh (không bị ảnh hưởng bởi filter)
-        $tongHoSo    = DangKyTangCa::count();
-        $choDuyet    = DangKyTangCa::where('trang_thai', 'cho_duyet')->count();
-        $daDuyet     = DangKyTangCa::where('trang_thai', 'da_duyet')->count();
-        $tuChoi      = DangKyTangCa::where('trang_thai', 'tu_choi')->count();
-
-        $dangKyList = $query
+        // Lấy danh sách
+        $donTangCa = $query
             ->orderBy('ngay_tang_ca', 'desc')
             ->orderBy('id', 'desc')
             ->paginate(15)
             ->appends($request->query());
 
+        // Thống kê nhanh
+        $soLuongDangKyTangCa = DangKyTangCa::count();
+        $trangThaiThongKe = [
+            'cho_duyet' => DangKyTangCa::where('trang_thai', 'cho_duyet')->count(),
+            'da_duyet'  => DangKyTangCa::where('trang_thai', 'da_duyet')->count(),
+            'tu_choi'   => DangKyTangCa::where('trang_thai', 'tu_choi')->count(),
+        ];
+
+        // Lấy danh sách phòng ban cho bộ lọc
+        $phongBans = PhongBan::all();
+
         return view('admin.tang-ca.index', compact(
-            'dangKyList',
-            'tongHoSo',
-            'choDuyet',
-            'daDuyet',
-            'tuChoi'
+            'donTangCa',           // Tên biến này phải khớp với view
+            'soLuongDangKyTangCa',
+            'trangThaiThongKe',
+            'phongBans'
         ));
     }
 
-    // =========================================================================
-    // SHOW — Chi tiết đơn tăng ca
-    // =========================================================================
-
+    /**
+     * Chi tiết đơn tăng ca
+     */
     public function show($id)
     {
         $dangKy = DangKyTangCa::with([
             'nguoi_dung.hoSo',
+            'nguoi_dung.phongBan',
             'nguoi_duyet.hoSo',
             'thuc_hien',
         ])->findOrFail($id);
@@ -85,75 +96,100 @@ class TangCaController extends Controller
         return view('admin.tang-ca.show', compact('dangKy'));
     }
 
-    // =========================================================================
-    // DUYET — Phê duyệt đơn tăng ca
-    // =========================================================================
-
+    /**
+     * Phê duyệt đơn tăng ca
+     */
     public function duyet(Request $request, $id)
     {
         $dangKy = DangKyTangCa::findOrFail($id);
 
         if ($dangKy->trang_thai !== 'cho_duyet') {
-            return back()->withErrors(['Đơn này không ở trạng thái chờ duyệt.']);
+            return redirect()->back()->with('error', 'Đơn này không ở trạng thái chờ duyệt.');
         }
 
         $dangKy->update([
-            'trang_thai'     => 'da_duyet',
-            'nguoi_duyet_id' => Auth::id(),
-            'thoi_gian_duyet'=> now(),
-            'ly_do_tu_choi'  => null,
+            'trang_thai'      => 'da_duyet',
+            'nguoi_duyet_id'  => Auth::id(),
+            'thoi_gian_duyet' => now(),
+            'ly_do_tu_choi'   => null,
         ]);
 
-        return back()->with('success', 'Đã phê duyệt đơn tăng ca thành công.');
+        return redirect()->back()->with('success', 'Đã phê duyệt đơn tăng ca thành công.');
     }
 
-    // =========================================================================
-    // TU CHOI — Từ chối đơn tăng ca
-    // =========================================================================
-
+    /**
+     * Từ chối đơn tăng ca
+     */
     public function tuChoi(Request $request, $id)
     {
-        $dangKy = DangKyTangCa::findOrFail($id);
-
-        if ($dangKy->trang_thai !== 'cho_duyet') {
-            return back()->withErrors(['Đơn này không ở trạng thái chờ duyệt.']);
-        }
-
         $request->validate([
             'ly_do_tu_choi' => 'required|string|max:500',
         ], [
             'ly_do_tu_choi.required' => 'Vui lòng nhập lý do từ chối.',
         ]);
 
+        $dangKy = DangKyTangCa::findOrFail($id);
+
+        if ($dangKy->trang_thai !== 'cho_duyet') {
+            return redirect()->back()->with('error', 'Đơn này không ở trạng thái chờ duyệt.');
+        }
+
         $dangKy->update([
-            'trang_thai'     => 'tu_choi',
-            'nguoi_duyet_id' => Auth::id(),
-            'thoi_gian_duyet'=> now(),
-            'ly_do_tu_choi'  => $request->ly_do_tu_choi,
+            'trang_thai'      => 'tu_choi',
+            'nguoi_duyet_id'  => Auth::id(),
+            'thoi_gian_duyet' => now(),
+            'ly_do_tu_choi'   => $request->ly_do_tu_choi,
         ]);
 
-        return back()->with('success', 'Đã từ chối đơn tăng ca.');
+        return redirect()->back()->with('success', 'Đã từ chối đơn tăng ca.');
     }
 
-    // =========================================================================
-    // DUYET HANG LOAT — Phê duyệt nhiều đơn cùng lúc
-    // =========================================================================
-
+    /**
+     * Phê duyệt hàng loạt
+     */
+    /**
+     * Phê duyệt hàng loạt
+     */
     public function duyetHangLoat(Request $request)
     {
-        $request->validate([
-            'ids'   => 'required|array|min:1',
-            'ids.*' => 'exists:dang_ky_tang_ca,id',
-        ]);
+        try {
+            // Decode ids nếu là JSON string
+            $ids = $request->ids;
+            if (is_string($ids)) {
+                $ids = json_decode($ids, true);
+            }
 
-        $soLuong = DangKyTangCa::whereIn('id', $request->ids)
-            ->where('trang_thai', 'cho_duyet')
-            ->update([
-                'trang_thai'      => 'da_duyet',
-                'nguoi_duyet_id'  => Auth::id(),
-                'thoi_gian_duyet' => now(),
+            if (empty($ids) || !is_array($ids)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không có ID nào được chọn'
+                ], 400);
+            }
+
+            $soLuong = DangKyTangCa::whereIn('id', $ids)
+                ->where('trang_thai', 'cho_duyet')
+                ->update([
+                    'trang_thai'      => 'da_duyet',
+                    'nguoi_duyet_id'  => Auth::id(),
+                    'thoi_gian_duyet' => now(),
+                ]);
+
+            if ($soLuong == 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không có đơn nào ở trạng thái chờ duyệt'
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "Đã phê duyệt {$soLuong} đơn tăng ca."
             ]);
-
-        return back()->with('success', "Đã phê duyệt {$soLuong} đơn tăng ca.");
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
