@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\TangCaController;
 use App\Http\Controllers\Admin\ThucHienTangCaController;
 use App\Http\Controllers\Admin\YeuCauDieuChinhCongAdminController;
 use App\Http\Controllers\Admin\PhanQuyenController;
+use App\Http\Controllers\Admin\HoSoCaNhanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -134,6 +135,13 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     Route::middleware('permission:chucvu.delete')->group(function () {
         Route::delete('/chuc-vu/{id}', [ChucVuController::class, 'destroy'])->name('chuc-vu.destroy');
     });
+    // ========== HỒ SƠ CÁ NHÂN ==========
+
+    Route::get('/ho-so-ca-nhan', [HoSoCaNhanController::class, 'index'])->name('ho-so-ca-nhan.index');
+
+    // Thêm 2 route mới này:
+    Route::put('/ho-so-ca-nhan/update', [HoSoCaNhanController::class, 'update'])->name('ho-so-ca-nhan.update');
+    Route::post('/ho-so-ca-nhan/change-password', [HoSoCaNhanController::class, 'changePassword'])->name('ho-so-ca-nhan.change-password');
 
     // ========== CHẤM CÔNG ==========
     Route::middleware('permission:attendance.index')->group(function () {
