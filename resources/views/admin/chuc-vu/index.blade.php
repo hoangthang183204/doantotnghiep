@@ -116,43 +116,41 @@
                                 </td>
 
                                 <td class="px-4 py-3">
-                                    <div class="flex items-center justify-center gap-2">
-                                
-                                        {{-- Nút Sửa (Icon Bút chì - Dạng Solid thu nhỏ) --}}
+                                    <div class="flex justify-center gap-1.5">
+                                        
+                                        {{-- Nút Sửa --}}
                                         <a href="{{ route('admin.chuc-vu.edit', $chucVu->id) }}"
-                                            class="inline-flex items-center justify-center p-2 text-yellow-500 hover:text-yellow-600 hover:bg-yellow-50 rounded-full transition-all duration-200" 
-                                            title="Sửa">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
-                                                <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32l8.4-8.4z" />
-                                                <path d="M5.25 5.25a3 3 0 00-3 3v10.5a3 3 0 003 3h10.5a3 3 0 003-3V13.5a.75.75 0 00-1.5 0v5.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5V8.25a1.5 1.5 0 011.5-1.5h5.25a.75.75 0 000-1.5H5.25z" />
+                                           class="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded-lg transition" 
+                                           title="Sửa">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                             </svg>
                                         </a>
                                 
                                         {{-- NÚT ẨN / HIỂN THỊ CHỨC VỤ --}}
-                                        <form action="{{ route('admin.chuc-vu.destroy', $chucVu->id) }}" method="POST" class="m-0 p-0 flex items-center">
+                                        <form action="{{ route('admin.chuc-vu.destroy', $chucVu->id) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
                                 
                                             @if($chucVu->trang_thai == 1)
-                                                {{-- Trạng thái = 1 -> Đang hoạt động -> Hiện nút Ẩn (Icon Mắt gạch chéo - Dạng Solid thu nhỏ) --}}
+                                                {{-- Đang hoạt động -> Hiện nút Ẩn (Icon Mắt gạch chéo) --}}
                                                 <button type="submit"
-                                                    onclick="return confirm('Bạn có chắc muốn ẩn chức vụ này khỏi hệ thống?')"
-                                                    class="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-full transition-all duration-200" 
-                                                    title="Ẩn chức vụ">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
-                                                        <path fill-rule="evenodd" d="M3.53 2.47a.75.75 0 00-1.06 1.06l18 18a.75.75 0 101.06-1.06l-18-18zM22.676 12.553a11.249 11.249 0 01-2.631 4.31l-3.099-3.099a5.25 5.25 0 00-6.71-6.71L7.759 4.577a11.217 11.217 0 014.242-1.22c4.981 0 9.07 3.013 10.675 8.163a.75.75 0 010 .533z" clip-rule="evenodd" />
-                                                        <path fill-rule="evenodd" d="M1.325 11.467a.75.75 0 000 .533c1.605 5.15 5.694 8.163 10.675 8.163a11.217 11.217 0 004.242-1.22l-3.099-3.099a5.25 5.25 0 01-6.71-6.71L3.956 6.864a11.249 11.249 0 00-2.631 4.603z" clip-rule="evenodd" />
+                                                        onclick="return confirm('Bạn có chắc muốn ẩn chức vụ này khỏi hệ thống?')"
+                                                        class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition" 
+                                                        title="Ẩn chức vụ">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
                                                     </svg>
                                                 </button>
                                             @else
-                                                {{-- Trạng thái = 0 -> Đã ẩn -> Hiện nút Hiển thị lại (Icon Mắt - Dạng Solid thu nhỏ) --}}
+                                                {{-- Đã ẩn -> Hiện nút Hiển thị lại (Icon Mắt) --}}
                                                 <button type="submit"
-                                                    onclick="return confirm('Bạn có chắc muốn hiển thị lại chức vụ này?')"
-                                                    class="inline-flex items-center justify-center p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-full transition-all duration-200" 
-                                                    title="Hiển thị lại">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
-                                                        <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
-                                                        <path fill-rule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 010-1.113zM17.25 12a5.25 5.25 0 11-10.5 0 5.25 5.25 0 0110.5 0z" clip-rule="evenodd" />
+                                                        onclick="return confirm('Bạn có chắc muốn hiển thị lại chức vụ này?')"
+                                                        class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition" 
+                                                        title="Hiển thị lại">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                                     </svg>
                                                 </button>
                                             @endif
