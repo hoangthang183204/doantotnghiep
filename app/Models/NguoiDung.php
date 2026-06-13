@@ -55,14 +55,6 @@ class NguoiDung extends Authenticatable implements JWTSubject
         ];
     }
 
-    // Relationships
-    public function hoSo()
-    {
-        return $this->hasOne(
-            HoSoNguoiDung::class,
-            'nguoi_dung_id'
-        );
-    }
 
     public function ho_so()
     {
@@ -157,6 +149,26 @@ class NguoiDung extends Authenticatable implements JWTSubject
     {
         return $this->belongsToMany(VaiTro::class, 'nguoi_dung_vai_tro', 'nguoi_dung_id', 'vai_tro_id')
             ->withTimestamps();
+    }
+
+    // Thêm alias cho phong_ban
+    public function phongBan()
+    {
+        return $this->belongsTo(PhongBan::class, 'phong_ban_id');
+    }
+
+    public function hoSo()
+    {
+        return $this->hasOne(HoSoNguoiDung::class, 'nguoi_dung_id');
+    }
+
+    public function hopDongLaoDong()
+    {
+        return $this->hasMany(
+            HopDongLaoDong::class,
+            'nguoi_dung_id',
+            'id'
+        );
     }
     
     
