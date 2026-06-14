@@ -177,23 +177,45 @@
                                 </td>
 
                                 {{-- ACTION --}}
-                                <td class="p-3">
+                                <td class="px-4 py-3">
 
-                                    <div class="flex justify-center gap-2">
+                                    <div class="flex justify-center gap-1.5">
 
+                                        {{-- Chỉnh sửa --}}
                                         <a href="{{ route('admin.nguoi-dung.edit', $user->id) }}"
-                                            class="bg-yellow-400 hover:bg-yellow-500 text-white p-2 rounded-lg transition">
-                                            ✏️
+                                            class="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded-lg transition"
+                                            title="Chỉnh sửa">
+
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                                </path>
+
+                                            </svg>
+
                                         </a>
 
-                                        <form action="{{ route('admin.nguoi-dung.destroy', $user->id) }}" method="POST">
+                                        {{-- Xóa --}}
+                                        <form action="{{ route('admin.nguoi-dung.destroy', $user->id) }}" method="POST"
+                                            onsubmit="return confirm('Xóa người dùng này?')">
+
                                             @csrf
                                             @method('DELETE')
 
                                             <button type="submit"
-                                                class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition"
-                                                onclick="return confirm('Xóa người dùng này?')">
-                                                🗑
+                                                class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
+                                                title="Xóa">
+
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 7L5 7M10 11V17M14 11V17M6 7L7 19C7.1 20.1 7.9 21 9 21H15C16.1 21 16.9 20.1 17 19L18 7M9 7V5C9 3.9 9.9 3 11 3H13C14.1 3 15 3.9 15 5V7">
+                                                    </path>
+
+                                                </svg>
+
                                             </button>
 
                                         </form>
