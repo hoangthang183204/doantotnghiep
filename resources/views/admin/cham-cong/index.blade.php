@@ -64,11 +64,16 @@
                         <select name="trang_thai"
                             class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
                             <option value="">-- Tất cả trạng thái --</option>
-                            <option value="dung_gio" {{ request('trang_thai') == 'dung_gio' ? 'selected' : '' }}>✅ Đúng giờ</option>
-                            <option value="di_muon" {{ request('trang_thai') == 'di_muon' ? 'selected' : '' }}>⚠️ Đi muộn</option>
-                            <option value="ve_som" {{ request('trang_thai') == 've_som' ? 'selected' : '' }}>🔻 Về sớm</option>
-                            <option value="vang_mat" {{ request('trang_thai') == 'vang_mat' ? 'selected' : '' }}>❌ Vắng mặt</option>
-                            <option value="nghi_phep" {{ request('trang_thai') == 'nghi_phep' ? 'selected' : '' }}>🔵 Nghỉ phép</option>
+                            <option value="dung_gio" {{ request('trang_thai') == 'dung_gio' ? 'selected' : '' }}>✅ Đúng giờ
+                            </option>
+                            <option value="di_muon" {{ request('trang_thai') == 'di_muon' ? 'selected' : '' }}>⚠️ Đi muộn
+                            </option>
+                            <option value="ve_som" {{ request('trang_thai') == 've_som' ? 'selected' : '' }}>🔻 Về sớm
+                            </option>
+                            <option value="vang_mat" {{ request('trang_thai') == 'vang_mat' ? 'selected' : '' }}>❌ Vắng mặt
+                            </option>
+                            <option value="nghi_phep" {{ request('trang_thai') == 'nghi_phep' ? 'selected' : '' }}>🔵 Nghỉ
+                                phép</option>
                         </select>
                     </div>
                     <div>
@@ -76,9 +81,12 @@
                         <select name="trang_thai_duyet"
                             class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
                             <option value="">-- Tất cả --</option>
-                            <option value="3" {{ request('trang_thai_duyet') == '3' ? 'selected' : '' }}>⏳ Chờ duyệt</option>
-                            <option value="1" {{ request('trang_thai_duyet') == '1' ? 'selected' : '' }}>✅ Đã duyệt</option>
-                            <option value="2" {{ request('trang_thai_duyet') == '2' ? 'selected' : '' }}>❌ Từ chối</option>
+                            <option value="3" {{ request('trang_thai_duyet') == '3' ? 'selected' : '' }}>⏳ Chờ duyệt
+                            </option>
+                            <option value="1" {{ request('trang_thai_duyet') == '1' ? 'selected' : '' }}>✅ Đã duyệt
+                            </option>
+                            <option value="2" {{ request('trang_thai_duyet') == '2' ? 'selected' : '' }}>❌ Từ chối
+                            </option>
                         </select>
                     </div>
                     <div>
@@ -102,7 +110,8 @@
                             class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
                             <option value="">-- Chọn tháng --</option>
                             @for ($i = 1; $i <= 12; $i++)
-                                <option value="{{ $i }}" {{ request('thang') == $i ? 'selected' : '' }}>Tháng {{ $i }}</option>
+                                <option value="{{ $i }}" {{ request('thang') == $i ? 'selected' : '' }}>Tháng
+                                    {{ $i }}</option>
                             @endfor
                         </select>
                     </div>
@@ -112,7 +121,8 @@
                             class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
                             <option value="">-- Chọn năm --</option>
                             @for ($year = date('Y'); $year >= date('Y') - 5; $year--)
-                                <option value="{{ $year }}" {{ request('nam') == $year ? 'selected' : '' }}>{{ $year }}</option>
+                                <option value="{{ $year }}" {{ request('nam') == $year ? 'selected' : '' }}>
+                                    {{ $year }}</option>
                             @endfor
                         </select>
                     </div>
@@ -139,10 +149,12 @@
 
         {{-- ALERT --}}
         @if (session('success'))
-            <div id="alert-success" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-sm">
+            <div id="alert-success"
+                class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-sm">
                 <div class="flex justify-between items-center">
                     <span>{{ session('success') }}</span>
-                    <button type="button" onclick="document.getElementById('alert-success').remove()" class="font-bold text-green-700">×</button>
+                    <button type="button" onclick="document.getElementById('alert-success').remove()"
+                        class="font-bold text-green-700">×</button>
                 </div>
             </div>
         @endif
@@ -151,7 +163,8 @@
             <div id="alert-error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-sm">
                 <div class="flex justify-between items-center">
                     <span>{{ session('error') }}</span>
-                    <button type="button" onclick="document.getElementById('alert-error').remove()" class="font-bold text-red-700">×</button>
+                    <button type="button" onclick="document.getElementById('alert-error').remove()"
+                        class="font-bold text-red-700">×</button>
                 </div>
             </div>
         @endif
@@ -163,13 +176,16 @@
                     <span id="selectedCount">0</span> mục được chọn
                 </small>
                 <div id="bulkActions" class="flex gap-2" style="display: none;">
-                    <button type="button" onclick="bulkApprove()" class="px-3 py-1 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600">
+                    <button type="button" onclick="bulkApprove()"
+                        class="px-3 py-1 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600">
                         ✅ Duyệt hàng loạt
                     </button>
-                    <button type="button" onclick="bulkReject()" class="px-3 py-1 text-sm bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">
+                    <button type="button" onclick="bulkReject()"
+                        class="px-3 py-1 text-sm bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">
                         ❌ Từ chối hàng loạt
                     </button>
-                    <button type="button" onclick="bulkDelete()" class="px-3 py-1 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600">
+                    <button type="button" onclick="bulkDelete()"
+                        class="px-3 py-1 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600">
                         🗑️ Hủy hàng loạt
                     </button>
                 </div>
@@ -202,8 +218,8 @@
                             @php
                                 // Lấy thông tin nhân viên an toàn
                                 $nguoiDung = $cc->nguoiDung ?? null;
-                                $hoSo = $nguoiDung ? ($nguoiDung->hoSo ?? null) : null;
-                                
+                                $hoSo = $nguoiDung ? $nguoiDung->hoSo ?? null : null;
+
                                 $hoTen = '';
                                 if ($hoSo) {
                                     $hoTen = trim(($hoSo->ho ?? '') . ' ' . ($hoSo->ten ?? ''));
@@ -214,19 +230,25 @@
                                 if (empty($hoTen)) {
                                     $hoTen = 'NV#' . ($cc->nguoi_dung_id ?? '?');
                                 }
-                                
+
                                 $initial = strtoupper(substr($hoTen, 0, 1));
-                                $maNV = $hoSo ? ($hoSo->ma_nhan_vien ?? 'N/A') : 'N/A';
-                                $tenPhongBan = ($nguoiDung && $nguoiDung->phongBan) ? ($nguoiDung->phongBan->ten_phong_ban ?? 'N/A') : 'N/A';
+                                $maNV = $hoSo ? $hoSo->ma_nhan_vien ?? 'N/A' : 'N/A';
+                                $tenPhongBan =
+                                    $nguoiDung && $nguoiDung->phongBan
+                                        ? $nguoiDung->phongBan->ten_phong_ban ?? 'N/A'
+                                        : 'N/A';
                             @endphp
-                            <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                            <tr
+                                class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                                 <td class="px-4 py-4">
-                                    <input type="checkbox" class="row-checkbox rounded border-gray-300" value="{{ $cc->id }}">
+                                    <input type="checkbox" class="row-checkbox rounded border-gray-300"
+                                        value="{{ $cc->id }}">
                                 </td>
                                 <td class="px-4 py-4">
                                     <div class="flex items-center gap-3">
                                         {{-- Avatar dạng chữ cái đầu --}}
-                                        <div class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold text-lg shadow-md">
+                                        <div
+                                            class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold text-lg shadow-md">
                                             {{ $initial }}
                                         </div>
                                         <div>
@@ -238,10 +260,12 @@
                                 </td>
                                 <td class="px-4 py-4">
                                     {{ \Carbon\Carbon::parse($cc->ngay_cham_cong)->format('d/m/Y') }}
-                                    <br><small class="text-gray-500">{{ \Carbon\Carbon::parse($cc->ngay_cham_cong)->locale('vi')->dayName }}</small>
+                                    <br><small
+                                        class="text-gray-500">{{ \Carbon\Carbon::parse($cc->ngay_cham_cong)->locale('vi')->dayName }}</small>
                                 </td>
                                 <td class="px-4 py-4">
-                                    <span class="px-2 py-1 rounded text-sm {{ ($cc->phut_di_muon ?? 0) > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700' }}">
+                                    <span
+                                        class="px-2 py-1 rounded text-sm {{ ($cc->phut_di_muon ?? 0) > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700' }}">
                                         {{ $cc->getGioVaoFormatAttribute() }}
                                     </span>
                                     @if (($cc->phut_di_muon ?? 0) > 0)
@@ -249,7 +273,8 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-4">
-                                    <span class="px-2 py-1 rounded text-sm {{ ($cc->phut_ve_som ?? 0) > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700' }}">
+                                    <span
+                                        class="px-2 py-1 rounded text-sm {{ ($cc->phut_ve_som ?? 0) > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700' }}">
                                         {{ $cc->getGioRaFormatAttribute() }}
                                     </span>
                                     @if (($cc->phut_ve_som ?? 0) > 0)
@@ -257,7 +282,8 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-4 font-semibold">{{ number_format($cc->so_gio_lam ?? 0, 1) }}h</td>
-                                <td class="px-4 py-4 font-semibold text-blue-600">{{ number_format($cc->so_cong ?? 0, 2) }}</td>
+                                <td class="px-4 py-4 font-semibold text-blue-600">
+                                    {{ number_format($cc->so_cong ?? 0, 2) }}</td>
                                 <td class="px-4 py-4">
                                     @php
                                         $statusColors = [
@@ -275,13 +301,15 @@
                                             'nghi_phep' => '🔵 Nghỉ phép',
                                         ];
                                     @endphp
-                                    <span class="px-2 py-1 rounded text-xs {{ $statusColors[$cc->trang_thai] ?? 'bg-gray-100 text-gray-700' }}">
+                                    <span
+                                        class="px-2 py-1 rounded text-xs {{ $statusColors[$cc->trang_thai] ?? 'bg-gray-100 text-gray-700' }}">
                                         {{ $statusTexts[$cc->trang_thai] ?? $cc->trang_thai }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-4">
                                     @if ($cc->ghi_chu)
-                                        <button type="button" onclick="showReason('{{ addslashes($cc->ghi_chu) }}')" class="text-blue-600 hover:underline text-sm">
+                                        <button type="button" onclick="showReason('{{ addslashes($cc->ghi_chu) }}')"
+                                            class="text-blue-600 hover:underline text-sm">
                                             Xem lý do
                                         </button>
                                     @else
@@ -290,28 +318,75 @@
                                 </td>
                                 <td class="px-4 py-4">
                                     @if (($cc->trang_thai_duyet ?? 0) == 3)
-                                        <span class="px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-700">⏳ Chờ duyệt</span>
+                                        <span class="px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-700">⏳ Chờ
+                                            duyệt</span>
                                     @elseif(($cc->trang_thai_duyet ?? 0) == 1)
-                                        <span class="px-2 py-1 rounded text-xs bg-green-100 text-green-700">✅ Đã duyệt</span>
+                                        <span class="px-2 py-1 rounded text-xs bg-green-100 text-green-700">✅ Đã
+                                            duyệt</span>
                                     @elseif(($cc->trang_thai_duyet ?? 0) == 2)
                                         <span class="px-2 py-1 rounded text-xs bg-red-100 text-red-700">❌ Từ chối</span>
                                     @else
-                                        <span class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-700">📝 Chưa gửi</span>
+                                        <span class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-700">📝 Chưa
+                                            gửi</span>
                                     @endif
                                 </td>
                                 <td class="px-4 py-4">
                                     <div class="relative">
-                                        <button onclick="toggleDropdown(this)" class="px-3 py-1 text-sm bg-gray-100 rounded-lg hover:bg-gray-200">
-                                            ⋯
+                                        <button onclick="toggleDropdown(this)"
+                                            class="p-1.5 text-gray-500 hover:bg-gray-100 rounded-lg transition">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z">
+                                                </path>
+                                            </svg>
                                         </button>
-                                        <div class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg hidden z-10 dropdown-menu">
-                                            <a href="{{ route('admin.cham-cong.show', $cc->id) }}" class="block px-4 py-2 text-sm hover:bg-gray-100">👁️ Xem chi tiết</a>
+                                        <div
+                                            class="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg hidden z-10 dropdown-menu border border-gray-200 dark:border-gray-700">
+                                            <a href="{{ route('admin.cham-cong.show', $cc->id) }}"
+                                                class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                                    </path>
+                                                </svg>
+                                                Xem chi tiết
+                                            </a>
                                             @if (($cc->trang_thai_duyet ?? 0) == 3 || !$cc->trang_thai_duyet)
-                                                <button onclick="pheDuyet({{ $cc->id }}, 1)" class="block w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-gray-100">✅ Phê duyệt</button>
-                                                <button onclick="pheDuyet({{ $cc->id }}, 2)" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">❌ Từ chối</button>
+                                                <button onclick="pheDuyet({{ $cc->id }}, 1)"
+                                                    class="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                    </svg>
+                                                    Phê duyệt
+                                                </button>
+                                                <button onclick="pheDuyet({{ $cc->id }}, 2)"
+                                                    class="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                    </svg>
+                                                    Từ chối
+                                                </button>
                                             @endif
                                             @if (($cc->trang_thai_duyet ?? 0) != 4)
-                                                <button onclick="pheDuyet({{ $cc->id }}, 4)" class="block w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">🗑️ Hủy</button>
+                                                <button onclick="pheDuyet({{ $cc->id }}, 4)"
+                                                    class="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                        </path>
+                                                    </svg>
+                                                    Hủy
+                                                </button>
                                             @endif
                                         </div>
                                     </div>
@@ -319,7 +394,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="11" class="text-center py-10 text-gray-500">📭 Chưa có dữ liệu chấm công</td>
+                                <td colspan="11" class="text-center py-10 text-gray-500">📭 Chưa có dữ liệu chấm công
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -347,7 +423,8 @@
                     <textarea name="ghi_chu_phe_duyet" id="ghiChuPheDuyet" rows="3" class="w-full px-3 py-2 border rounded-lg"></textarea>
                 </div>
                 <div class="flex justify-end gap-3">
-                    <button type="button" onclick="closePheDuyetModal()" class="px-4 py-2 bg-gray-300 rounded-lg">Hủy</button>
+                    <button type="button" onclick="closePheDuyetModal()"
+                        class="px-4 py-2 bg-gray-300 rounded-lg">Hủy</button>
                     <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Xác nhận</button>
                 </div>
             </form>
@@ -384,8 +461,10 @@
                     </select>
                 </div>
                 <div class="flex justify-end gap-3">
-                    <button type="button" onclick="closeReportModal()" class="px-4 py-2 bg-gray-300 rounded-lg">Đóng</button>
-                    <button type="button" onclick="submitReport()" class="px-4 py-2 bg-green-600 text-white rounded-lg">Xuất</button>
+                    <button type="button" onclick="closeReportModal()"
+                        class="px-4 py-2 bg-gray-300 rounded-lg">Đóng</button>
+                    <button type="button" onclick="submitReport()"
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg">Xuất</button>
                 </div>
             </div>
         </div>
@@ -405,230 +484,235 @@
 @endsection
 
 @push('scripts')
-<script>
-    let confirmCallback = null;
-    let currentPheDuyetId = null;
+    <script>
+        let confirmCallback = null;
+        let currentPheDuyetId = null;
 
-    function toggleDropdown(btn) {
-        const dropdown = btn.nextElementSibling;
-        document.querySelectorAll('.dropdown-menu').forEach(menu => {
-            if (menu !== dropdown) menu.classList.add('hidden');
-        });
-        dropdown.classList.toggle('hidden');
-    }
-
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.relative')) {
+        function toggleDropdown(btn) {
+            const dropdown = btn.nextElementSibling;
             document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                menu.classList.add('hidden');
+                if (menu !== dropdown) menu.classList.add('hidden');
+            });
+            dropdown.classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.relative')) {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                    menu.classList.add('hidden');
+                });
+            }
+        });
+
+        const selectAllCheckbox = document.getElementById('check-all');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function() {
+                document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = this.checked);
+                updateBulkActions();
             });
         }
-    });
 
-    const selectAllCheckbox = document.getElementById('check-all');
-    if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', function() {
-            document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = this.checked);
+        document.querySelectorAll('.row-checkbox').forEach(cb => {
+            cb.addEventListener('change', function() {
+                updateBulkActions();
+                if (selectAllCheckbox) {
+                    const allChecked = document.querySelectorAll('.row-checkbox:checked').length ===
+                        document.querySelectorAll('.row-checkbox').length;
+                    selectAllCheckbox.checked = allChecked;
+                }
+            });
+        });
+
+        function updateBulkActions() {
+            const checked = document.querySelectorAll('.row-checkbox:checked');
+            const count = checked.length;
+            const selectedCountSpan = document.getElementById('selectedCount');
+            const bulkActions = document.getElementById('bulkActions');
+            if (selectedCountSpan) selectedCountSpan.textContent = count;
+            if (bulkActions) bulkActions.style.display = count > 0 ? 'flex' : 'none';
+        }
+
+        function getSelectedIds() {
+            return Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+        }
+
+        function bulkApprove() {
+            const ids = getSelectedIds();
+            if (ids.length === 0) return alert('Vui lòng chọn ít nhất một bản ghi!');
+            showConfirm(`Xác nhận phê duyệt ${ids.length} bản ghi?`, () => bulkAction(ids, 1));
+        }
+
+        function bulkReject() {
+            const ids = getSelectedIds();
+            if (ids.length === 0) return alert('Vui lòng chọn ít nhất một bản ghi!');
+            const reason = prompt('Nhập lý do từ chối:');
+            if (reason === null) return;
+            showConfirm(`Xác nhận từ chối ${ids.length} bản ghi?`, () => bulkAction(ids, 2, reason));
+        }
+
+        function bulkDelete() {
+            const ids = getSelectedIds();
+            if (ids.length === 0) return alert('Vui lòng chọn ít nhất một bản ghi!');
+            showConfirm(`Xác nhận hủy ${ids.length} bản ghi?`, () => bulkAction(ids, 4));
+        }
+
+        function bulkAction(ids, action, reason = null) {
+            fetch('{{ route('admin.cham-cong.bulk-action') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        ids: ids,
+                        action: action,
+                        reason: reason
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Có lỗi xảy ra');
+                    }
+                })
+                .catch(error => {
+                    alert('Có lỗi xảy ra: ' + error);
+                });
+        }
+
+        function pheDuyet(id, trangThai) {
+            currentPheDuyetId = id;
+            const modal = document.getElementById('pheDuyetModal');
+            const title = document.getElementById('modalTitle');
+            const trangThaiDuyet = document.getElementById('trangThaiDuyet');
+            const ghiChu = document.getElementById('ghiChuPheDuyet');
+
+            if (trangThai == 1) {
+                title.textContent = '✅ Phê duyệt chấm công';
+            } else if (trangThai == 2) {
+                title.textContent = '❌ Từ chối chấm công';
+            } else {
+                title.textContent = '🗑️ Hủy chấm công';
+            }
+
+            trangThaiDuyet.value = trangThai;
+            ghiChu.value = '';
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closePheDuyetModal() {
+            const modal = document.getElementById('pheDuyetModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            currentPheDuyetId = null;
+        }
+
+        document.getElementById('pheDuyetForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!currentPheDuyetId) return;
+
+            const formData = new FormData(this);
+
+            fetch(`/admin/cham-cong/${currentPheDuyetId}/phe-duyet`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Có lỗi xảy ra');
+                    }
+                })
+                .catch(error => {
+                    location.reload();
+                });
+        });
+
+        function showReason(reason) {
+            const modal = document.getElementById('reasonModal');
+            document.getElementById('reasonText').textContent = reason;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeReasonModal() {
+            const modal = document.getElementById('reasonModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openReportModal() {
+            const modal = document.getElementById('reportModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeReportModal() {
+            const modal = document.getElementById('reportModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function submitReport() {
+            const startDate = document.getElementById('report_start_date').value;
+            const endDate = document.getElementById('report_end_date').value;
+            const format = document.getElementById('report_format').value;
+
+            if (!startDate || !endDate) {
+                alert('Vui lòng chọn ngày bắt đầu và kết thúc');
+                return;
+            }
+
+            let url = `{{ route('admin.cham-cong.export') }}?tu_ngay=${startDate}&den_ngay=${endDate}`;
+
+            if (format === 'pdf') {
+                alert('Tính năng PDF đang phát triển');
+                return;
+            }
+
+            window.open(url, '_blank');
+            closeReportModal();
+        }
+
+        function exportData() {
+            const params = new URLSearchParams(window.location.search);
+            window.open(`/admin/cham-cong/export?${params.toString()}`, '_blank');
+        }
+
+        function showConfirm(message, callback) {
+            const modal = document.getElementById('confirmModal');
+            document.getElementById('confirmMessage').textContent = message;
+            confirmCallback = callback;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            const confirmBtn = document.getElementById('confirmBtn');
+            confirmBtn.onclick = function() {
+                if (confirmCallback) confirmCallback();
+                closeConfirmModal();
+            };
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            confirmCallback = null;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
             updateBulkActions();
         });
-    }
-
-    document.querySelectorAll('.row-checkbox').forEach(cb => {
-        cb.addEventListener('change', function() {
-            updateBulkActions();
-            if (selectAllCheckbox) {
-                const allChecked = document.querySelectorAll('.row-checkbox:checked').length === document.querySelectorAll('.row-checkbox').length;
-                selectAllCheckbox.checked = allChecked;
-            }
-        });
-    });
-
-    function updateBulkActions() {
-        const checked = document.querySelectorAll('.row-checkbox:checked');
-        const count = checked.length;
-        const selectedCountSpan = document.getElementById('selectedCount');
-        const bulkActions = document.getElementById('bulkActions');
-        if (selectedCountSpan) selectedCountSpan.textContent = count;
-        if (bulkActions) bulkActions.style.display = count > 0 ? 'flex' : 'none';
-    }
-
-    function getSelectedIds() {
-        return Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
-    }
-
-    function bulkApprove() {
-        const ids = getSelectedIds();
-        if (ids.length === 0) return alert('Vui lòng chọn ít nhất một bản ghi!');
-        showConfirm(`Xác nhận phê duyệt ${ids.length} bản ghi?`, () => bulkAction(ids, 1));
-    }
-
-    function bulkReject() {
-        const ids = getSelectedIds();
-        if (ids.length === 0) return alert('Vui lòng chọn ít nhất một bản ghi!');
-        const reason = prompt('Nhập lý do từ chối:');
-        if (reason === null) return;
-        showConfirm(`Xác nhận từ chối ${ids.length} bản ghi?`, () => bulkAction(ids, 2, reason));
-    }
-
-    function bulkDelete() {
-        const ids = getSelectedIds();
-        if (ids.length === 0) return alert('Vui lòng chọn ít nhất một bản ghi!');
-        showConfirm(`Xác nhận hủy ${ids.length} bản ghi?`, () => bulkAction(ids, 4));
-    }
-
-    function bulkAction(ids, action, reason = null) {
-        fetch('{{ route("admin.cham-cong.bulk-action") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({ ids: ids, action: action, reason: reason })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(data.message);
-                location.reload();
-            } else {
-                alert(data.message || 'Có lỗi xảy ra');
-            }
-        })
-        .catch(error => {
-            alert('Có lỗi xảy ra: ' + error);
-        });
-    }
-
-    function pheDuyet(id, trangThai) {
-        currentPheDuyetId = id;
-        const modal = document.getElementById('pheDuyetModal');
-        const title = document.getElementById('modalTitle');
-        const trangThaiDuyet = document.getElementById('trangThaiDuyet');
-        const ghiChu = document.getElementById('ghiChuPheDuyet');
-        
-        if (trangThai == 1) {
-            title.textContent = '✅ Phê duyệt chấm công';
-        } else if (trangThai == 2) {
-            title.textContent = '❌ Từ chối chấm công';
-        } else {
-            title.textContent = '🗑️ Hủy chấm công';
-        }
-        
-        trangThaiDuyet.value = trangThai;
-        ghiChu.value = '';
-        
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
-
-    function closePheDuyetModal() {
-        const modal = document.getElementById('pheDuyetModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        currentPheDuyetId = null;
-    }
-
-    document.getElementById('pheDuyetForm')?.addEventListener('submit', function(e) {
-        e.preventDefault();
-        if (!currentPheDuyetId) return;
-        
-        const formData = new FormData(this);
-        
-        fetch(`/admin/cham-cong/${currentPheDuyetId}/phe-duyet`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert(data.message || 'Có lỗi xảy ra');
-            }
-        })
-        .catch(error => {
-            location.reload();
-        });
-    });
-
-    function showReason(reason) {
-        const modal = document.getElementById('reasonModal');
-        document.getElementById('reasonText').textContent = reason;
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
-
-    function closeReasonModal() {
-        const modal = document.getElementById('reasonModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
-
-    function openReportModal() {
-        const modal = document.getElementById('reportModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
-
-    function closeReportModal() {
-        const modal = document.getElementById('reportModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
-
-    function submitReport() {
-        const startDate = document.getElementById('report_start_date').value;
-        const endDate = document.getElementById('report_end_date').value;
-        const format = document.getElementById('report_format').value;
-        
-        if (!startDate || !endDate) {
-            alert('Vui lòng chọn ngày bắt đầu và kết thúc');
-            return;
-        }
-        
-        let url = `{{ route("admin.cham-cong.export") }}?tu_ngay=${startDate}&den_ngay=${endDate}`;
-        
-        if (format === 'pdf') {
-            alert('Tính năng PDF đang phát triển');
-            return;
-        }
-        
-        window.open(url, '_blank');
-        closeReportModal();
-    }
-
-    function exportData() {
-        const params = new URLSearchParams(window.location.search);
-        window.open(`/admin/cham-cong/export?${params.toString()}`, '_blank');
-    }
-
-    function showConfirm(message, callback) {
-        const modal = document.getElementById('confirmModal');
-        document.getElementById('confirmMessage').textContent = message;
-        confirmCallback = callback;
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        
-        const confirmBtn = document.getElementById('confirmBtn');
-        confirmBtn.onclick = function() {
-            if (confirmCallback) confirmCallback();
-            closeConfirmModal();
-        };
-    }
-
-    function closeConfirmModal() {
-        const modal = document.getElementById('confirmModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        confirmCallback = null;
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        updateBulkActions();
-    });
-</script>
+    </script>
 @endpush
