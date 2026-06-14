@@ -54,7 +54,7 @@ Route::prefix('admin/phan-quyen')->name('admin.phan-quyen.')->group(function () 
 |--------------------------------------------------------------------------
 */
 Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
-
+    
     // ========== DASHBOARD ==========
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -72,7 +72,7 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     // ========== QUẢN LÝ NGƯỜI DÙNG ==========
     Route::middleware('permission:user.view')->group(function () {
         Route::get('/nguoi-dung', [NguoiDungController::class, 'index'])->name('nguoi-dung.index');
-        Route::get('/nguoi-dung/{id}', [NguoiDungController::class, 'show'])->name('nguoi-dung.show');
+        Route::get('/nguoi-dung/{id}', [NguoiDungController::class, 'show']) ->whereNumber('id') ->name('nguoi-dung.show');
     });
 
     Route::middleware('permission:user.create')->group(function () {
@@ -80,13 +80,10 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
         Route::post('/nguoi-dung', [NguoiDungController::class, 'store'])->name('nguoi-dung.store');
     });
 
-    Route::middleware('permission:user.edit')->group(function () {
-        Route::get('/nguoi-dung/{id}/edit', [NguoiDungController::class, 'edit'])->name('nguoi-dung.edit');
-        Route::put('/nguoi-dung/{id}', [NguoiDungController::class, 'update'])->name('nguoi-dung.update');
-    });
+    Route::get('/nguoi-dung/{id}/edit', [NguoiDungController::class, 'edit'])->whereNumber('id')->name('nguoi-dung.edit');
 
     Route::middleware('permission:user.delete')->group(function () {
-        Route::delete('/nguoi-dung/{id}', [NguoiDungController::class, 'destroy'])->name('nguoi-dung.destroy');
+        Route::delete('/nguoi-dung/{id}', [NguoiDungController::class, 'destroy'])->whereNumber('id')->name('nguoi-dung.destroy');
     });
 
     Route::middleware('permission:user.reset_password')->group(function () {
@@ -99,7 +96,7 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
         Route::get('/phong-ban/create', [PhongBanController::class, 'create'])->name('phong-ban.create');
         Route::post('/phong-ban', [PhongBanController::class, 'store'])->name('phong-ban.store');
     });
-    
+
     Route::middleware('permission:department.view')->group(function () {
         Route::get('/phong-ban', [PhongBanController::class, 'index'])->name('phong-ban.index');
         Route::get('/phong-ban/{id}', [PhongBanController::class, 'show'])->name('phong-ban.show');
@@ -117,7 +114,6 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     // ========== CHỨC VỤ ==========
     Route::middleware('permission:chucvu.view')->group(function () {
         Route::get('/chuc-vu', [ChucVuController::class, 'index'])->name('chuc-vu.index');
-        
     });
 
     Route::middleware('permission:chucvu.create')->group(function () {
