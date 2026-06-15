@@ -328,4 +328,7 @@ Route::prefix('admin/ung-vien')->name('admin.ung_vien.')->group(function () {
     Route::get('/{id}', [UngVienController::class, 'show'])->name('show');
     Route::put('/{id}', [UngVienController::class, 'update'])->name('update');
     Route::delete('/{id}', [UngVienController::class, 'destroy'])->name('destroy');
+    Route::get('/archived/list', [UngVienController::class, 'archived'])->name('archived');
+    Route::post('/{id}/archive', [UngVienController::class, 'archive'])->name('archive');
+    Route::post('/{id}/restore', [UngVienController::class, 'restore'])->name('restore');
 });

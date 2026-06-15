@@ -8,18 +8,12 @@
 
             <div>
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-                    Danh sách ứng viên
+                Hồ sơ ứng viên lưu trữ
                 </h1>
                 <p class="text-gray-500 dark:text-gray-400 mt-1">
                     Quản lý hồ sơ ứng viên tuyển dụng trong hệ thống.
                 </p>
             </div>
-
-            {{-- BUTTON THÊM --}}
-            <a href="{{ route('admin.ung_vien.create') }}"
-                class="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm transition">
-                + Thêm ứng viên
-            </a>
 
         </div>
 
@@ -82,7 +76,7 @@
                             <th class="px-5 py-4 text-left">Tin tuyển dụng</th>
                             <th class="px-5 py-4 text-left">Phòng ban</th>
                             <th class="px-5 py-4 text-right">Lương</th>
-                            <th class="px-5 py-4 text-center">Trạng thái</th>
+                            <th class="px-5 py-4 text-center ">Trạng thái</th>
                             <th class="px-5 py-4 text-center">Hành động</th>
                         </tr>
                     </thead>
@@ -104,7 +98,6 @@
                                 </td>
 
                                 <td class="px-5 py-4 font-semibold text-gray-900 dark:text-white">{{ $item->email }}</td>
-
 
                                 <td class="px-5 py-4 font-semibold text-gray-900 dark:text-white">
                                     {{ $item->tinTuyenDung?->tieu_de }}
@@ -153,30 +146,17 @@
                                             class="px-3 py-1 rounded-lg bg-blue-50 text-blue-600 text-xs">
                                             Xem
                                         </a>
-                                        {{-- NÚT LƯU TRỮ --}}
-                                        @if($item->trang_thai != 'luu_tru')
-                                            <form action="{{ route('admin.ung_vien.archive', $item->id) }}"
-                                                method="POST">
-                                                @csrf
+                                        {{-- NÚT KHÔI PHỤC --}}
+                                        <form action="{{ route('admin.ung_vien.restore', $item->id) }}"
+                                            method="POST">
+                                            @csrf
 
-                                                <button type="submit"
-                                                    onclick="return confirm('Lưu trữ hồ sơ này?')"
-                                                    class="px-3 py-1 rounded-lg bg-yellow-50 text-yellow-600 text-xs hover:bg-yellow-100">
-                                                    Lưu trữ
-                                                </button>
-                                            </form>
-                                        @else
-                                            <form action="{{ route('admin.ung_vien.restore', $item->id) }}"
-                                                method="POST">
-                                                @csrf
-
-                                                <button type="submit"
-                                                    onclick="return confirm('Khôi phục hồ sơ này?')"
-                                                    class="px-3 py-1 rounded-lg bg-green-50 text-green-600 text-xs hover:bg-green-100">
-                                                    Khôi phục
-                                                </button>
-                                            </form>
-                                        @endif
+                                            <button type="submit"
+                                                onclick="return confirm('Khôi phục hồ sơ này?')"
+                                                class="px-3 py-1 rounded-lg bg-green-50 text-green-600 text-xs hover:bg-green-100">
+                                                Khôi phục
+                                            </button>
+                                        </form>
                                         {{-- NÚT XÓA --}}
                                         <form action="{{ route('admin.ung_vien.destroy', $item->id) }}" method="POST"
                                             onsubmit="return confirm('Bạn có chắc muốn xóa ứng viên này?')"

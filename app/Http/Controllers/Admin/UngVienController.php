@@ -18,7 +18,7 @@ class UngVienController extends Controller
             'tinTuyenDung.phongBan',
             'tinTuyenDung.chucVu'
         ]);
-
+        $query->where('trang_thai', '!=', 'tu_choi');
         if ($request->keyword) {
             $query->where(function ($q) use ($request) {
                 $q->where('ho', 'like', "%{$request->keyword}%")
@@ -166,7 +166,53 @@ class UngVienController extends Controller
         return redirect()->route('admin.ung_vien.index')
             ->with('success', 'Cập nhật ứng viên thành công!');
     }
+    // ======================
+    // LƯU TRỮ
+    // ======================
+public function archive($id)
+{
+    $ungVien = UngVien::findOrFail($id);
 
+    $ungVien->update([
+        'trang_thai' => 'tu_choi'
+    ]);
+
+    return redirect()
+        ->back()
+        ->with('success', 'Đã lưu trữ hồ sơ ứng viên.');
+}
+public function archived()
+{
+    $ungViens = UngVien::with([
+        'tinTuyenDung.phongBan',
+        'tinTuyenDung.chucVu'
+    ])
+    ->where('trang_thai', 'tu_choi')
+    ->latest()
+    ->paginate(10);
+
+    $tinTuyenDungs = TinTuyenDung::select('id', 'tieu_de')->get();
+
+    return view(
+        'admin.ung-vien.archived',
+        compact('ungViens', 'tinTuyenDungs')
+    );
+}
+    // ======================
+    // LƯU TRỮ
+    // ======================
+    public function restore($id)
+{
+    $ungVien = UngVien::findOrFail($id);
+
+    $ungVien->update([
+        'trang_thai' => 'moi_nop'
+    ]);
+
+    return redirect()
+        ->back()
+        ->with('success', 'Đã khôi phục hồ sơ.');
+}
     // ======================
     // XÓA (OPTIONAL)
     // ======================
