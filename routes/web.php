@@ -209,10 +209,7 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     });
 
     // ========== VAI TRÒ ==========
-    Route::middleware('permission:role.view')->group(function () {
-        Route::get('/vai-tro', [VaiTroController::class, 'index'])->name('vai-tro.index');
-        Route::get('/vai-tro/{id}', [VaiTroController::class, 'show'])->name('vai-tro.show');
-    });
+    
 
     Route::middleware('permission:role.create')->group(function () {
         Route::get('/vai-tro/create', [VaiTroController::class, 'create'])->name('vai-tro.create');
@@ -226,6 +223,10 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
 
     Route::middleware('permission:role.delete')->group(function () {
         Route::delete('/vai-tro/{id}', [VaiTroController::class, 'destroy'])->name('vai-tro.destroy');
+    });
+    Route::middleware('permission:role.view')->group(function () {
+        Route::get('/vai-tro', [VaiTroController::class, 'index'])->name('vai-tro.index');
+        Route::get('/vai-tro/{id}', [VaiTroController::class, 'show'])->name('vai-tro.show');
     });
 
     // ========== LOẠI NGHỈ PHÉP ==========
