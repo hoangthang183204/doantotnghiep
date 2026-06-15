@@ -61,25 +61,6 @@ class ChamCong extends Model
 
     // ========== CÁC METHOD MỚI THÊM CHO VIEW ==========
 
-    /**
-     * Kiểm tra đi muộn
-     */
-    public function kiemTraDiMuon(): bool
-    {
-        return $this->phut_di_muon > 0;
-    }
-
-    /**
-     * Kiểm tra về sớm
-     */
-    public function kiemTraVeSom(): bool
-    {
-        return $this->phut_ve_som > 0;
-    }
-
-    /**
-     * Getter cho giờ vào format (H:i)
-     */
     public function getGioVaoFormatAttribute(): string
     {
         if (!$this->gio_vao) {
@@ -115,7 +96,7 @@ class ChamCong extends Model
             'nghi_phep' => 'Nghỉ phép',
             'khong_cham_cong' => 'Không chấm công',
         ];
-        
+
         return $statuses[$this->trang_thai] ?? $this->trang_thai;
     }
 
@@ -199,5 +180,44 @@ class ChamCong extends Model
         if ($phutVeSom > 0)  return 've_som';
 
         return 'dung_gio';
+    }
+
+    /**
+     * Cập nhật trạng thái chấm công dựa trên giờ vào/ra
+     */
+    public function capNhatTrangThai()
+    {
+        // Kiểm tra đi muộn
+        if ($this->gio_vao && $this->kiemTraDiMuon()) {
+            $this->trang_thai = 'di_muon';
+        }
+        // Kiểm tra về sớm
+        elseif ($this->gio_ra && $this->kiemTraVeSom()) {
+            $this->trang_thai = 've_som';
+        }
+        // Bình thường
+        elseif ($this->gio_vao && $this->gio_ra) {
+            $this->trang_thai = 'dung_gio';
+        }
+        // Không chấm công
+        else {
+            $this->trang_thai = 'khong_cham_cong';
+        }
+
+        return $this;
+    }
+
+    public function kiemTraDiMuon()
+    {
+        if (!$this->gio_vao) return false;
+        $gioVaoQuyDinh = '08:30:00';
+        return $this->gio_vao > $gioVaoQuyDinh;
+    }
+
+    public function kiemTraVeSom()
+    {
+        if (!$this->gio_ra) return false;
+        $gioRaQuyDinh = '17:30:00';
+        return $this->gio_ra < $gioRaQuyDinh;
     }
 }

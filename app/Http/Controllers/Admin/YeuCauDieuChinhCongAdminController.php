@@ -8,13 +8,13 @@ use App\Models\ChamCong;
 use App\Models\PhongBan;
 use App\Models\YeuCauDieuChinhCong;
 use App\Models\NguoiDung;
-use App\Notifications\PheDuyetYeuCauChinhCong;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Notifications\PheDuyetYeuCauChinhCong;
 
 class YeuCauDieuChinhCongAdminController extends Controller
 {
@@ -151,7 +151,16 @@ class YeuCauDieuChinhCongAdminController extends Controller
                     ]);
                 }
 
-                $chamCong->capNhatTrangThai();
+                // Cập nhật trạng thái thủ công
+                if ($chamCong->gio_vao && $chamCong->kiemTraDiMuon()) {
+                    $chamCong->trang_thai = 'di_muon';
+                } elseif ($chamCong->gio_ra && $chamCong->kiemTraVeSom()) {
+                    $chamCong->trang_thai = 've_som';
+                } elseif ($chamCong->gio_vao && $chamCong->gio_ra) {
+                    $chamCong->trang_thai = 'dung_gio';
+                } else {
+                    $chamCong->trang_thai = 'khong_cham_cong';
+                }
                 $chamCong->save();
             }
 
@@ -162,17 +171,14 @@ class YeuCauDieuChinhCongAdminController extends Controller
                 'ghi_chu_duyet' => $request->ghi_chu_duyet
             ]);
 
-            // Gửi thông báo
-            $yeuCau->nguoiDung->notify(new DuyetDonController($yeuCau, $trangThaiMoi));
-
+            $yeuCau->nguoiDung->notify(new PheDuyetYeuCauChinhCong($yeuCau, $trangThaiMoi));
             DB::commit();
 
-            $thongBao = $request->hanh_dong === 'duyet' 
-                ? 'Đã duyệt yêu cầu thành công!' 
+            $thongBao = $request->hanh_dong === 'duyet'
+                ? 'Đã duyệt yêu cầu thành công!'
                 : 'Đã từ chối yêu cầu thành công!';
 
             return redirect()->route('admin.yeu-cau-dieu-chinh-cong.index')->with('success', $thongBao);
-
         } catch (\Exception $e) {
             DB::rollback();
             return redirect()->back()->withErrors(['error' => 'Có lỗi xảy ra: ' . $e->getMessage()]);
@@ -281,7 +287,6 @@ class YeuCauDieuChinhCongAdminController extends Controller
                 'message' => $thongBao,
                 'affected_count' => $soLuongCapNhat
             ]);
-
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
@@ -315,7 +320,6 @@ class YeuCauDieuChinhCongAdminController extends Controller
 
             return redirect()->route('admin.yeu-cau-dieu-chinh-cong.index')
                 ->with('success', 'Xóa yêu cầu thành công!');
-
         } catch (\Exception $e) {
             DB::rollback();
             return redirect()->back()->withErrors(['error' => 'Có lỗi xảy ra: ' . $e->getMessage()]);
