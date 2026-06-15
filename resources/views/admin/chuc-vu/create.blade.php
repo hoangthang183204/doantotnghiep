@@ -32,100 +32,106 @@
             </div>
         @endif
 
-        <form action="{{ route('admin.chuc-vu.store') }}"
-              method="POST"
-              class="space-y-5">
+        <form action="{{ route('admin.chuc-vu.store') }}" method="POST">
 
             @csrf
 
-            {{-- TÊN CHỨC VỤ --}}
-            <div>
-                <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
-                    Tên chức vụ
-                </label>
+            {{-- GRID 2 CỘT --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                <input
-                    type="text"
-                    name="ten"
-                    value="{{ old('ten') }}"
-                    class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-            </div>
+                {{-- TÊN CHỨC VỤ --}}
+                <div>
+                    <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
+                        Tên chức vụ
+                    </label>
 
-            {{-- MÃ CHỨC VỤ --}}
-            <div>
-                <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
-                    Mã chức vụ
-                </label>
+                    <input
+                        type="text"
+                        name="ten"
+                        value="{{ old('ten') }}"
+                        placeholder="VD: Trưởng phòng Nhân sự..."
+                        class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
 
-                <input
-                    type="text"
-                    name="ma"
-                    value="{{ old('ma') }}"
-                    class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-            </div>
+                {{-- MÃ CHỨC VỤ --}}
+                <div>
+                    <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
+                        Mã chức vụ
+                    </label>
 
-            {{-- PHÒNG BAN --}}
-            <div>
-                <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
-                    Phòng ban
-                </label>
+                    <input
+                        type="text"
+                        name="ma"
+                        value="{{ old('ma') }}"
+                        placeholder="VD: TP_NS..."
+                        class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
 
-                <select
-                    name="phong_ban_id"
-                    class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-3">
+                {{-- PHÒNG BAN --}}
+                <div>
+                    <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
+                        Phòng ban
+                    </label>
 
-                    <option value="">
-                        -- Chọn phòng ban --
-                    </option>
+                    <select
+                        name="phong_ban_id"
+                        class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none">
 
-                    @foreach($phongBans as $pb)
-                        <option value="{{ $pb->id }}">
-                            {{ $pb->ten_phong_ban }}
+                        <option value="">
+                            -- Chọn phòng ban --
                         </option>
-                    @endforeach
 
-                </select>
-            </div>
+                        @foreach($phongBans as $pb)
+                            <option value="{{ $pb->id }}" {{ old('phong_ban_id') == $pb->id ? 'selected' : '' }}>
+                                {{ $pb->ten_phong_ban }}
+                            </option>
+                        @endforeach
 
-            {{-- MÔ TẢ --}}
-            <div>
-                <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
-                    Mô tả
-                </label>
+                    </select>
+                </div>
 
-                <textarea
-                    name="mo_ta"
-                    rows="4"
-                    class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-3">{{ old('mo_ta') }}</textarea>
-            </div>
+                {{-- TRẠNG THÁI --}}
+                <div>
+                    <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
+                        Trạng thái
+                    </label>
 
-            {{-- TRẠNG THÁI --}}
-            <div>
-                <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
-                    Trạng thái
-                </label>
+                    <select
+                        name="trang_thai"
+                        class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none">
 
-                <select
-                    name="trang_thai"
-                    class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-3">
+                        <option value="1" {{ old('trang_thai', '1') == '1' ? 'selected' : '' }}>Hoạt động</option>
+                        <option value="0" {{ old('trang_thai') == '0' ? 'selected' : '' }}>Ngừng hoạt động</option>
 
-                    <option value="1">Hoạt động</option>
-                    <option value="0">Ngừng hoạt động</option>
+                    </select>
+                </div>
 
-                </select>
+                {{-- MÔ TẢ (Cho chiếm 2 cột để rộng rãi) --}}
+                <div class="md:col-span-2">
+                    <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
+                        Mô tả
+                    </label>
+
+                    <textarea
+                        name="mo_ta"
+                        rows="4"
+                        placeholder="Nhập mô tả chi tiết về chức vụ này..."
+                        class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none">{{ old('mo_ta') }}</textarea>
+                </div>
+
             </div>
 
             {{-- BUTTON --}}
-            <div class="flex gap-3 pt-3">
+            <div class="flex gap-3 mt-8">
 
                 <button
                     type="submit"
-                    class="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                    class="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
                     Lưu chức vụ
                 </button>
 
                 <a href="{{ route('admin.chuc-vu.index') }}"
-                   class="px-5 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg">
+                   class="px-5 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition">
                     Quay lại
                 </a>
 
