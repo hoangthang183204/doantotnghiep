@@ -54,7 +54,7 @@ Route::prefix('admin/phan-quyen')->name('admin.phan-quyen.')->group(function () 
 |--------------------------------------------------------------------------
 */
 Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
-    
+
     // ========== DASHBOARD ==========
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -72,7 +72,7 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     // ========== QUẢN LÝ NGƯỜI DÙNG ==========
     Route::middleware('permission:user.view')->group(function () {
         Route::get('/nguoi-dung', [NguoiDungController::class, 'index'])->name('nguoi-dung.index');
-        Route::get('/nguoi-dung/{id}', [NguoiDungController::class, 'show']) ->whereNumber('id') ->name('nguoi-dung.show');
+        Route::get('/nguoi-dung/{id}', [NguoiDungController::class, 'show'])->whereNumber('id')->name('nguoi-dung.show');
     });
 
     Route::middleware('permission:user.create')->group(function () {
@@ -80,7 +80,16 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
         Route::post('/nguoi-dung', [NguoiDungController::class, 'store'])->name('nguoi-dung.store');
     });
 
-    Route::get('/nguoi-dung/{id}/edit', [NguoiDungController::class, 'edit'])->whereNumber('id')->name('nguoi-dung.edit');
+    Route::middleware('permission:user.edit')->group(function () {
+
+        Route::get('/nguoi-dung/{id}/edit', [NguoiDungController::class, 'edit'])
+            ->whereNumber('id')
+            ->name('nguoi-dung.edit');
+
+        Route::put('/nguoi-dung/{id}', [NguoiDungController::class, 'update'])
+            ->whereNumber('id')
+            ->name('nguoi-dung.update');
+    });
 
     Route::middleware('permission:user.delete')->group(function () {
         Route::delete('/nguoi-dung/{id}', [NguoiDungController::class, 'destroy'])->whereNumber('id')->name('nguoi-dung.destroy');
@@ -209,7 +218,7 @@ Route::prefix('admin')->name('admin.')->middleware('role')->group(function () {
     });
 
     // ========== VAI TRÒ ==========
-    
+
 
     Route::middleware('permission:role.create')->group(function () {
         Route::get('/vai-tro/create', [VaiTroController::class, 'create'])->name('vai-tro.create');
