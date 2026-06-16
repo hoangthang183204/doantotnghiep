@@ -342,3 +342,89 @@ Route::prefix('admin/ung-vien')->name('admin.ung_vien.')->group(function () {
     Route::post('/{id}/archive', [UngVienController::class, 'archive'])->name('archive');
     Route::post('/{id}/restore', [UngVienController::class, 'restore'])->name('restore');
 });
+
+
+
+
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Employee\DashboardEmployeeController;
+use App\Http\Controllers\Employee\ChamCongController as EmployeeChamCongController;
+
+
+// =============================================
+// AUTH ROUTES
+// =============================================
+Route::get('/', function () {
+    if (auth()->check()) {
+        $user = auth()->user();
+        $isAdmin = $user->vaiTros()->whereIn('name', ['admin', 'Super Admin', 'Admin'])->exists();
+        return redirect($isAdmin ? route('admin.dashboard') : route('employee.dashboard'));
+    }
+    return redirect()->route('login');
+});
+
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+// =============================================
+// ADMIN ROUTES - Chỉ Admin mới vào được
+// =============================================
+Route::prefix('admin')
+    ->middleware(['auth', 'admin'])
+    ->name('admin.')
+    ->group(function () {
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+        // Các route admin khác...
+        Route::get('/cham-cong', [App\Http\Controllers\Admin\ChamCongController::class, 'index'])->name('cham-cong.index');
+        Route::get('/bang-luong', [App\Http\Controllers\Admin\BangLuongController::class, 'index'])->name('bang-luong.index');
+        Route::get('/ho-so', [App\Http\Controllers\Admin\HoSoController::class, 'index'])->name('ho-so.index');
+        Route::get('/nguoi-dung', [App\Http\Controllers\Admin\NguoiDungController::class, 'index'])->name('nguoi-dung.index');
+        Route::get('/phong-ban', [App\Http\Controllers\Admin\PhongBanController::class, 'index'])->name('phong-ban.index');
+        Route::get('/chuc-vu', [App\Http\Controllers\Admin\ChucVuController::class, 'index'])->name('chuc-vu.index');
+        Route::get('/vai-tro', [App\Http\Controllers\Admin\VaiTroController::class, 'index'])->name('vai-tro.index');
+        Route::get('/phan-quyen', [App\Http\Controllers\Admin\PhanQuyenController::class, 'index'])->name('phan-quyen.index');
+        Route::get('/hop-dong', [App\Http\Controllers\Admin\HopDongLaoDongController::class, 'index'])->name('hop-dong.index');
+        Route::get('/ung-vien', [App\Http\Controllers\Admin\UngVienController::class, 'index'])->name('ung-vien.index');
+        Route::get('/tin-tuyen-dung', [App\Http\Controllers\Admin\TinTuyenDungController::class, 'index'])->name('tin-tuyen-dung.index');
+        Route::get('/duyet-don', [App\Http\Controllers\Admin\DuyetDonController::class, 'index'])->name('duyet-don.index');
+        Route::get('/don-nghi', [App\Http\Controllers\Admin\DonNghiController::class, 'index'])->name('don-nghi.index');
+        Route::get('/loai-nghi-phep', [App\Http\Controllers\Admin\LoaiNghiController::class, 'index'])->name('loai-nghi-phep.index');
+        Route::get('/phu-cap', [App\Http\Controllers\Admin\PhuCapController::class, 'index'])->name('phu-cap.index');
+        Route::get('/tang-ca', [App\Http\Controllers\Admin\TangCaController::class, 'index'])->name('tang-ca.index');
+        Route::get('/thuc-hien-tang-ca', [App\Http\Controllers\Admin\ThucHienTangCaController::class, 'index'])->name('thuc-hien-tang-ca.index');
+        Route::get('/yeu-cau-dieu-chinh-cong', [App\Http\Controllers\Admin\YeuCauDieuChinhCongAdminController::class, 'index'])->name('yeu-cau-dieu-chinh-cong.index');
+        Route::get('/quy-dinh', [App\Http\Controllers\Admin\QuyDinhController::class, 'index'])->name('quy-dinh.index');
+        Route::get('/ho-so-ca-nhan', [App\Http\Controllers\Admin\HoSoCaNhanController::class, 'index'])->name('ho-so-ca-nhan.index');
+    });
+
+// =============================================
+// EMPLOYEE ROUTES - Chỉ Nhân viên mới vào được
+// =============================================
+Route::prefix('employee')
+    ->middleware(['auth', 'employee'])
+    ->name('employee.')
+    ->group(function () {
+        // Dashboard
+        Route::get('/dashboard', [DashboardEmployeeController::class, 'index'])->name('dashboard');
+
+        // Chấm công
+        Route::prefix('cham-cong')->name('cham-cong.')->group(function () {
+            Route::get('/', [EmployeeChamCongController::class, 'index'])->name('index');
+            Route::post('/check-in', [EmployeeChamCongController::class, 'checkIn'])->name('check-in');
+            Route::post('/check-out', [EmployeeChamCongController::class, 'checkOut'])->name('check-out');
+            Route::get('/history', [EmployeeChamCongController::class, 'history'])->name('history');
+        });
+
+        Route::prefix('cham-cong')
+            ->name('cham-cong.')
+            ->group(function () {
+                Route::get('/', [EmployeeChamCongController::class, 'index'])->name('index');
+                Route::post('/check-in', [EmployeeChamCongController::class, 'checkIn'])
+                    ->middleware(['attendance.location'])->name('check-in');
+                Route::post('/check-out', [EmployeeChamCongController::class, 'checkOut'])
+                    ->middleware(['attendance.location'])->name('check-out');
+                Route::get('/history', [EmployeeChamCongController::class, 'history'])->name('history');
+            });
+    });
