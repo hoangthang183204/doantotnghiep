@@ -130,4 +130,11 @@ class NguoiDung extends Authenticatable implements JWTSubject
 
         return $this->ten_dang_nhap;
     }
+    public function lich_su_duyet()
+{
+    return $this->hasMany(
+        LichSuDuyetDonNghi::class,
+        'nguoi_duyet_id'
+    );
+}
 }

@@ -49,4 +49,11 @@ class DonXinNghi extends Model
     {
         return $this->belongsTo(NguoiDung::class, 'ban_giao_cho_id');
     }
+    public function lichSuDuyet()
+{
+    return $this->hasMany(
+        LichSuDuyetDonNghi::class,
+        'don_xin_nghi_id'
+    )->orderBy('cap_duyet');
+}
 }
