@@ -1,3 +1,4 @@
+{{-- resources/views/admin/hop-dong-lao-dong/create.blade.php --}}
 @extends('layouts.admin')
 
 @section('title', 'Thêm hợp đồng lao động')
@@ -32,17 +33,7 @@
 
     {{-- FORM --}}
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-        {{-- THỬ CÁC CÁCH GỌI ROUTE KHÁC NHAU --}}
-        
-        {{-- Cách 1: Dùng route name đầy đủ --}}
         <form action="{{ route('admin.hop-dong.store') }}" method="POST" enctype="multipart/form-data">
-        
-        {{-- Cách 2: Nếu cách 1 không được, thử cách này --}}
-        {{-- <form action="{{ url('/admin/hop-dong/tao-moi') }}" method="POST" enctype="multipart/form-data"> --}}
-        
-        {{-- Cách 3: Hoặc thử cách này --}}
-        {{-- <form action="/admin/hop-dong/tao-moi" method="POST" enctype="multipart/form-data"> --}}
-        
             @csrf
             <div class="p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -120,12 +111,29 @@
                         <input type="number" step="1000" name="luong_co_ban" value="{{ old('luong_co_ban') }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                     </div>
 
-                    {{-- Phụ cấp --}}
+                    {{-- ===== PHỤ CẤP - LẤY TỪ BẢNG PHU_CAP ===== --}}
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Phụ cấp
                         </label>
-                        <input type="number" step="1000" name="phu_cap" value="{{ old('phu_cap') }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <select name="phu_cap_ids[]" id="phu_cap_ids" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500" multiple>
+                            @foreach($phuCaps as $pc)
+                                <option value="{{ $pc->id }}" {{ old('phu_cap_ids') && in_array($pc->id, old('phu_cap_ids')) ? 'selected' : '' }}>
+                                    {{ $pc->ten }} - {{ number_format($pc->so_tien_mac_dinh) }} VND
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Giữ Ctrl để chọn nhiều phụ cấp</p>
+                    </div>
+
+                    {{-- Danh sách phụ cấp đã chọn (hiển thị) --}}
+                    <div id="selected_phu_caps" class="col-span-2">
+                        <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4">
+                            <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">📋 Phụ cấp đã chọn:</p>
+                            <div id="phu_cap_list" class="flex flex-wrap gap-2">
+                                <span class="text-sm text-gray-500 dark:text-gray-400">Chưa có phụ cấp nào được chọn</span>
+                            </div>
+                        </div>
                     </div>
 
                     {{-- Địa điểm làm việc --}}
@@ -179,6 +187,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // ===== XỬ LÝ LOẠI HỢP ĐỒNG =====
         const loaiHopDong = document.getElementById('loai_hop_dong');
         const ngayKetThuc = document.getElementById('ngay_ket_thuc');
         const ngayKetThucRequired = document.getElementById('ngay_ket_thuc_required');
@@ -198,6 +207,63 @@
 
         loaiHopDong?.addEventListener('change', toggleNgayKetThuc);
         toggleNgayKetThuc();
+
+        // ===== XỬ LÝ PHỤ CẤP - HIỂN THỊ DANH SÁCH ĐÃ CHỌN =====
+        const phuCapSelect = document.getElementById('phu_cap_ids');
+        const phuCapList = document.getElementById('phu_cap_list');
+
+        function updatePhuCapList() {
+            const selectedOptions = phuCapSelect.selectedOptions;
+            const phuCapItems = [];
+
+            for (let option of selectedOptions) {
+                phuCapItems.push(option.text);
+            }
+
+            if (phuCapItems.length === 0) {
+                phuCapList.innerHTML = '<span class="text-sm text-gray-500 dark:text-gray-400">Chưa có phụ cấp nào được chọn</span>';
+            } else {
+                phuCapList.innerHTML = phuCapItems.map(item => 
+                    `<span class="inline-flex items-center px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm">
+                        ${item}
+                    </span>`
+                ).join(' ');
+            }
+        }
+
+        phuCapSelect?.addEventListener('change', updatePhuCapList);
+        updatePhuCapList();
+
+        // ===== XỬ LÝ CHỌN NHÂN VIÊN - TỰ ĐỘNG ĐIỀN THÔNG TIN =====
+        const nhanVienSelect = document.querySelector('select[name="nguoi_dung_id"]');
+        const luongCoBanInput = document.querySelector('input[name="luong_co_ban"]');
+
+        nhanVienSelect?.addEventListener('change', function() {
+            const userId = this.value;
+            if (userId) {
+                // Gọi AJAX để lấy thông tin nhân viên
+                fetch(`/admin/get-nhan-vien-info/${userId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Tự động điền lương cơ bản từ chức vụ
+                            if (data.luong_co_ban) {
+                                luongCoBanInput.value = data.luong_co_ban;
+                            }
+                            
+                            // Tự động chọn phụ cấp của nhân viên (nếu có)
+                            if (data.phu_cap_ids && data.phu_cap_ids.length > 0) {
+                                const options = phuCapSelect.options;
+                                for (let i = 0; i < options.length; i++) {
+                                    options[i].selected = data.phu_cap_ids.includes(parseInt(options[i].value));
+                                }
+                                updatePhuCapList();
+                            }
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+        });
     });
 </script>
 @endsection
