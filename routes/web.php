@@ -23,7 +23,6 @@ use App\Http\Controllers\Admin\ThucHienTangCaController;
 use App\Http\Controllers\Admin\YeuCauDieuChinhCongAdminController;
 use App\Http\Controllers\Admin\PhanQuyenController;
 use App\Http\Controllers\Admin\HoSoCaNhanController;
-use App\Http\Controllers\Admin\TrungTuyenController;
 
 /*
 |--------------------------------------------------------------------------
@@ -350,7 +349,8 @@ Route::prefix('admin/ung-vien')->name('admin.ung_vien.')->group(function () {
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Employee\DashboardEmployeeController;
 use App\Http\Controllers\Employee\ChamCongController as EmployeeChamCongController;
-
+use App\Http\Controllers\Employee\DonNghiController as EmployeeDonNghiController;
+use App\Http\Controllers\Employee\HoSoController as EmployeeHoSoController;
 
 // =============================================
 // AUTH ROUTES
@@ -376,7 +376,7 @@ Route::prefix('admin')
     ->name('admin.')
     ->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-
+        
         // Các route admin khác...
         Route::get('/cham-cong', [App\Http\Controllers\Admin\ChamCongController::class, 'index'])->name('cham-cong.index');
         Route::get('/bang-luong', [App\Http\Controllers\Admin\BangLuongController::class, 'index'])->name('bang-luong.index');
@@ -418,6 +418,24 @@ Route::prefix('employee')
             Route::get('/history', [EmployeeChamCongController::class, 'history'])->name('history');
         });
 
+        // Đơn nghỉ phép
+        Route::prefix('don-nghi')->name('don-nghi.')->group(function () {
+            Route::get('/', [EmployeeDonNghiController::class, 'index'])->name('index');
+            Route::get('/create', [EmployeeDonNghiController::class, 'create'])->name('create');
+            Route::post('/', [EmployeeDonNghiController::class, 'store'])->name('store');
+            Route::get('/{id}', [EmployeeDonNghiController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [EmployeeDonNghiController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [EmployeeDonNghiController::class, 'update'])->name('update');
+            Route::post('/{id}/huy', [EmployeeDonNghiController::class, 'huy'])->name('huy');
+        });
+
+        // Hồ sơ cá nhân
+        Route::prefix('ho-so')->name('ho-so.')->group(function () {
+            Route::get('/', [EmployeeHoSoController::class, 'index'])->name('index');
+            Route::put('/', [EmployeeHoSoController::class, 'update'])->name('update');
+            Route::post('/change-password', [EmployeeHoSoController::class, 'changePassword'])->name('change-password');
+        });
+
         Route::prefix('cham-cong')
             ->name('cham-cong.')
             ->group(function () {
@@ -429,8 +447,3 @@ Route::prefix('employee')
                 Route::get('/history', [EmployeeChamCongController::class, 'history'])->name('history');
             });
     });
-// ========== TRÚNG TUYỂN ==========
-Route::prefix('admin/trung-tuyen')->name('admin.trung_tuyen.')->group(function () {
-    Route::get('/', [TrungTuyenController::class, 'index'])->name('index');
-    Route::post('/{id}/chuyen-thanh-nhan-vien', [TrungTuyenController::class, 'convertToEmployee'])->name('convert');
-});
