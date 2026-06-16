@@ -17,13 +17,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // Đăng ký middleware aliases
         $middleware->alias([
             'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
-            'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+            // 'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
             
             // Middleware của bạn
             'admin' => \App\Http\Middleware\CheckAdmin::class,
             'employee' => \App\Http\Middleware\CheckEmployee::class,
             'role' => \App\Http\Middleware\CheckRoleAccess::class,
-            'attendance.location' => \App\Http\Middleware\CheckAttendanceLocation::class, // THÊM DÒNG NÀY
+            'attendance.location' => \App\Http\Middleware\CheckAttendanceLocation::class,
+            'permission' => \App\Http\Middleware\CheckPermission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
