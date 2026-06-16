@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\ThucHienTangCaController;
 use App\Http\Controllers\Admin\YeuCauDieuChinhCongAdminController;
 use App\Http\Controllers\Admin\PhanQuyenController;
 use App\Http\Controllers\Admin\HoSoCaNhanController;
+use App\Http\Controllers\Admin\TrungTuyenController;
 
 /*
 |--------------------------------------------------------------------------
@@ -428,3 +429,8 @@ Route::prefix('employee')
                 Route::get('/history', [EmployeeChamCongController::class, 'history'])->name('history');
             });
     });
+// ========== TRÚNG TUYỂN ==========
+Route::prefix('admin/trung-tuyen')->name('admin.trung_tuyen.')->group(function () {
+    Route::get('/', [TrungTuyenController::class, 'index'])->name('index');
+    Route::post('/{id}/chuyen-thanh-nhan-vien', [TrungTuyenController::class, 'convertToEmployee'])->name('convert');
+});

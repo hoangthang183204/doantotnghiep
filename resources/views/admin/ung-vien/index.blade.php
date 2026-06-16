@@ -152,7 +152,8 @@
                                         <a href="{{ route('admin.ung_vien.show', $item->id) }}"
                                             class="px-3 py-1 rounded-lg bg-blue-50 text-blue-600 text-xs">
                                             Xem
-                                        </a>
+                                        </a> 
+                                              
                                         {{-- NÚT LƯU TRỮ --}}
                                         @if($item->trang_thai != 'luu_tru')
                                             <form action="{{ route('admin.ung_vien.archive', $item->id) }}"
