@@ -54,6 +54,7 @@ class ChamCong extends Model
     const TRANG_THAI_DUYET_TU_CHOI = 2;
     const TRANG_THAI_DUYET_DANG_DUYET = 3;
 
+    const TRANG_THAI_DEN_SOM = 'den_som';
     const TRANG_THAI_DUNG_GIO = 'dung_gio';
     const TRANG_THAI_DI_MUON = 'di_muon';
     const TRANG_THAI_VE_SOM = 've_som';
@@ -75,31 +76,11 @@ class ChamCong extends Model
         return $this->belongsTo(NguoiDung::class, 'nguoi_phe_duyet_id');
     }
 
-    // =========================================================================
-    // Accessors (Getter)
-    // =========================================================================
-
-    public function getGioVaoFormatAttribute(): string
-    {
-        if (!$this->gio_vao) {
-            return '--:--';
-        }
-        $parts = explode(':', $this->gio_vao);
-        return count($parts) >= 2 ? $parts[0] . ':' . $parts[1] : $this->gio_vao;
-    }
-
-    public function getGioRaFormatAttribute(): string
-    {
-        if (!$this->gio_ra) {
-            return '--:--';
-        }
-        $parts = explode(':', $this->gio_ra);
-        return count($parts) >= 2 ? $parts[0] . ':' . $parts[1] : $this->gio_ra;
-    }
 
     public function getTrangThaiTextAttribute(): string
     {
         $statuses = [
+            self::TRANG_THAI_DEN_SOM => 'Đến sớm',
             self::TRANG_THAI_DUNG_GIO => 'Đúng giờ',
             self::TRANG_THAI_DI_MUON => 'Đi muộn',
             self::TRANG_THAI_VE_SOM => 'Về sớm',
@@ -110,6 +91,23 @@ class ChamCong extends Model
 
         return $statuses[$this->trang_thai] ?? $this->trang_thai;
     }
+
+    // Cập nhật getTrangThaiBadgeAttribute
+    public function getTrangThaiBadgeAttribute(): string
+    {
+        $badges = [
+            self::TRANG_THAI_DEN_SOM => 'info',
+            self::TRANG_THAI_DUNG_GIO => 'success',
+            self::TRANG_THAI_DI_MUON => 'warning',
+            self::TRANG_THAI_VE_SOM => 'warning',
+            self::TRANG_THAI_VANG_MAT => 'danger',
+            self::TRANG_THAI_NGHI_PHEP => 'info',
+            self::TRANG_THAI_KHONG_CHAM_CONG => 'secondary',
+        ];
+
+        return $badges[$this->trang_thai] ?? 'secondary';
+    }
+
 
     public function getTrangThaiDuyetTextAttribute(): string
     {
@@ -135,19 +133,6 @@ class ChamCong extends Model
         return $badges[$this->trang_thai_duyet] ?? 'secondary';
     }
 
-    public function getTrangThaiBadgeAttribute(): string
-    {
-        $badges = [
-            self::TRANG_THAI_DUNG_GIO => 'success',
-            self::TRANG_THAI_DI_MUON => 'warning',
-            self::TRANG_THAI_VE_SOM => 'warning',
-            self::TRANG_THAI_VANG_MAT => 'danger',
-            self::TRANG_THAI_NGHI_PHEP => 'info',
-            self::TRANG_THAI_KHONG_CHAM_CONG => 'secondary',
-        ];
-
-        return $badges[$this->trang_thai] ?? 'secondary';
-    }
 
     public function getPhuongThucChamCongTextAttribute(): string
     {
@@ -319,7 +304,7 @@ class ChamCong extends Model
         if ($phutDiMuon > 0) {
             return self::TRANG_THAI_DI_MUON;
         }
-        
+
         if ($phutVeSom > 0) {
             return self::TRANG_THAI_VE_SOM;
         }
@@ -574,5 +559,32 @@ class ChamCong extends Model
             'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at?->format('Y-m-d H:i:s'),
         ];
+    }
+
+    public function getGioVaoFormatAttribute(): string
+    {
+        if (!$this->gio_vao) {
+            return '--:--';
+        }
+        // Parse với timezone Asia/Ho_Chi_Minh
+        $time = Carbon::parse($this->gio_vao, 'Asia/Ho_Chi_Minh');
+        return $time->format('H:i');
+    }
+
+    public function getGioRaFormatAttribute(): string
+    {
+        if (!$this->gio_ra) {
+            return '--:--';
+        }
+        $time = Carbon::parse($this->gio_ra, 'Asia/Ho_Chi_Minh');
+        return $time->format('H:i');
+    }
+
+    public function getNgayChamCongFormatAttribute(): string
+    {
+        if (!$this->ngay_cham_cong) {
+            return '--/--/----';
+        }
+        return Carbon::parse($this->ngay_cham_cong)->format('d/m/Y');
     }
 }

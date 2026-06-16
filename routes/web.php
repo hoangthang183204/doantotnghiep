@@ -110,6 +110,7 @@ Route::prefix('admin')
         Route::get('/cham-cong/{id}', [ChamCongController::class, 'show'])->name('cham-cong.show');
         Route::get('/cham-cong/export', [ChamCongController::class, 'export'])->name('cham-cong.export');
         Route::post('/cham-cong/bulk-action', [ChamCongController::class, 'bulkAction'])->name('cham-cong.bulk-action');
+        Route::post('/cham-cong/{id}/phe-duyet', [ChamCongController::class, 'pheDuyetDonLe'])->name('cham-cong.phe-duyet');
 
         // ========== ĐƠN NGHỈ ==========
         Route::get('/don-nghi', [DonNghiController::class, 'index'])->name('don_nghi.index');
@@ -239,6 +240,25 @@ Route::prefix('employee')
             Route::post('/check-out', [EmployeeChamCongController::class, 'checkOut'])->name('check-out');
             Route::get('/history', [EmployeeChamCongController::class, 'history'])->name('history');
         });
+
+        // ===== TĂNG CA =====
+        Route::prefix('tang-ca')->name('tang-ca.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Employee\TangCaController::class, 'index'])->name('index');
+            Route::get('/create', [App\Http\Controllers\Employee\TangCaController::class, 'create'])->name('create');
+            Route::post('/', [App\Http\Controllers\Employee\TangCaController::class, 'store'])->name('store');
+            Route::get('/{id}', [App\Http\Controllers\Employee\TangCaController::class, 'show'])->name('show');
+            Route::post('/{id}/huy', [App\Http\Controllers\Employee\TangCaController::class, 'huy'])->name('huy');
+        });
+
+        Route::prefix('yeu-cau-chinh-cong')->name('yeu-cau-chinh-cong.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Employee\YeuCauChinhCongController::class, 'index'])->name('index');
+            Route::get('/create', [App\Http\Controllers\Employee\YeuCauChinhCongController::class, 'create'])->name('create');
+            Route::post('/', [App\Http\Controllers\Employee\YeuCauChinhCongController::class, 'store'])->name('store');
+            Route::get('/{id}', [App\Http\Controllers\Employee\YeuCauChinhCongController::class, 'show'])->name('show');
+            Route::post('/{id}/huy', [App\Http\Controllers\Employee\YeuCauChinhCongController::class, 'huy'])->name('huy');
+            Route::get('/{id}/download', [App\Http\Controllers\Employee\YeuCauChinhCongController::class, 'download'])->name('download');
+        });
+
 
         // Đơn nghỉ phép
         Route::prefix('don-nghi')->name('don-nghi.')->group(function () {
