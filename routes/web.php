@@ -304,3 +304,4 @@ Route::post('/check-in', [EmployeeChamCongController::class, 'checkIn'])->name('
         });
     });
     });
+    });

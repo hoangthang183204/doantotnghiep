@@ -70,7 +70,7 @@
 
             <!-- Lương -->
             <div class="pt-4">
-           
+
                 <a href="#"
                     class="menu-toggle flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
                     <i class="fas fa-money-bill-wave w-5 text-center"></i>
@@ -90,7 +90,7 @@
 
             <!-- Nghỉ phép -->
             <div class="pt-4">
-               
+
 
                 <button onclick="toggleSubmenu('leaveSubMenu')"
                     class="menu-toggle w-full flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 {{ request()->routeIs('employee.don-nghi*') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}"
