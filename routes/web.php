@@ -61,6 +61,7 @@ Route::prefix('admin')
     ->group(function () {
 
         // ========== DASHBOARD ==========
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -98,6 +99,16 @@ Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dash
         Route::get('/chuc-vu', [ChucVuController::class, 'index'])->name('chuc-vu.index');
         Route::get('/chuc-vu/create', [ChucVuController::class, 'create'])->name('chuc-vu.create');
         Route::post('/chuc-vu', [ChucVuController::class, 'store'])->name('chuc-vu.store');
+        Route::get('/chuc-vu/{id}', [ChucVuController::class, 'show'])->name('chuc-vu.show');
+        Route::get('/chuc-vu/{id}/edit', [ChucVuController::class, 'edit'])->name('chuc-vu.edit');
+        Route::put('/chuc-vu/{id}', [ChucVuController::class, 'update'])->name('chuc-vu.update');
+        Route::delete('/chuc-vu/{id}', [ChucVuController::class, 'destroy'])->name('chuc-vu.destroy');
+
+        // ========== HỒ SƠ CÁ NHÂN ==========
+        Route::get('/ho-so-ca-nhan', [HoSoCaNhanController::class, 'index'])->name('ho-so-ca-nhan.index');
+        Route::put('/ho-so-ca-nhan/update', [HoSoCaNhanController::class, 'update'])->name('ho-so-ca-nhan.update');
+        Route::post('/ho-so-ca-nhan/change-password', [HoSoCaNhanController::class, 'changePassword'])->name('ho-so-ca-nhan.change-password');
+
 Route::get('/chuc-vu/{id}', [ChucVuController::class, 'show'])->name('chuc-vu.show');
         Route::get('/chuc-vu/{id}/edit', [ChucVuController::class, 'edit'])->name('chuc-vu.edit');
         Route::put('/chuc-vu/{id}', [ChucVuController::class, 'update'])->name('chuc-vu.update');
@@ -137,6 +148,7 @@ Route::get('/chuc-vu/{id}', [ChucVuController::class, 'show'])->name('chuc-vu.sh
         // ========== TUYỂN DỤNG ==========
         Route::get('/tin-tuyen-dung', [TinTuyenDungController::class, 'index'])->name('tin-tuyen-dung.index');
         Route::get('/tin-tuyen-dung/{id}', [TinTuyenDungController::class, 'show'])->name('tin-tuyen-dung.show');
+        Route::get('/tin-tuyen-dung/create', [TinTuyenDungController::class, 'create'])->name('tin-tuyen-dung.create');
 Route::get('/tin-tuyen-dung/create', [TinTuyenDungController::class, 'create'])->name('tin-tuyen-dung.create');
         Route::post('/tin-tuyen-dung', [TinTuyenDungController::class, 'store'])->name('tin-tuyen-dung.store');
         Route::get('/tin-tuyen-dung/{id}/edit', [TinTuyenDungController::class, 'edit'])->name('tin-tuyen-dung.edit');
@@ -173,6 +185,7 @@ Route::get('/tin-tuyen-dung/create', [TinTuyenDungController::class, 'create'])-
             Route::post('/tao-moi', [HopDongLaoDongController::class, 'store'])->name('hop-dong.store');
             Route::get('/{id}', [HopDongLaoDongController::class, 'show'])->name('hop-dong.show');
             Route::get('/{id}/sua', [HopDongLaoDongController::class, 'edit'])->name('hop-dong.edit');
+            Route::put('/{id}', [HopDongLaoDongController::class, 'update'])->name('hop-dong.update');
 Route::put('/{id}', [HopDongLaoDongController::class, 'update'])->name('hop-dong.update');
             Route::delete('/{id}', [HopDongLaoDongController::class, 'destroy'])->name('hop-dong.destroy');
             Route::post('/{id}/gui-ky', [HopDongLaoDongController::class, 'guiKy'])->name('hop-dong.gui-ky');
@@ -289,4 +302,5 @@ Route::post('/check-in', [EmployeeChamCongController::class, 'checkIn'])->name('
             Route::put('/', [EmployeeHoSoController::class, 'update'])->name('update');
             Route::post('/change-password', [EmployeeHoSoController::class, 'changePassword'])->name('change-password');
         });
+    });
     });
