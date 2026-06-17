@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\ThucHienTangCaController;
 use App\Http\Controllers\Admin\YeuCauDieuChinhCongAdminController;
 use App\Http\Controllers\Admin\PhanQuyenController;
 use App\Http\Controllers\Admin\HoSoCaNhanController;
+use App\Http\Controllers\Employee\HopDongController;
 
 /*
 |--------------------------------------------------------------------------
@@ -409,6 +410,9 @@ Route::prefix('employee')
     ->group(function () {
         // Dashboard
         Route::get('/dashboard', [DashboardEmployeeController::class, 'index'])->name('dashboard');
+        // Hợp Đồng của tôi
+        Route::get('/hop-dong-cua-toi', [HopDongController::class, 'getHopDongCuaToi'])
+    ->name('hop-dong.index');
 
         // Chấm công
         Route::prefix('cham-cong')->name('cham-cong.')->group(function () {
