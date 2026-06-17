@@ -25,7 +25,7 @@ class LoginController extends Controller
             try {
                 $token = Cookie::get('access_token');
                 auth('api')->setToken($token);
-                
+
                 if (auth('api')->check()) {
                     $user = auth('api')->user();
                     Auth::login($user);
@@ -54,9 +54,9 @@ class LoginController extends Controller
         // Thử đăng nhập với guard web trước
         if (Auth::attempt($credentials, $request->remember)) {
             $request->session()->regenerate();
-            
+
             $user = Auth::user();
-            
+
             // Cập nhật thông tin đăng nhập
             $user->update([
                 'lan_dang_nhap_cuoi' => now(),
@@ -65,7 +65,7 @@ class LoginController extends Controller
 
             // Tạo token cho API (nếu cần)
             $token = auth('api')->login($user);
-            
+
             // Lưu token vào cookie
             $cookie = Cookie::make(
                 'access_token',
@@ -93,7 +93,7 @@ class LoginController extends Controller
         }
 
         $user = auth('api')->user();
-        
+
         // Đăng nhập cả guard web
         Auth::login($user);
 
@@ -127,7 +127,7 @@ class LoginController extends Controller
     {
         // Logout guard web
         Auth::logout();
-        
+
         // Logout guard api
         $token = Cookie::get('access_token');
         if ($token) {
@@ -159,19 +159,26 @@ class LoginController extends Controller
             return redirect()->route('login');
         }
 
-        // Lấy vai trò đầu tiên của user
-        $vaiTro = $user->vaiTros->first();
-        $roleName = $vaiTro ? $vaiTro->name : 'nhan_vien';
+        // Lấy danh sách vai trò của user
+        $roleNames = $user->vaiTros->pluck('name')->toArray();
 
-        // Kiểm tra user có quyền admin không
-        $isAdmin = in_array($roleName, ['admin', 'Super Admin', 'Admin']);
-        
-        // Hoặc kiểm tra user có role admin không
-        if ($user->vaiTros()->whereIn('name', ['admin', 'Super Admin', 'Admin'])->exists()) {
+        // Kiểm tra admin
+        if (array_intersect($roleNames, ['admin', 'Super Admin', 'Admin'])) {
             return redirect()->route('admin.dashboard');
         }
 
-        // Mặc định là employee
+        // Kiểm tra HR
+        if (in_array('hr', $roleNames) || in_array('HR', $roleNames)) {
+            // HR có thể vào admin hoặc trang riêng
+            return redirect()->route('admin.dashboard');
+        }
+
+        // Kiểm tra Trưởng phòng
+        if (in_array('truong_phong', $roleNames)) {
+            return redirect()->route('employee.dashboard');
+        }
+
+        // Mặc định: Nhân viên
         return redirect()->route('employee.dashboard');
     }
 

@@ -170,6 +170,9 @@ class NguoiDung extends Authenticatable implements JWTSubject
             'id'
         );
     }
-    
-    
+
+    public function phuCapNhanViens()
+    {
+        return $this->hasMany(PhuCapNhanVien::class, 'nguoi_dung_id');
+    }
 }
