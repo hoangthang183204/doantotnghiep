@@ -377,7 +377,7 @@ Route::prefix('admin')
     ->name('admin.')
     ->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-        
+
         // Các route admin khác...
         Route::get('/cham-cong', [App\Http\Controllers\Admin\ChamCongController::class, 'index'])->name('cham-cong.index');
         Route::get('/bang-luong', [App\Http\Controllers\Admin\BangLuongController::class, 'index'])->name('bang-luong.index');
@@ -412,8 +412,8 @@ Route::prefix('employee')
         Route::get('/dashboard', [DashboardEmployeeController::class, 'index'])->name('dashboard');
         // Hợp Đồng của tôi
         Route::get('/hop-dong-cua-toi', [HopDongController::class, 'getHopDongCuaToi'])
-    ->name('hop-dong.index');
-
+            ->name('hop-dong.index');
+            Route::patch('/hop-dong/{id}/update-status', [HopDongController::class, 'updateTrangThaiKy'])->name('hopdong.update-status');
         // Chấm công
         Route::prefix('cham-cong')->name('cham-cong.')->group(function () {
             Route::get('/', [EmployeeChamCongController::class, 'index'])->name('index');
