@@ -1,4 +1,5 @@
 <?php
+// app/Http/Controllers/Admin/HopDongLaoDongController.php
 
 namespace App\Http\Controllers\Admin;
 
@@ -8,6 +9,8 @@ use App\Models\NguoiDung;
 use App\Models\ChucVu;
 use App\Models\HoSoNguoiDung;
 use App\Models\Luong;
+use App\Models\PhuCap;
+use App\Models\PhuCapNhanVien;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -174,7 +177,7 @@ class HopDongLaoDongController extends Controller
             ->whereDoesntHave('vaiTros', function ($query) {
                 $query->where('name', 'admin');
             })
-            ->with(['hoSo', 'hopDongLaoDong'])
+            ->with(['hoSo', 'hopDongLaoDong', 'phuCapNhanViens.phuCap'])
             ->get();
 
         $nhanViens = $allNhanViens->filter(function ($nhanVien) {
@@ -199,7 +202,10 @@ class HopDongLaoDongController extends Controller
         $chucVus = ChucVu::all();
         $soHopDongTuDong = $this->generateSoHopDong();
 
-        return view('admin.hop-dong-lao-dong.create', compact('nhanViens', 'chucVus', 'selectedNhanVienId', 'soHopDongTuDong'));
+        // Lấy danh sách phụ cấp để hiển thị trong form
+        $phuCaps = PhuCap::where('trang_thai', 1)->get();
+
+        return view('admin.hop-dong-lao-dong.create', compact('nhanViens', 'chucVus', 'selectedNhanVienId', 'soHopDongTuDong', 'phuCaps'));
     }
 
     /**
@@ -228,6 +234,8 @@ class HopDongLaoDongController extends Controller
             'file_hop_dong' => 'required|array|min:1',
             'file_hop_dong.*' => 'required|file|mimes:pdf,doc,docx|max:2048',
             'file_dinh_kem' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:2048',
+            'phu_cap_ids' => 'nullable|array',
+            'phu_cap_ids.*' => 'exists:phu_cap,id',
         ]);
 
         $data = $request->all();
@@ -249,7 +257,26 @@ class HopDongLaoDongController extends Controller
             $data['file_dinh_kem'] = $request->file('file_dinh_kem')->store('file_dinh_kem', 'public');
         }
 
-        HopDongLaoDong::create($data);
+        // Tạo hợp đồng
+        $hopDong = HopDongLaoDong::create($data);
+
+        // ===== LƯU PHỤ CẤP VÀO BẢNG PHU_CAP_NHAN_VIEN =====
+        if ($request->has('phu_cap_ids') && is_array($request->phu_cap_ids)) {
+            foreach ($request->phu_cap_ids as $phuCapId) {
+                $phuCap = PhuCap::find($phuCapId);
+                if ($phuCap) {
+                    PhuCapNhanVien::create([
+                        'nguoi_dung_id' => $request->nguoi_dung_id,
+                        'phu_cap_id' => $phuCapId,
+                        'so_tien' => $phuCap->so_tien_mac_dinh,
+                        'ngay_hieu_luc' => $request->ngay_bat_dau,
+                        'ngay_ket_thuc' => $request->ngay_ket_thuc,
+                        'trang_thai' => 'hieu_luc',
+                        'ghi_chu' => 'Phụ cấp từ hợp đồng ' . $request->so_hop_dong,
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('admin.hop-dong.index')->with('success', 'Hợp đồng đã được tạo thành công.');
     }
@@ -268,7 +295,7 @@ class HopDongLaoDongController extends Controller
      */
     public function edit($id)
     {
-        $hopDong = HopDongLaoDong::with(['hoSoNguoiDung', 'chucVu'])->findOrFail($id);
+        $hopDong = HopDongLaoDong::with(['hoSoNguoiDung', 'chucVu', 'nguoiDung.phuCapNhanViens.phuCap'])->findOrFail($id);
 
         if (($hopDong->trang_thai_ky === 'cho_ky' && $hopDong->trang_thai_hop_dong === 'chua_hieu_luc') ||
             $hopDong->trang_thai_ky === 'tu_choi_ky'
@@ -297,7 +324,14 @@ class HopDongLaoDongController extends Controller
         });
 
         $chucVus = ChucVu::all();
-        return view('admin.hop-dong-lao-dong.edit', compact('hopDong', 'nhanViens', 'chucVus'));
+
+        // Lấy danh sách phụ cấp để hiển thị trong form
+        $phuCaps = PhuCap::where('trang_thai', 1)->get();
+
+        // Lấy danh sách phụ cấp đã chọn của nhân viên
+        $selectedPhuCapIds = $hopDong->nguoiDung->phuCapNhanViens->pluck('phu_cap_id')->toArray();
+
+        return view('admin.hop-dong-lao-dong.edit', compact('hopDong', 'nhanViens', 'chucVus', 'phuCaps', 'selectedPhuCapIds'));
     }
 
     /**
@@ -325,6 +359,8 @@ class HopDongLaoDongController extends Controller
             'file_hop_dong' => 'nullable|array',
             'file_hop_dong.*' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
             'file_dinh_kem' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:2048',
+            'phu_cap_ids' => 'nullable|array',
+            'phu_cap_ids.*' => 'exists:phu_cap,id',
         ];
 
         if ($request->loai_hop_dong !== 'khong_xac_dinh_thoi_han') {
@@ -333,7 +369,7 @@ class HopDongLaoDongController extends Controller
 
         $request->validate($validationRules);
 
-        $data = $request->except(['file_hop_dong', 'file_dinh_kem']);
+        $data = $request->except(['file_hop_dong', 'file_dinh_kem', 'phu_cap_ids']);
 
         // Xử lý file hợp đồng
         if ($request->hasFile('file_hop_dong')) {
@@ -359,7 +395,32 @@ class HopDongLaoDongController extends Controller
             $data['file_dinh_kem'] = $request->file('file_dinh_kem')->store('file_dinh_kem', 'public');
         }
 
+        // Cập nhật hợp đồng
         $hopDong->update($data);
+
+        // ===== CẬP NHẬT PHỤ CẤP =====
+        // Xóa phụ cấp cũ
+        PhuCapNhanVien::where('nguoi_dung_id', $hopDong->nguoi_dung_id)
+            ->where('ghi_chu', 'LIKE', '%từ hợp đồng ' . $hopDong->so_hop_dong . '%')
+            ->delete();
+
+        // Thêm phụ cấp mới
+        if ($request->has('phu_cap_ids') && is_array($request->phu_cap_ids)) {
+            foreach ($request->phu_cap_ids as $phuCapId) {
+                $phuCap = PhuCap::find($phuCapId);
+                if ($phuCap) {
+                    PhuCapNhanVien::create([
+                        'nguoi_dung_id' => $hopDong->nguoi_dung_id,
+                        'phu_cap_id' => $phuCapId,
+                        'so_tien' => $phuCap->so_tien_mac_dinh,
+                        'ngay_hieu_luc' => $request->ngay_bat_dau,
+                        'ngay_ket_thuc' => $request->ngay_ket_thuc,
+                        'trang_thai' => 'hieu_luc',
+                        'ghi_chu' => 'Phụ cấp từ hợp đồng ' . $hopDong->so_hop_dong,
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('admin.hop-dong.index')->with('success', 'Cập nhật hợp đồng thành công');
     }
@@ -669,6 +730,25 @@ class HopDongLaoDongController extends Controller
         return redirect()
             ->route('admin.hop-dong.show', $id)
             ->with('success', 'Đã hủy hợp đồng');
+    }
+
+    /**
+     * API lấy thông tin nhân viên (cho AJAX)
+     */
+    public function getNhanVienInfo($id)
+    {
+        $nhanVien = NguoiDung::with(['chucVu', 'phuCapNhanViens.phuCap'])
+            ->find($id);
+        
+        if (!$nhanVien) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy nhân viên']);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'luong_co_ban' => $nhanVien->chucVu->luong_co_ban ?? 0,
+            'phu_cap_ids' => $nhanVien->phuCapNhanViens->pluck('phu_cap_id')->toArray(),
+        ]);
     }
 
     /**
