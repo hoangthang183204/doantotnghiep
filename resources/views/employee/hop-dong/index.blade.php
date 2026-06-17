@@ -87,10 +87,6 @@
                                     @endif
                                 </div>
                                 <div>
-                                    <span class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider block">Hình thức làm việc:</span>
-                                    <span class="text-base font-medium text-gray-900 dark:text-white">{{ ($hopDong->hinh_thuc_lam_viec ?? '') == 'full_time' ? 'Toàn thời gian (Full-time)' : 'Bán thời gian (Part-time)' }}</span>
-                                </div>
-                                <div>
                                     <span class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider block">Địa điểm làm việc:</span>
                                     <span class="text-base font-medium text-gray-900 dark:text-white">{{ $hopDong->dia_diem_lam_viec ?? 'Hà Nội' }}</span>
                                 </div>
@@ -161,18 +157,42 @@
                             <h4 class="font-bold text-gray-800 dark:text-gray-200">File hợp đồng gốc</h4>
                         </div>
                         <div class="p-6">
-                            @if (!empty($hopDong->file_hop_dong))
-                                <div class="p-2">
-                                    <a href="{{ asset('pdf/HD0004.pdf') }}" download
-                                        class="inline-flex items-center px-4 py-2.5 bg-red-50 text-red-700 border border-red-200 rounded-lg hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800 transition-colors text-sm font-medium">
-                                        <i class="fas fa-file-pdf text-base mr-3"></i> Tải xuống file hợp đồng gốc
-                                    </a>
-                                </div>
+                            @if (!empty($hopDong->duong_dan_file))
+                                @php
+                                    // Cắt chuỗi lưu nhiều file của Admin (ngăn cách bởi dấu ;) để lấy file đầu tiên
+                                    $danhSachFile = explode(';', $hopDong->duong_dan_file);
+                                    $fileDauTien = trim($danhSachFile[0]);
+                                    
+                                    // Phân tích đuôi file để hiển thị icon động
+                                    $extension = strtolower(pathinfo($fileDauTien, PATHINFO_EXTENSION));
+                                    $icon = 'fa-file-pdf text-red-500';
+                                    
+                                    if (in_array($extension, ['doc', 'docx'])) {
+                                        $icon = 'fa-file-word text-blue-500';
+                                    } elseif (in_array($extension, ['xls', 'xlsx'])) {
+                                        $icon = 'fa-file-excel text-green-500';
+                                    }
+                                @endphp
+
+                                @if(!empty($fileDauTien))
+                                    <div class="p-2">
+                                        <a href="{{ asset('storage/' . $fileDauTien) }}" download
+                                            class="inline-flex items-center px-4 py-2.5 bg-red-50 text-red-700 border border-red-200 rounded-lg hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800 transition-colors text-sm font-medium">
+                                            <i class="fas {{ $icon }} text-base mr-3"></i> Tải xuống file hợp đồng gốc (.{{ $extension }})
+                                        </a>
+                                    </div>
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-2 px-2 italic">
+                                        Tên file hệ thống: {{ basename($fileDauTien) }}
+                                    </p>
+                                @else
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-900/20 text-gray-500 dark:text-gray-400 rounded-xl border border-gray-100 dark:border-gray-800 text-sm italic flex items-center">
+                                        <i class="fas fa-info-circle mr-2 text-gray-400"></i> Tập tin đính kèm không hợp lệ.
+                                    </div>
+                                @endif
                             @else
-                                <a href="{{ asset('pdf/HD0004.pdf') }}" download
-                                    class="text-blue-600 hover:underline flex items-center">
-                                    <i class="fas fa-file-pdf mr-2"></i> File 1: {{ $hopDong->so_hop_dong ?? 'HD0004' }}..pdf
-                                </a>
+                                <div class="p-4 bg-gray-50 dark:bg-gray-900/20 text-gray-500 dark:text-gray-400 rounded-xl border border-gray-100 dark:border-gray-800 text-sm italic flex items-center">
+                                    <i class="fas fa-info-circle mr-2 text-gray-400"></i> Chưa có file đính kèm cho hợp đồng này hoặc đang chờ Admin cập nhật.
+                                </div>
                             @endif
                         </div>
                     </div>
@@ -233,13 +253,13 @@
                                     @csrf
                                     @method('PATCH')
                                     
-                                    <button type="submit" name="action" value="da_ky" 
+                                    <button type="submit" name="action" value="da_ky"
                                         onclick="return confirm('Bạn hoàn toàn đồng ý với các mức lương, phụ cấp và điều khoản và muốn tiến hành KÝ hợp đồng này chứ?')"
                                         class="w-full inline-flex items-center justify-center px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow-sm transition-colors text-sm">
                                         <i class="fas fa-file-signature mr-2 text-base"></i> Ký kết hợp đồng
                                     </button>
                                     
-                                    <button type="submit" name="action" value="tu_choi" 
+                                    <button type="submit" name="action" value="tu_choi"
                                         onclick="return confirm('Bạn chắc chắn muốn TỪ CHỐI ký kết hợp đồng lao động này?')"
                                         class="w-full inline-flex items-center justify-center px-4 py-3 bg-white dark:bg-gray-800 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/60 rounded-xl font-medium hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors text-sm">
                                         <i class="fas fa-times mr-2"></i> Từ chối ký kết
