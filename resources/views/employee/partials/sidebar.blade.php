@@ -70,7 +70,7 @@
 
             <!-- Lương -->
             <div class="pt-4">
-           
+
                 <a href="#"
                     class="menu-toggle flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
                     <i class="fas fa-money-bill-wave w-5 text-center"></i>
@@ -80,12 +80,9 @@
 
             <!-- Hợp đồng -->
             <div class="pt-4">
-                <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Hợp đồng</p>
-                <a href="{{ route('employee.hop-dong.index') }}" 
-                   class="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 
-                          {{ request()->routeIs('employee.hop-dong.index') ? 'bg-blue-50 text-blue-600 dark:bg-gray-700 dark:text-blue-400' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
-                <a href="#"
-                    class="menu-toggle flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
+                <a href="{{ route('employee.hop-dong.index') }}"
+                    class="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 
+              {{ request()->routeIs('employee.hop-dong.*') ? 'bg-blue-50 text-blue-600 dark:bg-gray-700 dark:text-blue-400' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                     <i class="fas fa-file-contract w-5 text-center"></i>
                     <span class="ml-3 menu-text">Hợp đồng của tôi</span>
                 </a>
@@ -93,7 +90,7 @@
 
             <!-- Nghỉ phép -->
             <div class="pt-4">
-               
+
 
                 <button onclick="toggleSubmenu('leaveSubMenu')"
                     class="menu-toggle w-full flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 {{ request()->routeIs('employee.don-nghi*') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}"

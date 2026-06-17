@@ -56,6 +56,10 @@ class ChamCongController extends Controller
     /**
      * Check-in - SỬA: DÙNG THỜI GIAN TỪ CLIENT
      */
+    // app/Http/Controllers/Employee/ChamCongController.php
+
+    // app/Http/Controllers/Employee/ChamCongController.php
+
     public function checkIn(Request $request)
     {
         try {
@@ -90,50 +94,48 @@ class ChamCongController extends Controller
                 ], 403);
             }
 
-            // ===== SỬA: LẤY THỜI GIAN TỪ CLIENT =====
-            $clientTime = $request->input('client_time');
-            
-            if ($clientTime) {
-                try {
-                    // Parse thời gian từ client và chuyển về timezone Asia/Ho_Chi_Minh
-                    $now = Carbon::parse($clientTime)->setTimezone('Asia/Ho_Chi_Minh');
-                } catch (\Exception $e) {
-                    // Nếu parse lỗi, dùng thời gian server
-                    $now = Carbon::now('Asia/Ho_Chi_Minh');
-                }
-            } else {
-                // Nếu không có client_time, dùng thời gian server
-                $now = Carbon::now('Asia/Ho_Chi_Minh');
-            }
-            
+            // Lấy thời gian hiện tại
+            $now = Carbon::now('Asia/Ho_Chi_Minh');
             $gioVaoStr = $now->format('H:i:s');
 
-            // Lấy giờ làm việc
+            // ===== LOGIC XÁC ĐỊNH TRẠNG THÁI =====
             $gioLamViec = GioLamViec::first();
-            $phutChenhLech = 0;
-            $phutDiMuon = 0;
+
+            // Mặc định là đúng giờ
             $trangThai = 'dung_gio';
+            $phutDiMuon = 0;
 
             if ($gioLamViec) {
-                $gioBatDau = Carbon::parse($gioLamViec->gio_bat_dau, 'Asia/Ho_Chi_Minh');
-                $phutChenhLech = $now->diffInMinutes($gioBatDau, false);
+                // Giờ chuẩn 08:30
+                $gioChuan = '08:30:00';
+                $gioChuanCarbon = Carbon::parse($gioChuan, 'Asia/Ho_Chi_Minh');
 
-                // Nếu đến sớm (trước 8h30)
-                if ($phutChenhLech < 0) {
+                // So sánh thời gian check-in với 08:30
+                if ($now->lt($gioChuanCarbon)) {
+                    // Check-in TRƯỚC 08:30 -> Đến sớm
                     $trangThai = 'den_som';
                     $phutDiMuon = 0;
-                }
-                // Nếu đi muộn (sau 8h45)
-                elseif ($phutChenhLech > ($gioLamViec->so_phut_cho_phep_di_tre ?? 15)) {
-                    $trangThai = 'di_muon';
-                    $phutDiMuon = $phutChenhLech;
-                }
-                // Đúng giờ (8h30 - 8h45)
-                else {
-                    $trangThai = 'dung_gio';
-                    $phutDiMuon = 0;
+                } else {
+                    // Check-in SAU 08:30 -> Tính số phút trễ
+                    $phutDiMuon = $gioChuanCarbon->diffInMinutes($now);
+
+                    // Nếu trễ quá 15 phút -> Đi muộn
+                    if ($phutDiMuon > ($gioLamViec->so_phut_cho_phep_di_tre ?? 15)) {
+                        $trangThai = 'di_muon';
+                    } else {
+                        // Trễ trong khoảng cho phép (0-15 phút) -> Đúng giờ
+                        $trangThai = 'dung_gio';
+                        $phutDiMuon = 0;
+                    }
                 }
             }
+
+            // Log để debug
+            \Log::info('Check-in result', [
+                'gio_vao' => $gioVaoStr,
+                'trang_thai' => $trangThai,
+                'phut_di_muon' => $phutDiMuon,
+            ]);
 
             $method = 'manual';
             if ($ipAllowed) $method = 'ip';
@@ -172,7 +174,6 @@ class ChamCongController extends Controller
                 'phuong_thuc' => $method,
                 'gio_vao' => $gioVaoStr
             ]);
-
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Check-in error: ' . $e->getMessage());
@@ -228,7 +229,7 @@ class ChamCongController extends Controller
 
             // ===== SỬA: LẤY THỜI GIAN TỪ CLIENT =====
             $clientTime = $request->input('client_time');
-            
+
             if ($clientTime) {
                 try {
                     $now = Carbon::parse($clientTime)->setTimezone('Asia/Ho_Chi_Minh');
@@ -300,7 +301,6 @@ class ChamCongController extends Controller
                 'phut_di_muon' => $phutDiMuon,
                 'so_phut_lam_thuc_te' => $soPhutLamThucTe
             ]);
-
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Check-out error: ' . $e->getMessage());
