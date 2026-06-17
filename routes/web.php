@@ -28,6 +28,7 @@ use App\Http\Controllers\Employee\DashboardEmployeeController;
 use App\Http\Controllers\Employee\ChamCongController as EmployeeChamCongController;
 use App\Http\Controllers\Employee\DonNghiController as EmployeeDonNghiController;
 use App\Http\Controllers\Employee\HoSoController as EmployeeHoSoController;
+use App\Http\Controllers\Admin\LuongController;
 
 // =============================================
 // ROUTE GỐC
@@ -63,7 +64,7 @@ Route::prefix('admin')
 
         // ========== HỒ SƠ ==========
         Route::prefix('ho-so')->name('ho-so.')->group(function () {
-            Route::get('/', [HoSoController::class, 'index'])->name('index');
+Route::get('/', [HoSoController::class, 'index'])->name('index');
             Route::get('/{id}/edit', [HoSoController::class, 'edit'])->name('edit');
             Route::put('/{id}', [HoSoController::class, 'update'])->name('update');
             Route::get('/{id}', [HoSoController::class, 'show'])->name('show');
@@ -98,7 +99,7 @@ Route::prefix('admin')
         Route::get('/chuc-vu/{id}', [ChucVuController::class, 'show'])->name('chuc-vu.show');
         Route::get('/chuc-vu/{id}/edit', [ChucVuController::class, 'edit'])->name('chuc-vu.edit');
         Route::put('/chuc-vu/{id}', [ChucVuController::class, 'update'])->name('chuc-vu.update');
-        Route::delete('/chuc-vu/{id}', [ChucVuController::class, 'destroy'])->name('chuc-vu.destroy');
+Route::delete('/chuc-vu/{id}', [ChucVuController::class, 'destroy'])->name('chuc-vu.destroy');
 
         // ========== HỒ SƠ CÁ NHÂN ==========
         Route::get('/ho-so-ca-nhan', [HoSoCaNhanController::class, 'index'])->name('ho-so-ca-nhan.index');
@@ -128,13 +129,18 @@ Route::prefix('admin')
         // ========== PHỤ CẤP ==========
         Route::resource('phu-cap', PhuCapController::class);
 
+        // ========== Danh sach luong ==========
+      Route::middleware('permission:salary.view')->group(function () {
+    Route::resource('luong', LuongController::class);
+});
+
         // ========== TUYỂN DỤNG ==========
         Route::get('/tin-tuyen-dung', [TinTuyenDungController::class, 'index'])->name('tin-tuyen-dung.index');
         Route::get('/tin-tuyen-dung/{id}', [TinTuyenDungController::class, 'show'])->name('tin-tuyen-dung.show');
         Route::get('/tin-tuyen-dung/create', [TinTuyenDungController::class, 'create'])->name('tin-tuyen-dung.create');
         Route::post('/tin-tuyen-dung', [TinTuyenDungController::class, 'store'])->name('tin-tuyen-dung.store');
         Route::get('/tin-tuyen-dung/{id}/edit', [TinTuyenDungController::class, 'edit'])->name('tin-tuyen-dung.edit');
-        Route::put('/tin-tuyen-dung/{id}', [TinTuyenDungController::class, 'update'])->name('tin-tuyen-dung.update');
+Route::put('/tin-tuyen-dung/{id}', [TinTuyenDungController::class, 'update'])->name('tin-tuyen-dung.update');
         Route::delete('/tin-tuyen-dung/{id}', [TinTuyenDungController::class, 'destroy'])->name('tin-tuyen-dung.destroy');
 
         // ========== VAI TRÒ ==========
@@ -173,7 +179,7 @@ Route::prefix('admin')
 
         // ========== PHÂN QUYỀN ==========
         Route::prefix('phan-quyen')->name('phan-quyen.')->group(function () {
-            Route::get('/', [PhanQuyenController::class, 'index'])->name('index');
+Route::get('/', [PhanQuyenController::class, 'index'])->name('index');
             Route::get('/{id}/edit', [PhanQuyenController::class, 'edit'])->name('edit');
             Route::put('/{id}', [PhanQuyenController::class, 'update'])->name('update');
         });
@@ -204,7 +210,7 @@ Route::prefix('admin')
         Route::get('/duyetdon/tuyendung', [DuyetDonController::class, 'index'])->name('duyetdon.tuyendung.index');
         Route::get('/duyetdon/tuyendung/{id}', [DuyetDonController::class, 'show'])->name('duyetdon.tuyendung.show');
         Route::post('/duyetdon/tuyendung/{id}/duyet', [DuyetDonController::class, 'duyet'])->name('duyetdon.tuyendung.duyet');
-        Route::post('/duyetdon/tuyendung/{id}/tuchoi', [DuyetDonController::class, 'tuChoi'])->name('duyetdon.tuyendung.tuchoi');
+Route::post('/duyetdon/tuyendung/{id}/tuchoi', [DuyetDonController::class, 'tuChoi'])->name('duyetdon.tuyendung.tuchoi');
 
         // ========== ỨNG VIÊN ==========
         Route::prefix('ung-vien')->name('ung_vien.')->group(function () {
@@ -249,8 +255,7 @@ Route::prefix('employee')
             Route::get('/{id}', [App\Http\Controllers\Employee\TangCaController::class, 'show'])->name('show');
             Route::post('/{id}/huy', [App\Http\Controllers\Employee\TangCaController::class, 'huy'])->name('huy');
         });
-
-        Route::prefix('yeu-cau-chinh-cong')->name('yeu-cau-chinh-cong.')->group(function () {
+Route::prefix('yeu-cau-chinh-cong')->name('yeu-cau-chinh-cong.')->group(function () {
             Route::get('/', [App\Http\Controllers\Employee\YeuCauChinhCongController::class, 'index'])->name('index');
             Route::get('/create', [App\Http\Controllers\Employee\YeuCauChinhCongController::class, 'create'])->name('create');
             Route::post('/', [App\Http\Controllers\Employee\YeuCauChinhCongController::class, 'store'])->name('store');
