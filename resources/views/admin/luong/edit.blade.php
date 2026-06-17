@@ -1,121 +1,133 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="min-h-screen bg-gray-50 p-6">
 
-    <div class="max-w-3xl mx-auto">
+<div class="min-h-screen p-6 bg-gray-50 dark:bg-slate-900">
 
-        {{-- Header --}}
-        <div class="mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">Sửa lương cơ bản</h1>
-            <p class="text-gray-500 mt-1">Cập nhật thông tin lương nhân viên</p>
+<div class="max-w-4xl mx-auto">
+
+    {{-- BREADCRUMB --}}
+    <div class="mb-3 text-sm text-gray-500 dark:text-slate-400">
+        <span class="text-blue-600 dark:text-sky-400 font-medium">Lương</span>
+        <span class="mx-2">&gt;</span>
+        <span>Sửa lương</span>
+    </div>
+
+    {{-- HEADER --}}
+    <div class="mb-4 flex items-center gap-3 p-4 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm">
+
+        <div class="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-950 flex items-center justify-center text-blue-600 dark:text-sky-400">
+            <i class="fa-solid fa-money-bill-wave"></i>
         </div>
 
-        {{-- Card --}}
-        <form method="POST"
-              action="{{ route('admin.luong.update', $luong->id) }}"
-              class="bg-white shadow-lg rounded-2xl p-6 space-y-5">
+        <div>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+                Sửa lương cơ bản
+            </h2>
+            <p class="text-sm text-gray-500 dark:text-slate-400">
+                Cập nhật thông tin lương nhân viên
+            </p>
+        </div>
 
+    </div>
+
+    {{-- FORM --}}
+    <div class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm p-5">
+
+        <form method="POST" action="{{ route('admin.luong.update', $luong->id) }}">
             @csrf
             @method('PUT')
 
-            {{-- Nhân viên --}}
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                    Nhân viên
-                </label>
-                <select name="nguoi_dung_id"
-                        class="w-full border border-gray-300 rounded-xl px-4 py-3
-                               focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    @foreach($nhanViens as $nv)
-                        <option value="{{ $nv->id }}"
-                            {{ $luong->nguoi_dung_id == $nv->id ? 'selected' : '' }}>
-                            {{ $nv->ho_ten }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            {{-- Hợp đồng --}}
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                    Hợp đồng
-                </label>
-                <select name="hop_dong_id"
-                        class="w-full border border-gray-300 rounded-xl px-4 py-3
-                               focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    @foreach($hopDongs as $hd)
-                        <option value="{{ $hd->id }}"
-                            {{ $luong->hop_dong_lao_dong_id == $hd->id ? 'selected' : '' }}>
-                            {{ $hd->so_hop_dong }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            {{-- Grid input --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
+                {{-- NHÂN VIÊN --}}
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        Lương cơ bản
+                    <label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-slate-200">
+                        Nhân viên
                     </label>
-                    <input type="number" name="luong_co_ban"
-                           value="{{ $luong->luong_co_ban }}"
-                           class="w-full border border-gray-300 rounded-xl px-4 py-3
-                                  focus:ring-2 focus:ring-blue-500 focus:outline-none">
+
+                    <select name="nguoi_dung_id"
+                        class="w-full rounded-lg border border-gray-300 dark:border-slate-600
+                               bg-white dark:bg-slate-900 text-gray-900 dark:text-white
+                               px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-sky-500">
+
+                        @foreach($nhanViens as $nv)
+                            <option value="{{ $nv->id }}"
+                                {{ $luong->nguoi_dung_id == $nv->id ? 'selected' : '' }}>
+                                {{ $nv->ho_ten }}
+                            </option>
+                        @endforeach
+
+                    </select>
                 </div>
 
+                {{-- HỢP ĐỒNG --}}
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        Phụ cấp
+                    <label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-slate-200">
+                        Hợp đồng
                     </label>
-                    <input type="number" name="phu_cap"
-                           value="{{ $luong->phu_cap }}"
-                           class="w-full border border-gray-300 rounded-xl px-4 py-3
-                                  focus:ring-2 focus:ring-blue-500 focus:outline-none">
+
+                    <select name="hop_dong_lao_dong_id"
+                        class="w-full rounded-lg border border-gray-300 dark:border-slate-600
+                               bg-white dark:bg-slate-900 text-gray-900 dark:text-white
+                               px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-sky-500">
+
+                        @foreach($hopDongs as $hd)
+                            <option value="{{ $hd->id }}"
+                                {{ $luong->hop_dong_lao_dong_id == $hd->id ? 'selected' : '' }}>
+                                {{ $hd->so_hop_dong }}
+                            </option>
+                        @endforeach
+
+                    </select>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        Thưởng
-                    </label>
-                    <input type="number" name="tien_thuong"
-                           value="{{ $luong->tien_thuong }}"
-                           class="w-full border border-gray-300 rounded-xl px-4 py-3
-                                  focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                </div>
+                {{-- INPUT --}}
+                @foreach([
+                    'luong_co_ban' => 'Lương cơ bản',
+                    'phu_cap' => 'Phụ cấp',
+                    'tien_thuong' => 'Thưởng',
+                    'tien_phat' => 'Tiền phạt'
+                ] as $field => $label)
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        Tiền phạt
+                    <label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-slate-200">
+                        {{ $label }}
                     </label>
-                    <input type="number" name="tien_phat"
-                           value="{{ $luong->tien_phat }}"
-                           class="w-full border border-gray-300 rounded-xl px-4 py-3
-                                  focus:ring-2 focus:ring-blue-500 focus:outline-none">
+
+                    <input type="number"
+                        name="{{ $field }}"
+                        value="{{ $luong->$field }}"
+                        class="w-full rounded-lg border border-gray-300 dark:border-slate-600
+                               bg-white dark:bg-slate-900 text-gray-900 dark:text-white
+                               px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-sky-500">
                 </div>
+
+                @endforeach
 
             </div>
 
-            {{-- Buttons --}}
-            <div class="flex justify-end gap-3 pt-4">
+            {{-- BUTTON --}}
+            <div class="flex justify-end gap-3 mt-6">
 
                 <a href="{{ route('admin.luong.index') }}"
-                   class="px-5 py-2.5 rounded-xl bg-gray-100 text-gray-700
-                          hover:bg-gray-200 transition">
+                   class="px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-900 text-gray-700 dark:text-slate-300 hover:opacity-80">
                     Huỷ
                 </a>
 
                 <button type="submit"
-                        class="px-5 py-2.5 rounded-xl bg-blue-600 text-white
-                               hover:bg-blue-700 transition shadow-md">
-                    Cập nhật
+                        class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white">
+                    Lưu thay đổi
                 </button>
 
             </div>
 
         </form>
+
     </div>
+
 </div>
+
+</div>
+
 @endsection
