@@ -210,7 +210,7 @@
                             @php
                                 $hoTen = optional($hd->hoSoNguoiDung)->ho . ' ' . optional($hd->hoSoNguoiDung)->ten;
                                 $avatar = optional($hd->hoSoNguoiDung)->anh_dai_dien
-                                    ? asset($hd->hoSoNguoiDung->anh_dai_dien)
+                                    ? asset('storage/' . optional($hd->hoSoNguoiDung)->anh_dai_dien)
                                     : 'https://ui-avatars.com/api/?background=3b82f6&color=fff&name=' .
                                         urlencode($hoTen);
                             @endphp
