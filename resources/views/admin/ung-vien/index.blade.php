@@ -79,7 +79,6 @@
                             <th class="px-5 py-4 text-left">Mã HS</th>
                             <th class="px-5 py-4 text-left">Họ tên</th>
                             <th class="px-5 py-4 text-left">Email</th>
-                            <th class="px-5 py-4 text-left">Tin tuyển dụng</th>
                             <th class="px-5 py-4 text-left">Phòng ban</th>
                             <th class="px-5 py-4 text-right">Lương</th>
                             <th class="px-5 py-4 text-center">Trạng thái</th>
@@ -106,9 +105,6 @@
                                 <td class="px-5 py-4 font-semibold text-gray-900 dark:text-white">{{ $item->email }}</td>
 
 
-                                <td class="px-5 py-4 font-semibold text-gray-900 dark:text-white">
-                                    {{ $item->tinTuyenDung?->tieu_de }}
-                                </td>
 
                                 <td class="px-5 py-4 font-semibold text-gray-900 dark:text-white">
                                     {{ $item->tinTuyenDung?->phongBan?->ten_phong_ban }}
@@ -147,48 +143,74 @@
                                 </td>
 
                                 <td class="px-5 py-4">
-                                    <div class="flex justify-center gap-2">
+                                    <div class="flex justify-center gap-1.5">
 
+                                        {{-- Xem chi tiết --}}
                                         <a href="{{ route('admin.ung_vien.show', $item->id) }}"
-                                            class="px-3 py-1 rounded-lg bg-blue-50 text-blue-600 text-xs">
-                                            Xem
-                                        </a> 
-                                              
-                                        {{-- NÚT LƯU TRỮ --}}
-                                        @if($item->trang_thai != 'luu_tru')
-                                            <form action="{{ route('admin.ung_vien.archive', $item->id) }}"
-                                                method="POST">
-                                                @csrf
+                                            class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                            title="Xem chi tiết">
 
-                                                <button type="submit"
-                                                    onclick="return confirm('Lưu trữ hồ sơ này?')"
-                                                    class="px-3 py-1 rounded-lg bg-yellow-50 text-yellow-600 text-xs hover:bg-yellow-100">
-                                                    Lưu trữ
-                                                </button>
-                                            </form>
-                                        @else
-                                            <form action="{{ route('admin.ung_vien.restore', $item->id) }}"
-                                                method="POST">
-                                                @csrf
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 
-                                                <button type="submit"
-                                                    onclick="return confirm('Khôi phục hồ sơ này?')"
-                                                    class="px-3 py-1 rounded-lg bg-green-50 text-green-600 text-xs hover:bg-green-100">
-                                                    Khôi phục
-                                                </button>
-                                            </form>
-                                        @endif
-                                        {{-- NÚT XÓA --}}
-                                        <form action="{{ route('admin.ung_vien.destroy', $item->id) }}" method="POST"
-                                            onsubmit="return confirm('Bạn có chắc muốn xóa ứng viên này?')"
-                                            style="display:inline-block;">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
+                                                </path>
+
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                                </path>
+
+                                            </svg>
+
+                                        </a>
+
+                                        {{-- Lưu trữ --}}
+                                        <form action="{{ route('admin.ung_vien.archive', $item->id) }}"
+                                            method="POST"
+                                            onsubmit="return confirm('Lưu trữ hồ sơ ứng viên này?')">
+
+                                            @csrf
+
+                                            <button type="submit"
+                                                class="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded-lg transition"
+                                                title="Lưu trữ">
+
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4">
+                                                    </path>
+
+                                                </svg>
+
+                                            </button>
+
+                                        </form>
+
+                                        {{-- Xóa --}}
+                                        <form action="{{ route('admin.ung_vien.destroy', $item->id) }}"
+                                            method="POST"
+                                            onsubmit="return confirm('Bạn có chắc muốn xóa ứng viên này?')">
 
                                             @csrf
                                             @method('DELETE')
 
                                             <button type="submit"
-                                                class="px-3 py-1 rounded-lg bg-red-50 text-red-600 text-xs hover:bg-red-100">
-                                                Xóa
+                                                class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
+                                                title="Xóa ứng viên">
+
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M19 7L5 7M10 11V17M14 11V17M6 7L7 19C7.1 20.1 7.9 21 9 21H15C16.1 21 16.9 20.1 17 19L18 7M9 7V5C9 3.9 9.9 3 11 3H13C14.1 3 15 3.9 15 5V7">
+                                                    </path>
+
+                                                </svg>
+
                                             </button>
 
                                         </form>

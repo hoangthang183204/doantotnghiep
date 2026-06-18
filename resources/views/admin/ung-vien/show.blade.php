@@ -41,10 +41,6 @@
                 <p class="dark:text-white">{{ $ungVien->tinTuyenDung?->phongBan?->ten_phong_ban }}</p>
             </div>
 
-            <div>
-                <p class="text-gray-500">Chức vụ</p>
-                <p class="dark:text-white">{{ $ungVien->tinTuyenDung?->chucVu?->ten_chuc_vu }}</p>
-            </div>
 
             <div>
                 <p class="text-gray-500">Kinh nghiệm</p>

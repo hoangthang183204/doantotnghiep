@@ -303,3 +303,4 @@ Route::prefix('employee')
             Route::post('/change-password', [EmployeeHoSoController::class, 'changePassword'])->name('change-password');
         });
     });
+    
