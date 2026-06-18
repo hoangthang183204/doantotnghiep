@@ -27,7 +27,7 @@ class HopDongLaoDongController extends Controller
     public function index(Request $request)
     {
         $query = HopDongLaoDong::with(['hoSoNguoiDung', 'nguoiKy', 'chucVu']);
-
+    
         // Tìm kiếm theo từ khóa
         if ($request->search) {
             $search = $request->search;
@@ -40,22 +40,31 @@ class HopDongLaoDongController extends Controller
                     });
             });
         }
-
+    
         // Lọc theo loại hợp đồng
         if ($request->loai_hop_dong) {
             $query->where('loai_hop_dong', $request->loai_hop_dong);
         }
-
+    
         // Lọc theo trạng thái hợp đồng
         if ($request->trang_thai_hop_dong) {
             $query->where('trang_thai_hop_dong', $request->trang_thai_hop_dong);
         }
-
+    
         // Lọc theo trạng thái ký
         if ($request->trang_thai_ky) {
             $query->where('trang_thai_ky', $request->trang_thai_ky);
         }
-
+    
+        // 💡 THÊM MỚI: Bộ lọc theo trạng thái nộp file scan ký tay
+        if ($request->has('file_scan')) {
+            if ($request->file_scan === 'da_nop') {
+                $query->whereNotNull('file_scan_ky');
+            } elseif ($request->file_scan === 'chua_nop') {
+                $query->whereNull('file_scan_ky');
+            }
+        }
+    
         // Loại trừ hợp đồng đã hủy bỏ, hợp đồng hết hạn đã được tái ký thành công, và hợp đồng từ chối ký
         $query->where(function ($q) {
             $q->where('trang_thai_hop_dong', '!=', 'huy_bo')
@@ -71,9 +80,9 @@ class HopDongLaoDongController extends Controller
                         });
                 });
         });
-
+    
         $hopDongs = $query->latest()->paginate(20);
-
+    
         // Cập nhật trạng thái hết hạn tự động
         foreach ($hopDongs as $hopDong) {
             if ($hopDong->ngay_ket_thuc && Carbon::parse($hopDong->ngay_ket_thuc)->lt(now()) && $hopDong->trang_thai_hop_dong !== 'het_han') {
@@ -84,11 +93,11 @@ class HopDongLaoDongController extends Controller
                 $hopDong->save();
             }
         }
-
+    
         // Thống kê
         $now = now();
         $in30days = now()->addDays(30);
-
+    
         $hieuLuc = HopDongLaoDong::where('trang_thai_hop_dong', 'hieu_luc')->count();
         $chuaCoHopDong = HoSoNguoiDung::whereDoesntHave('hopDongLaoDong')->count();
         $sapHetHan = HopDongLaoDong::where('trang_thai_hop_dong', 'hieu_luc')
@@ -96,7 +105,7 @@ class HopDongLaoDongController extends Controller
             ->where('ngay_ket_thuc', '<=', $in30days)
             ->count();
         $hetHanChuaTaiKy = HopDongLaoDong::where('trang_thai_tai_ky', 'cho_tai_ky')->count();
-
+    
         return view('admin.hop-dong-lao-dong.index', compact('hopDongs', 'hieuLuc', 'chuaCoHopDong', 'sapHetHan', 'hetHanChuaTaiKy'));
     }
 

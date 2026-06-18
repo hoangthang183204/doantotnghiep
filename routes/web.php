@@ -303,5 +303,4 @@ Route::post('/check-in', [EmployeeChamCongController::class, 'checkIn'])->name('
             Route::post('/change-password', [EmployeeHoSoController::class, 'changePassword'])->name('change-password');
         });
     });
-    });
-    });
+    
