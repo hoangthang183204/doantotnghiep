@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage; // Thêm Facade Storage để xử lý xóa/lưu file nếu cần
 
 class HopDongController extends Controller
 {
@@ -26,7 +27,7 @@ class HopDongController extends Controller
                 'nguoi_dung.ten_dang_nhap',
                 'ho_so_nguoi_dung.ma_nhan_vien as nhan_vien_ma_nv', 
                 'chuc_vu.ten as ten_chuc_vu',                                     
-                'phong_ban.ten_phong_ban as ten_phong_ban',         
+                'phong_ban.ten_phong_ban as ten_phong_ban',          
                 DB::raw("CONCAT(ho_so_nguoi_dung.ho, ' ', ho_so_nguoi_dung.ten) as nhan_vien_ho_ten") 
             )
             ->first(); 
@@ -65,29 +66,58 @@ class HopDongController extends Controller
         return view('employee.hop-dong.index', compact('hopDong', 'dsPhuCap'));
     }
 
-    // 5. Xử lý hành động Ký hoặc Từ chối cập nhật trực tiếp vào bảng hop_dong_lao_dong
+    // 5. Xử lý nhận file scan hợp đồng đã ký tay và cập nhật vào bảng hop_dong_lao_dong
     public function updateTrangThaiKy(Request $request, $id)
     {
+        // Validate dữ liệu đầu vào: Action phải đúng và bắt buộc phải có file đính kèm
         $request->validate([
-            'action' => 'required|in:da_ky,tu_choi'
+            'action' => 'required|in:gui_file_scan',
+            'file_scan_ky' => 'required|file|mimes:jpeg,png,jpg,pdf,doc,docx|max:5120', // Tối đa 5MB
+        ], [
+            'file_scan_ky.required' => 'Vui lòng chọn file ảnh hoặc bản scan hợp đồng của bạn.',
+            'file_scan_ky.mimes' => 'Định dạng file không hợp lệ (Chỉ chấp nhận png, jpg, jpeg, pdf, doc, docx).',
+            'file_scan_ky.max' => 'Kích thước file quá lớn, vui lòng chọn file dưới 5MB.'
         ]);
 
         $userId = Auth::id();
-        
-        $updated = DB::table('hop_dong_lao_dong')
+
+        // Lấy thông tin hợp đồng hiện tại để kiểm tra file cũ
+        $hopDongHienTai = DB::table('hop_dong_lao_dong')
             ->where('id', $id)
             ->where('nguoi_dung_id', $userId)
-            ->update([
-                'trang_thai_ky' => $request->action, 
-                'thoi_gian_ky' => $request->action === 'da_ky' ? now() : null,
-                'updated_at' => now()
-            ]);
+            ->first();
 
-        if ($updated) {
-            $msg = $request->action === 'da_ky' ? 'Bạn đã ký kết hợp đồng điện tử thành công!' : 'Bạn đã từ chối ký hợp đồng.';
-            return redirect()->back()->with('success', $msg);
+        if (!$hopDongHienTai) {
+            return redirect()->back()->with('error', 'Không tìm thấy thông tin hợp đồng hợp lệ.');
         }
 
-        return redirect()->back()->with('error', 'Cập nhật trạng thái hợp đồng thất bại.');
+        // Xử lý upload file mới
+        if ($request->hasFile('file_scan_ky')) {
+            
+            // Nếu trước đó nhân viên đã gửi file rồi, tiến hành xóa file cũ trên server để tránh rác host
+            if (!empty($hopDongHienTai->file_scan_ky)) {
+                Storage::disk('public')->delete($hopDongHienTai->file_scan_ky);
+            }
+
+            // Lưu file mới vào thư mục: public/hop_dong_scan
+            $filePath = $request->file('file_scan_ky')->store('hop_dong_scan', 'public');
+
+            // Cập nhật đường dẫn file và trạng thái ký vào database
+            $updated = DB::table('hop_dong_lao_dong')
+                ->where('id', $id)
+                ->where('nguoi_dung_id', $userId)
+                ->update([
+                    'file_scan_ky' => $filePath, 
+                    'trang_thai_ky' => 'da_ky', // Chuyển trạng thái sang "Đã ký" (hoặc "cho_duyet" tùy quy trình của bạn)
+                    'thoi_gian_ky' => now(),
+                    'updated_at' => now()
+                ]);
+
+            if ($updated) {
+                return redirect()->back()->with('success', 'Gửi file bản scan hợp đồng đã ký lên hệ thống thành công!');
+            }
+        }
+
+        return redirect()->back()->with('error', 'Có lỗi xảy ra trong quá trình tải file lên.');
     }
 }

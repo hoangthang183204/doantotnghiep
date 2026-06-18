@@ -114,6 +114,46 @@
             </div>
         </div>
     </div>
+    {{-- Khối code hiển thị Bản Scan Hợp Đồng Ký Tay do nhân viên nộp --}}
+    @if($hopDong->file_scan_ky)
+    <div class="bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+        <div class="border-b px-6 py-4 bg-teal-50 dark:bg-teal-900/20">
+            <h3 class="text-lg font-semibold text-teal-600 dark:text-teal-400 flex items-center gap-2">
+                📸 Bản scan hợp đồng ký tay từ nhân viên
+            </h3>
+        </div>
+        <div class="p-6">
+            <div class="flex flex-wrap items-center gap-4">
+                @php
+                    $extension = strtolower(pathinfo($hopDong->file_scan_ky, PATHINFO_EXTENSION));
+                    $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                @endphp
+
+                <a href="{{ asset('storage/' . $hopDong->file_scan_ky) }}" target="_blank" 
+                   class="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl transition font-medium text-sm shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    Xem chi tiết bản ký tay (.{{ $extension }})
+                </a>
+
+                @if($hopDong->thoi_gian_ky)
+                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                        🕐 Thời gian nộp: {{ \Carbon\Carbon::parse($hopDong->thoi_gian_ky)->format('d/m/Y H:i') }}
+                    </span>
+                @endif
+            </div>
+
+            @if($isImage)
+                <div class="mt-4 border border-gray-200 dark:border-gray-700 rounded-lg p-2 bg-gray-50 dark:bg-gray-900/50 max-w-md">
+                    <p class="text-xs text-gray-400 mb-2 font-medium">📷 Xem trước ảnh bản ký:</p>
+                    <img src="{{ asset('storage/' . $hopDong->file_scan_ky) }}" alt="Bản scan ký tay" class="rounded shadow-sm max-h-60 object-contain cursor-pointer" onclick="window.open(this.src)">
+                </div>
+            @endif
+        </div>
+    </div>
+    @endif
 
     {{-- Điều khoản hợp đồng --}}
     @if($hopDong->dieu_khoan)

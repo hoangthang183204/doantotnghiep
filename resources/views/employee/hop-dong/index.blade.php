@@ -78,12 +78,10 @@
                                 </div>
                                 <div>
                                     <span class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-1">Trạng thái ký:</span>
-                                    @if (($hopDong->trang_thai_ky ?? '') == 'da_ky')
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800">Đã ký</span>
-                                    @elseif (($hopDong->trang_thai_ky ?? '') == 'tu_choi')
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800">Từ chối ký</span>
+                                    @if (($hopDong->trang_thai_ky ?? '') == 'da_ky' || !empty($hopDong->file_scan_ky))
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800">Đã gửi file ký</span>
                                     @else
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800">Chưa ký</span>
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800">Chưa ký / Chờ tải file scan</span>
                                     @endif
                                 </div>
                                 <div>
@@ -159,11 +157,8 @@
                         <div class="p-6">
                             @if (!empty($hopDong->duong_dan_file))
                                 @php
-                                    // Cắt chuỗi lưu nhiều file của Admin (ngăn cách bởi dấu ;) để lấy file đầu tiên
                                     $danhSachFile = explode(';', $hopDong->duong_dan_file);
                                     $fileDauTien = trim($danhSachFile[0]);
-                                    
-                                    // Phân tích đuôi file để hiển thị icon động
                                     $extension = strtolower(pathinfo($fileDauTien, PATHINFO_EXTENSION));
                                     $icon = 'fa-file-pdf text-red-500';
                                     
@@ -232,40 +227,50 @@
 
                     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden sticky top-6">
                         <div class="px-5 py-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 flex items-center">
-                            <i class="fas fa-pen-nib text-indigo-600 dark:text-indigo-400 text-lg mr-3"></i>
-                            <h4 class="font-bold text-gray-800 dark:text-gray-200">Xác nhận ký kết</h4>
+                            <i class="fas fa-cloud-upload-alt text-indigo-600 dark:text-indigo-400 text-lg mr-3"></i>
+                            <h4 class="font-bold text-gray-800 dark:text-gray-200">Gửi file bản ký tay</h4>
                         </div>
                         <div class="p-6 space-y-4">
                             <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                                Vui lòng đọc kỹ toàn bộ điều khoản hợp đồng lao động, mức lương cùng danh sách phụ cấp được hưởng trước khi đưa ra quyết định ký duyệt điện tử.
+                                <b class="text-gray-700 dark:text-gray-300">Hướng dẫn thực hiện:</b><br>
+                                1. Tải file gốc ở mục <span class="text-red-500 font-medium">File hợp đồng gốc</span>.<br>
+                                2. In ra giấy, đọc kỹ điều khoản và tiến hành ký tay.<br>
+                                3. Chụp ảnh rõ nét hoặc scan bản đã ký thành file (PDF/Ảnh) rồi chọn tải lên hệ thống bên dưới.
                             </p>
 
-                            @if (($hopDong->trang_thai_ky ?? '') == 'da_ky')
-                                <div class="p-4 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 rounded-xl border border-emerald-200 dark:border-emerald-900 text-center font-bold text-sm">
-                                    <i class="fas fa-check-double text-base mr-1.5 animate-bounce"></i> Hợp đồng đã được ký kết thành công
+                            <form action="{{ route('employee.hopdong.update-status', $hopDong->id) }}" method="POST" enctype="multipart/form-data" class="space-y-4 pt-2">
+                                @csrf
+                                @method('PATCH')
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Chọn File ảnh / File scan đã ký:
+                                    </label>
+                                    <input type="file" name="file_scan_ky" required accept="image/*,.pdf,.doc,.docx"
+                                        class="block w-full text-sm text-gray-500 dark:text-gray-400
+                                        file:mr-4 file:py-2 file:px-4
+                                        file:rounded-lg file:border-0
+                                        file:text-sm file:font-semibold
+                                        file:bg-indigo-50 file:text-indigo-700
+                                        hover:file:bg-indigo-100
+                                        dark:file:bg-gray-700 dark:file:text-gray-300
+                                        border border-gray-300 dark:border-gray-600 rounded-lg p-1 bg-gray-50 dark:bg-gray-900">
                                 </div>
-                            @elseif (($hopDong->trang_thai_ky ?? '') == 'tu_choi')
-                                <div class="p-4 bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 rounded-xl border border-rose-200 dark:border-rose-900 text-center font-bold text-sm">
-                                    <i class="fas fa-times-circle text-base mr-1.5"></i> Bạn đã từ chối ký hợp đồng này
-                                </div>
-                            @else
-                                <form action="{{ route('employee.hopdong.update-status', $hopDong->id) }}" method="POST" class="space-y-3 pt-2">
-                                    @csrf
-                                    @method('PATCH')
-                                    
-                                    <button type="submit" name="action" value="da_ky"
-                                        onclick="return confirm('Bạn hoàn toàn đồng ý với các mức lương, phụ cấp và điều khoản và muốn tiến hành KÝ hợp đồng này chứ?')"
-                                        class="w-full inline-flex items-center justify-center px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow-sm transition-colors text-sm">
-                                        <i class="fas fa-file-signature mr-2 text-base"></i> Ký kết hợp đồng
-                                    </button>
-                                    
-                                    <button type="submit" name="action" value="tu_choi"
-                                        onclick="return confirm('Bạn chắc chắn muốn TỪ CHỐI ký kết hợp đồng lao động này?')"
-                                        class="w-full inline-flex items-center justify-center px-4 py-3 bg-white dark:bg-gray-800 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/60 rounded-xl font-medium hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors text-sm">
-                                        <i class="fas fa-times mr-2"></i> Từ chối ký kết
-                                    </button>
-                                </form>
-                            @endif
+
+                                @if (!empty($hopDong->file_scan_ky))
+                                    <div class="p-3 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-400 text-xs rounded-lg border border-emerald-200 dark:border-emerald-900 flex flex-col gap-1">
+                                        <span class="font-semibold"><i class="fas fa-check-circle mr-1"></i> Đã có bản scan trên hệ thống:</span>
+                                        <a href="{{ asset('storage/' . $hopDong->file_scan_ky) }}" target="_blank" class="underline text-blue-600 dark:text-blue-400 truncate">
+                                            {{ basename($hopDong->file_scan_ky) }}
+                                        </a>
+                                    </div>
+                                @endif
+
+                                <button type="submit" name="action" value="gui_file_scan"
+                                    class="w-full inline-flex items-center justify-center px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-sm transition-colors text-sm">
+                                    <i class="fas fa-paper-plane mr-2 text-base"></i> Gửi file hợp đồng đã ký
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
