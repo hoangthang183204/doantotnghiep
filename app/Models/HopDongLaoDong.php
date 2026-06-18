@@ -20,6 +20,7 @@ class HopDongLaoDong extends Model
         'ngay_bat_dau',
         'ngay_ket_thuc',
         'luong_co_ban',
+        'phu_cap_id',
         'hinh_thuc_lam_viec',
         'dia_diem_lam_viec',
         'duong_dan_file',
@@ -188,5 +189,25 @@ class HopDongLaoDong extends Model
             return $this->phuCap->ten;
         }
         return 'Phụ cấp khác';
+    }
+
+    // app/Models/HopDongLaoDong.php
+
+    protected static function booted()
+    {
+        static::saving(function ($hopDong) {
+            // Nếu có ngày bắt đầu và ngày bắt đầu <= hôm nay
+            if ($hopDong->ngay_bat_dau && $hopDong->ngay_bat_dau <= now()) {
+                // Nếu chưa có ngày kết thúc hoặc ngày kết thúc >= hôm nay
+                if (!$hopDong->ngay_ket_thuc || $hopDong->ngay_ket_thuc >= now()) {
+                    $hopDong->trang_thai_hop_dong = 'hieu_luc';
+                }
+            }
+
+            // Nếu có ngày kết thúc và ngày kết thúc < hôm nay
+            if ($hopDong->ngay_ket_thuc && $hopDong->ngay_ket_thuc < now()) {
+                $hopDong->trang_thai_hop_dong = 'het_han';
+            }
+        });
     }
 }

@@ -27,7 +27,7 @@ class HopDongLaoDongController extends Controller
     public function index(Request $request)
     {
         $query = HopDongLaoDong::with(['hoSoNguoiDung', 'nguoiKy', 'chucVu']);
-    
+
         // Tìm kiếm theo từ khóa
         if ($request->search) {
             $search = $request->search;
@@ -40,22 +40,22 @@ class HopDongLaoDongController extends Controller
                     });
             });
         }
-    
+
         // Lọc theo loại hợp đồng
         if ($request->loai_hop_dong) {
             $query->where('loai_hop_dong', $request->loai_hop_dong);
         }
-    
+
         // Lọc theo trạng thái hợp đồng
         if ($request->trang_thai_hop_dong) {
             $query->where('trang_thai_hop_dong', $request->trang_thai_hop_dong);
         }
-    
+
         // Lọc theo trạng thái ký
         if ($request->trang_thai_ky) {
             $query->where('trang_thai_ky', $request->trang_thai_ky);
         }
-    
+
         // 💡 THÊM MỚI: Bộ lọc theo trạng thái nộp file scan ký tay
         if ($request->has('file_scan')) {
             if ($request->file_scan === 'da_nop') {
@@ -64,7 +64,7 @@ class HopDongLaoDongController extends Controller
                 $query->whereNull('file_scan_ky');
             }
         }
-    
+
         // Loại trừ hợp đồng đã hủy bỏ, hợp đồng hết hạn đã được tái ký thành công, và hợp đồng từ chối ký
         $query->where(function ($q) {
             $q->where('trang_thai_hop_dong', '!=', 'huy_bo')
@@ -80,9 +80,9 @@ class HopDongLaoDongController extends Controller
                         });
                 });
         });
-    
+
         $hopDongs = $query->latest()->paginate(20);
-    
+
         // Cập nhật trạng thái hết hạn tự động
         foreach ($hopDongs as $hopDong) {
             if ($hopDong->ngay_ket_thuc && Carbon::parse($hopDong->ngay_ket_thuc)->lt(now()) && $hopDong->trang_thai_hop_dong !== 'het_han') {
@@ -93,11 +93,11 @@ class HopDongLaoDongController extends Controller
                 $hopDong->save();
             }
         }
-    
+
         // Thống kê
         $now = now();
         $in30days = now()->addDays(30);
-    
+
         $hieuLuc = HopDongLaoDong::where('trang_thai_hop_dong', 'hieu_luc')->count();
         $chuaCoHopDong = HoSoNguoiDung::whereDoesntHave('hopDongLaoDong')->count();
         $sapHetHan = HopDongLaoDong::where('trang_thai_hop_dong', 'hieu_luc')
@@ -105,7 +105,7 @@ class HopDongLaoDongController extends Controller
             ->where('ngay_ket_thuc', '<=', $in30days)
             ->count();
         $hetHanChuaTaiKy = HopDongLaoDong::where('trang_thai_tai_ky', 'cho_tai_ky')->count();
-    
+
         return view('admin.hop-dong-lao-dong.index', compact('hopDongs', 'hieuLuc', 'chuaCoHopDong', 'sapHetHan', 'hetHanChuaTaiKy'));
     }
 
@@ -220,6 +220,9 @@ class HopDongLaoDongController extends Controller
     /**
      * Lưu hợp đồng mới
      */
+    /**
+     * Lưu hợp đồng mới
+     */
     public function store(Request $request)
     {
         if (!auth()->check()) return redirect()->route('login');
@@ -251,6 +254,17 @@ class HopDongLaoDongController extends Controller
         $data['trang_thai_hop_dong'] = 'tao_moi';
         $data['trang_thai_ky'] = 'cho_ky';
         $data['created_by'] = Auth::id();
+
+        // ⭐ XỬ LÝ PHỤ CẤP ID - LƯU VÀO CỘT phu_cap_id
+        // Nếu chọn 1 phụ cấp, lưu id vào cột phu_cap_id
+        // Nếu chọn nhiều phụ cấp, lưu danh sách id dạng JSON vào cột phu_cap_ids (nếu có)
+        if ($request->has('phu_cap_ids') && is_array($request->phu_cap_ids)) {
+            // Lưu phu_cap_id đầu tiên vào cột phu_cap_id (để hiển thị chính)
+            $data['phu_cap_id'] = $request->phu_cap_ids[0] ?? null;
+
+            // Lưu tất cả vào cột phu_cap dạng JSON (để giữ danh sách đầy đủ)
+            $data['phu_cap'] = json_encode($request->phu_cap_ids);
+        }
 
         // Xử lý file hợp đồng
         if ($request->hasFile('file_hop_dong')) {
@@ -346,6 +360,9 @@ class HopDongLaoDongController extends Controller
     /**
      * Cập nhật hợp đồng
      */
+    /**
+     * Cập nhật hợp đồng
+     */
     public function update(Request $request, $id)
     {
         $hopDong = HopDongLaoDong::findOrFail($id);
@@ -379,6 +396,18 @@ class HopDongLaoDongController extends Controller
         $request->validate($validationRules);
 
         $data = $request->except(['file_hop_dong', 'file_dinh_kem', 'phu_cap_ids']);
+
+        // ⭐ CẬP NHẬT PHỤ CẤP ID
+        if ($request->has('phu_cap_ids') && is_array($request->phu_cap_ids)) {
+            // Lưu phu_cap_id đầu tiên vào cột phu_cap_id
+            $data['phu_cap_id'] = $request->phu_cap_ids[0] ?? null;
+
+            // Lưu tất cả vào cột phu_cap dạng JSON
+            $data['phu_cap'] = json_encode($request->phu_cap_ids);
+        } else {
+            $data['phu_cap_id'] = null;
+            $data['phu_cap'] = null;
+        }
 
         // Xử lý file hợp đồng
         if ($request->hasFile('file_hop_dong')) {
@@ -748,11 +777,11 @@ class HopDongLaoDongController extends Controller
     {
         $nhanVien = NguoiDung::with(['chucVu', 'phuCapNhanViens.phuCap'])
             ->find($id);
-        
+
         if (!$nhanVien) {
             return response()->json(['success' => false, 'message' => 'Không tìm thấy nhân viên']);
         }
-        
+
         return response()->json([
             'success' => true,
             'luong_co_ban' => $nhanVien->chucVu->luong_co_ban ?? 0,
