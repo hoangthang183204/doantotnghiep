@@ -111,12 +111,12 @@
                     <p class="text-sm text-gray-500 dark:text-gray-400">Trạng thái</p>
                     @php
                         $statusConfig = [
-                            'dung_gio' => ['bg-green-100 dark:bg-green-900/30', 'text-green-700 dark:text-green-300', 'Đúng giờ'],
-                            'di_muon' => ['bg-yellow-100 dark:bg-yellow-900/30', 'text-yellow-700 dark:text-yellow-300', 'Đi muộn'],
-                            've_som' => ['bg-orange-100 dark:bg-orange-900/30', 'text-orange-700 dark:text-orange-300', 'Về sớm'],
-                            'khong_cham_cong' => ['bg-red-100 dark:bg-red-900/30', 'text-red-700 dark:text-red-300', 'Không chấm công'],
+                            'dung_gio' => ['bg-green-100 dark:bg-green-900/30', 'text-green-700 dark:text-green-300', '✅ Đúng giờ'],
+                            'di_muon' => ['bg-yellow-100 dark:bg-yellow-900/30', 'text-yellow-700 dark:text-yellow-300', '⚠️ Đi muộn'],
+                            've_som' => ['bg-orange-100 dark:bg-orange-900/30', 'text-orange-700 dark:text-orange-300', '🔻 Về sớm'],
+                            'vang_mat' => ['bg-red-100 dark:bg-red-900/30', 'text-red-700 dark:text-red-300', '❌ Vắng mặt'],
                         ];
-                        $config = $statusConfig[$chamCong->trang_thai] ?? $statusConfig['khong_cham_cong'];
+                        $config = $statusConfig[$chamCong->trang_thai] ?? $statusConfig['vang_mat'];
                     @endphp
                     <span class="px-3 py-1 rounded-full text-sm font-medium {{ $config[0] }} {{ $config[1] }}">
                         {{ $config[2] }}
@@ -136,65 +136,6 @@
         </div>
     </div>
 
-    {{-- PHÊ DUYỆT --}}
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 class="font-semibold text-gray-800 dark:text-white">✅ Thông tin phê duyệt</h2>
-        </div>
-        <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Người phê duyệt</p>
-                    <p class="font-semibold text-gray-800 dark:text-white">
-                        @php
-                            $nguoiDuyet = $chamCong->nguoi_phe_duyet;
-                            if ($nguoiDuyet) {
-                                $ho = $nguoiDuyet->hoSo->ho ?? '';
-                                $ten = $nguoiDuyet->hoSo->ten ?? $nguoiDuyet->ten_dang_nhap ?? '';
-                                echo trim($ho . ' ' . $ten);
-                            } else {
-                                echo 'Chưa có';
-                            }
-                        @endphp
-                    </p>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Thời gian phê duyệt</p>
-                    <p class="font-semibold text-gray-800 dark:text-white">
-                        {{ $chamCong->thoi_gian_phe_duyet ? \Carbon\Carbon::parse($chamCong->thoi_gian_phe_duyet)->format('d/m/Y H:i') : 'Chưa có' }}
-                    </p>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Trạng thái duyệt</p>
-                    <div class="mt-1">
-                        @if($chamCong->trang_thai_duyet == 1)
-                            <span class="px-3 py-1 rounded-full text-sm font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
-                                ✅ Đã duyệt
-                            </span>
-                        @elseif($chamCong->trang_thai_duyet == 2)
-                            <span class="px-3 py-1 rounded-full text-sm font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
-                                ❌ Từ chối
-                            </span>
-                        @else
-                            <span class="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300">
-                                ⏳ Chờ duyệt
-                            </span>
-                        @endif
-                    </div>
-                </div>
-                @if($chamCong->ghi_chu_duyet)
-                <div class="md:col-span-2">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Ghi chú duyệt</p>
-                    <p class="mt-1 text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg text-sm">
-                        {{ $chamCong->ghi_chu_duyet }}
-                    </p>
-                </div>
-                @endif
-            </div>
-        </div>
-    </div>
-
-    {{-- GHI CHÚ --}}
     @if($chamCong->ghi_chu)
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -205,27 +146,6 @@
                 {{ $chamCong->ghi_chu }}
             </p>
         </div>
-    </div>
-    @endif
-
-    {{-- NÚT HÀNH ĐỘNG --}}
-    @if(($chamCong->trang_thai_duyet ?? 0) == 3 || !$chamCong->trang_thai_duyet)
-    <div class="flex gap-3">
-        <form action="{{ route('admin.cham-cong.phe-duyet', $chamCong->id) }}" method="POST" class="inline">
-            @csrf
-            <input type="hidden" name="trang_thai_duyet" value="1">
-            <button type="submit" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition">
-                ✅ Phê duyệt
-            </button>
-        </form>
-        <form action="{{ route('admin.cham-cong.phe-duyet', $chamCong->id) }}" method="POST" class="inline">
-            @csrf
-            <input type="hidden" name="trang_thai_duyet" value="2">
-            <input type="hidden" name="ghi_chu_phe_duyet" value="Từ chối">
-            <button type="submit" class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition">
-                ❌ Từ chối
-            </button>
-        </form>
     </div>
     @endif
 
