@@ -50,5 +50,9 @@ class HoSoNguoiDung extends Model
     {
         return $this->hasMany(HopDongLaoDong::class, 'nguoi_dung_id', 'nguoi_dung_id');
     }
-    // ========== KẾT THÚC ==========
+
+    public function hoSo()
+    {
+        return $this->belongsTo(HoSo::class, 'nguoi_dung_id', 'nguoi_dung_id');
+    }
 }

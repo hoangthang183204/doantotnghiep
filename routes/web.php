@@ -62,7 +62,7 @@ Route::prefix('admin')
 
         // ========== DASHBOARD ==========
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
         // ========== HỒ SƠ ==========
@@ -74,6 +74,10 @@ Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dash
             Route::post('/{id}/resign', [HoSoController::class, 'resign'])->name('resign');
             Route::post('/{id}/activate', [HoSoController::class, 'activate'])->name('activate');
             Route::get('/cv/view/{id}', [HoSoController::class, 'viewCv'])->name('cv.view');
+            Route::get('ho-so/{id}/view-cv', [HoSoController::class, 'viewCv'])->name('ho-so.view-cv');
+            Route::get('/{id}/view-cv', [HoSoController::class, 'viewCv'])->name('view-cv');
+            Route::get('/{id}/view-contract', [HoSoController::class, 'viewContract'])->name('view-contract');
+            Route::get('/view-contract/{id}', [HoSoController::class, 'viewContract'])->name('view-contract');
         });
 
         // ========== QUẢN LÝ NGƯỜI DÙNG ==========
@@ -109,15 +113,11 @@ Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dash
         Route::put('/ho-so-ca-nhan/update', [HoSoCaNhanController::class, 'update'])->name('ho-so-ca-nhan.update');
         Route::post('/ho-so-ca-nhan/change-password', [HoSoCaNhanController::class, 'changePassword'])->name('ho-so-ca-nhan.change-password');
 
-Route::get('/chuc-vu/{id}', [ChucVuController::class, 'show'])->name('chuc-vu.show');
+        Route::get('/chuc-vu/{id}', [ChucVuController::class, 'show'])->name('chuc-vu.show');
         Route::get('/chuc-vu/{id}/edit', [ChucVuController::class, 'edit'])->name('chuc-vu.edit');
         Route::put('/chuc-vu/{id}', [ChucVuController::class, 'update'])->name('chuc-vu.update');
         Route::delete('/chuc-vu/{id}', [ChucVuController::class, 'destroy'])->name('chuc-vu.destroy');
 
-        // ========== HỒ SƠ CÁ NHÂN ==========
-        Route::get('/ho-so-ca-nhan', [HoSoCaNhanController::class, 'index'])->name('ho-so-ca-nhan.index');
-        Route::put('/ho-so-ca-nhan/update', [HoSoCaNhanController::class, 'update'])->name('ho-so-ca-nhan.update');
-        Route::post('/ho-so-ca-nhan/change-password', [HoSoCaNhanController::class, 'changePassword'])->name('ho-so-ca-nhan.change-password');
 
         // ========== CHẤM CÔNG ==========
         Route::get('/cham-cong', [ChamCongController::class, 'index'])->name('cham-cong.index');
@@ -149,7 +149,7 @@ Route::get('/chuc-vu/{id}', [ChucVuController::class, 'show'])->name('chuc-vu.sh
         Route::get('/tin-tuyen-dung', [TinTuyenDungController::class, 'index'])->name('tin-tuyen-dung.index');
         Route::get('/tin-tuyen-dung/{id}', [TinTuyenDungController::class, 'show'])->name('tin-tuyen-dung.show');
         Route::get('/tin-tuyen-dung/create', [TinTuyenDungController::class, 'create'])->name('tin-tuyen-dung.create');
-Route::get('/tin-tuyen-dung/create', [TinTuyenDungController::class, 'create'])->name('tin-tuyen-dung.create');
+        Route::get('/tin-tuyen-dung/create', [TinTuyenDungController::class, 'create'])->name('tin-tuyen-dung.create');
         Route::post('/tin-tuyen-dung', [TinTuyenDungController::class, 'store'])->name('tin-tuyen-dung.store');
         Route::get('/tin-tuyen-dung/{id}/edit', [TinTuyenDungController::class, 'edit'])->name('tin-tuyen-dung.edit');
         Route::put('/tin-tuyen-dung/{id}', [TinTuyenDungController::class, 'update'])->name('tin-tuyen-dung.update');
@@ -186,7 +186,7 @@ Route::get('/tin-tuyen-dung/create', [TinTuyenDungController::class, 'create'])-
             Route::get('/{id}', [HopDongLaoDongController::class, 'show'])->name('hop-dong.show');
             Route::get('/{id}/sua', [HopDongLaoDongController::class, 'edit'])->name('hop-dong.edit');
             Route::put('/{id}', [HopDongLaoDongController::class, 'update'])->name('hop-dong.update');
-Route::put('/{id}', [HopDongLaoDongController::class, 'update'])->name('hop-dong.update');
+            Route::put('/{id}', [HopDongLaoDongController::class, 'update'])->name('hop-dong.update');
             Route::delete('/{id}', [HopDongLaoDongController::class, 'destroy'])->name('hop-dong.destroy');
             Route::post('/{id}/gui-ky', [HopDongLaoDongController::class, 'guiKy'])->name('hop-dong.gui-ky');
             Route::post('/{id}/huy', [HopDongLaoDongController::class, 'huy'])->name('hop-dong.huy');
@@ -219,7 +219,7 @@ Route::put('/{id}', [HopDongLaoDongController::class, 'update'])->name('hop-dong
         // ========== THỰC HIỆN TĂNG CA ==========
         Route::get('/thuc-hien-tang-ca', [ThucHienTangCaController::class, 'index'])->name('thuc-hien-tang-ca.index');
         Route::get('/thuc-hien-tang-ca/{id}', [ThucHienTangCaController::class, 'show'])->name('thuc-hien-tang-ca.show');
-Route::get('/thuc-hien-tang-ca/{id}/edit', [ThucHienTangCaController::class, 'edit'])->name('thuc-hien-tang-ca.edit');
+        Route::get('/thuc-hien-tang-ca/{id}/edit', [ThucHienTangCaController::class, 'edit'])->name('thuc-hien-tang-ca.edit');
         Route::put('/thuc-hien-tang-ca/{id}', [ThucHienTangCaController::class, 'update'])->name('thuc-hien-tang-ca.update');
 
         // ========== DUYỆT ĐƠN TUYỂN DỤNG ==========
@@ -261,7 +261,7 @@ Route::prefix('employee')
         // ========== CHẤM CÔNG ==========
         Route::prefix('cham-cong')->name('cham-cong.')->group(function () {
             Route::get('/', [EmployeeChamCongController::class, 'index'])->name('index');
-Route::post('/check-in', [EmployeeChamCongController::class, 'checkIn'])->name('check-in');
+            Route::post('/check-in', [EmployeeChamCongController::class, 'checkIn'])->name('check-in');
             Route::post('/check-out', [EmployeeChamCongController::class, 'checkOut'])->name('check-out');
             Route::get('/history', [EmployeeChamCongController::class, 'history'])->name('history');
         });
@@ -302,6 +302,4 @@ Route::post('/check-in', [EmployeeChamCongController::class, 'checkIn'])->name('
             Route::put('/', [EmployeeHoSoController::class, 'update'])->name('update');
             Route::post('/change-password', [EmployeeHoSoController::class, 'changePassword'])->name('change-password');
         });
-    });
-    });
     });
