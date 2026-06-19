@@ -75,6 +75,7 @@
             </div>
         </div>
 
+
         {{-- ================= PASSWORD ================= --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-5">
             <div class="font-semibold mb-4">Đổi mật khẩu</div>
@@ -165,6 +166,51 @@
                             placeholder="SĐT">
                         <input name="quan_he_khan_cap" class="input" value="{{ $user->hoSo?->quan_he_khan_cap }}"
                             placeholder="Quan hệ">
+                    </div>
+                </div>
+
+                {{-- ================= BANK ================= --}}
+                <div class="mt-6">
+                    <div class="font-semibold mb-4">
+                        🏦 Thông tin ngân hàng
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-4">
+
+                        <input name="chu_tai_khoan" class="input"
+                            value="{{ old('chu_tai_khoan', $user->hoSo?->chu_tai_khoan) }}" placeholder="Chủ tài khoản">
+
+                        <input name="so_tai_khoan" class="input"
+                            value="{{ old('so_tai_khoan', $user->hoSo?->so_tai_khoan) }}" placeholder="Số tài khoản">
+
+                        <input name="ten_ngan_hang" class="input"
+                            value="{{ old('ten_ngan_hang', $user->hoSo?->ten_ngan_hang) }}" placeholder="Tên ngân hàng">
+
+                        <input name="chi_nhanh_ngan_hang" class="input"
+                            value="{{ old('chi_nhanh_ngan_hang', $user->hoSo?->chi_nhanh_ngan_hang) }}"
+                            placeholder="Chi nhánh ngân hàng">
+
+                    </div>
+                </div>
+
+                {{-- ================= INSURANCE ================= --}}
+                <div class="mt-6">
+                    <div class="font-semibold mb-4">
+                        🛡️ Bảo hiểm & Thuế
+                    </div>
+
+                    <div class="grid md:grid-cols-3 gap-4">
+
+                        <input name="so_bhxh" class="input" value="{{ old('so_bhxh', $user->hoSo?->so_bhxh) }}"
+                            placeholder="Số BHXH">
+
+                        <input name="ma_so_thue" class="input"
+                            value="{{ old('ma_so_thue', $user->hoSo?->ma_so_thue) }}" placeholder="Mã số thuế">
+
+                        <input name="noi_dang_ky_kcb" class="input"
+                            value="{{ old('noi_dang_ky_kcb', $user->hoSo?->noi_dang_ky_kcb) }}"
+                            placeholder="Nơi đăng ký KCB">
+
                     </div>
                 </div>
 
@@ -289,9 +335,305 @@
                 </div>
 
             </form>
+
+
+            {{-- ================= CV ================= --}}
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-5 mt-6">
+                <div class="font-semibold mb-4">
+                    📄 CV Hồ sơ năng lực
+                </div>
+
+                @if ($user->hoSo?->hoSo?->cv)
+                    <div class="flex justify-between items-center">
+
+                        <div>
+                            {{ basename($user->hoSo->hoSo->cv->duong_dan_file ?? ($user->hoSo->hoSo->cv->tep_tin ?? 'CV')) }}
+                        </div>
+
+                        <a href="{{ asset('storage/' . ($user->hoSo->hoSo->cv->duong_dan_file ?? $user->hoSo->hoSo->cv->tep_tin)) }}"
+                            target="_blank" class="btn-blue">
+                            Xem CV
+                        </a>
+
+                    </div>
+                @else
+                    <div class="text-gray-500">
+                        Chưa có CV được tải lên.
+                    </div>
+                @endif
+            </div>
+
+            {{-- ================= SKILLS ================= --}}
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-5">
+
+                <div class="font-semibold mb-4">
+                    🛠️ Kỹ năng chuyên môn
+                </div>
+
+                @forelse($user->hoSo?->hoSo?->ky_nang ?? [] as $skill)
+                    <div class="flex justify-between items-center py-3 border-b">
+
+                        <div class="font-medium">
+                            {{ $skill->ten_ky_nang }}
+                        </div>
+
+                        <span class="text-sm">
+                            {{ $skill->icon_cap_do }}
+                            {{ $skill->cap_do }}
+                        </span>
+
+                    </div>
+
+                @empty
+
+                    <div class="text-gray-500">
+                        Chưa có dữ liệu.
+                    </div>
+                @endforelse
+
+            </div>
+
+            {{-- ================= CERTIFICATE ================= --}}
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-5">
+
+                <div class="font-semibold mb-4">
+                    🏅 Chứng chỉ
+                </div>
+
+                @forelse($user->hoSo?->hoSo?->chung_chi ?? [] as $cc)
+                    <div class="border-b py-4">
+
+                        <div class="font-medium">
+                            {{ $cc->ten_chung_chi }}
+                        </div>
+
+                        <div class="text-sm text-gray-500">
+                            {{ $cc->to_chuc_cap }}
+                        </div>
+
+                        <div class="text-sm">
+                            Năm cấp: {{ $cc->nam_cap }}
+                        </div>
+
+                        <div class="text-sm">
+                            {{ $cc->trang_thai_hien_thi }}
+                        </div>
+
+                    </div>
+
+                @empty
+
+                    <div class="text-gray-500">
+                        Chưa có chứng chỉ.
+                    </div>
+                @endforelse
+
+            </div>
+
+            {{-- ================= TRAINING ================= --}}
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-5">
+
+                <div class="font-semibold mb-4">
+                    🎓 Đào tạo
+                </div>
+
+                @forelse($user->hoSo?->hoSo?->dao_tao ?? [] as $dt)
+                    <div class="border-b py-4">
+
+                        <div class="font-medium">
+                            {{ $dt->ten_khoa_hoc }}
+                        </div>
+
+                        <div class="text-sm text-gray-500">
+                            {{ $dt->to_chuc }}
+                        </div>
+
+                        <div class="text-sm">
+                            {{ optional($dt->ngay_bat_dau)->format('d/m/Y') }}
+                            -
+                            {{ optional($dt->ngay_ket_thuc)->format('d/m/Y') }}
+                        </div>
+
+                        <div class="text-sm">
+                            {{ $dt->ket_qua ?? '---' }}
+                        </div>
+
+                    </div>
+
+                @empty
+
+                    <div class="text-gray-500">
+                        Chưa có dữ liệu đào tạo.
+                    </div>
+                @endforelse
+
+            </div>
+
+            {{-- ================= DEPENDENT ================= --}}
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-5">
+
+                <div class="font-semibold mb-4">
+                    👨‍👩‍👧 Người phụ thuộc
+                </div>
+
+                @forelse($user->hoSo?->hoSo?->nguoiPhuThuoc ?? [] as $npt)
+                    <div class="border-b py-4">
+
+                        <div class="font-medium">
+                            {{ $npt->ho_ten }}
+                        </div>
+
+                        <div class="text-sm">
+                            {{ $npt->quan_he_text }}
+                        </div>
+
+                        <div class="text-sm">
+                            MST: {{ $npt->ma_so_thue ?? '---' }}
+                        </div>
+
+                    </div>
+
+                @empty
+
+                    <div class="text-gray-500">
+                        Chưa có người phụ thuộc.
+                    </div>
+                @endforelse
+
+            </div>
+
+            {{-- ================= CONTRACT ================= --}}
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-5">
+
+                <div class="font-semibold mb-4">
+                    📄 Hợp đồng lao động
+                </div>
+
+                @php
+                    $hopDong = $user->hoSo?->hoSo?->hop_dong?->where('trang_thai_hop_dong', 'hieu_luc')->first();
+                @endphp
+
+                @if ($hopDong)
+                    <div class="grid md:grid-cols-2 gap-4">
+
+                        <div>
+                            <strong>Số hợp đồng:</strong>
+                            {{ $hopDong->so_hop_dong }}
+                        </div>
+
+                        <div>
+                            <strong>Loại:</strong>
+                            {{ $hopDong->ten_loai_hop_dong }}
+                        </div>
+
+                        <div>
+                            <strong>Ngày bắt đầu:</strong>
+                            {{ $hopDong->ngay_bat_dau_format }}
+                        </div>
+
+                        <div>
+                            <strong>Ngày kết thúc:</strong>
+                            {{ $hopDong->ngay_ket_thuc_format }}
+                        </div>
+
+                        <div>
+                            <strong>Trạng thái:</strong>
+                            {{ $hopDong->ten_trang_thai }}
+                        </div>
+
+                    </div>
+                @else
+                    <div class="text-gray-500">
+                        Chưa có hợp đồng lao động.
+                    </div>
+                @endif
+
+            </div>
+        </div>
+
+        {{-- ================= REWARD DISCIPLINE ================= --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-5">
+
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold text-lg">
+                    🏆 Khen thưởng & Kỷ luật
+                </h3>
+
+                <span class="text-sm text-gray-500">
+                    Lịch sử đánh giá nhân sự
+                </span>
+            </div>
+
+            @forelse($user->hoSo?->hoSo?->khen_thuong_ky_luat ?? [] as $item)
+                <div class="{{ $item->mau_loai }} rounded-lg p-4 mb-4">
+
+                    <div class="flex justify-between items-start">
+
+                        <div>
+                            <div class="font-semibold text-lg">
+                                {{ $item->ten }}
+                            </div>
+
+                            <div class="text-sm mt-1">
+                                {{ $item->loai_text }}
+                            </div>
+                        </div>
+
+                        <div class="text-sm">
+                            {{ optional($item->ngay)->format('d/m/Y') }}
+                        </div>
+
+                    </div>
+
+                    @if ($item->noi_dung)
+                        <div class="mt-3">
+                            {{ $item->noi_dung }}
+                        </div>
+                    @endif
+
+                    <div class="grid md:grid-cols-3 gap-3 mt-4 text-sm">
+
+                        <div>
+                            <strong>Hình thức:</strong><br>
+                            {{ $item->hinh_thuc ?? '---' }}
+                        </div>
+
+                        <div>
+                            <strong>Quyết định số:</strong><br>
+                            {{ $item->quyet_dinh_so ?? '---' }}
+                        </div>
+
+                        <div>
+                            <strong>Số tiền:</strong><br>
+                            @if ($item->so_tien)
+                                {{ number_format($item->so_tien, 0, ',', '.') }} VNĐ
+                            @else
+                                ---
+                            @endif
+                        </div>
+
+                    </div>
+
+                    @if ($item->nguoiKy)
+                        <div class="mt-3 text-sm text-gray-500">
+                            Người ký:
+                            {{ $item->nguoiKy->ten_dang_nhap ?? '#' . $item->nguoi_ky_id }}
+                        </div>
+                    @endif
+
+                </div>
+
+            @empty
+
+                <div class="text-center py-10 text-gray-500">
+                    Chưa có dữ liệu khen thưởng hoặc kỷ luật.
+                </div>
+            @endforelse
+
         </div>
 
     </div>
+
 
     {{-- ================= STYLE ================= --}}
     <style>

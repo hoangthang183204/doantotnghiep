@@ -31,6 +31,13 @@ class HoSoNguoiDung extends Model
         'quan_he_khan_cap',
         'anh_cccd_truoc',
         'anh_cccd_sau',
+        'chu_tai_khoan',
+        'so_tai_khoan',
+        'ten_ngan_hang',
+        'chi_nhanh_ngan_hang',
+        'so_bhxh',
+        'ma_so_thue',
+        'noi_dang_ky_kcb',
     ];
 
     protected $casts = [
