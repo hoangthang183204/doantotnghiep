@@ -21,7 +21,15 @@ class HoSoController extends Controller
             'hoSo',
             'phong_ban',
             'chuc_vu',
-            'vai_tro'
+            'vai_tro',
+
+            'hoSo.hoSo.cv',
+            'hoSo.hoSo.ky_nang',
+            'hoSo.hoSo.chung_chi',
+            'hoSo.hoSo.dao_tao',
+            'hoSo.hoSo.nguoiPhuThuoc',
+            'hoSo.hoSo.hop_dong',
+            'hoSo.hoSo.khen_thuong_ky_luat',
         ]);
 
         return view('employee.ho-so.index', compact('user'));
@@ -49,7 +57,21 @@ class HoSoController extends Controller
             'sdt_khan_cap' => 'nullable|string|max:20',
             'quan_he_khan_cap' => 'nullable|string|max:100',
 
+            // Ngân hàng
+            'chu_tai_khoan' => 'nullable|string|max:255',
+            'so_tai_khoan' => 'nullable|string|max:100',
+            'ten_ngan_hang' => 'nullable|string|max:255',
+            'chi_nhanh_ngan_hang' => 'nullable|string|max:255',
+
+            // BHXH & Thuế
+            'so_bhxh' => 'nullable|string|max:100',
+            'ma_so_thue' => 'nullable|string|max:100',
+            'noi_dang_ky_kcb' => 'nullable|string|max:255',
+
+            // Hình ảnh
             'anh_dai_dien' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'anh_cccd_truoc' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'anh_cccd_sau' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         /** @var NguoiDung $user */
@@ -64,25 +86,47 @@ class HoSoController extends Controller
         }
 
         $data = [
+
+            // Cá nhân
             'ho' => $request->ho,
             'ten' => $request->ten,
             'so_dien_thoai' => $request->so_dien_thoai,
             'ngay_sinh' => $request->ngay_sinh,
             'gioi_tinh' => $request->gioi_tinh,
 
+            // Địa chỉ
             'dia_chi_hien_tai' => $request->dia_chi_hien_tai,
             'dia_chi_thuong_tru' => $request->dia_chi_thuong_tru,
 
+            // Giấy tờ
             'cmnd_cccd' => $request->cmnd_cccd,
             'so_ho_chieu' => $request->so_ho_chieu,
 
+            // Hôn nhân
             'tinh_trang_hon_nhan' => $request->tinh_trang_hon_nhan,
 
+            // Khẩn cấp
             'lien_he_khan_cap' => $request->lien_he_khan_cap,
             'sdt_khan_cap' => $request->sdt_khan_cap,
             'quan_he_khan_cap' => $request->quan_he_khan_cap,
+
+            // Ngân hàng
+            'chu_tai_khoan' => $request->chu_tai_khoan,
+            'so_tai_khoan' => $request->so_tai_khoan,
+            'ten_ngan_hang' => $request->ten_ngan_hang,
+            'chi_nhanh_ngan_hang' => $request->chi_nhanh_ngan_hang,
+
+            // BHXH & Thuế
+            'so_bhxh' => $request->so_bhxh,
+            'ma_so_thue' => $request->ma_so_thue,
+            'noi_dang_ky_kcb' => $request->noi_dang_ky_kcb,
         ];
 
+        /*
+    |--------------------------------------------------------------------------
+    | Avatar
+    |--------------------------------------------------------------------------
+    */
         if ($request->hasFile('anh_dai_dien')) {
 
             if (
@@ -97,19 +141,45 @@ class HoSoController extends Controller
                 ->store('avatars', 'public');
         }
 
-        $hoSo->update($data);
-
+        /*
+    |--------------------------------------------------------------------------
+    | CCCD mặt trước
+    |--------------------------------------------------------------------------
+    */
         if ($request->hasFile('anh_cccd_truoc')) {
-            $data['anh_cccd_truoc'] = $request->file('anh_cccd_truoc')->store('cccd', 'public');
+
+            if (
+                $hoSo->anh_cccd_truoc &&
+                Storage::disk('public')->exists($hoSo->anh_cccd_truoc)
+            ) {
+                Storage::disk('public')->delete($hoSo->anh_cccd_truoc);
+            }
+
+            $data['anh_cccd_truoc'] = $request
+                ->file('anh_cccd_truoc')
+                ->store('cccd', 'public');
         }
 
+        /*
+    |--------------------------------------------------------------------------
+    | CCCD mặt sau
+    |--------------------------------------------------------------------------
+    */
         if ($request->hasFile('anh_cccd_sau')) {
-            $data['anh_cccd_sau'] = $request->file('anh_cccd_sau')->store('cccd', 'public');
+
+            if (
+                $hoSo->anh_cccd_sau &&
+                Storage::disk('public')->exists($hoSo->anh_cccd_sau)
+            ) {
+                Storage::disk('public')->delete($hoSo->anh_cccd_sau);
+            }
+
+            $data['anh_cccd_sau'] = $request
+                ->file('anh_cccd_sau')
+                ->store('cccd', 'public');
         }
 
-        if ($request->hasFile('anh_dai_dien')) {
-            $data['anh_dai_dien'] = $request->file('anh_dai_dien')->store('avatars', 'public');
-        }
+        $hoSo->update($data);
 
         return redirect()
             ->route('employee.ho-so.index')
