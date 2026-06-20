@@ -118,7 +118,7 @@
             <!-- Quy định -->
             <div class="pt-4">
 
-                <a href="#"
+                <a href="{{ route('employee.quydinh.index') }}"
                     class="menu-toggle flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
                     <i class="fas fa-gavel w-5 text-center"></i>
                     <span class="ml-3 menu-text">Quy định</span>
