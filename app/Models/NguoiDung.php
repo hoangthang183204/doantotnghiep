@@ -175,4 +175,5 @@ class NguoiDung extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(PhuCapNhanVien::class, 'nguoi_dung_id');
     }
+
 }
