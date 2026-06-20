@@ -33,6 +33,7 @@ use App\Http\Controllers\Employee\HoSoController as EmployeeHoSoController;
 use App\Http\Controllers\Employee\TangCaController as EmployeeTangCaController;
 use App\Http\Controllers\Employee\YeuCauChinhCongController;
 use App\Http\Controllers\Employee\HopDongController;
+use App\Http\Controllers\Employee\QuyDinhController as EmployeeQuyDinhController;
 
 // =============================================
 // ROUTE GỐC
@@ -303,4 +304,6 @@ Route::prefix('employee')
             Route::post('/change-password', [EmployeeHoSoController::class, 'changePassword'])->name('change-password');
         });
     });
+    // ========== QUY ĐỊNH ==========
+    Route::get('/quy-dinh', [EmployeeQuyDinhController::class, 'index'])->name('employee.quydinh.index');
     
