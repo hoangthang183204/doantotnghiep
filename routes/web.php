@@ -128,8 +128,12 @@ Route::prefix('admin')
         Route::post('/cham-cong/{id}/phe-duyet', [ChamCongController::class, 'pheDuyetDonLe'])->name('cham-cong.phe-duyet');
 
         // ========== ĐƠN NGHỈ ==========
-        Route::get('/don-nghi', [DonNghiController::class, 'index'])->name('don_nghi.index');
-        Route::post('/don-nghi/{id}/duyet', [DonNghiController::class, 'capNhatTrangThai'])->name('don_nghi.duyet');
+        Route::prefix('don-nghi')->name('don_nghi.')->group(function () {
+            Route::get('/', [DonNghiController::class, 'index'])->name('index');
+            Route::get('/{id}', [DonNghiController::class, 'show'])->name('show');
+            Route::post('/{id}/duyet', [DonNghiController::class, 'capNhatTrangThai'])->name('duyet');
+            Route::post('/bulk-action', [DonNghiController::class, 'bulkAction'])->name('bulk-action');
+        });
 
         // ========== LƯƠNG ==========
         Route::get('/bang-luong', [BangLuongController::class, 'index'])->name('bang-luong.index');
@@ -304,6 +308,5 @@ Route::prefix('employee')
             Route::post('/change-password', [EmployeeHoSoController::class, 'changePassword'])->name('change-password');
         });
     });
-    // ========== QUY ĐỊNH ==========
-    Route::get('/quy-dinh', [EmployeeQuyDinhController::class, 'index'])->name('employee.quydinh.index');
-    
+// ========== QUY ĐỊNH ==========
+Route::get('/quy-dinh', [EmployeeQuyDinhController::class, 'index'])->name('employee.quydinh.index');

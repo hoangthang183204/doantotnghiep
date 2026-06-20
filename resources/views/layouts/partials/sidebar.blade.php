@@ -91,12 +91,6 @@
                         '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>',
                 ],
                 [
-                    'title' => 'Quản lý thời gian',
-                    'route' => '#',
-                    'icon' =>
-                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>',
-                ],
-                [
                     'title' => 'Yêu cầu chỉnh công',
                     'route' => 'admin.yeu-cau-dieu-chinh-cong.index',
                     'icon' =>
