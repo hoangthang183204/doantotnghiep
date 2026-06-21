@@ -34,6 +34,6 @@ class QuyDinhController extends Controller
         // Ghi đè dữ liệu mới vào file JSON
         \Illuminate\Support\Facades\Storage::put('company_setting.json', json_encode($data, JSON_PRETTY_PRINT));
 
-        return redirect()->route('employee.quydinh.index')->with('success', 'Cập nhật giờ làm việc thành công!');
+        return redirect()->back()->with('success', 'Cập nhật giờ làm việc thành công!');
     }
 }

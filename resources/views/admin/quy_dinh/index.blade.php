@@ -138,17 +138,39 @@
 
         /* 3. TUỲ CHỈNH COMPONENT (Card, Banner, Accordion) */
         .banner-quy-dinh {
-            background: linear-gradient(135deg, #253fa8 0%, #3b59d6 100%);
+            /* Đổi sang nền trắng, bo góc, và bóng đổ nhẹ để tạo khối */
+            background: #ffffff;
             border-radius: 12px;
             padding: 24px;
-            color: white;
+            color: #1e293b;
+            /* Đổi màu chữ chính sang màu tối */
             margin-bottom: 24px;
-            box-shadow: 0 4px 15px rgba(37, 63, 168, 0.2);
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.05);
+            /* Bóng đổ nhẹ hơn */
+            border: 1px solid #e2e8f0;
+            /* Thêm viền xám nhẹ cho tinh tế */
         }
 
         .banner-quy-dinh h4 {
             margin: 0 0 4px 0;
             font-size: 20px;
+            color: #3b59d6;
+            /* Đổi màu tiêu đề chính sang màu xanh */
+        }
+
+        .banner-quy-dinh .hr-btn-light {
+            border-color: #3b59d6;
+            /* Đổi viền xanh */
+            color: #3b59d6;
+            /* Đổi chữ xanh */
+            background: transparent;
+        }
+
+        .banner-quy-dinh .hr-btn-light:hover {
+            background: #3b59d6;
+            /* Khi hover, nền xanh */
+            color: white;
+            /* Và chữ trắng */
         }
 
         .card-custom {
@@ -508,9 +530,12 @@
     <div class="hr-wrapper">
         <div class="banner-quy-dinh d-flex justify-content-between align-items-center">
             <div>
+                <!-- Màu icon và tiêu đề được điều chỉnh trong CSS -->
                 <h4 class="fw-bold"><i class="fas fa-clipboard-list me-2"></i> Quy Định Công Ty</h4>
-                <div style="opacity: 0.8; font-size: 14px;">Nội quy và quy định làm việc</div>
+                <!-- Màu chữ phụ, giữ nguyên size và giảm độ mờ một chút -->
+                <div class="text-muted small">Nội quy và quy định làm việc</div>
             </div>
+            <!-- Nút Xuất PDF với viền và chữ xanh, nền trong suốt -->
             <button onclick="exportPDF()" class="hr-btn hr-btn-light">
                 <i class="fas fa-download me-2"></i> Xuất PDF
             </button>
