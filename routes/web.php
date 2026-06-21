@@ -174,6 +174,8 @@ Route::prefix('admin')
 
         // ========== QUY ĐỊNH ==========
         Route::get('/quy-dinh', [QuyDinhController::class, 'index'])->name('quy-dinh.index');
+        Route::get('/quy-dinh/edit', [QuyDinhController::class, 'edit'])->name('quydinh.edit');
+        Route::post('/quy-dinh/update', [QuyDinhController::class, 'update'])->name('quydinh.update');
 
         // ========== QUẢN LÝ THỜI GIAN ==========
         Route::get('/quan-ly-thoi-gian', [QuanLyThoiGianController::class, 'index'])->name('quan-ly-thoi-gian.index');
