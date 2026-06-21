@@ -138,17 +138,39 @@
 
         /* 3. TUỲ CHỈNH COMPONENT (Card, Banner, Accordion) */
         .banner-quy-dinh {
-            background: linear-gradient(135deg, #253fa8 0%, #3b59d6 100%);
+            /* Đổi sang nền trắng, bo góc, và bóng đổ nhẹ để tạo khối */
+            background: #ffffff;
             border-radius: 12px;
             padding: 24px;
-            color: white;
+            color: #1e293b;
+            /* Đổi màu chữ chính sang màu tối */
             margin-bottom: 24px;
-            box-shadow: 0 4px 15px rgba(37, 63, 168, 0.2);
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.05);
+            /* Bóng đổ nhẹ hơn */
+            border: 1px solid #e2e8f0;
+            /* Thêm viền xám nhẹ cho tinh tế */
         }
 
         .banner-quy-dinh h4 {
             margin: 0 0 4px 0;
             font-size: 20px;
+            color: #3b59d6;
+            /* Đổi màu tiêu đề chính sang màu xanh */
+        }
+
+        .banner-quy-dinh .hr-btn-light {
+            border-color: #3b59d6;
+            /* Đổi viền xanh */
+            color: #3b59d6;
+            /* Đổi chữ xanh */
+            background: transparent;
+        }
+
+        .banner-quy-dinh .hr-btn-light:hover {
+            background: #3b59d6;
+            /* Khi hover, nền xanh */
+            color: white;
+            /* Và chữ trắng */
         }
 
         .card-custom {
@@ -508,9 +530,12 @@
     <div class="hr-wrapper">
         <div class="banner-quy-dinh d-flex justify-content-between align-items-center">
             <div>
+                <!-- Màu icon và tiêu đề được điều chỉnh trong CSS -->
                 <h4 class="fw-bold"><i class="fas fa-clipboard-list me-2"></i> Quy Định Công Ty</h4>
-                <div style="opacity: 0.8; font-size: 14px;">Nội quy và quy định làm việc</div>
+                <!-- Màu chữ phụ, giữ nguyên size và giảm độ mờ một chút -->
+                <div class="text-muted small">Nội quy và quy định làm việc</div>
             </div>
+            <!-- Nút Xuất PDF với viền và chữ xanh, nền trong suốt -->
             <button onclick="exportPDF()" class="hr-btn hr-btn-light">
                 <i class="fas fa-download me-2"></i> Xuất PDF
             </button>
@@ -679,6 +704,12 @@
                         <button onclick="openModal()" class="hr-btn hr-btn-secondary">
                             <i class="fas fa-history me-2"></i> Lịch sử cập nhật
                         </button>
+                        @if (auth()->check() && auth()->user()->vai_tro_id == 1)
+                            <button type="button" onclick="openModalSua()" class="hr-btn"
+                                style="border-color: #ef4444; color: #ef4444; width: 100%; margin-top: 12px; font-weight: 500;">
+                                <i class="fas fa-edit me-2"></i> Sửa quy định (Admin)
+                            </button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -686,27 +717,42 @@
         </div>
     </div>
 
-    <div id="modalLichSu" class="hr-modal">
-        <div class="hr-modal-content">
-            <div class="hr-modal-header d-flex justify-content-between align-items-center">
-                <h5 class="fw-bold text-dark"><i class="fas fa-history text-secondary me-2"></i> Lịch sử cập nhật</h5>
-                <button onclick="closeModal()" class="hr-close-btn">&times;</button>
-            </div>
-            <div class="card-body-custom">
-                <div class="hr-timeline-item">
-                    <h6 class="fw-bold text-primary">Phiên bản 1.1 (Hiện tại)</h6>
-                    <div class="text-muted small mb-2"><i class="far fa-calendar-alt me-1"></i> 01/06/2026</div>
-                    <div class="text-dark small">- Cập nhật số lượng nhân viên.<br>- Bổ sung quy định giờ làm việc Thứ 7.
-                    </div>
+    <form action="{{ route('admin.quydinh.update') }}" method="POST">
+        @csrf
+        <div id="modalLichSu" class="hr-modal">
+            <div class="hr-modal-content">
+                <div class="hr-modal-header d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-dark"><i class="fas fa-edit text-danger me-2"></i> Chỉnh sửa giờ làm việc</h5>
+                    <button type="button" onclick="closeModal()" class="hr-close-btn">&times;</button>
                 </div>
-                <div class="hr-timeline-item">
-                    <h6 class="fw-bold text-secondary">Phiên bản 1.0</h6>
-                    <div class="text-muted small mb-2"><i class="far fa-calendar-alt me-1"></i> 01/01/2026</div>
-                    <div class="text-dark small">- Ban hành lần đầu quy chế nội bộ.</div>
+                <div class="card-body-custom">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500; text-align: left;">Giờ vào
+                            làm:</label>
+                        <input type="text" name="work_start"
+                            value="{{ \Illuminate\Support\Facades\Storage::json('company_setting.json')['work_start'] ?? '08:30' }}"
+                            style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; color: #000;">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500; text-align: left;">Giờ tan
+                            làm:</label>
+                        <input type="text" name="work_end"
+                            value="{{ \Illuminate\Support\Facades\Storage::json('company_setting.json')['work_end'] ?? '17:30' }}"
+                            style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; color: #000;">
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button type="button" onclick="closeModal()"
+                            style="background: #64748b; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Hủy</button>
+                        <button type="submit"
+                            style="background: #22c55e; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 500;">Lưu
+                            thay đổi</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 
     <script>
         // JS 1: Đóng Mở Các Dòng Quy Định
@@ -767,6 +813,10 @@
                 };
                 html2pdf().set(opt).from(element).save();
             }, 500);
+        }
+
+        function openModalSua() {
+            document.getElementById('modalLichSu').classList.add('show');
         }
     </script>
 @endsection
