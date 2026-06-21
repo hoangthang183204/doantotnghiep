@@ -175,4 +175,9 @@ class NguoiDung extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(PhuCapNhanVien::class, 'nguoi_dung_id');
     }
+    public function isAdmin(): bool
+    {
+        // Check trực tiếp cột vai_tro_id theo dữ liệu từ Seeder
+        return $this->vai_tro_id === 1;
+    }
 }
