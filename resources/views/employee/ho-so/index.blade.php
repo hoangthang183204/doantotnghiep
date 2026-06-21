@@ -32,33 +32,57 @@
         @endif
 
         {{-- ================= HEADER ================= --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-5 flex justify-between items-center">
+        <div
+            class="rounded-2xl p-6
+            bg-gradient-to-r
+            from-blue-600 to-indigo-600
+            dark:from-slate-800 dark:to-slate-900
+            text-white
+            border border-blue-500/20 dark:border-slate-700">
 
-            <div class="flex items-center gap-4">
-                @if ($user->hoSo?->anh_dai_dien)
-                    <img src="{{ asset('storage/' . $user->hoSo->anh_dai_dien) }}"
-                        class="w-14 h-14 rounded-full object-cover border">
-                @else
-                    <div
-                        class="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center font-bold">
-                        {{ strtoupper(substr($user->ho_ten, 0, 1)) }}
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+
+                <div class="flex items-center gap-4">
+
+                    @if ($user->hoSo?->anh_dai_dien)
+                        <img src="{{ asset('storage/' . $user->hoSo->anh_dai_dien) }}"
+                            class="w-20 h-20 rounded-2xl object-cover border-4 border-white/20">
+                    @else
+                        <div class="w-20 h-20 rounded-2xl bg-white/20 flex items-center justify-center text-2xl font-bold">
+                            {{ strtoupper(substr($user->ho_ten, 0, 1)) }}
+                        </div>
+                    @endif
+
+                    <div>
+                        <h1 class="text-2xl font-bold">
+                            {{ $user->ho_ten }}
+                        </h1>
+
+                        <p class="text-blue-100">
+                            {{ $user->email }}
+                        </p>
+
+                        <div class="flex flex-wrap gap-2 mt-2">
+
+                            <span class="px-3 py-1 rounded-full bg-white/15 text-sm">
+                                {{ $user->vai_tro?->ten_hien_thi }}
+                            </span>
+
+                            <span class="px-3 py-1 rounded-full bg-white/15 text-sm">
+                                {{ $user->phong_ban?->ten_phong_ban }}
+                            </span>
+
+                        </div>
                     </div>
-                @endif
 
-                <div>
-                    <div class="font-semibold text-lg">{{ $user->ho_ten }}</div>
-                    <div class="text-sm text-gray-500">{{ $user->email }}</div>
                 </div>
+
             </div>
 
-            <div class="text-right text-sm">
-                <div class="font-medium">{{ $user->vai_tro?->ten_hien_thi }}</div>
-                <div class="text-gray-500">{{ $user->phong_ban?->ten_phong_ban }}</div>
-            </div>
         </div>
 
         {{-- ================= ACCOUNT INFO ================= --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-5">
+        <div class="profile-card">
             <div class="font-semibold mb-4">Thông Tin Tài Khoản</div>
 
             <div class="grid md:grid-cols-2 gap-4">
@@ -77,26 +101,81 @@
 
 
         {{-- ================= PASSWORD ================= --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-5">
-            <div class="font-semibold mb-4">Đổi mật khẩu</div>
+        <div class="profile-card">
+
+            <div class="section-header">
+
+                <div class="section-icon">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+
+                <div>
+                    <h3 class="font-semibold text-lg">
+                        Đổi mật khẩu
+                    </h3>
+
+                    <p class="text-sm text-gray-500">
+                        Cập nhật mật khẩu đăng nhập tài khoản
+                    </p>
+                </div>
+
+            </div>
 
             <form action="{{ route('employee.ho-so.change-password') }}" method="POST">
                 @csrf
 
                 <div class="grid md:grid-cols-3 gap-4">
-                    <input type="password" name="current_password" class="input" placeholder="Mật khẩu hiện tại">
-                    <input type="password" name="new_password" class="input" placeholder="Mật khẩu mới">
-                    <input type="password" name="new_password_confirmation" class="input" placeholder="Xác nhận">
+
+                    <div>
+                        <label class="form-label">
+                            Mật khẩu hiện tại
+                        </label>
+
+                        <input type="password" name="current_password" class="input" placeholder="Nhập mật khẩu hiện tại">
+                    </div>
+
+                    <div>
+                        <label class="form-label">
+                            Mật khẩu mới
+                        </label>
+
+                        <input type="password" name="new_password" class="input" placeholder="Nhập mật khẩu mới">
+                    </div>
+
+                    <div>
+                        <label class="form-label">
+                            Xác nhận mật khẩu
+                        </label>
+
+                        <input type="password" name="new_password_confirmation" class="input"
+                            placeholder="Nhập lại mật khẩu">
+                    </div>
+
                 </div>
 
-                <div class="text-right mt-4">
-                    <button class="btn-yellow">Đổi mật khẩu</button>
+                <div class="flex justify-end mt-4">
+
+                    <button type="submit"
+                        class="inline-flex items-center gap-2
+                       px-5 py-2.5 rounded-xl
+                       bg-blue-600 text-white
+                       hover:bg-blue-700
+                       transition">
+
+                        <i class="fa-solid fa-key"></i>
+
+                        Đổi mật khẩu
+
+                    </button>
+
                 </div>
+
             </form>
+
         </div>
 
         {{-- ================= PERSONAL INFO ================= --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-5">
+        <div class="profile-card">
             <div class="font-semibold mb-4">Thông Tin Cá Nhân</div>
 
             <form action="{{ route('employee.ho-so.update') }}" method="POST" enctype="multipart/form-data">
@@ -321,348 +400,704 @@
                     </div>
                 </div>
 
-                <div class="text-right mt-6 flex justify-end gap-3">
+                {{-- ================= CV ================= --}}
+                <div class="section-card">
 
-                    <button type="reset"
-                        class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        Đặt lại
-                    </button>
+                    <div class="section-header">
 
-                    <button class="btn-blue">
-                        Lưu thay đổi
-                    </button>
-
-                </div>
-
-            </form>
-
-
-            {{-- ================= CV ================= --}}
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-5 mt-6">
-                <div class="font-semibold mb-4">
-                    📄 CV Hồ sơ năng lực
-                </div>
-
-                @if ($user->hoSo?->hoSo?->cv)
-                    <div class="flex justify-between items-center">
+                        <div class="section-icon">
+                            <i class="fa-solid fa-file-pdf"></i>
+                        </div>
 
                         <div>
-                            {{ basename($user->hoSo->hoSo->cv->duong_dan_file ?? ($user->hoSo->hoSo->cv->tep_tin ?? 'CV')) }}
+                            <h3 class="font-semibold text-lg">
+                                Hồ sơ năng lực (CV)
+                            </h3>
+
+                            <p class="text-sm text-gray-500">
+                                Cập nhật và quản lý CV cá nhân
+                            </p>
                         </div>
 
-                        <a href="{{ asset('storage/' . ($user->hoSo->hoSo->cv->duong_dan_file ?? $user->hoSo->hoSo->cv->tep_tin)) }}"
-                            target="_blank" class="btn-blue">
-                            Xem CV
-                        </a>
-
                     </div>
-                @else
-                    <div class="text-gray-500">
-                        Chưa có CV được tải lên.
-                    </div>
-                @endif
-            </div>
 
-            {{-- ================= SKILLS ================= --}}
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-5">
+                    @if ($user->hoSo?->hoSo?->cv)
 
-                <div class="font-semibold mb-4">
-                    🛠️ Kỹ năng chuyên môn
+                        @php
+                            $cv = $user->hoSo->hoSo->cv;
+                            $filePath = $cv->duong_dan_file ?? $cv->tep_tin;
+                            $fileName = basename($filePath);
+                        @endphp
+
+                        <div
+                            class="border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-gray-50 dark:bg-gray-900">
+
+                            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+
+                                <div class="flex items-center gap-4">
+
+                                    <div
+                                        class="w-12 h-12 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
+
+                                        <i class="fa-solid fa-file-pdf"></i>
+
+                                    </div>
+
+                                    <div>
+
+                                        <div class="font-semibold">
+                                            {{ $fileName }}
+                                        </div>
+
+                                        <div class="text-sm text-gray-500">
+                                            CV hiện tại trên hệ thống
+                                        </div>
+
+                                        @if ($cv->updated_at)
+                                            <div class="text-xs text-gray-400 mt-1">
+                                                Cập nhật:
+                                                {{ $cv->updated_at->format('d/m/Y H:i') }}
+                                            </div>
+                                        @endif
+
+                                    </div>
+
+                                </div>
+
+                                <div class="flex flex-wrap gap-2">
+
+                                    <a href="{{ asset('storage/' . $filePath) }}" target="_blank"
+                                        class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800">
+
+                                        <i class="fa-solid fa-eye"></i>
+                                        Xem CV
+
+                                    </a>
+
+                                    <label
+                                        class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800">
+
+                                        <i class="fa-solid fa-upload"></i>
+                                        Chọn CV mới
+
+                                        <input id="cv_file" type="file" name="cv_file" accept=".pdf,.doc,.docx"
+                                            class="hidden" onchange="showCvFile(this)">
+                                    </label>
+
+                                </div>
+
+                            </div>
+
+                            <div id="cvFileName" class="mt-3 text-sm text-blue-600 dark:text-blue-400 hidden">
+                            </div>
+
+                        </div>
+                    @else
+                        <div
+                            class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center">
+
+                            <div class="text-5xl text-gray-300 mb-4">
+                                <i class="fa-regular fa-file"></i>
+                            </div>
+
+                            <div class="font-medium text-gray-600 dark:text-gray-300">
+                                Chưa có CV được tải lên
+                            </div>
+
+                            <div class="text-sm text-gray-500 mt-2 mb-5">
+                                Tải CV PDF hoặc Word để hoàn thiện hồ sơ
+                            </div>
+
+                            <label
+                                class="cursor-pointer inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700">
+
+                                <i class="fa-solid fa-upload"></i>
+                                Chọn CV
+
+                                <input id="cv_file" type="file" name="cv_file" accept=".pdf,.doc,.docx"
+                                    class="hidden">
+
+                            </label>
+
+                            <div id="cvFileName" class="mt-4 text-sm text-blue-600 dark:text-blue-400 hidden">
+                            </div>
+
+                        </div>
+
+                    @endif
+
                 </div>
 
-                @forelse($user->hoSo?->hoSo?->ky_nang ?? [] as $skill)
-                    <div class="flex justify-between items-center py-3 border-b">
+                {{-- ================= SKILLS ================= --}}
+                <div class="profile-card">
 
-                        <div class="font-medium">
-                            {{ $skill->ten_ky_nang }}
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="section-icon">
+                            <i class="fa-solid fa-brain"></i>
                         </div>
 
-                        <span class="text-sm">
-                            {{ $skill->icon_cap_do }}
-                            {{ $skill->cap_do }}
-                        </span>
-
+                        <div>
+                            <h3 class="font-semibold text-lg">
+                                Kỹ năng chuyên môn
+                            </h3>
+                            <p class="text-sm text-gray-500">
+                                Cập nhật kỹ năng làm việc
+                            </p>
+                        </div>
                     </div>
 
-                @empty
+                    @forelse($user->hoSo?->hoSo?->ky_nang ?? [] as $skill)
+                        <div class="border rounded-xl p-4 mb-4">
 
-                    <div class="text-gray-500">
-                        Chưa có dữ liệu.
-                    </div>
-                @endforelse
+                            <div class="grid md:grid-cols-2 gap-4">
 
-            </div>
+                                <input class="input" name="skills[{{ $skill->id }}][ten_ky_nang]"
+                                    value="{{ $skill->ten_ky_nang }}">
 
-            {{-- ================= CERTIFICATE ================= --}}
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-5">
+                                <select class="input" name="skills[{{ $skill->id }}][cap_do]">
 
-                <div class="font-semibold mb-4">
-                    🏅 Chứng chỉ
+                                    <option value="Cơ bản" @selected($skill->cap_do == 'Cơ bản')>
+                                        Cơ bản
+                                    </option>
+
+                                    <option value="Trung cấp" @selected($skill->cap_do == 'Trung cấp')>
+                                        Trung cấp
+                                    </option>
+
+                                    <option value="Thành thạo" @selected($skill->cap_do == 'Thành thạo')>
+                                        Thành thạo
+                                    </option>
+
+                                    <option value="Chuyên gia" @selected($skill->cap_do == 'Chuyên gia')>
+                                        Chuyên gia
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    @empty
+                        <div class="text-gray-500">
+                            Chưa có dữ liệu.
+                        </div>
+                    @endforelse
+
                 </div>
 
-                @forelse($user->hoSo?->hoSo?->chung_chi ?? [] as $cc)
-                    <div class="border-b py-4">
+                {{-- ================= CERTIFICATE ================= --}}
+                <div class="profile-card">
 
-                        <div class="font-medium">
-                            {{ $cc->ten_chung_chi }}
+                    <div class="section-header">
+
+                        <div class="section-icon">
+                            <i class="fa-solid fa-award"></i>
                         </div>
 
-                        <div class="text-sm text-gray-500">
-                            {{ $cc->to_chuc_cap }}
-                        </div>
+                        <div>
+                            <h3 class="font-semibold text-lg">
+                                Chứng chỉ
+                            </h3>
 
-                        <div class="text-sm">
-                            Năm cấp: {{ $cc->nam_cap }}
-                        </div>
-
-                        <div class="text-sm">
-                            {{ $cc->trang_thai_hien_thi }}
+                            <p class="text-sm text-gray-500">
+                                Chứng nhận và bằng cấp chuyên môn
+                            </p>
                         </div>
 
                     </div>
 
-                @empty
+                    @foreach ($user->hoSo?->hoSo?->chung_chi ?? [] as $cc)
+                        <div class="border rounded-xl p-3 mb-3">
 
-                    <div class="text-gray-500">
-                        Chưa có chứng chỉ.
-                    </div>
-                @endforelse
+                            <div class="grid md:grid-cols-4 gap-3">
 
-            </div>
+                                <input class="input" name="certificates[{{ $cc->id }}][ten_chung_chi]"
+                                    value="{{ $cc->ten_chung_chi }}" placeholder="Tên chứng chỉ">
 
-            {{-- ================= TRAINING ================= --}}
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-5">
+                                <input class="input" name="certificates[{{ $cc->id }}][to_chuc_cap]"
+                                    value="{{ $cc->to_chuc_cap }}" placeholder="Tổ chức">
 
-                <div class="font-semibold mb-4">
-                    🎓 Đào tạo
+                                <input type="number" class="input" name="certificates[{{ $cc->id }}][nam_cap]"
+                                    value="{{ $cc->nam_cap }}" placeholder="Năm">
+
+                                <input type="date" class="input"
+                                    name="certificates[{{ $cc->id }}][ngay_het_han]"
+                                    value="{{ optional($cc->ngay_het_han)->format('Y-m-d') }}">
+
+                            </div>
+
+                        </div>
+                    @endforeach
+
                 </div>
 
-                @forelse($user->hoSo?->hoSo?->dao_tao ?? [] as $dt)
-                    <div class="border-b py-4">
+                {{-- ================= TRAINING ================= --}}
+                <div class="profile-card">
 
-                        <div class="font-medium">
-                            {{ $dt->ten_khoa_hoc }}
+                    <div class="section-header">
+
+                        <div class="section-icon">
+                            <i class="fa-solid fa-graduation-cap"></i>
                         </div>
 
-                        <div class="text-sm text-gray-500">
-                            {{ $dt->to_chuc }}
-                        </div>
+                        <div>
+                            <h3 class="font-semibold text-lg">
+                                Đào tạo
+                            </h3>
 
-                        <div class="text-sm">
-                            {{ optional($dt->ngay_bat_dau)->format('d/m/Y') }}
-                            -
-                            {{ optional($dt->ngay_ket_thuc)->format('d/m/Y') }}
-                        </div>
-
-                        <div class="text-sm">
-                            {{ $dt->ket_qua ?? '---' }}
+                            <p class="text-sm text-gray-500">
+                                Khóa học đã tham gia
+                            </p>
                         </div>
 
                     </div>
 
-                @empty
+                    @foreach ($user->hoSo?->hoSo?->dao_tao ?? [] as $dt)
+                        <div class="border rounded-xl p-3 mb-3">
 
-                    <div class="text-gray-500">
-                        Chưa có dữ liệu đào tạo.
-                    </div>
-                @endforelse
+                            <div class="grid md:grid-cols-5 gap-3">
 
-            </div>
+                                <input class="input" name="trainings[{{ $dt->id }}][ten_khoa_hoc]"
+                                    value="{{ $dt->ten_khoa_hoc }}" placeholder="Khóa học">
 
-            {{-- ================= DEPENDENT ================= --}}
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-5">
+                                <input class="input" name="trainings[{{ $dt->id }}][to_chuc]"
+                                    value="{{ $dt->to_chuc }}" placeholder="Tổ chức">
 
-                <div class="font-semibold mb-4">
-                    👨‍👩‍👧 Người phụ thuộc
+                                <input class="input" name="trainings[{{ $dt->id }}][ket_qua]"
+                                    value="{{ $dt->ket_qua }}" placeholder="Kết quả">
+
+                                <input type="date" class="input" name="trainings[{{ $dt->id }}][ngay_bat_dau]"
+                                    value="{{ optional($dt->ngay_bat_dau)->format('Y-m-d') }}">
+
+                                <input type="date" class="input"
+                                    name="trainings[{{ $dt->id }}][ngay_ket_thuc]"
+                                    value="{{ optional($dt->ngay_ket_thuc)->format('Y-m-d') }}">
+
+                            </div>
+
+                        </div>
+                    @endforeach
+
                 </div>
 
-                @forelse($user->hoSo?->hoSo?->nguoiPhuThuoc ?? [] as $npt)
-                    <div class="border-b py-4">
+                {{-- ================= DEPENDENT ================= --}}
+                <div class="profile-card">
 
-                        <div class="font-medium">
-                            {{ $npt->ho_ten }}
+                    <div class="section-header">
+
+                        <div class="section-icon">
+                            <i class="fa-solid fa-people-roof"></i>
                         </div>
 
-                        <div class="text-sm">
-                            {{ $npt->quan_he_text }}
-                        </div>
+                        <div>
+                            <h3 class="font-semibold text-lg">
+                                Người phụ thuộc
+                            </h3>
 
-                        <div class="text-sm">
-                            MST: {{ $npt->ma_so_thue ?? '---' }}
+                            <p class="text-sm text-gray-500">
+                                Thông tin giảm trừ gia cảnh
+                            </p>
                         </div>
 
                     </div>
 
-                @empty
+                    @foreach ($user->hoSo?->hoSo?->nguoiPhuThuoc ?? [] as $npt)
+                        <div class="border rounded-xl p-3 mb-3">
 
-                    <div class="text-gray-500">
-                        Chưa có người phụ thuộc.
-                    </div>
-                @endforelse
+                            <div class="grid md:grid-cols-3 gap-3">
 
-            </div>
+                                <input class="input" name="dependents[{{ $npt->id }}][ho_ten]"
+                                    value="{{ $npt->ho_ten }}" placeholder="Họ tên">
 
-            {{-- ================= CONTRACT ================= --}}
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-5">
+                                <select class="input" name="dependents[{{ $npt->id }}][quan_he]">
 
-                <div class="font-semibold mb-4">
-                    📄 Hợp đồng lao động
+                                    <option value="con" @selected($npt->quan_he == 'con')>
+                                        Con
+                                    </option>
+
+                                    <option value="vo" @selected($npt->quan_he == 'vo')>
+                                        Vợ
+                                    </option>
+
+                                    <option value="chong" @selected($npt->quan_he == 'chong')>
+                                        Chồng
+                                    </option>
+
+                                    <option value="cha" @selected($npt->quan_he == 'cha')>
+                                        Cha
+                                    </option>
+
+                                    <option value="me" @selected($npt->quan_he == 'me')>
+                                        Mẹ
+                                    </option>
+
+                                    <option value="khac" @selected($npt->quan_he == 'khac')>
+                                        Khác
+                                    </option>
+
+                                </select>
+
+                                <input class="input" name="dependents[{{ $npt->id }}][ma_so_thue]"
+                                    value="{{ $npt->ma_so_thue }}" placeholder="Mã số thuế">
+
+                            </div>
+
+                        </div>
+                    @endforeach
+
                 </div>
 
+                {{-- ================= CONTRACT ================= --}}
                 @php
-                    $hopDong = $user->hoSo?->hoSo?->hop_dong?->where('trang_thai_hop_dong', 'hieu_luc')->first();
+                    $hopDong = $user->hoSo?->hoSo?->hop_dong?->first();
                 @endphp
 
                 @if ($hopDong)
-                    <div class="grid md:grid-cols-2 gap-4">
 
-                        <div>
-                            <strong>Số hợp đồng:</strong>
-                            {{ $hopDong->so_hop_dong }}
+                    <div class="profile-card">
+
+                        <div class="section-header">
+
+                            <div class="section-icon">
+                                <i class="fa-solid fa-file-signature"></i>
+                            </div>
+
+                            <div>
+                                <h3 class="font-semibold text-lg">
+                                    Hợp đồng lao động
+                                </h3>
+
+                                <p class="text-sm text-gray-500">
+                                    Thông tin hợp đồng hiện tại
+                                </p>
+                            </div>
+
                         </div>
 
-                        <div>
-                            <strong>Loại:</strong>
-                            {{ $hopDong->ten_loai_hop_dong }}
+                        <div class="grid md:grid-cols-3 gap-4">
+
+                            <div class="info-item">
+                                <span>Số hợp đồng</span>
+                                <strong>{{ $hopDong->so_hop_dong }}</strong>
+                            </div>
+
+                            <div class="info-item">
+                                <span>Loại hợp đồng</span>
+                                <strong>{{ $hopDong->ten_loai_hop_dong }}</strong>
+                            </div>
+
+                            <div class="info-item">
+                                <span>Trạng thái</span>
+
+                                <div>
+                                    <span class="px-3 py-1 rounded-full text-xs {{ $hopDong->mau_trang_thai }}">
+                                        {{ $hopDong->ten_trang_thai }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="info-item">
+                                <span>Ngày bắt đầu</span>
+                                <strong>{{ $hopDong->ngay_bat_dau_format }}</strong>
+                            </div>
+
+                            <div class="info-item">
+                                <span>Ngày kết thúc</span>
+                                <strong>{{ $hopDong->ngay_ket_thuc_format }}</strong>
+                            </div>
+
+                            <div class="info-item">
+                                <span>Hình thức</span>
+                                <strong>{{ $hopDong->hinh_thuc_lam_viec ?? '---' }}</strong>
+                            </div>
+
+                            <div class="md:col-span-3 info-item">
+                                <span>Địa điểm làm việc</span>
+                                <strong>{{ $hopDong->dia_diem_lam_viec ?? '---' }}</strong>
+                            </div>
+
                         </div>
 
-                        <div>
-                            <strong>Ngày bắt đầu:</strong>
-                            {{ $hopDong->ngay_bat_dau_format }}
-                        </div>
+                        @if ($hopDong->file_dinh_kem || $hopDong->duong_dan_file)
+                            <div class="mt-5">
 
-                        <div>
-                            <strong>Ngày kết thúc:</strong>
-                            {{ $hopDong->ngay_ket_thuc_format }}
-                        </div>
+                                <a href="{{ asset('storage/' . ($hopDong->file_dinh_kem ?? $hopDong->duong_dan_file)) }}"
+                                    target="_blank"
+                                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700">
 
-                        <div>
-                            <strong>Trạng thái:</strong>
-                            {{ $hopDong->ten_trang_thai }}
-                        </div>
+                                    <i class="fa-solid fa-paperclip"></i>
+                                    Xem hợp đồng
+
+                                </a>
+
+                            </div>
+                        @endif
 
                     </div>
                 @else
-                    <div class="text-gray-500">
-                        Chưa có hợp đồng lao động.
+                    <div class="profile-card">
+
+                        <div class="text-center py-8 text-gray-500">
+                            Chưa có hợp đồng lao động.
+                        </div>
+
                     </div>
+
                 @endif
 
-            </div>
-        </div>
+                {{-- ================= REWARD DISCIPLINE ================= --}}
+                <div class="profile-card">
 
-        {{-- ================= REWARD DISCIPLINE ================= --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-5">
+                    <div class="section-header">
 
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="font-semibold text-lg">
-                    🏆 Khen thưởng & Kỷ luật
-                </h3>
-
-                <span class="text-sm text-gray-500">
-                    Lịch sử đánh giá nhân sự
-                </span>
-            </div>
-
-            @forelse($user->hoSo?->hoSo?->khen_thuong_ky_luat ?? [] as $item)
-                <div class="{{ $item->mau_loai }} rounded-lg p-4 mb-4">
-
-                    <div class="flex justify-between items-start">
-
-                        <div>
-                            <div class="font-semibold text-lg">
-                                {{ $item->ten }}
-                            </div>
-
-                            <div class="text-sm mt-1">
-                                {{ $item->loai_text }}
-                            </div>
+                        <div class="section-icon">
+                            <i class="fa-solid fa-trophy"></i>
                         </div>
 
-                        <div class="text-sm">
-                            {{ optional($item->ngay)->format('d/m/Y') }}
+                        <div>
+                            <h3 class="font-semibold text-lg">
+                                Khen thưởng & Kỷ luật
+                            </h3>
+
+                            <p class="text-sm text-gray-500">
+                                Lịch sử đánh giá nhân sự
+                            </p>
                         </div>
 
                     </div>
 
-                    @if ($item->noi_dung)
-                        <div class="mt-3">
-                            {{ $item->noi_dung }}
-                        </div>
-                    @endif
+                    @forelse($user->hoSo?->hoSo?->khen_thuong_ky_luat ?? [] as $item)
+                        <div class="{{ $item->mau_loai }} rounded-lg p-4 mb-4">
 
-                    <div class="grid md:grid-cols-3 gap-3 mt-4 text-sm">
+                            <div class="flex justify-between items-start">
 
-                        <div>
-                            <strong>Hình thức:</strong><br>
-                            {{ $item->hinh_thuc ?? '---' }}
-                        </div>
+                                <div>
+                                    <div class="font-semibold text-lg">
+                                        {{ $item->ten }}
+                                    </div>
 
-                        <div>
-                            <strong>Quyết định số:</strong><br>
-                            {{ $item->quyet_dinh_so ?? '---' }}
-                        </div>
+                                    <div class="text-sm mt-1">
+                                        {{ $item->loai_text }}
+                                    </div>
+                                </div>
 
-                        <div>
-                            <strong>Số tiền:</strong><br>
-                            @if ($item->so_tien)
-                                {{ number_format($item->so_tien, 0, ',', '.') }} VNĐ
-                            @else
-                                ---
+                                <div class="text-sm">
+                                    {{ optional($item->ngay)->format('d/m/Y') }}
+                                </div>
+
+                            </div>
+
+                            @if ($item->noi_dung)
+                                <div class="mt-3">
+                                    {{ $item->noi_dung }}
+                                </div>
                             @endif
+
+                            <div class="grid md:grid-cols-3 gap-3 mt-4 text-sm">
+
+                                <div>
+                                    <strong>Hình thức:</strong><br>
+                                    {{ $item->hinh_thuc ?? '---' }}
+                                </div>
+
+                                <div>
+                                    <strong>Quyết định số:</strong><br>
+                                    {{ $item->quyet_dinh_so ?? '---' }}
+                                </div>
+
+                                <div>
+                                    <strong>Số tiền:</strong><br>
+                                    @if ($item->so_tien)
+                                        {{ number_format($item->so_tien, 0, ',', '.') }} VNĐ
+                                    @else
+                                        ---
+                                    @endif
+                                </div>
+
+                            </div>
+
+                            @if ($item->nguoiKy)
+                                <div class="mt-3 text-sm text-gray-500">
+                                    Người ký:
+                                    {{ $item->nguoiKy->ten_dang_nhap ?? '#' . $item->nguoi_ky_id }}
+                                </div>
+                            @endif
+
                         </div>
 
-                    </div>
+                    @empty
 
-                    @if ($item->nguoiKy)
-                        <div class="mt-3 text-sm text-gray-500">
-                            Người ký:
-                            {{ $item->nguoiKy->ten_dang_nhap ?? '#' . $item->nguoi_ky_id }}
+                        <div class="text-center py-10 text-gray-500">
+                            Chưa có dữ liệu khen thưởng hoặc kỷ luật.
                         </div>
-                    @endif
+                    @endforelse
 
                 </div>
 
-            @empty
+                <div class="sticky bottom-5 z-20 flex justify-end gap-3 mt-10">
 
-                <div class="text-center py-10 text-gray-500">
-                    Chưa có dữ liệu khen thưởng hoặc kỷ luật.
+                    <button type="reset" class="px-4 py-2 rounded-xl border bg-white dark:bg-gray-700">
+                        Đặt lại
+                    </button>
+
+                    <button type="submit" class="px-6 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700">
+                        Lưu hồ sơ
+                    </button>
+
                 </div>
-            @endforelse
-
+            </form>
         </div>
 
-    </div>
 
+        {{-- ================= STYLE ================= --}}
+        <style>
+            .profile-card {
+                background: #fff;
+                border: 1px solid #e5e7eb;
+                border-radius: 18px;
+                padding: 20px;
+            }
 
-    {{-- ================= STYLE ================= --}}
-    <style>
-        .input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #d1d5db;
-            border-radius: 10px;
-        }
+            .dark .profile-card {
+                background: #1f2937;
+                border-color: #374151;
+            }
 
-        .dark .input {
-            background: #1f2937;
-            border-color: #374151;
-            color: white;
-        }
+            .section-title {
+                font-size: 16px;
+                font-weight: 700;
+                margin-bottom: 16px;
+            }
 
-        .btn-blue {
-            background: #2563eb;
-            color: white;
-            padding: 10px 16px;
-            border-radius: 10px;
-        }
+            .form-label {
+                display: block;
+                margin-bottom: 8px;
+                font-size: 13px;
+                font-weight: 600;
+                color: #6b7280;
+            }
 
-        .btn-yellow {
-            background: #f59e0b;
-            color: white;
-            padding: 10px 16px;
-            border-radius: 10px;
-        }
-    </style>
+            .section-card {
+                background: #fff;
+                border: 1px solid #e5e7eb;
+                border-radius: 18px;
+                padding: 24px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, .05);
+            }
 
-@endsection
+            .dark .section-card {
+                background: #1f2937;
+                border-color: #374151;
+            }
+
+            .section-header {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 16px;
+            }
+
+            .section-icon {
+                width: 38px;
+                height: 38px;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 15px;
+                background: #eff6ff;
+                color: #2563eb;
+            }
+
+            .dark .section-icon {
+                background: rgba(37, 99, 235, .15);
+            }
+
+            .form-card {
+                border: 1px solid #e5e7eb;
+                border-radius: 14px;
+                padding: 16px;
+                transition: .2s;
+            }
+
+            .form-card:hover {
+                box-shadow: 0 8px 20px rgba(0, 0, 0, .06);
+            }
+
+            .dark .form-card {
+                border-color: #374151;
+            }
+
+            .input {
+                width: 100%;
+                height: 40px;
+                padding: 0 12px;
+                border: 1px solid #d1d5db;
+                border-radius: 10px;
+                font-size: 13px;
+            }
+
+            .input:hover {
+                border-color: #93c5fd;
+            }
+
+            .input:focus {
+                outline: none;
+                border-color: #2563eb;
+                background: #fff;
+                box-shadow: 0 0 0 4px rgba(37, 99, 235, .12);
+            }
+
+            .dark .input {
+                background: #111827;
+                border-color: #374151;
+                color: #f3f4f6;
+            }
+
+            .dark .input:focus {
+                border-color: #3b82f6;
+            }
+
+            .badge-status {
+                padding: 6px 12px;
+                border-radius: 999px;
+                font-size: 12px;
+                font-weight: 600;
+            }
+
+            .info-item {
+                background: #f9fafb;
+                border: 1px solid #e5e7eb;
+                border-radius: 12px;
+                padding: 12px;
+            }
+
+            .info-item span {
+                display: block;
+                font-size: 12px;
+                color: #6b7280;
+                margin-bottom: 4px;
+            }
+
+            .info-item strong {
+                font-size: 14px;
+                color: #111827;
+            }
+
+            .dark .info-item {
+                background: #111827;
+                border-color: #374151;
+            }
+
+            .dark .info-item strong {
+                color: #f3f4f6;
+            }
+
+            .dark input[type="date"]::-webkit-calendar-picker-indicator {
+                filter: invert(1);
+                cursor: pointer;
+            }
+        </style>
+
+    @endsection
