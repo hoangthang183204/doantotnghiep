@@ -3,8 +3,13 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
+use App\Models\ChungChiNhanVien;
+use App\Models\DaoTaoNhanVien;
+use App\Models\HopDongLaoDong;
 use App\Models\HoSoNguoiDung;
+use App\Models\KyNangNhanVien;
 use App\Models\NguoiDung;
+use App\Models\NguoiPhuThuoc;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -72,6 +77,9 @@ class HoSoController extends Controller
             'anh_dai_dien' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'anh_cccd_truoc' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'anh_cccd_sau' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+
+            // CV 
+            'cv_file' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
         ]);
 
         /** @var NguoiDung $user */
@@ -180,6 +188,101 @@ class HoSoController extends Controller
         }
 
         $hoSo->update($data);
+
+        if ($request->hasFile('cv_file')) {
+
+            $hosoNhanSu = $hoSo->hoSo;
+
+            if ($hosoNhanSu) {
+
+                $cv = $hosoNhanSu->cv;
+
+                if ($cv) {
+
+                    $oldFile = $cv->duong_dan_file ?? $cv->tep_tin;
+
+                    if (
+                        $oldFile &&
+                        Storage::disk('public')->exists($oldFile)
+                    ) {
+                        Storage::disk('public')->delete($oldFile);
+                    }
+                }
+
+                $path = $request
+                    ->file('cv_file')
+                    ->store('cv', 'public');
+
+                $hosoNhanSu->cv()->updateOrCreate(
+                    [],
+                    [
+                        'tep_tin' => $path,
+                        'duong_dan_file' => $path,
+                    ]
+                );
+            }
+        }
+
+        if ($request->filled('skills')) {
+
+            foreach ($request->skills as $id => $skill) {
+
+                KyNangNhanVien::where('id', $id)->update([
+                    'ten_ky_nang' => $skill['ten_ky_nang'] ?? null,
+                    'cap_do' => $skill['cap_do'] ?? null,
+                ]);
+            }
+        }
+
+        if ($request->filled('certificates')) {
+
+            foreach ($request->certificates as $id => $cc) {
+
+                ChungChiNhanVien::where('id', $id)->update([
+                    'ten_chung_chi' => $cc['ten_chung_chi'] ?? null,
+                    'to_chuc_cap' => $cc['to_chuc_cap'] ?? null,
+                    'nam_cap' => $cc['nam_cap'] ?? null,
+                    'ngay_het_han' => $cc['ngay_het_han'] ?? null,
+                ]);
+            }
+        }
+
+        if ($request->filled('trainings')) {
+
+            foreach ($request->trainings as $id => $dt) {
+
+                DaoTaoNhanVien::where('id', $id)->update([
+                    'ten_khoa_hoc' => $dt['ten_khoa_hoc'] ?? null,
+                    'to_chuc' => $dt['to_chuc'] ?? null,
+                    'ket_qua' => $dt['ket_qua'] ?? null,
+                    'ngay_bat_dau' => $dt['ngay_bat_dau'] ?? null,
+                    'ngay_ket_thuc' => $dt['ngay_ket_thuc'] ?? null,
+                ]);
+            }
+        }
+
+        if ($request->filled('dependents')) {
+
+            foreach ($request->dependents as $id => $npt) {
+
+                NguoiPhuThuoc::where('id', $id)->update([
+                    'ho_ten' => $npt['ho_ten'] ?? null,
+                    'quan_he' => $npt['quan_he'] ?? null,
+                    'ma_so_thue' => $npt['ma_so_thue'] ?? null,
+                ]);
+            }
+        }
+
+        if ($request->filled('contract.id')) {
+
+            HopDongLaoDong::where('id', $request->contract['id'])
+                ->update([
+                    'so_hop_dong' => $request->contract['so_hop_dong'],
+                    'loai_hop_dong' => $request->contract['loai_hop_dong'],
+                    'ngay_bat_dau' => $request->contract['ngay_bat_dau'],
+                    'ngay_ket_thuc' => $request->contract['ngay_ket_thuc'],
+                ]);
+        }
 
         return redirect()
             ->route('employee.ho-so.index')
