@@ -54,12 +54,8 @@ class ChamCongController extends Controller
     }
 
     /**
-     * Check-in - SỬA: DÙNG THỜI GIAN TỪ CLIENT
+     * Check-in - DÙNG THỜI GIAN TỪ CLIENT
      */
-    // app/Http/Controllers/Employee/ChamCongController.php
-
-    // app/Http/Controllers/Employee/ChamCongController.php
-
     public function checkIn(Request $request)
     {
         try {
@@ -94,48 +90,42 @@ class ChamCongController extends Controller
                 ], 403);
             }
 
-            // Lấy thời gian hiện tại
-            $now = Carbon::now('Asia/Ho_Chi_Minh');
+            // Lấy thời gian từ client hoặc server
+            $clientTime = $request->input('client_time');
+            if ($clientTime) {
+                try {
+                    $now = Carbon::parse($clientTime)->setTimezone('Asia/Ho_Chi_Minh');
+                } catch (\Exception $e) {
+                    $now = Carbon::now('Asia/Ho_Chi_Minh');
+                }
+            } else {
+                $now = Carbon::now('Asia/Ho_Chi_Minh');
+            }
+
             $gioVaoStr = $now->format('H:i:s');
 
             // ===== LOGIC XÁC ĐỊNH TRẠNG THÁI =====
             $gioLamViec = GioLamViec::first();
-
-            // Mặc định là đúng giờ
             $trangThai = 'dung_gio';
             $phutDiMuon = 0;
 
             if ($gioLamViec) {
-                // Giờ chuẩn 08:30
                 $gioChuan = '08:30:00';
                 $gioChuanCarbon = Carbon::parse($gioChuan, 'Asia/Ho_Chi_Minh');
 
-                // So sánh thời gian check-in với 08:30
                 if ($now->lt($gioChuanCarbon)) {
-                    // Check-in TRƯỚC 08:30 -> Đến sớm
                     $trangThai = 'den_som';
                     $phutDiMuon = 0;
                 } else {
-                    // Check-in SAU 08:30 -> Tính số phút trễ
                     $phutDiMuon = $gioChuanCarbon->diffInMinutes($now);
-
-                    // Nếu trễ quá 15 phút -> Đi muộn
                     if ($phutDiMuon > ($gioLamViec->so_phut_cho_phep_di_tre ?? 15)) {
                         $trangThai = 'di_muon';
                     } else {
-                        // Trễ trong khoảng cho phép (0-15 phút) -> Đúng giờ
                         $trangThai = 'dung_gio';
                         $phutDiMuon = 0;
                     }
                 }
             }
-
-            // Log để debug
-            \Log::info('Check-in result', [
-                'gio_vao' => $gioVaoStr,
-                'trang_thai' => $trangThai,
-                'phut_di_muon' => $phutDiMuon,
-            ]);
 
             $method = 'manual';
             if ($ipAllowed) $method = 'ip';
@@ -158,7 +148,8 @@ class ChamCongController extends Controller
                     'dia_chi_mac' => $mac,
                     'ten_thiet_bi' => $request->header('User-Agent'),
                     'phuong_thuc_cham_cong' => $method,
-                    'trang_thai_duyet' => 0,
+                    // ⭐ BỎ TRẠNG THÁI DUYỆT
+                    // 'trang_thai_duyet' => 0,
                     'so_gio_lam' => 0,
                     'so_cong' => 0,
                 ]
@@ -185,7 +176,7 @@ class ChamCongController extends Controller
     }
 
     /**
-     * Check-out - SỬA: DÙNG THỜI GIAN TỪ CLIENT
+     * Check-out - DÙNG THỜI GIAN TỪ CLIENT
      */
     public function checkOut(Request $request)
     {
@@ -227,9 +218,8 @@ class ChamCongController extends Controller
                 ], 403);
             }
 
-            // ===== SỬA: LẤY THỜI GIAN TỪ CLIENT =====
+            // Lấy thời gian từ client
             $clientTime = $request->input('client_time');
-
             if ($clientTime) {
                 try {
                     $now = Carbon::parse($clientTime)->setTimezone('Asia/Ho_Chi_Minh');
@@ -243,40 +233,46 @@ class ChamCongController extends Controller
             $gioRaStr = $now->format('H:i:s');
 
             $gioLamViec = GioLamViec::first();
+            $gioKetThuc = Carbon::parse($gioLamViec->gio_ket_thuc ?? '17:30:00', 'Asia/Ho_Chi_Minh');
 
-            // Giờ chuẩn bắt đầu làm việc (8h30)
-            $gioBatDauLam = Carbon::parse($gioLamViec->gio_bat_dau ?? '08:30:00', 'Asia/Ho_Chi_Minh');
-
-            // Kiểm tra về sớm
+            // ===== TÍNH TOÁN =====
             $phutVeSom = 0;
-            if ($gioLamViec) {
-                $gioKetThuc = Carbon::parse($gioLamViec->gio_ket_thuc, 'Asia/Ho_Chi_Minh');
-                $phutVeSom = $gioKetThuc->diffInMinutes($now, false);
+            $trangThai = $chamCong->trang_thai ?? 'dung_gio';
 
-                if ($phutVeSom > ($gioLamViec->so_phut_cho_phep_ve_som ?? 15)) {
-                    if ($chamCong->trang_thai != 'di_muon') {
-                        $chamCong->trang_thai = 've_som';
-                    }
+            // Nếu check-out TRƯỚC giờ kết thúc (17:30)
+            if ($now->lt($gioKetThuc)) {
+                $phutVeSom = $gioKetThuc->diffInMinutes($now);
+                $soPhutChoPhep = $gioLamViec->so_phut_cho_phep_ve_som ?? 15;
+
+                if ($phutVeSom > $soPhutChoPhep) {
+                    $trangThai = 've_som';
+                    $phutVeSom = $phutVeSom - $soPhutChoPhep;
+                } else {
+                    $phutVeSom = 0;
+                }
+            } else {
+                // Check-out SAU giờ kết thúc
+                $phutVeSom = 0;
+                if ($now->gt($gioKetThuc)) {
+                    $trangThai = 'tang_ca';
                 }
             }
 
-            // ===== TÍNH SỐ GIỜ LÀM =====
-            $soPhutLam = $gioBatDauLam->diffInMinutes($now, false);
-
-            $phutDiMuon = $chamCong->phut_di_muon ?? 0;
-            $soPhutLamThucTe = $soPhutLam - $phutDiMuon;
-            $soPhutLamThucTe = max(0, $soPhutLamThucTe);
-
-            $soGioLam = round($soPhutLamThucTe / 60, 2);
+            // Tính số giờ làm
+            $gioVao = Carbon::parse($chamCong->gio_vao, 'Asia/Ho_Chi_Minh');
+            $soPhutLam = $gioVao->diffInMinutes($now);
+            $soGioLam = round($soPhutLam / 60, 2);
             $soCong = round($soGioLam / 8, 2);
 
-            // ===== TÍNH GIỜ TĂNG CA =====
+            // Tính giờ tăng ca
             $gioTangCa = 0;
-            if ($gioLamViec && $gioLamViec->gio_ket_thuc) {
-                $gioKetThuc = Carbon::parse($gioLamViec->gio_ket_thuc, 'Asia/Ho_Chi_Minh');
-                if ($now->gt($gioKetThuc)) {
-                    $gioTangCa = round($gioKetThuc->diffInHours($now), 1);
-                }
+            if ($now->gt($gioKetThuc)) {
+                $gioTangCa = round($gioKetThuc->diffInHours($now), 1);
+            }
+
+            // Nếu không phải tăng ca, giữ trạng thái đi muộn nếu có
+            if ($trangThai != 'tang_ca' && $chamCong->trang_thai == 'di_muon') {
+                $trangThai = 'di_muon';
             }
 
             DB::beginTransaction();
@@ -287,6 +283,8 @@ class ChamCongController extends Controller
                 'so_cong' => $soCong,
                 'phut_ve_som' => max(0, $phutVeSom),
                 'gio_tang_ca' => $gioTangCa,
+                'trang_thai' => $trangThai,
+                // ⭐ BỎ CẬP NHẬT TRẠNG THÁI DUYỆT
             ]);
 
             DB::commit();
@@ -294,12 +292,14 @@ class ChamCongController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Check-out thành công lúc ' . $gioRaStr,
-                'so_gio_lam' => $soGioLam,
-                'so_cong' => $soCong,
-                'gio_tang_ca' => $gioTangCa,
-                'gio_ra' => $gioRaStr,
-                'phut_di_muon' => $phutDiMuon,
-                'so_phut_lam_thuc_te' => $soPhutLamThucTe
+                'data' => [
+                    'gio_ra' => $gioRaStr,
+                    'so_gio_lam' => $soGioLam,
+                    'so_cong' => $soCong,
+                    'phut_ve_som' => $phutVeSom,
+                    'gio_tang_ca' => $gioTangCa,
+                    'trang_thai' => $trangThai,
+                ]
             ]);
         } catch (\Exception $e) {
             DB::rollback();
@@ -337,7 +337,7 @@ class ChamCongController extends Controller
             'tong_ngay_cong' => ChamCong::where('nguoi_dung_id', $user->id)
                 ->whereMonth('ngay_cham_cong', $thangHienTai)
                 ->whereYear('ngay_cham_cong', $namHienTai)
-                ->where('trang_thai', 'dung_gio')
+                ->whereIn('trang_thai', ['dung_gio', 'den_som'])
                 ->count(),
             'tong_di_muon' => ChamCong::where('nguoi_dung_id', $user->id)
                 ->whereMonth('ngay_cham_cong', $thangHienTai)
