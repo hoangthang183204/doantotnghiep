@@ -19,15 +19,13 @@ class DonNghiController extends Controller
      */
     private function getSoDuNghiPhep($userId)
     {
-        $soNgayPhepNam = 12; // Số ngày phép được cấp trong năm
+        $soNgayPhepNam = 12;
         
-        // Tính tổng số ngày đã nghỉ trong năm hiện tại (chỉ tính các đơn đã được duyệt)
         $soNgayDaNghi = DonXinNghi::where('nguoi_dung_id', $userId)
             ->where('trang_thai', 'da_duyet')
             ->whereYear('ngay_bat_dau', Carbon::now()->year)
             ->sum('so_ngay_nghi');
         
-        // Số dư còn lại
         $soDu = $soNgayPhepNam - $soNgayDaNghi;
         
         return [
@@ -43,10 +41,12 @@ class DonNghiController extends Controller
 
         $query = DonXinNghi::where('nguoi_dung_id', $user->id);
 
+        // Lọc theo trạng thái
         if ($request->filled('trang_thai')) {
             $query->where('trang_thai', $request->trang_thai);
         }
 
+        // Lọc theo ngày
         if ($request->filled('tu_ngay')) {
             $query->whereDate('ngay_bat_dau', '>=', $request->tu_ngay);
         }
@@ -56,28 +56,23 @@ class DonNghiController extends Controller
 
         $danhSachDon = $query->orderBy('created_at', 'desc')->paginate(10);
 
+        // ⭐ THỐNG KÊ CHÍNH XÁC
         $thongKe = [
             'tong' => DonXinNghi::where('nguoi_dung_id', $user->id)->count(),
             'cho_duyet' => DonXinNghi::where('nguoi_dung_id', $user->id)->where('trang_thai', 'cho_duyet')->count(),
             'da_duyet' => DonXinNghi::where('nguoi_dung_id', $user->id)->where('trang_thai', 'da_duyet')->count(),
             'tu_choi' => DonXinNghi::where('nguoi_dung_id', $user->id)->where('trang_thai', 'tu_choi')->count(),
+            'huy_bo' => DonXinNghi::where('nguoi_dung_id', $user->id)->where('trang_thai', 'huy_bo')->count(),
         ];
 
-        // Lấy số dư nghỉ phép
         $soDu = $this->getSoDuNghiPhep($user->id);
 
-        return view('employee.don-nghi.index', compact(
-            'danhSachDon', 
-            'thongKe', 
-            'soDu'
-        ));
+        return view('employee.don-nghi.index', compact('danhSachDon', 'thongKe', 'soDu'));
     }
 
     public function create()
     {
         $loaiNghiPheps = LoaiNghiPhep::where('trang_thai', 1)->get();
-        
-        // Lấy số dư nghỉ phép
         $user = Auth::user();
         $soDu = $this->getSoDuNghiPhep($user->id);
 
@@ -93,24 +88,12 @@ class DonNghiController extends Controller
             'so_ngay_nghi' => 'required|numeric|min:0.5',
             'ly_do' => 'required|string|min:10',
             'ghi_chu' => 'nullable|string',
-        ], [
-            'ngay_bat_dau.required' => 'Vui lòng chọn ngày bắt đầu.',
-            'ngay_bat_dau.after_or_equal' => 'Ngày bắt đầu không được chọn ngày đã qua.',
-            'ngay_ket_thuc.required' => 'Vui lòng chọn ngày kết thúc.',
-            'ngay_ket_thuc.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
-            'loai_nghi_id.required' => 'Vui lòng chọn loại nghỉ.',
-            'loai_nghi_id.exists' => 'Loại nghỉ không hợp lệ.',
-            'so_ngay_nghi.required' => 'Vui lòng nhập số ngày nghỉ.',
-            'so_ngay_nghi.min' => 'Số ngày nghỉ phải lớn hơn 0.',
-            'ly_do.required' => 'Vui lòng nhập lý do xin nghỉ.',
-            'ly_do.min' => 'Lý do phải có ít nhất 10 ký tự.',
         ]);
 
         $user = Auth::user();
 
-        // Kiểm tra số dư nghỉ phép
+        // Kiểm tra số dư
         $soDu = $this->getSoDuNghiPhep($user->id);
-        
         if ($request->so_ngay_nghi > $soDu['so_du_con_lai']) {
             return back()->withErrors(['so_ngay_nghi' => 'Số ngày nghỉ vượt quá số dư nghỉ phép hiện tại (' . $soDu['so_du_con_lai'] . ' ngày)']);
         }
@@ -128,7 +111,7 @@ class DonNghiController extends Controller
             return back()->withErrors(['ngay_bat_dau' => 'Bạn đã có đơn nghỉ trùng khoảng thời gian này đang chờ duyệt!']);
         }
 
-        // Tạo mã đơn nghỉ tự động
+        // Tạo mã đơn
         $latestDon = DonXinNghi::orderBy('id', 'desc')->first();
         $nextId = $latestDon ? $latestDon->id + 1 : 1;
         $maDonNghi = 'DN' . date('Ymd') . str_pad($nextId, 4, '0', STR_PAD_LEFT);
@@ -138,7 +121,6 @@ class DonNghiController extends Controller
             DonXinNghi::create([
                 'ma_don_nghi' => $maDonNghi,
                 'nguoi_dung_id' => $user->id,
-                'loai_nghi_id' => $request->loai_nghi_id,
                 'loai_nghi_phep_id' => $request->loai_nghi_id,
                 'ngay_bat_dau' => $request->ngay_bat_dau,
                 'ngay_ket_thuc' => $request->ngay_ket_thuc,
@@ -164,9 +146,14 @@ class DonNghiController extends Controller
     public function show($id)
     {
         $user = Auth::user();
-        $donNghi = DonXinNghi::with('loaiNghi', 'nguoiDung.hoSo')
-            ->where('nguoi_dung_id', $user->id)
-            ->findOrFail($id);
+        
+        $donNghi = DonXinNghi::with([
+            'loaiNghiPhep',
+            'nguoiDung.hoSo',
+            'nguoiDuyet.hoSo'
+        ])
+        ->where('nguoi_dung_id', $user->id)
+        ->findOrFail($id);
 
         return view('employee.don-nghi.show', compact('donNghi'));
     }
@@ -198,32 +185,11 @@ class DonNghiController extends Controller
             'so_ngay_nghi' => 'required|numeric|min:0.5',
             'ly_do' => 'required|string|min:10',
             'ghi_chu' => 'nullable|string',
-        ], [
-            'ngay_bat_dau.required' => 'Vui lòng chọn ngày bắt đầu.',
-            'ngay_bat_dau.after_or_equal' => 'Ngày bắt đầu không được chọn ngày đã qua.',
-            'ngay_ket_thuc.required' => 'Vui lòng chọn ngày kết thúc.',
-            'ngay_ket_thuc.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
-            'loai_nghi_id.required' => 'Vui lòng chọn loại nghỉ.',
-            'loai_nghi_id.exists' => 'Loại nghỉ không hợp lệ.',
-            'so_ngay_nghi.required' => 'Vui lòng nhập số ngày nghỉ.',
-            'so_ngay_nghi.min' => 'Số ngày nghỉ phải lớn hơn 0.',
-            'ly_do.required' => 'Vui lòng nhập lý do xin nghỉ.',
-            'ly_do.min' => 'Lý do phải có ít nhất 10 ký tự.',
         ]);
-
-        // Kiểm tra số dư nghỉ phép
-        $soDu = $this->getSoDuNghiPhep($user->id);
-        // Cộng thêm số ngày của đơn cũ vì nó chưa được trừ vào số dư
-        $soDuConLaiThucTe = $soDu['so_du_con_lai'] + $donNghi->so_ngay_nghi;
-        
-        if ($request->so_ngay_nghi > $soDuConLaiThucTe) {
-            return back()->withErrors(['so_ngay_nghi' => 'Số ngày nghỉ vượt quá số dư nghỉ phép hiện tại (' . $soDuConLaiThucTe . ' ngày)']);
-        }
 
         DB::beginTransaction();
         try {
             $donNghi->update([
-                'loai_nghi_id' => $request->loai_nghi_id,
                 'loai_nghi_phep_id' => $request->loai_nghi_id,
                 'ngay_bat_dau' => $request->ngay_bat_dau,
                 'ngay_ket_thuc' => $request->ngay_ket_thuc,

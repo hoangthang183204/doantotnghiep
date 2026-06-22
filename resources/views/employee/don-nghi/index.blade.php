@@ -23,63 +23,94 @@
     </div>
 
     {{-- Thông báo --}}
-    @include('layouts.partials.alerts')
+    @if(session('success'))
+        <div class="mb-4 p-4 text-sm text-green-800 dark:text-green-100 rounded-lg bg-green-50 dark:bg-green-900/50 border border-green-200 dark:border-green-800/50 flex items-center justify-between">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <span>{{ session('success') }}</span>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-green-800 dark:text-green-100 hover:opacity-70">&times;</button>
+        </div>
+    @endif
 
-    {{-- Thống kê nhanh --}}
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Tổng đơn</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $thongKe['tong'] ?? 0 }}</p>
-                </div>
-                <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                    <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                </div>
+    @if(session('error'))
+        <div class="mb-4 p-4 text-sm text-red-800 dark:text-red-100 rounded-lg bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800/50 flex items-center justify-between">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                <span>{{ session('error') }}</span>
             </div>
+            <button onclick="this.parentElement.remove()" class="text-red-800 dark:text-red-100 hover:opacity-70">&times;</button>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Chờ duyệt</p>
-                    <p class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{{ $thongKe['cho_duyet'] ?? 0 }}</p>
-                </div>
-                <div class="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center">
-                    <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
+    @endif
+
+   {{-- Thống kê nhanh - Thêm 5 thẻ --}}
+<div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Tổng đơn</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $thongKe['tong'] ?? 0 }}</p>
             </div>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Đã duyệt</p>
-                    <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ $thongKe['da_duyet'] ?? 0 }}</p>
-                </div>
-                <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                    <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Từ chối</p>
-                    <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ $thongKe['tu_choi'] ?? 0 }}</p>
-                </div>
-                <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
-                    <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </div>
+            <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
             </div>
         </div>
     </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Chờ duyệt</p>
+                <p class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{{ $thongKe['cho_duyet'] ?? 0 }}</p>
+            </div>
+            <div class="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Đã duyệt</p>
+                <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ $thongKe['da_duyet'] ?? 0 }}</p>
+            </div>
+            <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Từ chối</p>
+                <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ $thongKe['tu_choi'] ?? 0 }}</p>
+            </div>
+            <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Đã hủy</p>
+                <p class="text-2xl font-bold text-gray-600 dark:text-gray-400">{{ $thongKe['huy_bo'] ?? 0 }}</p>
+            </div>
+            <div class="w-10 h-10 bg-gray-100 dark:bg-gray-700/30 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
 
     {{-- Bộ lọc --}}
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
@@ -88,9 +119,10 @@
                 <label for="trang_thai" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Trạng thái</label>
                 <select name="trang_thai" id="trang_thai" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm focus:ring-blue-500 focus:border-blue-500">
                     <option value="">Tất cả</option>
-                    <option value="cho_duyet" {{ request('trang_thai') == 'cho_duyet' ? 'selected' : '' }}>Chờ duyệt</option>
-                    <option value="da_duyet" {{ request('trang_thai') == 'da_duyet' ? 'selected' : '' }}>Đã duyệt</option>
-                    <option value="tu_choi" {{ request('trang_thai') == 'tu_choi' ? 'selected' : '' }}>Từ chối</option>
+                    <option value="cho_duyet" {{ request('trang_thai') == 'cho_duyet' ? 'selected' : '' }}>⏳ Chờ duyệt</option>
+                    <option value="da_duyet" {{ request('trang_thai') == 'da_duyet' ? 'selected' : '' }}>✅ Đã duyệt</option>
+                    <option value="tu_choi" {{ request('trang_thai') == 'tu_choi' ? 'selected' : '' }}>❌ Từ chối</option>
+                    <option value="huy_bo" {{ request('trang_thai') == 'huy_bo' ? 'selected' : '' }}>🚫 Đã hủy</option>
                 </select>
             </div>
             <div>
@@ -148,21 +180,15 @@
                                 {{ $don->ly_do ?: 'Không có lý do' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @php
-                                    $statusColors = [
-                                        'cho_duyet' => 'yellow',
-                                        'da_duyet' => 'green',
-                                        'tu_choi' => 'red',
-                                    ];
-                                    $statusLabels = [
-                                        'cho_duyet' => 'Chờ duyệt',
-                                        'da_duyet' => 'Đã duyệt',
-                                        'tu_choi' => 'Từ chối',
-                                    ];
-                                @endphp
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-{{ $statusColors[$don->trang_thai] ?? 'gray' }}-100 text-{{ $statusColors[$don->trang_thai] ?? 'gray' }}-800 dark:bg-{{ $statusColors[$don->trang_thai] ?? 'gray' }}-900/30 dark:text-{{ $statusColors[$don->trang_thai] ?? 'gray' }}-400">
-                                    {{ $statusLabels[$don->trang_thai] ?? $don->trang_thai }}
-                                </span>
+                                @if($don->trang_thai == 'cho_duyet')
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">⏳ Chờ duyệt</span>
+                                @elseif($don->trang_thai == 'da_duyet')
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">✅ Đã duyệt</span>
+                                @elseif($don->trang_thai == 'tu_choi')
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">❌ Từ chối</span>
+                                @elseif($don->trang_thai == 'huy_bo')
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400">🚫 Đã hủy</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <div class="flex items-center space-x-2">
@@ -223,47 +249,45 @@
     </div>
 
     {{-- Số dư nghỉ phép --}}
-    {{-- Số dư nghỉ phép --}}
-<div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border-2 border-gray-200 dark:border-gray-700 p-4">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-        <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-            </div>
-            <div>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Số dư nghỉ phép</p>
-                <div class="flex items-baseline gap-2">
-                    <p class="text-xl font-bold text-gray-900 dark:text-white">
-                        {{ $soDu['so_du_con_lai'] ?? 12 }}
-                        <span class="text-sm font-normal text-gray-500">/ {{ $soDu['so_ngay_phep_nam'] ?? 12 }} ngày</span>
-                    </p>
-                    @if(($soDu['so_ngay_da_nghi'] ?? 0) > 0)
-                        <span class="text-xs text-gray-500 dark:text-gray-400">
-                            (Đã nghỉ {{ $soDu['so_ngay_da_nghi'] ?? 0 }} ngày)
-                        </span>
-                    @endif
+    <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Số dư nghỉ phép</p>
+                    <div class="flex items-baseline gap-2">
+                        <p class="text-xl font-bold text-gray-900 dark:text-white">
+                            {{ $soDu['so_du_con_lai'] ?? 12 }}
+                            <span class="text-sm font-normal text-gray-500">/ {{ $soDu['so_ngay_phep_nam'] ?? 12 }} ngày</span>
+                        </p>
+                        @if(($soDu['so_ngay_da_nghi'] ?? 0) > 0)
+                            <span class="text-xs text-gray-500 dark:text-gray-400">
+                                (Đã nghỉ {{ $soDu['so_ngay_da_nghi'] ?? 0 }} ngày)
+                            </span>
+                        @endif
+                    </div>
                 </div>
             </div>
+            <div class="mt-3 md:mt-0">
+                <span class="text-sm text-gray-500 dark:text-gray-400">{{ now()->format('d/m/Y') }}</span>
+            </div>
         </div>
-        <div class="mt-3 md:mt-0 flex items-center space-x-4">
-            <span class="text-sm text-gray-500 dark:text-gray-400">{{ now()->format('d/m/Y') }}</span>
-            <span class="text-xs text-gray-400 dark:text-gray-500">© {{ date('Y') }} HRFlow - Hệ thống quản lý nhân sự</span>
+        {{-- Thanh tiến trình --}}
+        <div class="mt-3">
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                @php
+                    $soDuConLai = $soDu['so_du_con_lai'] ?? 0;
+                    $soNgayPhepNam = $soDu['so_ngay_phep_nam'] ?? 12;
+                    $phanTram = $soNgayPhepNam > 0 ? ($soDuConLai / $soNgayPhepNam) * 100 : 0;
+                @endphp
+                <div class="bg-green-500 h-2 rounded-full transition-all duration-500" 
+                     style="width: {{ min(100, $phanTram) }}%"></div>
+            </div>
         </div>
     </div>
-    {{-- Thanh tiến trình --}}
-    <div class="mt-3">
-        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-            @php
-                $soDuConLai = $soDu['so_du_con_lai'] ?? 0;
-                $soNgayPhepNam = $soDu['so_ngay_phep_nam'] ?? 12;
-                $phanTram = $soNgayPhepNam > 0 ? ($soDuConLai / $soNgayPhepNam) * 100 : 0;
-            @endphp
-            <div class="bg-green-500 h-2 rounded-full transition-all duration-500" 
-                 style="width: {{ min(100, $phanTram) }}%"></div>
-        </div>
-    </div>
-</div>
 </div>
 @endsection

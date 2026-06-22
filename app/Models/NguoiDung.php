@@ -1,4 +1,5 @@
 <?php
+// app/Models/NguoiDung.php
 
 namespace App\Models;
 
@@ -40,6 +41,9 @@ class NguoiDung extends Authenticatable implements JWTSubject
         'lan_dang_nhap_cuoi' => 'datetime',
     ];
 
+    // =============================================
+    // JWT
+    // =============================================
     public function getJWTIdentifier()
     {
         return $this->getKey();
@@ -49,63 +53,87 @@ class NguoiDung extends Authenticatable implements JWTSubject
     {
         return [
             'vai_tro_id' => $this->vai_tro_id,
-            'vai_tro' => $this->vai_tro->ten_hien_thi ?? null,
+            'vai_tro' => $this->vaiTro->ten_hien_thi ?? null,
             'phong_ban_id' => $this->phong_ban_id,
             'chuc_vu_id' => $this->chuc_vu_id,
         ];
     }
 
+    // =============================================
+    // QUAN HỆ - Cách viết chuẩn (không dấu gạch dưới)
+    // =============================================
 
-    public function ho_so()
-    {
-        return $this->hoSo();
-    }
-    public function vai_tro()
+    /**
+     * Quan hệ với bảng vai_tro
+     */
+    public function vaiTro()
     {
         return $this->belongsTo(VaiTro::class, 'vai_tro_id');
     }
 
-    public function phong_ban()
+    /**
+     * Quan hệ với bảng phong_ban
+     */
+    public function phongBan()
     {
         return $this->belongsTo(PhongBan::class, 'phong_ban_id');
     }
 
-    public function chuc_vu()
+    /**
+     * Quan hệ với bảng chuc_vu
+     */
+    public function chucVu()
     {
         return $this->belongsTo(ChucVu::class, 'chuc_vu_id');
     }
 
-    public function chi_nhanh()
+    /**
+     * Quan hệ với bảng chi_nhanh_cong_ty
+     */
+    public function chiNhanh()
     {
         return $this->belongsTo(ChiNhanhCongTy::class, 'branch_id');
     }
 
-    public function cham_congs()
+    /**
+     * Quan hệ với bảng ho_so_nguoi_dung
+     */
+    public function hoSo()
+    {
+        return $this->hasOne(HoSoNguoiDung::class, 'nguoi_dung_id');
+    }
+
+    /**
+     * Quan hệ với bảng cham_cong
+     */
+    public function chamCongs()
     {
         return $this->hasMany(ChamCong::class, 'nguoi_dung_id');
     }
 
-    public function taiLieus()
-    {
-        return $this->hasMany(TaiLieu::class, 'nguoi_dung_id');
-    }
-
-    public function don_xin_nghis()
+    /**
+     * Quan hệ với bảng don_xin_nghi
+     */
+    public function donXinNghis()
     {
         return $this->hasMany(DonXinNghi::class, 'nguoi_dung_id');
     }
 
-    // THÊM RELATIONSHIP NÀY
-    public function hop_dongs()
+    /**
+     * Quan hệ với bảng hop_dong_lao_dong
+     */
+    public function hopDongs()
     {
         return $this->hasMany(HopDongLaoDong::class, 'nguoi_dung_id');
     }
 
-    // Lấy hợp đồng hiện tại
-    public function hop_dong_hien_tai()
+    /**
+     * Lấy hợp đồng hiện tại
+     */
+    public function hopDongHienTai()
     {
         return $this->hasOne(HopDongLaoDong::class, 'nguoi_dung_id')
-            ->where('trang_thai_hop_dong', 'da_ky')
+            ->where('trang_thai_hop_dong', 'hieu_luc')
             ->where(function ($q) {
                 $q->whereNull('ngay_ket_thuc')
                     ->orWhere('ngay_ket_thuc', '>=', now());
@@ -113,25 +141,155 @@ class NguoiDung extends Authenticatable implements JWTSubject
             ->latest('ngay_bat_dau');
     }
 
-    public function luong_nhan_viens()
+    /**
+     * Quan hệ với bảng luong_nhan_vien
+     */
+    public function luongNhanViens()
     {
         return $this->hasMany(LuongNhanVien::class, 'nguoi_dung_id');
     }
 
-    // Accessor lấy họ tên đầy đủ
+    /**
+     * Quan hệ với bảng tai_lieu
+     */
+    public function taiLieus()
+    {
+        return $this->hasMany(TaiLieu::class, 'nguoi_dung_id');
+    }
 
+    /**
+     * Quan hệ với bảng phu_cap_nhan_vien
+     */
+    public function phuCapNhanViens()
+    {
+        return $this->hasMany(PhuCapNhanVien::class, 'nguoi_dung_id');
+    }
+
+    /**
+     * Quan hệ nhiều-nhiều với bảng vai_tro (qua bảng trung gian nguoi_dung_vai_tro)
+     */
+    public function vaiTros()
+    {
+        return $this->belongsToMany(VaiTro::class, 'nguoi_dung_vai_tro', 'nguoi_dung_id', 'vai_tro_id')
+            ->withTimestamps();
+    }
+
+    // =============================================
+    // ALIAS (Tương thích ngược với code cũ)
+    // =============================================
+
+    /**
+     * Alias cho hoSo()
+     */
+    public function ho_so()
+    {
+        return $this->hoSo();
+    }
+
+    /**
+     * Alias cho vaiTro()
+     */
+    public function vai_tro()
+    {
+        return $this->vaiTro();
+    }
+
+    /**
+     * Alias cho phongBan()
+     */
+    public function phong_ban()
+    {
+        return $this->phongBan();
+    }
+
+    /**
+     * Alias cho chucVu()
+     */
+    public function chuc_vu()
+    {
+        return $this->chucVu();
+    }
+
+    /**
+     * Alias cho chiNhanh()
+     */
+    public function chi_nhanh()
+    {
+        return $this->chiNhanh();
+    }
+
+    /**
+     * Alias cho chamCongs()
+     */
+    public function cham_congs()
+    {
+        return $this->chamCongs();
+    }
+
+    /**
+     * Alias cho donXinNghis()
+     */
+    public function don_xin_nghis()
+    {
+        return $this->donXinNghis();
+    }
+
+    /**
+     * Alias cho hopDongs()
+     */
+    public function hop_dongs()
+    {
+        return $this->hopDongs();
+    }
+
+    /**
+     * Alias cho hopDongHienTai()
+     */
+    public function hop_dong_hien_tai()
+    {
+        return $this->hopDongHienTai();
+    }
+
+    /**
+     * Alias cho luongNhanViens()
+     */
+    public function luong_nhan_viens()
+    {
+        return $this->luongNhanViens();
+    }
+
+    /**
+     * Alias cho hopDongLaoDong
+     */
+    public function hopDongLaoDong()
+    {
+        return $this->hopDongs();
+    }
+
+    // =============================================
+    // ACCESSOR
+    // =============================================
+
+    /**
+     * Lấy họ tên đầy đủ
+     */
     public function getHoTenAttribute()
     {
         if ($this->hoSo && $this->hoSo->ho) {
             return trim($this->hoSo->ho . ' ' . $this->hoSo->ten);
         }
-
         return $this->ten_dang_nhap;
     }
 
+    // =============================================
+    // PERMISSION
+    // =============================================
+
+    /**
+     * Kiểm tra quyền của user
+     */
     public function hasPermission($permissionName)
     {
-        // Kiểm tra qua vai trò
         foreach ($this->vaiTros as $vaiTro) {
             if ($vaiTro->hasPermission($permissionName)) {
                 return true;
@@ -140,44 +298,19 @@ class NguoiDung extends Authenticatable implements JWTSubject
         return false;
     }
 
+    /**
+     * Alias cho hasPermission
+     */
     public function canAccess($permissionName)
     {
         return $this->hasPermission($permissionName);
     }
 
-    public function vaiTros()
-    {
-        return $this->belongsToMany(VaiTro::class, 'nguoi_dung_vai_tro', 'nguoi_dung_id', 'vai_tro_id')
-            ->withTimestamps();
-    }
-
-    // Thêm alias cho phong_ban
-    public function phongBan()
-    {
-        return $this->belongsTo(PhongBan::class, 'phong_ban_id');
-    }
-
-    public function hoSo()
-    {
-        return $this->hasOne(HoSoNguoiDung::class, 'nguoi_dung_id');
-    }
-
-    public function hopDongLaoDong()
-    {
-        return $this->hasMany(
-            HopDongLaoDong::class,
-            'nguoi_dung_id',
-            'id'
-        );
-    }
-
-    public function phuCapNhanViens()
-    {
-        return $this->hasMany(PhuCapNhanVien::class, 'nguoi_dung_id');
-    }
+    /**
+     * Kiểm tra user có phải admin không
+     */
     public function isAdmin(): bool
     {
-        // Check trực tiếp cột vai_tro_id theo dữ liệu từ Seeder
         return $this->vai_tro_id === 1;
     }
 }

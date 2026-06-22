@@ -137,10 +137,10 @@ Route::prefix('admin')
 
         // ========== ĐƠN NGHỈ ==========
         Route::prefix('don-nghi')->name('don_nghi.')->group(function () {
-            Route::get('/', [DonNghiController::class, 'index'])->name('index');
-            Route::get('/{id}', [DonNghiController::class, 'show'])->name('show');
-            Route::post('/{id}/duyet', [DonNghiController::class, 'capNhatTrangThai'])->name('duyet');
-            Route::post('/bulk-action', [DonNghiController::class, 'bulkAction'])->name('bulk-action');
+        Route::get('/', [DonNghiController::class, 'index'])->name('index');
+        Route::get('/{id}', [DonNghiController::class, 'show'])->name('show');
+        Route::post('/{id}/duyet', [DonNghiController::class, 'capNhatTrangThai'])->name('duyet');
+        Route::post('/bulk-action', [DonNghiController::class, 'bulkAction'])->name('bulk');
         });
 
         // ========== LƯƠNG (BẢNG LƯƠNG THÁNG) ==========

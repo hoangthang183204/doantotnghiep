@@ -15,20 +15,21 @@ class DonXinNghi extends Model
     protected $fillable = [
         'ma_don_nghi',
         'nguoi_dung_id',
-        'loai_nghi_id',
-        'loai_nghi_phep_id',
+        'loai_nghi_phep_id',  // ← Cột này trong database
         'ngay_bat_dau',
         'ngay_ket_thuc',
         'so_ngay_nghi',
         'ly_do',
         'ghi_chu',
-        'trang_thai',
-        'ban_giao_cho_id',
-        'ghi_chu_ban_giao',
-        'cap_duyet_hien_tai',
+        'tai_lieu_ho_tro',
         'lien_he_khan_cap',
         'sdt_khan_cap',
-        'tai_lieu_ho_tro',
+        'ban_giao_cho_id',
+        'ghi_chu_ban_giao',
+        'trang_thai',
+        'cap_duyet_hien_tai',
+        'nguoi_duyet_id',
+        'thoi_gian_duyet',
     ];
 
     protected $casts = [
@@ -36,6 +37,7 @@ class DonXinNghi extends Model
         'ngay_ket_thuc' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'thoi_gian_duyet' => 'datetime',
         'tai_lieu_ho_tro' => 'array',
     ];
 
@@ -56,7 +58,8 @@ class DonXinNghi extends Model
     }
 
     /**
-     * Quan hệ với bảng loai_nghi_phep (loại nghỉ)
+     * Quan hệ với bảng loai_nghi_phep - QUAN TRỌNG
+     * Tên quan hệ là loaiNghiPhep (không phải loaiNghi)
      */
     public function loaiNghiPhep()
     {
@@ -64,10 +67,10 @@ class DonXinNghi extends Model
     }
 
     /**
-     * Quan hệ với bảng loai_nghi_phep (loại nghỉ - cũ)
+     * Quan hệ với bảng nguoi_dung (người duyệt)
      */
-    public function loaiNghi()
+    public function nguoiDuyet()
     {
-        return $this->belongsTo(LoaiNghiPhep::class, 'loai_nghi_id');
+        return $this->belongsTo(NguoiDung::class, 'nguoi_duyet_id');
     }
 }
