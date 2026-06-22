@@ -14,6 +14,7 @@ use App\Models\ChucVu;
 class NguoiDungController extends Controller
 {
     // Danh sách user
+    // Danh sách user
     public function index(Request $request)
     {
         $query = NguoiDung::with(['vai_tro', 'phong_ban', 'hoSo']);
@@ -21,8 +22,20 @@ class NguoiDungController extends Controller
         if ($request->keyword) {
             $query->where(function ($q) use ($request) {
                 $q->where('ten_dang_nhap', 'like', "%{$request->keyword}%")
-                    ->orWhere('email', 'like', "%{$request->keyword}%");
+                    ->orWhere('email', 'like', "%{$request->keyword}%")
+                    // ⭐ THÊM TÌM THEO MÃ NV, HỌ TÊN
+                    ->orWhereHas('hoSo', function ($hs) use ($request) {
+                        $hs->where('ma_nhan_vien', 'like', "%{$request->keyword}%")
+                            ->orWhere('ho', 'like', "%{$request->keyword}%")
+                            ->orWhere('ten', 'like', "%{$request->keyword}%")
+                            ->orWhereRaw("CONCAT(ho, ' ', ten) LIKE ?", ["%{$request->keyword}%"]);
+                    });
             });
+        }
+
+        // ⭐ THÊM LỌC THEO VAI TRÒ
+        if ($request->vai_tro_id) {
+            $query->where('vai_tro_id', $request->vai_tro_id);
         }
 
         if ($request->phong_ban_id) {
@@ -34,9 +47,13 @@ class NguoiDungController extends Controller
         }
 
         $users = $query->latest()->paginate(10);
+
+        // ⭐ THÊM 2 DÒNG NÀY ĐỂ LẤY DỮ LIỆU CHO BỘ LỌC
+        $vaiTros = VaiTro::all();
         $phongBans = PhongBan::all();
 
-        return view('admin.nguoi-dung.index', compact('users', 'phongBans'));
+        // ⭐ THÊM $vaiTros VÀO COMPACT
+        return view('admin.nguoi-dung.index', compact('users', 'vaiTros', 'phongBans'));
     }
 
     // Form tạo
@@ -71,8 +88,8 @@ class NguoiDungController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'vai_tro_id' => $request->vai_tro_id,
-            'phong_ban_id' => $request->phong_ban_id,   
-            'chuc_vu_id' => $request->chuc_vu_id,       
+            'phong_ban_id' => $request->phong_ban_id,
+            'chuc_vu_id' => $request->chuc_vu_id,
             'trang_thai' => 1,
             'trang_thai_cong_viec' => 'dang_lam',
         ]);
@@ -168,14 +185,16 @@ class NguoiDungController extends Controller
     public function destroy($id)
     {
         $user = NguoiDung::findOrFail($id);
-        
+
         // Xóa user (hồ sơ sẽ tự xóa do cascadeOnDelete)
         $user->delete();
 
         return back()->with('success', 'Đã xóa người dùng và hồ sơ liên quan');
     }
 
-    // Đồng bộ hồ sơ cho user cũ (chạy 1 lần)
+    /**
+     * Đồng bộ hồ sơ cho user cũ
+     */
     public function syncHoSo()
     {
         $users = NguoiDung::doesntHave('hoSo')->get();
@@ -208,6 +227,4 @@ class NguoiDungController extends Controller
         return redirect()->route('admin.nguoi-dung.index')
             ->with('success', "Đã đồng bộ {$count} hồ sơ cho user chưa có hồ sơ.");
     }
-
-    
 }

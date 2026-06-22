@@ -82,17 +82,21 @@ Route::prefix('admin')
         });
 
         // ========== QUẢN LÝ NGƯỜI DÙNG ==========
-        Route::get('/nguoi-dung', [NguoiDungController::class, 'index'])->name('nguoi-dung.index');
-        Route::get('/nguoi-dung/create', [NguoiDungController::class, 'create'])->name('nguoi-dung.create');
-        Route::post('/nguoi-dung', [NguoiDungController::class, 'store'])->name('nguoi-dung.store');
-        Route::get('/nguoi-dung/{id}', [NguoiDungController::class, 'show'])->whereNumber('id')->name('nguoi-dung.show');
-        Route::get('/nguoi-dung/{id}/edit', [NguoiDungController::class, 'edit'])->whereNumber('id')->name('nguoi-dung.edit');
-        Route::put('/nguoi-dung/{id}', [NguoiDungController::class, 'update'])->whereNumber('id')->name('nguoi-dung.update');
-        Route::delete('/nguoi-dung/{id}', [NguoiDungController::class, 'destroy'])->whereNumber('id')->name('nguoi-dung.destroy');
-        Route::get('/nguoi-dung/sync-ho-so', [NguoiDungController::class, 'syncHoSo'])->name('nguoi-dung.sync-ho-so');
+        Route::prefix('nguoi-dung')->name('nguoi-dung.')->group(function () {
+            Route::get('/', [NguoiDungController::class, 'index'])->name('index');
+            Route::get('/sync', [NguoiDungController::class, 'syncHoSo'])->name('sync');
+            Route::get('/create', [NguoiDungController::class, 'create'])->name('create');
+            Route::post('/', [NguoiDungController::class, 'store'])->name('store');
+            Route::get('/{id}', [NguoiDungController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [NguoiDungController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [NguoiDungController::class, 'update'])->name('update');
+            Route::delete('/{id}', [NguoiDungController::class, 'destroy'])->name('destroy');
+        });
 
         // ========== PHÒNG BAN ==========
         Route::get('/phong-ban', [PhongBanController::class, 'index'])->name('phong-ban.index');
+        Route::get('/phong-ban/org-chart', [PhongBanController::class, 'orgChart'])->name('phong-ban.org-chart');
+        Route::get('/phong-ban/statistics', [PhongBanController::class, 'statistics'])->name('phong-ban.statistics');
         Route::get('/phong-ban/create', [PhongBanController::class, 'create'])->name('phong-ban.create');
         Route::post('/phong-ban', [PhongBanController::class, 'store'])->name('phong-ban.store');
         Route::get('/phong-ban/{id}', [PhongBanController::class, 'show'])->name('phong-ban.show');
@@ -101,6 +105,8 @@ Route::prefix('admin')
         Route::delete('/phong-ban/{id}', [PhongBanController::class, 'destroy'])->name('phong-ban.destroy');
 
         // ========== CHỨC VỤ ==========
+        Route::get('/chuc-vu/org-chart', [ChucVuController::class, 'orgChart'])->name('chuc-vu.org-chart');
+        Route::get('/chuc-vu/statistics', [ChucVuController::class, 'statistics'])->name('chuc-vu.statistics');
         Route::get('/chuc-vu', [ChucVuController::class, 'index'])->name('chuc-vu.index');
         Route::get('/chuc-vu/create', [ChucVuController::class, 'create'])->name('chuc-vu.create');
         Route::post('/chuc-vu', [ChucVuController::class, 'store'])->name('chuc-vu.store');
@@ -108,6 +114,7 @@ Route::prefix('admin')
         Route::get('/chuc-vu/{id}/edit', [ChucVuController::class, 'edit'])->name('chuc-vu.edit');
         Route::put('/chuc-vu/{id}', [ChucVuController::class, 'update'])->name('chuc-vu.update');
         Route::delete('/chuc-vu/{id}', [ChucVuController::class, 'destroy'])->name('chuc-vu.destroy');
+
 
         // ========== HỒ SƠ CÁ NHÂN ==========
         Route::get('/ho-so-ca-nhan', [HoSoCaNhanController::class, 'index'])->name('ho-so-ca-nhan.index');

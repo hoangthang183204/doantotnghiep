@@ -276,15 +276,7 @@
                             </div>
                         </details>
 
-                        @if ($chamCongHomNay && $chamCongHomNay->trang_thai_duyet == 0)
-                            <div
-                                class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                                <p class="text-xs text-yellow-700 dark:text-yellow-300 flex items-center">
-                                    <i class="fas fa-clock mr-2"></i>
-                                    Đang chờ phê duyệt
-                                </p>
-                            </div>
-                        @endif
+                        {{-- ⭐ BỎ PHẦN HIỂN THỊ "ĐANG CHỜ PHÊ DUYỆT" --}}
                     </div>
                 </div>
             </div>
@@ -371,6 +363,13 @@
                                             </span>
                                         @break
 
+                                        @case('tang_ca')
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
+                                                <i class="fas fa-clock mr-1"></i> Tăng ca
+                                            </span>
+                                        @break
+
                                         @default
                                             <span
                                                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
@@ -402,6 +401,7 @@
             @csrf
         </form>
     @endsection
+
 
     @push('scripts')
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

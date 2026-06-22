@@ -69,6 +69,8 @@
                         <tr class="text-left border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
                             <th class="p-3">MÃ PHÒNG</th>
                             <th class="p-3">TÊN PHÒNG BAN</th>
+                            <th class="p-3 text-center">SỐ NV</th>
+                            <th class="p-3 text-center">SỐ CV</th>
                             <th class="p-3">NGÂN SÁCH</th>
                             <th class="p-3">TRƯỞNG PHÒNG</th>
                             <th class="p-3">TRẠNG THÁI</th>
@@ -90,22 +92,35 @@
                                     {{ $pb->ten_phong_ban }}
                                 </td>
 
+                                <td class="p-3 text-center">
+                                    <span
+                                        class="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-xs font-semibold">
+                                        {{ $pb->nguoi_dungs_count ?? $pb->nguoiDungs()->count() }}
+                                    </span>
+                                </td>
+
+                                {{-- ✅ SỐ CHỨC VỤ --}}
+                                <td class="p-3 text-center">
+                                    <span
+                                        class="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-full text-xs font-semibold">
+                                        {{ $pb->chuc_vus_count ?? $pb->chucVus()->count() }}
+                                    </span>
+                                </td>
+
                                 <td class="p-3">
                                     {{ number_format($pb->ngan_sach, 0, ',', '.') }} đ
                                 </td>
 
                                 <td class="p-3">
-                                    @if ($pb->truong_phong_id)
-                                        @if ($pb->truong_phong && $pb->truong_phong->hoSo)
-                                            {{ $pb->truong_phong->hoSo->ho }}
-                                            {{ $pb->truong_phong->hoSo->ten }}
+                                    @if ($pb->truongPhong)
+                                        {{-- ✅ Đã sửa --}}
+                                        @if ($pb->truongPhong->hoSo)
+                                            {{ $pb->truongPhong->hoSo->ho }} {{ $pb->truongPhong->hoSo->ten }}
                                         @else
-                                            {{ $pb->truong_phong->ten_dang_nhap ?? '---' }}
+                                            {{ $pb->truongPhong->ten_dang_nhap ?? '---' }}
                                         @endif
                                     @else
-                                        <span class="text-gray-400 italic">
-                                            Chưa cập nhật
-                                        </span>
+                                        <span class="text-gray-400 italic">Chưa cập nhật</span>
                                     @endif
                                 </td>
 
@@ -124,26 +139,31 @@
                                 {{-- ACTION --}}
                                 <td class="px-4 py-3">
                                     <div class="flex justify-center gap-1.5">
-                                        
+
                                         {{-- Nút Xem chi tiết (Icon Con mắt) --}}
-                                        <a href="{{ route('admin.phong-ban.show', $pb->id) }}" 
-                                           class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition" 
-                                           title="Xem chi tiết">
+                                        <a href="{{ route('admin.phong-ban.show', $pb->id) }}"
+                                            class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                            title="Xem chi tiết">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                                </path>
                                             </svg>
                                         </a>
-                                
+
                                         {{-- Nút Sửa (Icon Bút chì) --}}
-                                        <a href="{{ route('admin.phong-ban.edit', $pb->id) }}" 
-                                           class="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded-lg transition" 
-                                           title="Chỉnh sửa">
+                                        <a href="{{ route('admin.phong-ban.edit', $pb->id) }}"
+                                            class="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded-lg transition"
+                                            title="Chỉnh sửa">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                                </path>
                                             </svg>
                                         </a>
-                                
+
                                     </div>
                                 </td>
 
