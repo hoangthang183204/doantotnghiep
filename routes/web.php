@@ -135,20 +135,25 @@ Route::prefix('admin')
             Route::post('/bulk-action', [DonNghiController::class, 'bulkAction'])->name('bulk-action');
         });
 
-        // ========== LƯƠNG ==========
+        // ========== LƯƠNG (BẢNG LƯƠNG THÁNG) ==========
         Route::get('/bang-luong', [BangLuongController::class, 'index'])->name('bang-luong.index');
-        Route::get('/bang-luong/{id}', [BangLuongController::class, 'show'])->name('bang-luong.show');
         Route::get('/bang-luong/create', [BangLuongController::class, 'create'])->name('bang-luong.create');
-        Route::post('/bang-luong', [BangLuongController::class, 'store'])->name('bang-luong.store');
         Route::post('/bang-luong/tinh', [BangLuongController::class, 'tinhLuong'])->name('bang-luong.tinh');
-        Route::put('/bang-luong/{id}/duyet', [BangLuongController::class, 'duyet'])->name('bang-luong.duyet');
-        Route::delete('/bang-luong/{id}', [BangLuongController::class, 'destroy'])->name('bang-luong.destroy');
+        Route::get('/bang-luong/{id}', [BangLuongController::class, 'show'])->whereNumber('id')->name('bang-luong.show');
+        Route::get('/bang-luong/{id}/nhan-vien/{luongId}', [BangLuongController::class, 'chiTietNhanVien'])->whereNumber(['id', 'luongId'])->name('bang-luong.chi-tiet-nhan-vien');
+        Route::put('/bang-luong/{id}/chot', [BangLuongController::class, 'chot'])->whereNumber('id')->name('bang-luong.chot');
+        Route::put('/bang-luong/{id}/thanh-toan', [BangLuongController::class, 'thanhToan'])->whereNumber('id')->name('bang-luong.thanh-toan');
+        Route::delete('/bang-luong/{id}', [BangLuongController::class, 'destroy'])->whereNumber('id')->name('bang-luong.destroy');
 
         // ========== PHỤ CẤP ==========
         Route::resource('phu-cap', PhuCapController::class);
 
         // ========== QUẢN LÝ LƯƠNG ==========
-        Route::resource('luong', LuongController::class);
+        
+        Route::get('luong/export', [LuongController::class, 'export'])
+    ->name('luong.export');
+
+Route::resource('luong', LuongController::class);
 
         // ========== TUYỂN DỤNG ==========
         Route::get('/tin-tuyen-dung', [TinTuyenDungController::class, 'index'])->name('tin-tuyen-dung.index');

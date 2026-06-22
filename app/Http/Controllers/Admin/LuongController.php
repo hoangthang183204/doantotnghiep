@@ -7,6 +7,8 @@ use App\Models\Luong;
 use Illuminate\Http\Request;
 use App\Models\NguoiDung;
 use App\Models\HopDongLaoDong;
+use App\Exports\LuongExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class LuongController extends Controller
 {
@@ -88,5 +90,12 @@ public function update(Request $request, $id)
 
     return redirect()->route('admin.luong.index')
         ->with('success', 'Cập nhật lương thành công');
+}
+public function export()
+{
+    return Excel::download(
+        new LuongExport(),
+        'danh-sach-luong.xlsx'
+    );
 }
 }
