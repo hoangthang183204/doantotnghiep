@@ -34,6 +34,7 @@ use App\Http\Controllers\Employee\TangCaController as EmployeeTangCaController;
 use App\Http\Controllers\Employee\YeuCauChinhCongController;
 use App\Http\Controllers\Employee\HopDongController;
 use App\Http\Controllers\Employee\QuyDinhController as EmployeeQuyDinhController;
+use App\Http\Controllers\Admin\TrungTuyenController;
 
 // =============================================
 // ROUTE GỐC
@@ -262,6 +263,10 @@ Route::resource('luong', LuongController::class);
             Route::get('/email-phong-van/create', [UngVienController::class, 'createEmail'])->name('email.create');
             Route::post('/email-phong-van/send', [UngVienController::class, 'sendEmail'])->name('email.send');
         });
+        //=========Trúng Tuyển=========//
+        Route::prefix('trung-tuyen')->name('trung-tuyen.')->group(function () {
+    Route::get('/', [TrungTuyenController::class, 'index'])->name('index');
+});
     });
 
 // =============================================
