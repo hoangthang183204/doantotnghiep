@@ -1,3 +1,4 @@
+{{-- resources/views/admin/don_nghi/index.blade.php --}}
 @extends('layouts.admin') 
 
 @section('content')
@@ -138,9 +139,9 @@
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
                     @forelse($danhSachDon as $don)
                     @php
-                        $hoTen = optional($don->nguoi_dung->hoSo)->ho . ' ' . optional($don->nguoi_dung->hoSo)->ten;
-                        $avatar = optional($don->nguoi_dung->hoSo)->anh_dai_dien 
-                            ? asset('storage/' . optional($don->nguoi_dung->hoSo)->anh_dai_dien)
+                        $hoTen = optional($don->nguoiDung->hoSo)->ho . ' ' . optional($don->nguoiDung->hoSo)->ten;
+                        $avatar = optional($don->nguoiDung->hoSo)->anh_dai_dien 
+                            ? asset('storage/' . optional($don->nguoiDung->hoSo)->anh_dai_dien)
                             : 'https://ui-avatars.com/api/?background=3b82f6&color=fff&name=' . urlencode($hoTen);
                     @endphp
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
@@ -155,7 +156,7 @@
                                 <div>
                                     <div class="font-medium text-gray-900 dark:text-white">{{ $hoTen ?: 'N/A' }}</div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">
-                                        Mã NV: {{ optional($don->nguoi_dung->hoSo)->ma_nhan_vien ?? 'N/A' }}
+                                        Mã NV: {{ optional($don->nguoiDung->hoSo)->ma_nhan_vien ?? 'N/A' }}
                                     </div>
                                 </div>
                             </div>
