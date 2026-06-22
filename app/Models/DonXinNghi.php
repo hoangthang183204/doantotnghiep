@@ -49,4 +49,6 @@ class DonXinNghi extends Model
     {
         return $this->belongsTo(NguoiDung::class, 'ban_giao_cho_id');
     }
+
+    
 }
