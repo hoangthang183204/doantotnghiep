@@ -157,15 +157,39 @@
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-blue-800 dark:text-blue-300">Số dư nghỉ phép hiện tại</p>
-                                <p class="text-xl font-bold text-blue-600 dark:text-blue-400">
-                                    {{ $soDuNghiPhep ?? 12 }} <span class="text-sm font-normal text-blue-500 dark:text-blue-400">ngày còn lại</span>
-                                </p>
+                                <div class="flex items-baseline gap-2">
+                                    <p class="text-xl font-bold text-blue-600 dark:text-blue-400">
+                                        {{ $soDu['so_du_con_lai'] ?? 12 }}
+                                        <span class="text-sm font-normal text-blue-500 dark:text-blue-400">/ {{ $soDu['so_ngay_phep_nam'] ?? 12 }} ngày</span>
+                                    </p>
+                                    @if(($soDu['so_ngay_da_nghi'] ?? 0) > 0)
+                                        <span class="text-xs text-gray-500 dark:text-gray-400">
+                                            (Đã nghỉ {{ $soDu['so_ngay_da_nghi'] ?? 0 }} ngày)
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                         <div>
                             <span class="text-xs text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-lg border-2 border-blue-200 dark:border-blue-600 font-medium inline-block">
                                 <i class="fas fa-sync-alt mr-1.5"></i> Cập nhật tự động
                             </span>
+                        </div>
+                    </div>
+                    {{-- Thanh tiến trình số dư --}}
+                    <div class="mt-3">
+                        <div class="w-full bg-blue-200 dark:bg-blue-800/50 rounded-full h-2.5">
+                            @php
+                                $soDuConLai = $soDu['so_du_con_lai'] ?? 0;
+                                $soNgayPhepNam = $soDu['so_ngay_phep_nam'] ?? 12;
+                                $phanTram = $soNgayPhepNam > 0 ? ($soDuConLai / $soNgayPhepNam) * 100 : 0;
+                            @endphp
+                            <div class="bg-blue-600 dark:bg-blue-400 h-2.5 rounded-full transition-all duration-500" 
+                                 style="width: {{ min(100, $phanTram) }}%"></div>
+                        </div>
+                        <div class="flex justify-between mt-1">
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Còn lại</span>
+                            <span class="text-xs text-blue-600 dark:text-blue-400 font-medium">{{ $soDuConLai }} ngày</span>
                         </div>
                     </div>
                 </div>

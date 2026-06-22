@@ -1,3 +1,4 @@
+{{-- resources/views/admin/don_nghi/show.blade.php --}}
 @extends('layouts.admin')
 
 @section('title', 'Chi tiết đơn xin nghỉ - ' . $donNghi->ma_don_nghi)
@@ -53,21 +54,21 @@
         <div class="p-6">
             <div class="flex items-center gap-4 mb-4">
                 @php
-                    $avatar = optional($donNghi->nguoi_dung->hoSo)->anh_dai_dien 
-                        ? asset('storage/' . optional($donNghi->nguoi_dung->hoSo)->anh_dai_dien)
-                        : 'https://ui-avatars.com/api/?background=3b82f6&color=fff&name=' . urlencode(optional($donNghi->nguoi_dung->hoSo)->ho . ' ' . optional($donNghi->nguoi_dung->hoSo)->ten);
+                    $avatar = optional($donNghi->nguoiDung->hoSo)->anh_dai_dien 
+                        ? asset('storage/' . optional($donNghi->nguoiDung->hoSo)->anh_dai_dien)
+                        : 'https://ui-avatars.com/api/?background=3b82f6&color=fff&name=' . urlencode(optional($donNghi->nguoiDung->hoSo)->ho . ' ' . optional($donNghi->nguoiDung->hoSo)->ten);
                 @endphp
                 <img src="{{ $avatar }}" alt="Avatar" class="w-16 h-16 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600">
                 <div>
                     <h3 class="text-lg font-bold text-gray-800 dark:text-white">
-                        {{ optional($donNghi->nguoi_dung->hoSo)->ho ?? '' }} {{ optional($donNghi->nguoi_dung->hoSo)->ten ?? '' }}
+                        {{ optional($donNghi->nguoiDung->hoSo)->ho ?? '' }} {{ optional($donNghi->nguoiDung->hoSo)->ten ?? '' }}
                     </h3>
                     <div class="flex flex-wrap gap-3 text-sm text-gray-500 dark:text-gray-400">
-                        <span>Mã NV: {{ optional($donNghi->nguoi_dung->hoSo)->ma_nhan_vien ?? 'N/A' }}</span>
+                        <span>Mã NV: {{ optional($donNghi->nguoiDung->hoSo)->ma_nhan_vien ?? 'N/A' }}</span>
                         <span>•</span>
-                        <span>Phòng: {{ optional($donNghi->nguoi_dung->phongBan)->ten_phong_ban ?? 'N/A' }}</span>
+                        <span>Phòng: {{ optional($donNghi->nguoiDung->phongBan)->ten_phong_ban ?? 'N/A' }}</span>
                         <span>•</span>
-                        <span>Chức vụ: {{ optional($donNghi->nguoi_dung->chucVu)->ten ?? 'N/A' }}</span>
+                        <span>Chức vụ: {{ optional($donNghi->nguoiDung->chucVu)->ten ?? 'N/A' }}</span>
                     </div>
                 </div>
             </div>
@@ -84,7 +85,7 @@
                 <div class="space-y-4">
                     <div>
                         <span class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider block">Loại nghỉ phép</span>
-                        <p class="font-semibold text-gray-800 dark:text-white">{{ optional($donNghi->loai_nghi_phep)->ten ?? 'N/A' }}</p>
+                        <p class="font-semibold text-gray-800 dark:text-white">{{ optional($donNghi->loaiNghiPhep)->ten ?? 'N/A' }}</p>
                     </div>
                     <div>
                         <span class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider block">Số ngày nghỉ</span>
@@ -110,7 +111,7 @@
                     <div>
                         <span class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider block">Người bàn giao</span>
                         <p class="font-semibold text-gray-800 dark:text-white">
-                            {{ optional($donNghi->ban_giao_cho->hoSo)->ho ?? '' }} {{ optional($donNghi->ban_giao_cho->hoSo)->ten ?? 'Không có' }}
+                            {{ optional($donNghi->banGiaoCho->hoSo)->ho ?? '' }} {{ optional($donNghi->banGiaoCho->hoSo)->ten ?? 'Không có' }}
                         </p>
                     </div>
                     @if($donNghi->ghi_chu_ban_giao)
@@ -236,4 +237,4 @@
         animation: fadeIn 0.2s ease-out;
     }
 </style>
-@endsection
+@endsection 

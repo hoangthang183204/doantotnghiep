@@ -16,14 +16,14 @@ class DonNghiController extends Controller
      */
     public function index(Request $request)
     {
-        $query = DonXinNghi::with(['nguoi_dung.hoSo', 'ban_giao_cho.hoSo', 'loai_nghi_phep']);
+        $query = DonXinNghi::with(['nguoiDung.hoSo', 'banGiaoCho.hoSo', 'loaiNghiPhep']);
 
         // 🔍 Filter theo từ khóa
         if ($request->filled('keyword')) {
             $keyword = trim($request->keyword);
             $query->where(function ($q) use ($keyword) {
                 $q->where('ma_don_nghi', 'like', "%{$keyword}%")
-                    ->orWhereHas('nguoi_dung', function ($sub) use ($keyword) {
+                    ->orWhereHas('nguoiDung', function ($sub) use ($keyword) {
                         $sub->where('ten_dang_nhap', 'like', "%{$keyword}%")
                             ->orWhereHas('hoSo', function ($hs) use ($keyword) {
                                 $hs->where('ho', 'like', "%{$keyword}%")
@@ -87,11 +87,11 @@ class DonNghiController extends Controller
     public function show($id)
     {
         $donNghi = DonXinNghi::with([
-            'nguoi_dung.hoSo',
-            'nguoi_dung.phongBan',
-            'nguoi_dung.chuc_vu',  // ⭐ SỬA THÀNH chuc_vu (có dấu gạch dưới)
-            'ban_giao_cho.hoSo',
-            'loai_nghi_phep'
+            'nguoiDung.hoSo',
+            'nguoiDung.phongBan',
+            'nguoiDung.chucVu',
+            'banGiaoCho.hoSo',
+            'loaiNghiPhep'
         ])->findOrFail($id);
 
         return view('admin.don_nghi.show', compact('donNghi'));
