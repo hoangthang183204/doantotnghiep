@@ -62,6 +62,17 @@ class DonNghiController extends Controller
             'so_ngay_nghi' => 'required|numeric|min:0.5',
             'ly_do' => 'required|string|min:10',
             'ghi_chu' => 'nullable|string',
+        ], [
+            'ngay_bat_dau.required' => 'Vui lòng chọn ngày bắt đầu.',
+            'ngay_bat_dau.after_or_equal' => 'Ngày bắt đầu không được chọn ngày đã qua.',
+            'ngay_ket_thuc.required' => 'Vui lòng chọn ngày kết thúc.',
+            'ngay_ket_thuc.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
+            'loai_nghi_id.required' => 'Vui lòng chọn loại nghỉ.',
+            'loai_nghi_id.exists' => 'Loại nghỉ không hợp lệ.',
+            'so_ngay_nghi.required' => 'Vui lòng nhập số ngày nghỉ.',
+            'so_ngay_nghi.min' => 'Số ngày nghỉ phải lớn hơn 0.',
+            'ly_do.required' => 'Vui lòng nhập lý do xin nghỉ.',
+            'ly_do.min' => 'Lý do phải có ít nhất 10 ký tự.',
         ]);
 
         $user = Auth::user();
@@ -90,7 +101,7 @@ class DonNghiController extends Controller
                 'ma_don_nghi' => $maDonNghi,
                 'nguoi_dung_id' => $user->id,
                 'loai_nghi_id' => $request->loai_nghi_id,
-                'loai_nghi_phep_id' => $request->loai_nghi_id, // Thêm cột này (giá trị giống loai_nghi_id)
+                'loai_nghi_phep_id' => $request->loai_nghi_id,
                 'ngay_bat_dau' => $request->ngay_bat_dau,
                 'ngay_ket_thuc' => $request->ngay_ket_thuc,
                 'so_ngay_nghi' => $request->so_ngay_nghi,
@@ -144,18 +155,29 @@ class DonNghiController extends Controller
 
         $request->validate([
             'loai_nghi_id' => 'required|exists:loai_nghi_phep,id',
-            'ngay_bat_dau' => 'required|date',
+            'ngay_bat_dau' => 'required|date|after_or_equal:today',
             'ngay_ket_thuc' => 'required|date|after_or_equal:ngay_bat_dau',
             'so_ngay_nghi' => 'required|numeric|min:0.5',
             'ly_do' => 'required|string|min:10',
             'ghi_chu' => 'nullable|string',
+        ], [
+            'ngay_bat_dau.required' => 'Vui lòng chọn ngày bắt đầu.',
+            'ngay_bat_dau.after_or_equal' => 'Ngày bắt đầu không được chọn ngày đã qua.',
+            'ngay_ket_thuc.required' => 'Vui lòng chọn ngày kết thúc.',
+            'ngay_ket_thuc.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
+            'loai_nghi_id.required' => 'Vui lòng chọn loại nghỉ.',
+            'loai_nghi_id.exists' => 'Loại nghỉ không hợp lệ.',
+            'so_ngay_nghi.required' => 'Vui lòng nhập số ngày nghỉ.',
+            'so_ngay_nghi.min' => 'Số ngày nghỉ phải lớn hơn 0.',
+            'ly_do.required' => 'Vui lòng nhập lý do xin nghỉ.',
+            'ly_do.min' => 'Lý do phải có ít nhất 10 ký tự.',
         ]);
 
         DB::beginTransaction();
         try {
             $donNghi->update([
                 'loai_nghi_id' => $request->loai_nghi_id,
-                'loai_nghi_phep_id' => $request->loai_nghi_id, // Thêm cột này
+                'loai_nghi_phep_id' => $request->loai_nghi_id,
                 'ngay_bat_dau' => $request->ngay_bat_dau,
                 'ngay_ket_thuc' => $request->ngay_ket_thuc,
                 'so_ngay_nghi' => $request->so_ngay_nghi,
