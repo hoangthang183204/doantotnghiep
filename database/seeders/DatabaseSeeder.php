@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
         // Người dùng
         $this->call(NguoiDungSeeder::class);
         $this->call(HoSoNguoiDungSeeder::class);
+        $this->call(PhuCapNhanVienSeeder::class);
 
         // CV
         $this->call(TaiLieuSeeder::class);
@@ -53,10 +54,8 @@ class DatabaseSeeder extends Seeder
         $this->call(UngVienSeeder::class);
 
         // Lương
-        $this->call(BangLuongSeeder::class);
-        $this->call(LuongSeeder::class);
-        $this->call(LuongNhanVienSeeder::class);
-        $this->call(KhauTruLuongSeeder::class);
+        $this->call(LuongSeeder::class);        // module "Quản lý lương" (bảng luong theo hợp đồng)
+        $this->call(LuongDemoSeeder::class);    // bảng lương tháng - tính bằng engine TinhLuongService
 
         $this->call(QuyenSeeder::class);
     }
