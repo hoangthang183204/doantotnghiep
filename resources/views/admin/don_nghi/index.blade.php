@@ -13,7 +13,7 @@
     </div>
 
     {{-- THỐNG KÊ --}}
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 border-l-[6px] border-l-blue-500 p-4 flex flex-col items-center justify-center">
             <span class="text-2xl font-bold text-gray-800 dark:text-white">{{ $danhSachDon->total() }}</span>
             <span class="text-gray-500 dark:text-gray-300 text-sm font-medium">Tổng số</span>
@@ -29,6 +29,10 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 border-l-[6px] border-l-red-500 p-4 flex flex-col items-center justify-center">
             <span class="text-2xl font-bold text-gray-800 dark:text-white">{{ $countTuChoi }}</span>
             <span class="text-gray-500 dark:text-gray-300 text-sm font-medium">❌ Từ chối</span>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 border-l-[6px] border-l-gray-500 p-4 flex flex-col items-center justify-center">
+            <span class="text-2xl font-bold text-gray-800 dark:text-white">{{ $countHuyBo ?? 0 }}</span>
+            <span class="text-gray-500 dark:text-gray-300 text-sm font-medium">🚫 Đã hủy</span>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 border-l-[6px] border-l-purple-500 p-4 flex flex-col items-center justify-center">
             <span class="text-2xl font-bold text-gray-800 dark:text-white">{{ $countHomNay }}</span>
@@ -56,6 +60,7 @@
                         <option value="cho_duyet" {{ request('trang_thai') == 'cho_duyet' ? 'selected' : '' }}>⏳ Chờ duyệt</option>
                         <option value="da_duyet" {{ request('trang_thai') == 'da_duyet' ? 'selected' : '' }}>✅ Đã duyệt</option>
                         <option value="tu_choi" {{ request('trang_thai') == 'tu_choi' ? 'selected' : '' }}>❌ Từ chối</option>
+                        <option value="huy_bo" {{ request('trang_thai') == 'huy_bo' ? 'selected' : '' }}>🚫 Đã hủy</option>
                     </select>
                 </div>
 
@@ -120,6 +125,16 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="mb-4 p-4 text-sm text-red-800 dark:text-red-100 rounded-lg bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800/50 flex items-center justify-between">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                <span>{{ session('error') }}</span>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-red-800 dark:text-red-100 hover:opacity-70">&times;</button>
+        </div>
+    @endif
+
     {{-- BẢNG --}}
     <div class="bg-white dark:bg-gray-800 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 sm:rounded-lg overflow-hidden flex-1">
         <div class="overflow-x-auto">
@@ -166,10 +181,10 @@
                             <br><span class="text-xs text-gray-400">{{ $don->created_at->format('H:i') }}</span>
                         </td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-100">
-                            {{ $don->ngay_bat_dau->format('d/m/Y') }}
+                            {{ \Carbon\Carbon::parse($don->ngay_bat_dau)->format('d/m/Y') }}
                         </td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-100">
-                            {{ $don->ngay_ket_thuc->format('d/m/Y') }}
+                            {{ \Carbon\Carbon::parse($don->ngay_ket_thuc)->format('d/m/Y') }}
                         </td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm font-semibold text-blue-600 dark:text-blue-400">
                             {{ number_format($don->so_ngay_nghi, 0) }} ngày
@@ -179,11 +194,10 @@
                                 <span class="inline-flex items-center rounded-md bg-yellow-50 dark:bg-yellow-900/30 px-2.5 py-1 text-xs font-medium text-yellow-800 dark:text-yellow-400">⏳ Chờ duyệt</span>
                             @elseif($don->trang_thai == 'da_duyet')
                                 <span class="inline-flex items-center rounded-md bg-green-50 dark:bg-green-900/30 px-2.5 py-1 text-xs font-medium text-green-700 dark:text-green-400">✅ Đã duyệt</span>
-                            @else
+                            @elseif($don->trang_thai == 'tu_choi')
                                 <span class="inline-flex items-center rounded-md bg-red-50 dark:bg-red-900/30 px-2.5 py-1 text-xs font-medium text-red-700 dark:text-red-400">❌ Từ chối</span>
-                            @endif
-                            @if($don->trang_thai == 'tu_choi' && $don->ghi_chu)
-                                <div class="text-xs text-red-400 mt-0.5" title="{{ $don->ghi_chu }}">📌 {{ Str::limit($don->ghi_chu, 30) }}</div>
+                            @elseif($don->trang_thai == 'huy_bo')
+                                <span class="inline-flex items-center rounded-md bg-gray-50 dark:bg-gray-900/30 px-2.5 py-1 text-xs font-medium text-gray-700 dark:text-gray-400">🚫 Đã hủy</span>
                             @endif
                         </td>
                         <td class="whitespace-nowrap px-3 py-4 text-center text-sm font-medium">
@@ -212,7 +226,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                         </svg>
                                     </button>
-                                @else
+                                @elseif($don->trang_thai == 'da_duyet' || $don->trang_thai == 'tu_choi')
                                     <form action="{{ route('admin.don_nghi.duyet', $don->id) }}" method="POST" class="inline">
                                         @csrf
                                         <input type="hidden" name="trang_thai" value="cho_duyet"> 
@@ -222,6 +236,8 @@
                                             </svg>
                                         </button>
                                     </form>
+                                @elseif($don->trang_thai == 'huy_bo')
+                                    <span class="text-xs text-gray-400">🚫 Đã hủy</span>
                                 @endif
                             </div>
                         </td>

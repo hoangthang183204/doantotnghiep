@@ -1,4 +1,5 @@
 <?php
+// app/Http/Controllers/Admin/DonNghiController.php
 
 namespace App\Http\Controllers\Admin;
 
@@ -16,7 +17,12 @@ class DonNghiController extends Controller
      */
     public function index(Request $request)
     {
-        $query = DonXinNghi::with(['nguoiDung.hoSo', 'banGiaoCho.hoSo', 'loaiNghiPhep']);
+        $query = DonXinNghi::with([
+            'nguoiDung.hoSo', 
+            'banGiaoCho.hoSo', 
+            'loaiNghiPhep', 
+            'nguoiDuyet.hoSo'
+        ]);
 
         // 🔍 Filter theo từ khóa
         if ($request->filled('keyword')) {
@@ -67,6 +73,7 @@ class DonNghiController extends Controller
         $countChoDuyet = DonXinNghi::where('trang_thai', 'cho_duyet')->count();
         $countDaDuyet = DonXinNghi::where('trang_thai', 'da_duyet')->count();
         $countTuChoi = DonXinNghi::where('trang_thai', 'tu_choi')->count();
+        $countHuyBo = DonXinNghi::where('trang_thai', 'huy_bo')->count(); // ← THÊM THỐNG KÊ HỦY BỎ
         $countHomNay = DonXinNghi::whereDate('created_at', now()->toDateString())->count();
 
         $loaiNghiPheps = LoaiNghiPhep::where('trang_thai', 1)->get();
@@ -76,6 +83,7 @@ class DonNghiController extends Controller
             'countChoDuyet',
             'countDaDuyet',
             'countTuChoi',
+            'countHuyBo',
             'countHomNay',
             'loaiNghiPheps'
         ));
@@ -91,7 +99,8 @@ class DonNghiController extends Controller
             'nguoiDung.phongBan',
             'nguoiDung.chucVu',
             'banGiaoCho.hoSo',
-            'loaiNghiPhep'
+            'loaiNghiPhep',
+            'nguoiDuyet.hoSo'
         ])->findOrFail($id);
 
         return view('admin.don_nghi.show', compact('donNghi'));
@@ -110,11 +119,29 @@ class DonNghiController extends Controller
         try {
             $donNghi = DonXinNghi::findOrFail($id);
 
+            // ⚠️ KIỂM TRA: KHÔNG CHO PHÉP THAY ĐỔI ĐƠN ĐÃ HỦY
+            if ($donNghi->trang_thai == 'huy_bo') {
+                return redirect()->back()->with('error', '❌ Đơn này đã bị hủy, không thể thay đổi trạng thái!');
+            }
+
+            // Cập nhật trạng thái
+            $donNghi->trang_thai = $request->trang_thai;
+
+            if ($request->trang_thai == 'da_duyet' || $request->trang_thai == 'tu_choi') {
+                $donNghi->nguoi_duyet_id = auth()->id();
+                $donNghi->thoi_gian_duyet = now();
+            }
+
             if ($request->trang_thai == 'tu_choi') {
                 $donNghi->ghi_chu = $request->ly_do_tu_choi ?? 'Không có lý do';
             }
 
-            $donNghi->trang_thai = $request->trang_thai;
+            if ($request->trang_thai == 'cho_duyet') {
+                $donNghi->nguoi_duyet_id = null;
+                $donNghi->thoi_gian_duyet = null;
+                $donNghi->ghi_chu = null;
+            }
+
             $donNghi->save();
 
             $thongBao = match ($request->trang_thai) {
@@ -141,17 +168,28 @@ class DonNghiController extends Controller
             'action' => 'required|in:da_duyet,tu_choi'
         ]);
 
-        $count = DonXinNghi::whereIn('id', $request->ids)
-            ->where('trang_thai', 'cho_duyet')
-            ->update([
-                'trang_thai' => $request->action,
-                'ghi_chu' => $request->ly_do_tu_choi ?? ($request->action == 'da_duyet' ? 'Duyệt hàng loạt' : 'Từ chối hàng loạt'),
-            ]);
+        try {
+            // ⚠️ CHỈ CẬP NHẬT CÁC ĐƠN CÓ TRẠNG THÁI 'cho_duyet' VÀ KHÔNG PHẢI 'huy_bo'
+            $count = DonXinNghi::whereIn('id', $request->ids)
+                ->where('trang_thai', 'cho_duyet')
+                ->where('trang_thai', '!=', 'huy_bo')
+                ->update([
+                    'trang_thai' => $request->action,
+                    'nguoi_duyet_id' => auth()->id(),
+                    'thoi_gian_duyet' => now(),
+                    'ghi_chu' => $request->ly_do_tu_choi ?? ($request->action == 'da_duyet' ? 'Duyệt hàng loạt' : 'Từ chối hàng loạt'),
+                ]);
 
-        $message = $request->action == 'da_duyet' ? 'duyệt' : 'từ chối';
-        return response()->json([
-            'success' => true,
-            'message' => "Đã {$message} {$count} đơn thành công!"
-        ]);
+            $message = $request->action == 'da_duyet' ? 'duyệt' : 'từ chối';
+            return response()->json([
+                'success' => true,
+                'message' => "Đã {$message} {$count} đơn thành công!"
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
