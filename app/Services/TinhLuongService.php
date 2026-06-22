@@ -279,13 +279,15 @@ class TinhLuongService
         $chamCongs = ChamCong::where('nguoi_dung_id', $nguoiDungId)
             ->whereYear('ngay_cham_cong', $nam)
             ->whereMonth('ngay_cham_cong', $thang)
-            ->where('trang_thai_duyet', ChamCong::TRANG_THAI_DUYET_DA_DUYET)
+            // ✅ Chỉ lấy những ngày có giờ vào và giờ ra
+            ->whereNotNull('gio_vao')
+            ->whereNotNull('gio_ra')
             ->get();
 
         return [
-            'so_ngay_cong'         => $chamCongs->whereIn('trang_thai', self::TRANG_THAI_CO_MAT)->count(),
-            'ngay_nghi_phep'       => $chamCongs->where('trang_thai', 'nghi_phep')->count(),
-            'ngay_nghi_khong_phep' => $chamCongs->where('trang_thai', 'vang_mat')->count(),
+            'so_ngay_cong'         => $chamCongs->count(),  // ✅ Đếm tất cả
+            'ngay_nghi_phep'       => 0,
+            'ngay_nghi_khong_phep' => 0,
             'gio_tang_ca'          => round((float) $chamCongs->sum('gio_tang_ca'), 2),
         ];
     }
@@ -339,7 +341,7 @@ class TinhLuongService
 
         $tong         = round(array_sum(array_column($chiTiet, 'so_tien')), 2);
         $tongChiuThue = round(array_sum(array_map(
-            fn ($i) => $i['chiu_thue'] ? $i['so_tien'] : 0,
+            fn($i) => $i['chiu_thue'] ? $i['so_tien'] : 0,
             $chiTiet
         )), 2);
 

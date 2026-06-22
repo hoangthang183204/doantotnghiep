@@ -121,7 +121,7 @@
                                 Từ chối ký</option>
                         </select>
                     </div>
-                    
+
                 </div>
                 <div class="mt-5 flex gap-3">
                     <button type="submit"
@@ -286,20 +286,23 @@
                                         } }}
                                     </span>
                                 </td>
+                                {{-- Trong phần actions của mỗi dòng --}}
                                 <td class="px-4 py-3">
-                                    <div class="flex justify-center gap-1.5">
+                                    <div class="flex justify-center gap-1.5 flex-wrap">
+                                        {{-- Nút Xem --}}
                                         <a href="{{ route('admin.hop-dong.show', $hd->id) }}"
                                             class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
                                             title="Xem">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                                </path>
+                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                             </svg>
                                         </a>
+
+                                        {{-- Nút Sửa --}}
                                         @if (in_array($hd->trang_thai_hop_dong, ['tao_moi', 'chua_hieu_luc']) && $hd->trang_thai_ky != 'da_ky')
                                             <a href="{{ route('admin.hop-dong.edit', $hd->id) }}"
                                                 class="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded-lg transition"
@@ -307,11 +310,31 @@
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                                    </path>
+                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                 </svg>
                                             </a>
                                         @endif
+
+                                        {{-- ✅ NÚT TÁI KÝ - CHỈ HIỆN KHI HỢP ĐỒNG HẾT HẠN --}}
+                                        @if ($hd->trang_thai_hop_dong == 'het_han' && $hd->trang_thai_tai_ky != 'da_tai_ky')
+                                            <form action="{{ route('admin.hop-dong.tai-ky', $hd->id) }}" method="POST"
+                                                class="inline">
+                                                @csrf
+                                                <button type="submit"
+                                                    class="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition"
+                                                    title="Tái ký hợp đồng"
+                                                    onclick="return confirm('🔄 Tái ký hợp đồng {{ $hd->so_hop_dong }}?')">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                        {{-- Nút Xóa --}}
                                         <form action="{{ route('admin.hop-dong.destroy', $hd->id) }}" method="POST"
                                             onsubmit="return confirm('Xóa hợp đồng này?')" class="inline">
                                             @csrf @method('DELETE')
@@ -321,12 +344,12 @@
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                    </path>
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                 </svg>
                                             </button>
                                         </form>
                                     </div>
+                                </td>
                                 </td>
                             </tr>
                         @empty

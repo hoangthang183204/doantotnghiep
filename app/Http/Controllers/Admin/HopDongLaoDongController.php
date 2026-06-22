@@ -800,4 +800,86 @@ class HopDongLaoDongController extends Controller
         } while (HopDongLaoDong::where('so_hop_dong', $soHopDong)->exists());
         return $soHopDong;
     }
+
+    /**
+     * Tái ký hợp đồng (tạo hợp đồng mới từ hợp đồng cũ)
+     */
+    public function taiKy($id)
+    {
+        $hopDongCu = HopDongLaoDong::findOrFail($id);
+
+        // Kiểm tra hợp đồng cũ có thể tái ký không
+        if (!in_array($hopDongCu->trang_thai_hop_dong, ['het_han', 'hieu_luc'])) {
+            return back()->with('error', 'Hợp đồng không ở trạng thái có thể tái ký.');
+        }
+
+        // Kiểm tra đã tái ký chưa
+        if ($hopDongCu->trang_thai_tai_ky == 'da_tai_ky') {
+            return back()->with('error', 'Hợp đồng này đã được tái ký.');
+        }
+
+        // Tạo hợp đồng mới dựa trên hợp đồng cũ
+        $hopDongMoi = HopDongLaoDong::create([
+            'nguoi_dung_id' => $hopDongCu->nguoi_dung_id,
+            'chuc_vu_id' => $hopDongCu->chuc_vu_id,
+            'so_hop_dong' => $this->generateSoHopDong(),
+            'loai_hop_dong' => $hopDongCu->loai_hop_dong,
+            'ngay_bat_dau' => now()->addDays(1), // Bắt đầu từ ngày mai
+            'ngay_ket_thuc' => $hopDongCu->loai_hop_dong == 'khong_xac_dinh_thoi_han'
+                ? null
+                : now()->addYear(), // Mặc định thêm 1 năm nếu có thời hạn
+            'luong_co_ban' => $hopDongCu->luong_co_ban,
+            'phu_cap_id' => $hopDongCu->phu_cap_id,
+            'phu_cap' => $hopDongCu->phu_cap,
+            'dia_diem_lam_viec' => $hopDongCu->dia_diem_lam_viec,
+            'dieu_khoan' => $hopDongCu->dieu_khoan,
+            'trang_thai_hop_dong' => 'tao_moi',
+            'trang_thai_ky' => 'cho_ky',
+            'created_by' => auth()->id(),
+            'ghi_chu' => 'Tái ký từ hợp đồng ' . $hopDongCu->so_hop_dong . ' (ngày ' . now()->format('d/m/Y') . ')',
+        ]);
+
+        // Đánh dấu hợp đồng cũ đã được tái ký
+        $hopDongCu->update([
+            'trang_thai_tai_ky' => 'da_tai_ky',
+            'ghi_chu' => ($hopDongCu->ghi_chu ? $hopDongCu->ghi_chu . ' | ' : '') . 'Đã tái ký sang hợp đồng ' . $hopDongMoi->so_hop_dong . ' (ngày ' . now()->format('d/m/Y') . ')',
+        ]);
+
+        // Lưu lịch sử tái ký (nếu có bảng)
+        try {
+            if (class_exists(\App\Models\LichSuTaiKy::class)) {
+                \App\Models\LichSuTaiKy::create([
+                    'hop_dong_cu_id' => $hopDongCu->id,
+                    'hop_dong_moi_id' => $hopDongMoi->id,
+                    'nguoi_thuc_hien_id' => auth()->id(),
+                    'ly_do_tai_ky' => 'Tái ký tự động do hợp đồng ' . $hopDongCu->so_hop_dong . ' đã ' . ($hopDongCu->trang_thai_hop_dong == 'het_han' ? 'hết hạn' : 'cần tái ký'),
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Bỏ qua nếu chưa có bảng lịch sử
+        }
+
+        // Gửi thông báo cho HR/Admin
+        try {
+            $hrUsers = NguoiDung::whereHas('vaiTros', function ($q) {
+                $q->where('name', 'hr');
+            })->get();
+            $adminUsers = NguoiDung::whereHas('vaiTros', function ($q) {
+                $q->where('name', 'admin');
+            })->get();
+
+            foreach ($hrUsers as $hr) {
+                $hr->notify(new \App\Notifications\TaiKyHopDongNotification($hopDongCu, $hopDongMoi));
+            }
+            foreach ($adminUsers as $admin) {
+                $admin->notify(new \App\Notifications\TaiKyHopDongNotification($hopDongCu, $hopDongMoi));
+            }
+        } catch (\Exception $e) {
+            // Bỏ qua nếu chưa có notification
+        }
+
+        return redirect()
+            ->route('admin.hop-dong.edit', $hopDongMoi->id)
+            ->with('success', '🔄 Đã tạo hợp đồng tái ký thành công! Vui lòng kiểm tra và gửi cho nhân viên ký.');
+    }
 }

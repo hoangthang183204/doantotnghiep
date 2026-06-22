@@ -157,11 +157,11 @@ Route::prefix('admin')
         Route::resource('phu-cap', PhuCapController::class);
 
         // ========== QUẢN LÝ LƯƠNG ==========
-        
-        Route::get('luong/export', [LuongController::class, 'export'])
-    ->name('luong.export');
 
-Route::resource('luong', LuongController::class);
+        Route::get('luong/export', [LuongController::class, 'export'])
+            ->name('luong.export');
+
+        Route::resource('luong', LuongController::class);
 
         // ========== TUYỂN DỤNG ==========
         Route::get('/tin-tuyen-dung', [TinTuyenDungController::class, 'index'])->name('tin-tuyen-dung.index');
@@ -211,6 +211,8 @@ Route::resource('luong', LuongController::class);
             Route::post('/{id}/gui-ky', [HopDongLaoDongController::class, 'guiKy'])->name('hop-dong.gui-ky');
             Route::post('/{id}/huy', [HopDongLaoDongController::class, 'huy'])->name('hop-dong.huy');
             Route::get('/get-nhan-vien-info/{id}', [HopDongLaoDongController::class, 'getNhanVienInfo'])->name('get-nhan-vien-info');
+            Route::post('/hop-dong/tai-ky/{id}', [HopDongLaoDongController::class, 'taiKy'])
+                ->name('hop-dong.tai-ky');
         });
 
         // ========== PHÂN QUYỀN ==========
@@ -281,6 +283,8 @@ Route::prefix('employee')
         // ========== HỢP ĐỒNG CỦA TÔI ==========
         Route::get('/hop-dong-cua-toi', [HopDongController::class, 'getHopDongCuaToi'])->name('hop-dong.index');
         Route::patch('/hop-dong/{id}/update-status', [HopDongController::class, 'updateTrangThaiKy'])->name('hopdong.update-status');
+        Route::patch('/hop-dong/{id}/tu-choi-ky', [HopDongController::class, 'tuChoiKy'])
+            ->name('hop-dong.tu-choi-ky'); 
 
         // ========== CHẤM CÔNG ==========
         Route::prefix('cham-cong')->name('cham-cong.')->group(function () {
