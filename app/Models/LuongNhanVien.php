@@ -72,7 +72,7 @@ class LuongNhanVien extends Model
     {
         return $this->hasMany(KhauTruLuong::class, 'luong_nhan_vien_id');
     }
-}
+
     /** Chi tiết phụ cấp đã áp dụng cho dòng lương này */
     public function phuCapLuongs()
     {
