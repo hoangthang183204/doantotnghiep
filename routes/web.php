@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\HoSoCaNhanController;
 use App\Http\Controllers\Admin\QuanLyThoiGianController;
 use App\Http\Controllers\Admin\LuongController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Employee\BangLuongController as EmployeeBangLuongController;
 use App\Http\Controllers\Employee\DashboardEmployeeController;
 use App\Http\Controllers\Employee\ChamCongController as EmployeeChamCongController;
 use App\Http\Controllers\Employee\DonNghiController as EmployeeDonNghiController;
@@ -118,7 +119,6 @@ Route::prefix('admin')
         Route::get('/chuc-vu/{id}/edit', [ChucVuController::class, 'edit'])->name('chuc-vu.edit');
         Route::put('/chuc-vu/{id}', [ChucVuController::class, 'update'])->name('chuc-vu.update');
         Route::delete('/chuc-vu/{id}', [ChucVuController::class, 'destroy'])->name('chuc-vu.destroy');
-
 
         // ========== CHẤM CÔNG ==========
         Route::get('/cham-cong', [ChamCongController::class, 'index'])->name('cham-cong.index');
@@ -308,7 +308,15 @@ Route::prefix('employee')
             Route::get('/', [EmployeeHoSoController::class, 'index'])->name('index');
             Route::put('/', [EmployeeHoSoController::class, 'update'])->name('update');
             Route::post('/change-password', [EmployeeHoSoController::class, 'changePassword'])->name('change-password');
+            
         });
+        // ========== BẢNG LƯƠNG ==========
+// ========== BẢNG LƯƠNG ==========
+        Route::prefix('bang-luong')->name('bang-luong.')->group(function () {
+            Route::get('/', [EmployeeBangLuongController::class, 'index'])->name('index');
+            Route::get('/{id}', [EmployeeBangLuongController::class, 'show'])->name('show');
+        });
+
     });
 // ========== QUY ĐỊNH ==========
 Route::get('/quy-dinh', [EmployeeQuyDinhController::class, 'index'])->name('employee.quydinh.index');

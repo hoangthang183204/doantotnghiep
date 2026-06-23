@@ -57,4 +57,9 @@ class LuongNhanVien extends Model
     {
         return $this->belongsTo(NguoiDung::class, 'nguoi_dung_id');
     }
+
+    public function khauTrus()
+    {
+        return $this->hasMany(KhauTruLuong::class, 'luong_nhan_vien_id');
+    }
 }
