@@ -22,11 +22,12 @@
 
             {{-- <a href="#" class="bg-blue-700 hover:bg-blue-800 text-white px-5 py-2 rounded-lg transition">
                 + Thêm lương
-            </a>
-
-            <a href="#" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg transition">
-                Xuất Excel
             </a> --}}
+
+            <a href="{{ route('admin.luong.export') }}"
+   class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg transition">
+    Xuất Excel
+</a>
 
         </div>
 

@@ -112,7 +112,7 @@
                 ],
                 [
                     'title' => 'Tính lương',
-                    'route' => '#',
+                    'route' => 'admin.bang-luong.create',
                     'icon' =>
                         '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>',
                 ],
@@ -156,7 +156,7 @@
                 ],
                 [
                     'title' => 'Trúng tuyển',
-                    'route' => 'admin.trung_tuyen.index',
+                    'route' => 'admin.trung-tuyen.index',
                     'icon' =>
                         '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>',
                 ],

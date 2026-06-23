@@ -13,31 +13,28 @@ class TrungTuyenController extends Controller
     /**
      * Hiển thị danh sách ứng viên đã TRÚNG TUYỂN (Trạng thái: dat)
      */
-    public function index(Request $request)
-    {
-        // Sử dụng Eloquent kèm theo Eager Loading để đồng bộ dữ liệu với View cũ của bạn
-        $query = UngVien::with([
-            'tinTuyenDung.phongBan'
-        ])->where('trang_thai', 'dat'); // Chuỗi 'dat' chuẩn cú pháp PHP
+public function index(Request $request)
+{
+    $query = UngVien::with([
+        'tinTuyenDung.phongBan'
+    ])->where('trang_thai', 'dat');
 
-        // Bộ lọc tìm kiếm từ khóa tương tự UngVienController
-        if ($request->filled('keyword')) {
-            $keyword = $request->keyword;
-            $query->where(function ($q) use ($keyword) {
-                $q->where('ho', 'like', "%{$keyword}%")
-                  ->orWhere('ten', 'like', "%{$keyword}%")
-                  ->orWhere('email', 'like', "%{$keyword}%")
-                  ->orWhere('so_dien_thoai', 'like', "%{$keyword}%")
-                  ->orWhere('ma_ho_so', 'like', "%{$keyword}%");
-            });
-        }
+    if ($request->filled('keyword')) {
+        $keyword = $request->keyword;
 
-        // Sắp xếp giảm dần và phân trang
-        $ungViens = $query->orderByDesc('id')->paginate(10)->withQueryString();
-
-        return view('admin.trung-tuyen.index', compact('ungViens'));
+        $query->where(function ($q) use ($keyword) {
+            $q->where('ho', 'like', "%{$keyword}%")
+              ->orWhere('ten', 'like', "%{$keyword}%")
+              ->orWhere('email', 'like', "%{$keyword}%")
+              ->orWhere('so_dien_thoai', 'like', "%{$keyword}%")
+              ->orWhere('ma_ho_so', 'like', "%{$keyword}%");
+        });
     }
 
+    $ungViens = $query->latest()->paginate(10);
+
+    return view('admin.trung-tuyen.index', compact('ungViens'));
+}
     /**
      * Chuyển đổi ứng viên thành nhân viên chính thức (Cấp tài khoản hệ thống)
      */

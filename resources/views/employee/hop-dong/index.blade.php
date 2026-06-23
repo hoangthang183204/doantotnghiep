@@ -62,8 +62,8 @@
                             <i class="fas fa-file-contract text-blue-600 dark:text-blue-400 mr-2"></i>
                             <span class="font-bold text-gray-800 dark:text-gray-200 text-sm">Thông tin hợp đồng</span>
                             <span
-                                class="ml-auto text-xs px-2 py-0.5 rounded-full {{ ($hopDong->trang_thai_hop_dong ?? '') == 'hieu_luc' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' }}">
-                                {{ ($hopDong->trang_thai_hop_dong ?? '') == 'hieu_luc' ? '✅ Hiệu lực' : '⛔ Chưa hiệu lực' }}
+                                class="ml-auto text-xs px-2 py-0.5 rounded-full {{ ($hopDong->trang_thai_hop_dong ?? '') == 'hieu_luc' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' }}">
+                                {{ ($hopDong->trang_thai_hop_dong ?? '') == 'hieu_luc' ? '✅ Hiệu lực' : '⏳ Chưa hiệu lực' }}
                             </span>
                         </div>
                         <div class="p-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
@@ -178,10 +178,16 @@
                                         $danhSachFile = explode(';', $hopDong->duong_dan_file);
                                         $fileDauTien = trim($danhSachFile[0]);
                                     @endphp
-                                    <a href="{{ asset('storage/' . $fileDauTien) }}" download
-                                        class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors">
-                                        <i class="fas fa-download mr-1"></i> Tải
-                                    </a>
+                                    <div class="flex flex-wrap gap-1">
+                                        <a href="{{ asset('storage/' . $fileDauTien) }}" target="_blank"
+                                            class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors">
+                                            <i class="fas fa-eye mr-1"></i> Xem
+                                        </a>
+                                        <a href="{{ asset('storage/' . $fileDauTien) }}" download
+                                            class="inline-flex items-center px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-colors">
+                                            <i class="fas fa-download mr-1"></i> Tải
+                                        </a>
+                                    </div>
                                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1 truncate">
                                         {{ basename($fileDauTien) }}</p>
                                 @else
@@ -292,6 +298,17 @@
                             <span class="font-bold text-gray-800 dark:text-gray-200 text-sm">📤 Gửi file ký tay</span>
                         </div>
                         <div class="p-4">
+                            @php
+                                $canSign =
+                                    ($hopDong->trang_thai_ky ?? '') == 'cho_ky' &&
+                                    in_array($hopDong->trang_thai_hop_dong ?? '', [
+                                        'chua_hieu_luc',
+                                        'hieu_luc',
+                                        'het_han',
+                                    ]) &&
+                                    ($hopDong->trang_thai_hop_dong ?? '') != 'huy_bo';
+                            @endphp
+
                             @if (($hopDong->trang_thai_ky ?? '') == 'da_ky')
                                 <div
                                     class="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800 text-center">
@@ -300,45 +317,110 @@
                                     <p class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">✅ Đã gửi file
                                         đã ký</p>
                                     <p class="text-xs text-emerald-600 dark:text-emerald-400">Hợp đồng đã có hiệu lực</p>
+                                    @if (!empty($hopDong->file_hop_dong_da_ky))
+                                        <a href="{{ asset('storage/' . $hopDong->file_hop_dong_da_ky) }}" target="_blank"
+                                            class="inline-flex items-center mt-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors">
+                                            <i class="fas fa-eye mr-1"></i> Xem file đã ký
+                                        </a>
+                                    @endif
                                 </div>
-                            @else
+                            @elseif (($hopDong->trang_thai_hop_dong ?? '') == 'huy_bo' || ($hopDong->trang_thai_ky ?? '') == 'tu_choi_ky')
+                                <div
+                                    class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 text-center">
+                                    <i class="fas fa-times-circle text-2xl text-red-500 dark:text-red-400 block mb-1"></i>
+                                    <p class="text-sm font-semibold text-red-700 dark:text-red-300">❌ Hợp đồng đã bị hủy
+                                        hoặc từ chối</p>
+                                    <p class="text-xs text-red-600 dark:text-red-400">Vui lòng liên hệ HR để được hỗ
+                                        trợ</p>
+                                </div>
+                            @elseif ($canSign)
                                 <div class="space-y-3">
                                     <div
                                         class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-xs text-blue-700 dark:text-blue-300">
                                         <p class="font-semibold">📌 Hướng dẫn:</p>
                                         <ol class="list-decimal list-inside text-blue-600 dark:text-blue-400">
-                                            <li>Tải file gốc</li>
+                                            <li>Tải file hợp đồng gốc về</li>
                                             <li>In và ký tay</li>
-                                            <li>Scan và tải lên</li>
+                                            <li>Scan và tải lên file đã ký</li>
                                         </ol>
                                     </div>
 
                                     <form action="{{ route('employee.hopdong.update-status', $hopDong->id) }}"
-                                        method="POST" enctype="multipart/form-data">
+                                        method="POST" enctype="multipart/form-data" id="kyForm">
                                         @csrf
                                         @method('PATCH')
 
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                 📎 Chọn file đã ký:
+                                                <span class="text-red-500">*</span>
                                             </label>
                                             <input type="file" name="file_hop_dong_da_ky" required
                                                 accept="image/*,.pdf,.doc,.docx"
                                                 class="block w-full text-xs text-gray-500 dark:text-gray-400
-                                            file:mr-2 file:py-1.5 file:px-3
-                                            file:rounded-lg file:border-0
-                                            file:text-xs file:font-semibold
-                                            file:bg-indigo-50 file:text-indigo-700
-                                            hover:file:bg-indigo-100
-                                            dark:file:bg-gray-700 dark:file:text-gray-300
-                                            border border-gray-300 dark:border-gray-600 rounded-lg p-1 bg-gray-50 dark:bg-gray-900">
+                                                file:mr-2 file:py-1.5 file:px-3
+                                                file:rounded-lg file:border-0
+                                                file:text-xs file:font-semibold
+                                                file:bg-indigo-50 file:text-indigo-700
+                                                hover:file:bg-indigo-100
+                                                dark:file:bg-gray-700 dark:file:text-gray-300
+                                                border border-gray-300 dark:border-gray-600 rounded-lg p-1 bg-gray-50 dark:bg-gray-900">
+                                            <p class="text-xs text-gray-400 mt-1">Chấp nhận: JPG, PNG, PDF, DOC, DOCX (tối
+                                                đa 5MB)</p>
                                         </div>
 
-                                        <button type="submit" name="action" value="gui_file_scan"
-                                            class="w-full inline-flex items-center justify-center px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold text-sm transition-colors">
-                                            <i class="fas fa-paper-plane mr-1"></i> Gửi file đã ký
-                                        </button>
+                                        <div class="mt-3 flex flex-col gap-2">
+                                            <button type="submit" name="action" value="gui_file_scan"
+                                                class="w-full inline-flex items-center justify-center px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold text-sm transition-colors">
+                                                <i class="fas fa-paper-plane mr-1"></i> Gửi file đã ký
+                                            </button>
+                                            <button type="button" onclick="showTuChoiForm()"
+                                                class="w-full inline-flex items-center justify-center px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-semibold text-sm transition-colors">
+                                                <i class="fas fa-times mr-1"></i> Từ chối ký
+                                            </button>
+                                        </div>
                                     </form>
+
+                                    {{-- Form từ chối ký (ẩn) --}}
+                                    <div id="tuChoiForm" style="display:none;"
+                                        class="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                                        <form action="{{ route('employee.hop-dong.tu-choi-ky', $hopDong->id) }}"
+                                            method="POST">
+                                            @csrf
+                                            @method('PATCH')
+                                            <div class="mb-2">
+                                                <label
+                                                    class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Lý
+                                                    do từ chối:</label>
+                                                <textarea name="ly_do_tu_choi" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                                                    rows="3" placeholder="Nhập lý do từ chối ký..." required></textarea>
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <button type="submit"
+                                                    class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors">Xác
+                                                    nhận từ chối</button>
+                                                <button type="button" onclick="hideTuChoiForm()"
+                                                    class="px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white text-sm rounded-lg transition-colors">Hủy</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            @elseif (($hopDong->trang_thai_hop_dong ?? '') == 'tao_moi')
+                                <div
+                                    class="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-600 text-center">
+                                    <i class="fas fa-clock text-2xl text-gray-400 block mb-1"></i>
+                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">⏳ Hợp đồng đang chờ
+                                        HR gửi</p>
+                                    <p class="text-xs text-gray-400">Vui lòng đợi HR gửi hợp đồng để ký</p>
+                                </div>
+                            @else
+                                <div
+                                    class="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 text-center">
+                                    <i class="fas fa-info-circle text-2xl text-yellow-500 block mb-1"></i>
+                                    <p class="text-sm font-medium text-yellow-700 dark:text-yellow-300">⚠️ Hợp đồng không
+                                        thể ký</p>
+                                    <p class="text-xs text-yellow-600 dark:text-yellow-400">Trạng thái:
+                                        {{ $hopDong->trang_thai_hop_dong ?? 'Không xác định' }}</p>
                                 </div>
                             @endif
                         </div>
@@ -347,4 +429,58 @@
             </div>
         @endif
     </div>
+
+    {{-- Script --}}
+    <script>
+        function showTuChoiForm() {
+            document.getElementById('tuChoiForm').style.display = 'block';
+            document.getElementById('tuChoiForm').scrollIntoView({
+                behavior: 'smooth'
+            });
+        }
+
+        function hideTuChoiForm() {
+            document.getElementById('tuChoiForm').style.display = 'none';
+        }
+
+        // Validation form
+        document.getElementById('kyForm')?.addEventListener('submit', function(e) {
+            const fileInput = this.querySelector('input[type="file"]');
+            const file = fileInput?.files[0];
+
+            if (!file) {
+                e.preventDefault();
+                alert('⚠️ Vui lòng chọn file hợp đồng đã ký!');
+                return false;
+            }
+
+            // Check file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                e.preventDefault();
+                alert('⚠️ File quá lớn! Vui lòng chọn file dưới 5MB.');
+                return false;
+            }
+
+            // Check file type
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf', 'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ];
+            if (!allowedTypes.includes(file.type)) {
+                e.preventDefault();
+                alert('⚠️ Định dạng file không hợp lệ! Chấp nhận: JPG, PNG, PDF, DOC, DOCX.');
+                return false;
+            }
+
+            if (!confirm('✅ Bạn có chắc chắn muốn gửi file hợp đồng đã ký?')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    </script>
+
+    <style>
+        #tuChoiForm {
+            transition: all 0.3s ease;
+        }
+    </style>
 @endsection

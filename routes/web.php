@@ -35,6 +35,7 @@ use App\Http\Controllers\Employee\TangCaController as EmployeeTangCaController;
 use App\Http\Controllers\Employee\YeuCauChinhCongController;
 use App\Http\Controllers\Employee\HopDongController;
 use App\Http\Controllers\Employee\QuyDinhController as EmployeeQuyDinhController;
+use App\Http\Controllers\Admin\TrungTuyenController;
 
 // =============================================
 // ROUTE GỐC
@@ -83,17 +84,21 @@ Route::prefix('admin')
         });
 
         // ========== QUẢN LÝ NGƯỜI DÙNG ==========
-        Route::get('/nguoi-dung', [NguoiDungController::class, 'index'])->name('nguoi-dung.index');
-        Route::get('/nguoi-dung/create', [NguoiDungController::class, 'create'])->name('nguoi-dung.create');
-        Route::post('/nguoi-dung', [NguoiDungController::class, 'store'])->name('nguoi-dung.store');
-        Route::get('/nguoi-dung/{id}', [NguoiDungController::class, 'show'])->whereNumber('id')->name('nguoi-dung.show');
-        Route::get('/nguoi-dung/{id}/edit', [NguoiDungController::class, 'edit'])->whereNumber('id')->name('nguoi-dung.edit');
-        Route::put('/nguoi-dung/{id}', [NguoiDungController::class, 'update'])->whereNumber('id')->name('nguoi-dung.update');
-        Route::delete('/nguoi-dung/{id}', [NguoiDungController::class, 'destroy'])->whereNumber('id')->name('nguoi-dung.destroy');
-        Route::get('/nguoi-dung/sync-ho-so', [NguoiDungController::class, 'syncHoSo'])->name('nguoi-dung.sync-ho-so');
+        Route::prefix('nguoi-dung')->name('nguoi-dung.')->group(function () {
+            Route::get('/', [NguoiDungController::class, 'index'])->name('index');
+            Route::get('/sync', [NguoiDungController::class, 'syncHoSo'])->name('sync');
+            Route::get('/create', [NguoiDungController::class, 'create'])->name('create');
+            Route::post('/', [NguoiDungController::class, 'store'])->name('store');
+            Route::get('/{id}', [NguoiDungController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [NguoiDungController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [NguoiDungController::class, 'update'])->name('update');
+            Route::delete('/{id}', [NguoiDungController::class, 'destroy'])->name('destroy');
+        });
 
         // ========== PHÒNG BAN ==========
         Route::get('/phong-ban', [PhongBanController::class, 'index'])->name('phong-ban.index');
+        Route::get('/phong-ban/org-chart', [PhongBanController::class, 'orgChart'])->name('phong-ban.org-chart');
+        Route::get('/phong-ban/statistics', [PhongBanController::class, 'statistics'])->name('phong-ban.statistics');
         Route::get('/phong-ban/create', [PhongBanController::class, 'create'])->name('phong-ban.create');
         Route::post('/phong-ban', [PhongBanController::class, 'store'])->name('phong-ban.store');
         Route::get('/phong-ban/{id}', [PhongBanController::class, 'show'])->name('phong-ban.show');
@@ -102,6 +107,8 @@ Route::prefix('admin')
         Route::delete('/phong-ban/{id}', [PhongBanController::class, 'destroy'])->name('phong-ban.destroy');
 
         // ========== CHỨC VỤ ==========
+        Route::get('/chuc-vu/org-chart', [ChucVuController::class, 'orgChart'])->name('chuc-vu.org-chart');
+        Route::get('/chuc-vu/statistics', [ChucVuController::class, 'statistics'])->name('chuc-vu.statistics');
         Route::get('/chuc-vu', [ChucVuController::class, 'index'])->name('chuc-vu.index');
         Route::get('/chuc-vu/create', [ChucVuController::class, 'create'])->name('chuc-vu.create');
         Route::post('/chuc-vu', [ChucVuController::class, 'store'])->name('chuc-vu.store');
@@ -109,6 +116,7 @@ Route::prefix('admin')
         Route::get('/chuc-vu/{id}/edit', [ChucVuController::class, 'edit'])->name('chuc-vu.edit');
         Route::put('/chuc-vu/{id}', [ChucVuController::class, 'update'])->name('chuc-vu.update');
         Route::delete('/chuc-vu/{id}', [ChucVuController::class, 'destroy'])->name('chuc-vu.destroy');
+
 
         // ========== HỒ SƠ CÁ NHÂN ==========
         Route::get('/ho-so-ca-nhan', [HoSoCaNhanController::class, 'index'])->name('ho-so-ca-nhan.index');
@@ -129,25 +137,30 @@ Route::prefix('admin')
 
         // ========== ĐƠN NGHỈ ==========
         Route::prefix('don-nghi')->name('don_nghi.')->group(function () {
-            Route::get('/', [DonNghiController::class, 'index'])->name('index');
-            Route::get('/{id}', [DonNghiController::class, 'show'])->name('show');
-            Route::post('/{id}/duyet', [DonNghiController::class, 'capNhatTrangThai'])->name('duyet');
-            Route::post('/bulk-action', [DonNghiController::class, 'bulkAction'])->name('bulk-action');
+        Route::get('/', [DonNghiController::class, 'index'])->name('index');
+        Route::get('/{id}', [DonNghiController::class, 'show'])->name('show');
+        Route::post('/{id}/duyet', [DonNghiController::class, 'capNhatTrangThai'])->name('duyet');
+        Route::post('/bulk-action', [DonNghiController::class, 'bulkAction'])->name('bulk');
         });
 
-        // ========== LƯƠNG ==========
+        // ========== LƯƠNG (BẢNG LƯƠNG THÁNG) ==========
         Route::get('/bang-luong', [BangLuongController::class, 'index'])->name('bang-luong.index');
-        Route::get('/bang-luong/{id}', [BangLuongController::class, 'show'])->name('bang-luong.show');
         Route::get('/bang-luong/create', [BangLuongController::class, 'create'])->name('bang-luong.create');
-        Route::post('/bang-luong', [BangLuongController::class, 'store'])->name('bang-luong.store');
         Route::post('/bang-luong/tinh', [BangLuongController::class, 'tinhLuong'])->name('bang-luong.tinh');
-        Route::put('/bang-luong/{id}/duyet', [BangLuongController::class, 'duyet'])->name('bang-luong.duyet');
-        Route::delete('/bang-luong/{id}', [BangLuongController::class, 'destroy'])->name('bang-luong.destroy');
+        Route::get('/bang-luong/{id}', [BangLuongController::class, 'show'])->whereNumber('id')->name('bang-luong.show');
+        Route::get('/bang-luong/{id}/nhan-vien/{luongId}', [BangLuongController::class, 'chiTietNhanVien'])->whereNumber(['id', 'luongId'])->name('bang-luong.chi-tiet-nhan-vien');
+        Route::put('/bang-luong/{id}/chot', [BangLuongController::class, 'chot'])->whereNumber('id')->name('bang-luong.chot');
+        Route::put('/bang-luong/{id}/thanh-toan', [BangLuongController::class, 'thanhToan'])->whereNumber('id')->name('bang-luong.thanh-toan');
+        Route::delete('/bang-luong/{id}', [BangLuongController::class, 'destroy'])->whereNumber('id')->name('bang-luong.destroy');
 
         // ========== PHỤ CẤP ==========
         Route::resource('phu-cap', PhuCapController::class);
 
         // ========== QUẢN LÝ LƯƠNG ==========
+
+        Route::get('luong/export', [LuongController::class, 'export'])
+            ->name('luong.export');
+
         Route::resource('luong', LuongController::class);
 
         // ========== TUYỂN DỤNG ==========
@@ -198,6 +211,8 @@ Route::prefix('admin')
             Route::post('/{id}/gui-ky', [HopDongLaoDongController::class, 'guiKy'])->name('hop-dong.gui-ky');
             Route::post('/{id}/huy', [HopDongLaoDongController::class, 'huy'])->name('hop-dong.huy');
             Route::get('/get-nhan-vien-info/{id}', [HopDongLaoDongController::class, 'getNhanVienInfo'])->name('get-nhan-vien-info');
+            Route::post('/hop-dong/tai-ky/{id}', [HopDongLaoDongController::class, 'taiKy'])
+                ->name('hop-dong.tai-ky');
         });
 
         // ========== PHÂN QUYỀN ==========
@@ -250,6 +265,10 @@ Route::prefix('admin')
             Route::get('/email-phong-van/create', [UngVienController::class, 'createEmail'])->name('email.create');
             Route::post('/email-phong-van/send', [UngVienController::class, 'sendEmail'])->name('email.send');
         });
+        //=========Trúng Tuyển=========//
+        Route::prefix('trung-tuyen')->name('trung-tuyen.')->group(function () {
+    Route::get('/', [TrungTuyenController::class, 'index'])->name('index');
+});
     });
 
 // =============================================
@@ -264,6 +283,8 @@ Route::prefix('employee')
         // ========== HỢP ĐỒNG CỦA TÔI ==========
         Route::get('/hop-dong-cua-toi', [HopDongController::class, 'getHopDongCuaToi'])->name('hop-dong.index');
         Route::patch('/hop-dong/{id}/update-status', [HopDongController::class, 'updateTrangThaiKy'])->name('hopdong.update-status');
+        Route::patch('/hop-dong/{id}/tu-choi-ky', [HopDongController::class, 'tuChoiKy'])
+            ->name('hop-dong.tu-choi-ky'); 
 
         // ========== CHẤM CÔNG ==========
         Route::prefix('cham-cong')->name('cham-cong.')->group(function () {

@@ -5,17 +5,19 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\PhongBan;
 use App\Models\NguoiDung;
+use App\Models\ChucVu;
 use Illuminate\Http\Request;
 
 class PhongBanController extends Controller
 {
     public function index(Request $request)
     {
-        $query = PhongBan::with(['truong_phong.hoSo']);
+        // ✅ Sửa từ 'truong_phong' thành 'truongPhong'
+        $query = PhongBan::with(['truongPhong.hoSo'])
+            ->withCount(['nguoiDungs', 'chucVus']);
 
         if ($request->filled('keyword')) {
             $keyword = $request->keyword;
-
             $query->where(function ($q) use ($keyword) {
                 $q->where('ma_phong_ban', 'like', "%{$keyword}%")
                     ->orWhere('ten_phong_ban', 'like', "%{$keyword}%");
@@ -55,7 +57,8 @@ class PhongBanController extends Controller
 
     public function show($id)
     {
-        $phongBan = PhongBan::with(['truong_phong', 'nguoi_dungs', 'chuc_vus'])->findOrFail($id);
+        // ✅ Sửa từ 'truong_phong' thành 'truongPhong'
+        $phongBan = PhongBan::with(['truongPhong', 'nguoiDungs', 'chucVus'])->findOrFail($id);
 
         return view('admin.phong-ban.show', compact('phongBan'));
     }
@@ -91,16 +94,53 @@ class PhongBanController extends Controller
     {
         $phongBan = PhongBan::findOrFail($id);
 
-        if ($phongBan->nguoi_dungs()->count() > 0) {
+        if ($phongBan->nguoiDungs()->count() > 0) {
             return back()->with('error', 'Không thể xóa vì phòng ban đang có nhân viên.');
         }
 
-        if ($phongBan->chuc_vus()->count() > 0) {
+        if ($phongBan->chucVus()->count() > 0) {
             return back()->with('error', 'Không thể xóa vì phòng ban đang có chức vụ.');
         }
 
         $phongBan->delete();
 
         return back()->with('success', 'Xóa thành công');
+    }
+
+    // ✅ THÊM: Sơ đồ phòng ban
+    public function orgChart()
+    {
+        $phongBans = PhongBan::with(['chucVus' => function($query) {
+                $query->withCount('nguoi_dungs');
+            }])
+            ->withCount('nguoiDungs')
+            ->where('trang_thai', 1)
+            ->get();
+        
+        return view('admin.phong-ban.org-chart', compact('phongBans'));
+    }
+
+    // ✅ THÊM: Thống kê phòng ban
+    public function statistics()
+    {
+        $totalPhongBans = PhongBan::count();
+        $activePhongBans = PhongBan::where('trang_thai', 1)->count();
+        $inactivePhongBans = PhongBan::where('trang_thai', 0)->count();
+        
+        $phongBanStats = PhongBan::withCount(['nguoiDungs', 'chucVus'])
+            ->orderBy('nguoi_dungs_count', 'desc')
+            ->get();
+        
+        $totalNhanVien = NguoiDung::where('trang_thai', 1)->count();
+        $totalChucVu = ChucVu::count();
+        
+        return view('admin.phong-ban.statistics', compact(
+            'totalPhongBans',
+            'activePhongBans',
+            'inactivePhongBans',
+            'phongBanStats',
+            'totalNhanVien',
+            'totalChucVu'
+        ));
     }
 }
