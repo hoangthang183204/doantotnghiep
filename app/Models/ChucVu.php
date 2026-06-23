@@ -4,12 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes; // ✅ Thêm SoftDeletes
+
 
 class ChucVu extends Model
 {
     use HasFactory;
-    use SoftDeletes; // ✅ Cho phép xóa mềm
+   
     
     protected $table = 'chuc_vu';
     
