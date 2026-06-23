@@ -264,8 +264,8 @@
                 } else {
                     phuCapList.innerHTML = phuCapItems.map(item =>
                         `<span class="inline-flex items-center px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm">
-                        ${item}
-                    </span>`
+                    ${item}
+                </span>`
                     ).join(' ');
                 }
             }
@@ -273,14 +273,13 @@
             phuCapSelect?.addEventListener('change', updatePhuCapList);
             updatePhuCapList();
 
-            // ===== XỬ LÝ CHỌN NHÂN VIÊN - TỰ ĐỘNG ĐIỀN THÔNG TIN =====
+            // ===== XỬ LÝ CHỌN NHÂN VIÊN =====
             const nhanVienSelect = document.querySelector('select[name="nguoi_dung_id"]');
             const luongCoBanInput = document.querySelector('input[name="luong_co_ban"]');
 
             nhanVienSelect?.addEventListener('change', function() {
                 const userId = this.value;
                 if (userId) {
-                    // Gọi AJAX để lấy thông tin nhân viên
                     fetch(`/admin/get-nhan-vien-info/${userId}`)
                         .then(response => response.json())
                         .then(data => {
@@ -290,15 +289,15 @@
                                     luongCoBanInput.value = data.luong_co_ban;
                                 }
 
-                                // Tự động chọn phụ cấp của nhân viên (nếu có)
-                                if (data.phu_cap_ids && data.phu_cap_ids.length > 0) {
-                                    const options = phuCapSelect.options;
-                                    for (let i = 0; i < options.length; i++) {
-                                        options[i].selected = data.phu_cap_ids.includes(parseInt(
-                                            options[i].value));
-                                    }
-                                    updatePhuCapList();
+                                // ✅ RESET phụ cấp (xóa hết chọn cũ)
+                                const options = phuCapSelect.options;
+                                for (let i = 0; i < options.length; i++) {
+                                    options[i].selected = false;
                                 }
+
+                                // ✅ KHÔNG tự động chọn phụ cấp cũ nữa
+                                // (Người dùng sẽ tự chọn phụ cấp mới cho hợp đồng mới)
+                                updatePhuCapList();
                             }
                         })
                         .catch(error => console.error('Error:', error));
