@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/Admin/HopDongLaoDongController.php
 
 namespace App\Http\Controllers\Admin;
 
@@ -56,7 +55,7 @@ class HopDongLaoDongController extends Controller
             $query->where('trang_thai_ky', $request->trang_thai_ky);
         }
 
-        // 💡 THÊM MỚI: Bộ lọc theo trạng thái nộp file scan ký tay
+        // Bộ lọc theo trạng thái nộp file scan ký tay
         if ($request->has('file_scan')) {
             if ($request->file_scan === 'da_nop') {
                 $query->whereNotNull('file_scan_ky');
@@ -220,9 +219,6 @@ class HopDongLaoDongController extends Controller
     /**
      * Lưu hợp đồng mới
      */
-    /**
-     * Lưu hợp đồng mới
-     */
     public function store(Request $request)
     {
         if (!auth()->check()) return redirect()->route('login');
@@ -255,14 +251,9 @@ class HopDongLaoDongController extends Controller
         $data['trang_thai_ky'] = 'cho_ky';
         $data['created_by'] = Auth::id();
 
-        // ⭐ XỬ LÝ PHỤ CẤP ID - LƯU VÀO CỘT phu_cap_id
-        // Nếu chọn 1 phụ cấp, lưu id vào cột phu_cap_id
-        // Nếu chọn nhiều phụ cấp, lưu danh sách id dạng JSON vào cột phu_cap_ids (nếu có)
+        // XỬ LÝ PHỤ CẤP ID
         if ($request->has('phu_cap_ids') && is_array($request->phu_cap_ids)) {
-            // Lưu phu_cap_id đầu tiên vào cột phu_cap_id (để hiển thị chính)
             $data['phu_cap_id'] = $request->phu_cap_ids[0] ?? null;
-
-            // Lưu tất cả vào cột phu_cap dạng JSON (để giữ danh sách đầy đủ)
             $data['phu_cap'] = json_encode($request->phu_cap_ids);
         }
 
@@ -284,6 +275,11 @@ class HopDongLaoDongController extends Controller
         $hopDong = HopDongLaoDong::create($data);
 
         // ===== LƯU PHỤ CẤP VÀO BẢNG PHU_CAP_NHAN_VIEN =====
+        // ✅ Xóa phụ cấp cũ của nhân viên trước khi thêm mới
+        PhuCapNhanVien::where('nguoi_dung_id', $request->nguoi_dung_id)
+            ->where('trang_thai', 'hieu_luc')
+            ->delete();
+
         if ($request->has('phu_cap_ids') && is_array($request->phu_cap_ids)) {
             foreach ($request->phu_cap_ids as $phuCapId) {
                 $phuCap = PhuCap::find($phuCapId);
@@ -360,9 +356,6 @@ class HopDongLaoDongController extends Controller
     /**
      * Cập nhật hợp đồng
      */
-    /**
-     * Cập nhật hợp đồng
-     */
     public function update(Request $request, $id)
     {
         $hopDong = HopDongLaoDong::findOrFail($id);
@@ -397,12 +390,9 @@ class HopDongLaoDongController extends Controller
 
         $data = $request->except(['file_hop_dong', 'file_dinh_kem', 'phu_cap_ids']);
 
-        // ⭐ CẬP NHẬT PHỤ CẤP ID
+        // CẬP NHẬT PHỤ CẤP ID
         if ($request->has('phu_cap_ids') && is_array($request->phu_cap_ids)) {
-            // Lưu phu_cap_id đầu tiên vào cột phu_cap_id
             $data['phu_cap_id'] = $request->phu_cap_ids[0] ?? null;
-
-            // Lưu tất cả vào cột phu_cap dạng JSON
             $data['phu_cap'] = json_encode($request->phu_cap_ids);
         } else {
             $data['phu_cap_id'] = null;
@@ -433,16 +423,15 @@ class HopDongLaoDongController extends Controller
             $data['file_dinh_kem'] = $request->file('file_dinh_kem')->store('file_dinh_kem', 'public');
         }
 
-        // Cập nhật hợp đồng
-        $hopDong->update($data);
-
-        // ===== CẬP NHẬT PHỤ CẤP =====
-        // Xóa phụ cấp cũ
+        // ✅ Xóa phụ cấp cũ
         PhuCapNhanVien::where('nguoi_dung_id', $hopDong->nguoi_dung_id)
             ->where('ghi_chu', 'LIKE', '%từ hợp đồng ' . $hopDong->so_hop_dong . '%')
             ->delete();
 
-        // Thêm phụ cấp mới
+        // Cập nhật hợp đồng
+        $hopDong->update($data);
+
+        // ✅ Thêm phụ cấp mới
         if ($request->has('phu_cap_ids') && is_array($request->phu_cap_ids)) {
             foreach ($request->phu_cap_ids as $phuCapId) {
                 $phuCap = PhuCap::find($phuCapId);
@@ -469,13 +458,24 @@ class HopDongLaoDongController extends Controller
     public function destroy($id)
     {
         $hopDong = HopDongLaoDong::findOrFail($id);
+
+        // Xóa file hợp đồng
         if ($hopDong->duong_dan_file) {
             foreach (explode(';', $hopDong->duong_dan_file) as $file) {
                 if (trim($file)) Storage::disk('public')->delete(trim($file));
             }
         }
+
+        // ✅ Xóa phụ cấp của nhân viên liên quan đến hợp đồng này
+        PhuCapNhanVien::where('nguoi_dung_id', $hopDong->nguoi_dung_id)
+            ->where('ghi_chu', 'LIKE', '%từ hợp đồng ' . $hopDong->so_hop_dong . '%')
+            ->delete();
+
+        // Xóa hợp đồng
         $hopDong->delete();
-        return redirect()->route('admin.hop-dong.index')->with('success', 'Xóa hợp đồng thành công');
+
+        return redirect()->route('admin.hop-dong.index')
+            ->with('success', 'Xóa hợp đồng và phụ cấp liên quan thành công');
     }
 
     /**
@@ -495,16 +495,13 @@ class HopDongLaoDongController extends Controller
             return redirect()->back()->with('error', 'Hợp đồng không ở trạng thái tạo mới');
         }
 
-        $hopDong->update(['trang_thai_hop_dong' => 'chua_hieu_luc', 'trang_thai_ky' => 'cho_ky']);
+        $hopDong->update([
+            'trang_thai_hop_dong' => 'chua_hieu_luc',
+            'trang_thai_ky' => 'cho_ky'
+        ]);
 
-        // Gửi thông báo nếu có notification class
-        try {
-            $hopDong->nguoiDung->notify(new \App\Notifications\HopDongApprovedNotification($hopDong));
-        } catch (\Exception $e) {
-            // Bỏ qua nếu notification chưa được tạo
-        }
-
-        return redirect()->route('admin.hop-dong.show', $hopDong->id)->with('success', 'Gửi hợp đồng cho nhân viên thành công!');
+        return redirect()->route('admin.hop-dong.show', $hopDong->id)
+            ->with('success', 'Gửi hợp đồng cho nhân viên thành công!');
     }
 
     /**
@@ -586,19 +583,11 @@ class HopDongLaoDongController extends Controller
                 ]);
             }
 
-            // Gửi thông báo
-            try {
-                $hrUsers = NguoiDung::whereHas('vaiTros', fn($q) => $q->where('name', 'hr'))->get();
-                $adminUsers = NguoiDung::whereHas('vaiTros', fn($q) => $q->where('name', 'admin'))->get();
-                foreach ($hrUsers as $hr) $hr->notify(new \App\Notifications\HopDongSignedNotification($hopDong));
-                foreach ($adminUsers as $admin) $admin->notify(new \App\Notifications\HopDongSignedNotification($hopDong));
-            } catch (\Exception $e) {
-                // Bỏ qua nếu notification chưa được tạo
-            }
-
-            return redirect()->route('admin.hop-dong.cua-toi')->with('success', 'Ký hợp đồng thành công!');
+            return redirect()->route('admin.hop-dong.cua-toi')
+                ->with('success', 'Ký hợp đồng thành công!');
         } catch (\Exception $e) {
-            return redirect()->route('admin.hop-dong.cua-toi')->with('error', 'Có lỗi xảy ra khi ký hợp đồng.');
+            return redirect()->route('admin.hop-dong.cua-toi')
+                ->with('error', 'Có lỗi xảy ra khi ký hợp đồng.');
         }
     }
 
@@ -623,9 +612,13 @@ class HopDongLaoDongController extends Controller
             return redirect()->route('admin.hop-dong.cua-toi')->with('error', 'Hợp đồng này đã được ký.');
         }
 
-        $hopDong->update(['trang_thai_ky' => 'tu_choi_ky', 'ghi_chu' => 'Từ chối ký: ' . $request->ly_do_tu_choi]);
+        $hopDong->update([
+            'trang_thai_ky' => 'tu_choi_ky',
+            'ghi_chu' => 'Từ chối ký: ' . $request->ly_do_tu_choi
+        ]);
 
-        return redirect()->route('admin.hop-dong.cua-toi')->with('success', 'Đã từ chối ký hợp đồng thành công.');
+        return redirect()->route('admin.hop-dong.cua-toi')
+            ->with('success', 'Đã từ chối ký hợp đồng thành công.');
     }
 
     /**
@@ -650,7 +643,8 @@ class HopDongLaoDongController extends Controller
             'thoi_gian_huy' => now(),
         ]);
 
-        return redirect()->route('admin.hop-dong.show', $hopDong->id)->with('success', 'Hủy hợp đồng thành công.');
+        return redirect()->route('admin.hop-dong.show', $hopDong->id)
+            ->with('success', 'Hủy hợp đồng thành công.');
     }
 
     /**
@@ -731,7 +725,20 @@ class HopDongLaoDongController extends Controller
             ->where('ngay_ket_thuc', '>', now())->where('ngay_ket_thuc', '<=', now()->addDays(30))
             ->with(['hoSoNguoiDung', 'chucVu'])->get();
 
-        return view('admin.hop-dong-lao-dong.thong-ke', compact('tongHopDong', 'hopDongHieuLuc', 'hopDongChuaHieuLuc', 'hopDongHetHan', 'hopDongHuyBo', 'hopDongTaoMoi', 'thongKeLoaiHopDong', 'thongKeTrangThaiKy', 'thongKeTheoPhongBan', 'hopDongSapHetHan', 'tuNgay', 'denNgay'));
+        return view('admin.hop-dong-lao-dong.thong-ke', compact(
+            'tongHopDong',
+            'hopDongHieuLuc',
+            'hopDongChuaHieuLuc',
+            'hopDongHetHan',
+            'hopDongHuyBo',
+            'hopDongTaoMoi',
+            'thongKeLoaiHopDong',
+            'thongKeTrangThaiKy',
+            'thongKeTheoPhongBan',
+            'hopDongSapHetHan',
+            'tuNgay',
+            'denNgay'
+        ));
     }
 
     public function guiKy($id)
@@ -740,7 +747,6 @@ class HopDongLaoDongController extends Controller
 
         $hopDong->trang_thai_ky = 'cho_ky';
 
-        // nếu có trạng thái hợp đồng
         if ($hopDong->trang_thai_hop_dong === 'tao_moi') {
             $hopDong->trang_thai_hop_dong = 'chua_hieu_luc';
         }
@@ -773,6 +779,9 @@ class HopDongLaoDongController extends Controller
     /**
      * API lấy thông tin nhân viên (cho AJAX)
      */
+    /**
+     * API lấy thông tin nhân viên (cho AJAX)
+     */
     public function getNhanVienInfo($id)
     {
         $nhanVien = NguoiDung::with(['chucVu', 'phuCapNhanViens.phuCap'])
@@ -782,10 +791,21 @@ class HopDongLaoDongController extends Controller
             return response()->json(['success' => false, 'message' => 'Không tìm thấy nhân viên']);
         }
 
+        // ✅ CHỈ lấy phụ cấp đang hiệu lực (không lấy phụ cấp cũ)
+        $phuCapIds = $nhanVien->phuCapNhanViens
+            ->where('trang_thai', 'hieu_luc')
+            ->where('ngay_hieu_luc', '<=', now())
+            ->where(function ($q) {
+                $q->whereNull('ngay_ket_thuc')
+                    ->orWhere('ngay_ket_thuc', '>=', now());
+            })
+            ->pluck('phu_cap_id')
+            ->toArray();
+
         return response()->json([
             'success' => true,
             'luong_co_ban' => $nhanVien->chucVu->luong_co_ban ?? 0,
-            'phu_cap_ids' => $nhanVien->phuCapNhanViens->pluck('phu_cap_id')->toArray(),
+            'phu_cap_ids' => $phuCapIds, // ✅ Chỉ trả về phụ cấp đang hiệu lực
         ]);
     }
 
@@ -824,10 +844,10 @@ class HopDongLaoDongController extends Controller
             'chuc_vu_id' => $hopDongCu->chuc_vu_id,
             'so_hop_dong' => $this->generateSoHopDong(),
             'loai_hop_dong' => $hopDongCu->loai_hop_dong,
-            'ngay_bat_dau' => now()->addDays(1), // Bắt đầu từ ngày mai
+            'ngay_bat_dau' => now()->addDays(1),
             'ngay_ket_thuc' => $hopDongCu->loai_hop_dong == 'khong_xac_dinh_thoi_han'
                 ? null
-                : now()->addYear(), // Mặc định thêm 1 năm nếu có thời hạn
+                : now()->addYear(),
             'luong_co_ban' => $hopDongCu->luong_co_ban,
             'phu_cap_id' => $hopDongCu->phu_cap_id,
             'phu_cap' => $hopDongCu->phu_cap,
@@ -857,25 +877,6 @@ class HopDongLaoDongController extends Controller
             }
         } catch (\Exception $e) {
             // Bỏ qua nếu chưa có bảng lịch sử
-        }
-
-        // Gửi thông báo cho HR/Admin
-        try {
-            $hrUsers = NguoiDung::whereHas('vaiTros', function ($q) {
-                $q->where('name', 'hr');
-            })->get();
-            $adminUsers = NguoiDung::whereHas('vaiTros', function ($q) {
-                $q->where('name', 'admin');
-            })->get();
-
-            foreach ($hrUsers as $hr) {
-                $hr->notify(new \App\Notifications\TaiKyHopDongNotification($hopDongCu, $hopDongMoi));
-            }
-            foreach ($adminUsers as $admin) {
-                $admin->notify(new \App\Notifications\TaiKyHopDongNotification($hopDongCu, $hopDongMoi));
-            }
-        } catch (\Exception $e) {
-            // Bỏ qua nếu chưa có notification
         }
 
         return redirect()
