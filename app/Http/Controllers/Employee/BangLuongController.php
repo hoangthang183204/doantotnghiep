@@ -13,7 +13,7 @@ class BangLuongController extends Controller
     {
         $userId = Auth::id();
 
-        $payrolls = LuongNhanVien::with(['bangLuong'])
+        $payrolls = LuongNhanVien::with(['bangLuong','hoSo'])
             ->where('nguoi_dung_id', $userId)
             ->orderBy('luong_nam', 'desc')
             ->orderBy('luong_thang', 'desc')

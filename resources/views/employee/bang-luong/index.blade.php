@@ -34,20 +34,36 @@
             <table class="w-full">
                 <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                        <th class="px-4 py-3 text-left font-semibold text-gray-800 dark:text-gray-100">Năm</th>
-                        <th class="px-4 py-3 text-left font-semibold text-gray-800 dark:text-gray-100">Tháng</th>
-                        <th class="px-4 py-3 text-left font-semibold text-gray-800 dark:text-gray-100">Tổng lương</th>
-                        <th class="px-4 py-3 text-left font-semibold text-gray-800 dark:text-gray-100">Thực nhận</th>
-                        <th class="px-4 py-3 text-center font-semibold text-gray-800 dark:text-gray-100">Thao tác</th>
+                        <th class="px-4 py-3 text-left font-semibold">Mã BL</th>
+                        <th class="px-4 py-3 text-left font-semibold">Mã NV</th>
+                        <th class="px-4 py-3 text-left font-semibold">Kỳ lương</th>
+                        <th class="px-4 py-3 text-left font-semibold">Tổng lương</th>
+                        <th class="px-4 py-3 text-left font-semibold">Thực nhận</th>
+                        <th class="px-4 py-3 text-center font-semibold">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($payrolls as $p)
                         <tr class="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                            <td class="px-4 py-3">{{ $p->luong_nam }}</td>
-                            <td class="px-4 py-3">{{ $p->luong_thang }}</td>
-                            <td class="px-4 py-3">{{ number_format($p->tong_luong) }}</td>
-                            <td class="px-4 py-3 font-medium text-gray-800 dark:text-white">{{ number_format($p->luong_thuc_nhan) }}</td>
+                            <td class="px-4 py-3 font-medium text-blue-600">
+                                {{ $p->bangLuong->ma_bang_luong ?? '-' }}
+                            </td>
+
+                            <td class="px-4 py-3">
+                                {{ $p->hoSo->ma_nhan_vien ?? '-' }}
+                            </td>
+
+                            <td class="px-4 py-3">
+                                {{ str_pad($p->luong_thang, 2, '0', STR_PAD_LEFT) }}/{{ $p->luong_nam }}
+                            </td>
+
+                            <td class="px-4 py-3">
+                                {{ number_format($p->tong_luong) }}
+                            </td>
+
+                            <td class="px-4 py-3 font-semibold text-green-600">
+                                {{ number_format($p->luong_thuc_nhan) }}
+                            </td>
                             <td class="px-4 py-3 text-center">
                                 <a href="{{ route('employee.bang-luong.show', $p->id) }}"
                                    title="Xem chi tiết"
