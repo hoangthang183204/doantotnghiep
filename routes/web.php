@@ -270,17 +270,17 @@ Route::prefix('admin')
         // ========== ỨNG VIÊN ==========
         Route::prefix('ung-vien')->name('ung_vien.')->group(function () {
             Route::get('/', [UngVienController::class, 'index'])->name('index');
-            Route::get('/create', [UngVienController::class, 'create'])->name('create');
-            Route::post('/store', [UngVienController::class, 'store'])->name('store');
-            Route::get('/{id}', [UngVienController::class, 'show'])->name('show');
-            Route::put('/{id}', [UngVienController::class, 'update'])->name('update');
-            Route::delete('/{id}', [UngVienController::class, 'destroy'])->name('destroy');
             Route::get('/archived/list', [UngVienController::class, 'archived'])->name('archived');
             Route::post('/{id}/archive', [UngVienController::class, 'archive'])->name('archive');
             Route::post('/{id}/restore', [UngVienController::class, 'restore'])->name('restore');
             Route::get('/email-phong-van', [UngVienController::class, 'emailList'])->name('email.index');
             Route::get('/email-phong-van/create', [UngVienController::class, 'createEmail'])->name('email.create');
             Route::post('/email-phong-van/send', [UngVienController::class, 'sendEmail'])->name('email.send');
+            Route::get('/create', [UngVienController::class, 'create'])->name('create');
+            Route::post('/store', [UngVienController::class, 'store'])->name('store');
+            Route::get('/{id}', [UngVienController::class, 'show'])->name('show');
+            Route::put('/{id}', [UngVienController::class, 'update'])->name('update');
+            Route::delete('/{id}', [UngVienController::class, 'destroy'])->name('destroy');
         });
         //=========Trúng Tuyển=========//
         Route::prefix('trung-tuyen')->name('trung-tuyen.')->group(function () {
