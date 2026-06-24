@@ -25,25 +25,73 @@
     </div>
 
     {{-- LƯƠNG THƯỞNG --}}
-    @if($payroll->gio_tang_ca > 0 || $payroll->cong_tang_ca > 0)
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-        <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Chi tiết lương thưởng</h3>
-        <div class="space-y-3">
-            @if($payroll->gio_tang_ca > 0)
-                <div class="flex justify-between items-center pb-3 border-b border-gray-200 dark:border-gray-700">
-                    <span class="text-gray-700 dark:text-gray-300">Giờ tăng ca</span>
-                    <span class="font-medium">{{ $payroll->gio_tang_ca }} giờ</span>
-                </div>
-            @endif
-            @if($payroll->cong_tang_ca > 0)
-                <div class="flex justify-between items-center pb-3 border-b border-gray-200 dark:border-gray-700">
-                    <span class="text-gray-700 dark:text-gray-300">Công tăng ca</span>
-                    <span class="font-medium">{{ number_format($payroll->cong_tang_ca) }}</span>
-                </div>
-            @endif
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+    <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
+        Thông tin chấm công
+    </h3>
+
+    <div class="space-y-3">
+
+        <div class="flex justify-between items-center pb-3 border-b border-gray-200 dark:border-gray-700">
+            <span class="text-gray-700 dark:text-gray-300">
+                Ngày công thực tế
+            </span>
+            <span class="font-semibold text-blue-600">
+                {{ $payroll->so_ngay_cong }} công
+            </span>
         </div>
+
+        <div class="flex justify-between items-center pb-3 border-b border-gray-200 dark:border-gray-700">
+            <span class="text-gray-700 dark:text-gray-300">
+                Ngày công chuẩn
+            </span>
+            <span class="font-medium">
+                {{ $payroll->so_ngay_cong_chuan }} công
+            </span>
+        </div>
+
+        <div class="flex justify-between items-center pb-3 border-b border-gray-200 dark:border-gray-700">
+            <span class="text-gray-700 dark:text-gray-300">
+                Ngày nghỉ phép
+            </span>
+            <span class="font-medium">
+                {{ $payroll->ngay_nghi_phep }} ngày
+            </span>
+        </div>
+
+        <div class="flex justify-between items-center pb-3 border-b border-gray-200 dark:border-gray-700">
+            <span class="text-gray-700 dark:text-gray-300">
+                Nghỉ không phép
+            </span>
+            <span class="font-medium text-red-600">
+                {{ $payroll->ngay_nghi_khong_phep }} ngày
+            </span>
+        </div>
+
+        @if($payroll->gio_tang_ca > 0)
+        <div class="flex justify-between items-center pb-3 border-b border-gray-200 dark:border-gray-700">
+            <span class="text-gray-700 dark:text-gray-300">
+                Giờ tăng ca
+            </span>
+            <span class="font-medium">
+                {{ $payroll->gio_tang_ca }} giờ
+            </span>
+        </div>
+        @endif
+
+        @if($payroll->cong_tang_ca > 0)
+        <div class="flex justify-between items-center">
+            <span class="text-gray-700 dark:text-gray-300">
+                Công quy đổi từ tăng ca
+            </span>
+            <span class="font-medium">
+                {{ number_format($payroll->cong_tang_ca, 2) }} công
+            </span>
+        </div>
+        @endif
+
     </div>
-    @endif
+</div>
 
     {{-- CHI TIẾT KHẤU TRỪ --}}
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
