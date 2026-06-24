@@ -88,7 +88,7 @@
                         </div>
                         <div>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Số ngày nghỉ</p>
-                            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $donNghi->so_ngay_nghi }} ngày</p>
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ number_format($donNghi->so_ngay_nghi, 0) }} ngày</p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Ngày tạo</p>
@@ -215,7 +215,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Còn lại</p>
-                            <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ number_format($soDuConLai, 1) }}</p>
+                            <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ number_format($soDuConLai, 0) }}</p>
                             <p class="text-xs text-gray-400">/ {{ $soNgayPhepNam }} ngày</p>
                         </div>
                         <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
@@ -234,8 +234,8 @@
                                  style="width: {{ min(100, $phanTram) }}%"></div>
                         </div>
                         <div class="flex justify-between mt-1">
-                            <span class="text-xs text-gray-500 dark:text-gray-400">Đã nghỉ {{ number_format($soNgayDaNghi, 1) }} ngày</span>
-                            <span class="text-xs text-green-600 dark:text-green-400 font-medium">{{ number_format($soDuConLai, 1) }} ngày</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Đã nghỉ {{ number_format($soNgayDaNghi, 0) }} ngày</span>
+                            <span class="text-xs text-green-600 dark:text-green-400 font-medium">{{ number_format($soDuConLai, 0) }} ngày</span>
                         </div>
                     </div>
                 </div>
