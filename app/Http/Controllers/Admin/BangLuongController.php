@@ -9,6 +9,8 @@ use App\Models\NguoiDung;
 use App\Services\TinhLuongService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Mail\PhieuLuongMail;
+use Illuminate\Support\Facades\Mail;
 
 class BangLuongController extends Controller
 {
@@ -156,4 +158,48 @@ class BangLuongController extends Controller
             ->route('admin.bang-luong.index')
             ->with('success', 'Đã xoá bảng lương.');
     }
+    public function guiEmailLuong($luongId)
+{
+    $luong = LuongNhanVien::with([
+        'nguoiDung',
+        'bangLuong'
+    ])->findOrFail($luongId);
+
+    if (!$luong->nguoiDung || !$luong->nguoiDung->email) {
+        return back()->with('error', 'Nhân viên chưa có email.');
+    }
+
+    Mail::to($luong->nguoiDung->email)
+        ->send(new PhieuLuongMail($luong));
+
+    return back()->with(
+        'success',
+        'Đã gửi phiếu lương cho ' . $luong->nguoiDung->ho_ten
+    );
+}
+public function guiTatCaEmail($id)
+{
+    $bangLuong = BangLuong::with([
+        'luongNhanViens.nguoiDung'
+    ])->findOrFail($id);
+
+    $soLuong = 0;
+
+    foreach ($bangLuong->luongNhanViens as $luong) {
+
+        if (!$luong->nguoiDung?->email) {
+            continue;
+        }
+
+        Mail::to($luong->nguoiDung->email)
+            ->send(new PhieuLuongMail($luong));
+
+        $soLuong++;
+    }
+
+    return back()->with(
+        'success',
+        "Đã gửi {$soLuong} phiếu lương thành công."
+    );
+}
 }

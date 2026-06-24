@@ -64,13 +64,17 @@ public function edit($id)
     $nhanViens = NguoiDung::all();
     $hopDongs = HopDongLaoDong::all();
 
-    return view('admin.luong.edit', compact('luong', 'nhanViens', 'hopDongs'));
+    return view('admin.luong.edit', compact(
+        'luong',
+        'nhanViens',
+        'hopDongs'
+    ));
 }
 public function update(Request $request, $id)
 {
     $request->validate([
         'nguoi_dung_id' => 'required',
-        'hop_dong_id' => 'required',
+        'hop_dong_lao_dong_id' => 'required',
         'luong_co_ban' => 'required|numeric',
         'phu_cap' => 'nullable|numeric',
         'tien_thuong' => 'nullable|numeric',
@@ -81,8 +85,8 @@ public function update(Request $request, $id)
 
     $luong->update([
         'nguoi_dung_id' => $request->nguoi_dung_id,
-        'hop_dong_lao_dong_id' => $request->hop_dong_id,
-        'luong_co_ban' => $request->luong_co_ban,
+        'hop_dong_lao_dong_id' => $request->hop_dong_lao_dong_id,
+        'luong_co_ban' => $request->luong_co_ban ?? 0,
         'phu_cap' => $request->phu_cap ?? 0,
         'tien_thuong' => $request->tien_thuong ?? 0,
         'tien_phat' => $request->tien_phat ?? 0,
