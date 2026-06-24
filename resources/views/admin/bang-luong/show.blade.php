@@ -16,6 +16,20 @@
             </p>
         </div>
         <div class="flex gap-2">
+{{-- Gửi tất cả phiếu lương --}}
+    <form action="{{ route('admin.bang-luong.gui-tat-ca-email', $bangLuong->id) }}"
+          method="POST"
+          onsubmit="return confirm('Gửi phiếu lương cho tất cả nhân viên?')">
+        @csrf
+
+        <button type="submit"
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm">
+            <i class="fa-solid fa-envelope mr-1"></i>
+            Gửi tất cả mail
+        </button>
+    </form>
+
+
             @if($bangLuong->la_nhap)
             <form action="{{ route('admin.bang-luong.chot', $bangLuong->id) }}" method="POST"
                   onsubmit="return confirm('Chốt bảng lương này? Sau khi chốt sẽ không sửa/xoá được.')">
@@ -107,11 +121,27 @@
                         <td class="p-3 text-right text-red-500">-{{ number_format($lnv->tong_khau_tru) }}</td>
                         <td class="p-3 text-right font-bold text-blue-600 dark:text-sky-400">{{ number_format($lnv->luong_thuc_nhan) }}</td>
                         <td class="p-3 text-center">
-                            <a href="{{ route('admin.bang-luong.chi-tiet-nhan-vien', [$bangLuong->id, $lnv->id]) }}"
-                               class="inline-flex items-center gap-1 px-3 py-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-700 rounded-lg text-xs">
-                                <i class="fa-solid fa-receipt"></i> Xem
-                            </a>
-                        </td>
+    <div class="flex justify-center gap-2">
+
+        <a href="{{ route('admin.bang-luong.chi-tiet-nhan-vien', [$bangLuong->id, $lnv->id]) }}"
+           class="inline-flex items-center gap-1 px-3 py-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-700 rounded-lg text-xs">
+            <i class="fa-solid fa-receipt"></i>
+            Xem
+        </a>
+
+        <form action="{{ route('admin.bang-luong.gui-email', $lnv->id) }}"
+      method="POST">
+    @csrf
+
+    <button type="submit"
+            class="inline-flex items-center gap-1 px-3 py-1.5 text-green-600 hover:bg-green-50 rounded-lg text-xs">
+        <i class="fa-solid fa-envelope"></i>
+        Mail
+    </button>
+</form>
+
+    </div>
+</td>
                     </tr>
                     @endforeach
                 </tbody>
