@@ -137,10 +137,10 @@ Route::prefix('admin')
 
         // ========== ĐƠN NGHỈ ==========
         Route::prefix('don-nghi')->name('don_nghi.')->group(function () {
-        Route::get('/', [DonNghiController::class, 'index'])->name('index');
-        Route::get('/{id}', [DonNghiController::class, 'show'])->name('show');
-        Route::post('/{id}/duyet', [DonNghiController::class, 'capNhatTrangThai'])->name('duyet');
-        Route::post('/bulk-action', [DonNghiController::class, 'bulkAction'])->name('bulk');
+            Route::get('/', [DonNghiController::class, 'index'])->name('index');
+            Route::get('/{id}', [DonNghiController::class, 'show'])->name('show');
+            Route::post('/{id}/duyet', [DonNghiController::class, 'capNhatTrangThai'])->name('duyet');
+            Route::post('/bulk-action', [DonNghiController::class, 'bulkAction'])->name('bulk');
         });
 
         // ========== LƯƠNG (BẢNG LƯƠNG THÁNG) ==========
@@ -267,8 +267,8 @@ Route::prefix('admin')
         });
         //=========Trúng Tuyển=========//
         Route::prefix('trung-tuyen')->name('trung-tuyen.')->group(function () {
-    Route::get('/', [TrungTuyenController::class, 'index'])->name('index');
-});
+            Route::get('/', [TrungTuyenController::class, 'index'])->name('index');
+        });
     });
 
 // =============================================
@@ -284,7 +284,7 @@ Route::prefix('employee')
         Route::get('/hop-dong-cua-toi', [HopDongController::class, 'getHopDongCuaToi'])->name('hop-dong.index');
         Route::patch('/hop-dong/{id}/update-status', [HopDongController::class, 'updateTrangThaiKy'])->name('hopdong.update-status');
         Route::patch('/hop-dong/{id}/tu-choi-ky', [HopDongController::class, 'tuChoiKy'])
-            ->name('hop-dong.tu-choi-ky'); 
+            ->name('hop-dong.tu-choi-ky');
 
         // ========== CHẤM CÔNG ==========
         Route::prefix('cham-cong')->name('cham-cong.')->group(function () {
@@ -292,7 +292,9 @@ Route::prefix('employee')
             Route::post('/check-in', [EmployeeChamCongController::class, 'checkIn'])->name('check-in');
             Route::post('/check-out', [EmployeeChamCongController::class, 'checkOut'])->name('check-out');
             Route::get('/history', [EmployeeChamCongController::class, 'history'])->name('history');
+            Route::post('/save-device-info', [EmployeeChamCongController::class, 'saveDeviceInfo'])->name('save-device-info');
         });
+
 
         // ========== TĂNG CA ==========
         Route::prefix('tang-ca')->name('tang-ca.')->group(function () {
@@ -329,15 +331,13 @@ Route::prefix('employee')
             Route::get('/', [EmployeeHoSoController::class, 'index'])->name('index');
             Route::put('/', [EmployeeHoSoController::class, 'update'])->name('update');
             Route::post('/change-password', [EmployeeHoSoController::class, 'changePassword'])->name('change-password');
-            
         });
         // ========== BẢNG LƯƠNG ==========
-// ========== BẢNG LƯƠNG ==========
+        // ========== BẢNG LƯƠNG ==========
         Route::prefix('bang-luong')->name('bang-luong.')->group(function () {
             Route::get('/', [EmployeeBangLuongController::class, 'index'])->name('index');
             Route::get('/{id}', [EmployeeBangLuongController::class, 'show'])->name('show');
         });
-
     });
 // ========== QUY ĐỊNH ==========
 Route::get('/quy-dinh', [EmployeeQuyDinhController::class, 'index'])->name('employee.quydinh.index');
