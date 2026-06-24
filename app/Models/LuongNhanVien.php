@@ -85,6 +85,11 @@ class LuongNhanVien extends Model
         return $this->hasMany(KhauTruLuong::class, 'luong_nhan_vien_id');
     }
 
+    public function hoSo()
+    {
+        return $this->hasOne(HoSo::class, 'nguoi_dung_id', 'nguoi_dung_id');
+    }
+
     // =====================================================================
     // Accessors hỗ trợ hiển thị công thức
     // =====================================================================
