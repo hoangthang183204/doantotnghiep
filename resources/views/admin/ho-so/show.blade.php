@@ -668,6 +668,9 @@
             {{-- ========================================================== --}}
             {{-- TAB 4: LƯƠNG THƯỞNG (DỮ LIỆU THẬT) --}}
             {{-- ========================================================== --}}
+            {{-- ========================================================== --}}
+            {{-- TAB 4: LƯƠNG THƯỞNG --}}
+            {{-- ========================================================== --}}
             <div id="tab4" class="tab-content hidden">
 
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
@@ -680,280 +683,107 @@
                     {{-- 🏦 THÔNG TIN NGÂN HÀNG --}}
                     <div
                         class="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border-2 border-green-200 dark:border-green-800 rounded-xl p-5 mb-6 shadow-sm">
-
                         <div class="flex items-center gap-3 mb-4">
                             <span class="text-2xl">🏦</span>
                             <h4 class="text-lg font-bold text-gray-800 dark:text-white">Thông tin nhận lương</h4>
                             <span
-                                class="ml-auto text-xs px-3 py-1 bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 rounded-full font-medium">
-                                Chi trả hàng tháng
-                            </span>
+                                class="ml-auto text-xs px-3 py-1 bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 rounded-full font-medium">Chi
+                                trả hàng tháng</span>
                         </div>
-
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div
                                 class="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-700">
                                 <span class="text-xs text-gray-500 dark:text-gray-400 uppercase block font-medium">Chủ tài
                                     khoản</span>
                                 <p class="font-semibold text-gray-800 dark:text-white text-lg">
-                                    {{ $hoSo->chu_tai_khoan ?? 'Chưa cập nhật' }}
-                                </p>
+                                    {{ $hoSo->chu_tai_khoan ?? 'Chưa cập nhật' }}</p>
                             </div>
                             <div
                                 class="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-700">
                                 <span class="text-xs text-gray-500 dark:text-gray-400 uppercase block font-medium">Số tài
                                     khoản</span>
                                 <p class="font-mono font-bold text-gray-800 dark:text-white text-lg">
-                                    {{ $hoSo->so_tai_khoan ?? 'Chưa cập nhật' }}
-                                </p>
+                                    {{ $hoSo->so_tai_khoan ?? 'Chưa cập nhật' }}</p>
                             </div>
                             <div
                                 class="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-700">
                                 <span class="text-xs text-gray-500 dark:text-gray-400 uppercase block font-medium">Ngân
                                     hàng</span>
                                 <p class="font-semibold text-gray-800 dark:text-white text-lg">
-                                    {{ $hoSo->ten_ngan_hang ?? 'Chưa cập nhật' }}
-                                </p>
+                                    {{ $hoSo->ten_ngan_hang ?? 'Chưa cập nhật' }}</p>
                             </div>
                             <div
                                 class="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-700">
                                 <span class="text-xs text-gray-500 dark:text-gray-400 uppercase block font-medium">Chi
                                     nhánh / PGD</span>
                                 <p class="font-semibold text-gray-800 dark:text-white text-lg">
-                                    {{ $hoSo->chi_nhanh_ngan_hang ?? 'Chưa cập nhật' }}
-                                </p>
+                                    {{ $hoSo->chi_nhanh_ngan_hang ?? 'Chưa cập nhật' }}</p>
                             </div>
                         </div>
-
                     </div>
 
-                    {{-- ========================================================== --}}
-                    {{-- ⭐ LƯƠNG HIỆN TẠI - LẤY TỪ BẢNG LƯƠNG GẦN NHẤT --}}
-                    {{-- ========================================================== --}}
+                    {{-- ⭐ LƯƠNG HIỆN TẠI - ĐƠN GIẢN NHƯ BASE HRM --}}
                     @if ($luongGanNhat && $luongGanNhat->id)
-                        @php
-                            // ✅ Lấy dữ liệu thực tế từ bảng lương
-                            $soNgayCong = $luongGanNhat->so_ngay_cong ?? 0;
-                            $soNgayCongChuan = $luongGanNhat->so_ngay_cong_chuan ?? 26;
-                            $luongCoBan = $luongGanNhat->luong_co_ban ?? 0;
-                            $luongTheoCong = $luongGanNhat->luong_theo_cong ?? 0;
-                            $tongPhuCap = $luongGanNhat->tong_phu_cap ?? 0;
-                            $tienTangCa = $luongGanNhat->tien_tang_ca ?? 0;
-                            $tongKhauTru = $luongGanNhat->tong_khau_tru ?? 0;
-                            $tongLuong = $luongGanNhat->tong_luong ?? 0;
-                            $luongThucNhan = $luongGanNhat->luong_thuc_nhan ?? 0;
-                            $thueTncn = $luongGanNhat->thue_thu_nhap_ca_nhan ?? 0;
-                            $gioTangCa = $luongGanNhat->gio_tang_ca ?? 0;
-
-                            // Lấy chi tiết phụ cấp từ bảng phu_cap_luong
-                            $chiTietPhuCap = $luongGanNhat->phuCapLuongs ?? collect();
-
-                            // Lấy chi tiết khấu trừ từ bảng khau_tru_luong
-                            $chiTietKhauTru = $luongGanNhat->khauTruLuongs ?? collect();
-
-                            // Nếu chưa có chi tiết, tạo mảng rỗng
-                            $phuCapItems = $chiTietPhuCap->map(function ($item) {
-                                return [
-                                    'ten' => $item->phuCap->ten ?? 'Phụ cấp',
-                                    'so_tien' => $item->so_tien ?? 0,
-                                ];
-                            });
-
-                            $khauTruItems = $chiTietKhauTru->map(function ($item) {
-                                $tenLoai = [
-                                    'bhxh' => 'BHXH (8%)',
-                                    'bhyt' => 'BHYT (1.5%)',
-                                    'bhtn' => 'BHTN (1%)',
-                                    'thue_tncn' => 'Thuế TNCN',
-                                    'khau_tru_khac' => 'Khấu trừ khác',
-                                ];
-                                return [
-                                    'loai' => $item->loai_khau_tru,
-                                    'ten' => $tenLoai[$item->loai_khau_tru] ?? $item->loai_khau_tru,
-                                    'so_tien' => $item->so_tien ?? 0,
-                                ];
-                            });
-                        @endphp
-
-                        {{-- ⭐ BANNER LƯƠNG THỰC NHẬN --}}
-                        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-6 mb-6 shadow-lg">
-                            <div class="flex flex-wrap justify-between items-center">
-                                <div>
-                                    <p class="text-blue-100 text-sm">Lương thực nhận</p>
-                                    <p class="text-3xl font-bold text-white">
-                                        {{ number_format($luongThucNhan, 0, ',', '.') }} ₫</p>
-                                </div>
-                                <div class="text-right text-sm text-blue-100">
-                                    <p>Gross: <span
-                                            class="font-semibold text-white">{{ number_format($tongLuong, 0, ',', '.') }}
-                                            ₫</span></p>
-                                    <p>Khấu trừ: <span
-                                            class="font-semibold text-white">-{{ number_format($tongKhauTru + $thueTncn, 0, ',', '.') }}
-                                            ₫</span></p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- THÔNG TIN NHANH --}}
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                             <div
                                 class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-600">
-                                <p class="text-sm text-gray-500 dark:text-gray-400">📅 Kỳ lương</p>
-                                <p class="text-lg font-bold text-gray-800 dark:text-white">Tháng
-                                    {{ $luongGanNhat->luong_thang }}/{{ $luongGanNhat->luong_nam }}</p>
-                            </div>
-                            <div
-                                class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-600">
-                                <p class="text-sm text-gray-500 dark:text-gray-400">📋 Ngày công</p>
-                                <p class="text-lg font-bold text-gray-800 dark:text-white">{{ $soNgayCong }} /
-                                    {{ $soNgayCongChuan }}</p>
-                            </div>
-                            <div
-                                class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-600">
-                                <p class="text-sm text-gray-500 dark:text-gray-400">⏰ Tăng ca</p>
-                                <p class="text-lg font-bold text-gray-800 dark:text-white">{{ $gioTangCa }} giờ</p>
-                            </div>
-                            <div
-                                class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-600">
-                                <p class="text-sm text-gray-500 dark:text-gray-400">💰 Lương CB</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">📋 Lương cơ bản</p>
                                 <p class="text-lg font-bold text-blue-600 dark:text-blue-400">
-                                    {{ number_format($luongCoBan, 0, ',', '.') }} ₫</p>
+                                    {{ number_format($luongGanNhat->luong_co_ban, 0, ',', '.') }} ₫</p>
                             </div>
-                        </div>
-
-                        {{-- ⭐ BẢNG CÔNG THỨC CHI TIẾT --}}
-                        <div class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
                             <div
-                                class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
-                                <h4 class="font-semibold text-gray-800 dark:text-white">📝 Chi tiết tính lương</h4>
+                                class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-600">
+                                <p class="text-sm text-gray-500 dark:text-gray-400">📊 Tổng thu nhập</p>
+                                <p class="text-lg font-bold text-green-600 dark:text-green-400">
+                                    {{ number_format($luongGanNhat->tong_luong, 0, ',', '.') }} ₫</p>
                             </div>
-
-                            <div class="divide-y divide-gray-100 dark:divide-gray-700">
-
-                                {{-- ① Lương theo công --}}
-                                <div class="px-5 py-4">
-                                    <div class="flex justify-between items-start gap-4">
-                                        <div>
-                                            <p class="font-medium text-gray-900 dark:text-white">① Lương theo ngày công</p>
-                                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                                = ({{ number_format($luongCoBan, 0, ',', '.') }} ÷ {{ $soNgayCongChuan }})
-                                                × {{ $soNgayCong }}
-                                            </p>
-                                        </div>
-                                        <p class="text-lg font-bold text-gray-900 dark:text-white">
-                                            {{ number_format($luongTheoCong, 0, ',', '.') }} ₫</p>
-                                    </div>
-                                </div>
-
-                                {{-- ② Phụ cấp --}}
-                                <div class="px-5 py-4">
-                                    <div class="flex justify-between items-start gap-4">
-                                        <div class="flex-1">
-                                            <p class="font-medium text-gray-900 dark:text-white">② Phụ cấp</p>
-                                            @if ($phuCapItems->count() > 0)
-                                                <ul class="mt-2 space-y-1">
-                                                    @foreach ($phuCapItems as $item)
-                                                        <li
-                                                            class="text-sm text-gray-600 dark:text-gray-300 flex justify-between max-w-md">
-                                                            <span>• {{ $item['ten'] }}</span>
-                                                            <span
-                                                                class="font-medium">{{ number_format($item['so_tien'], 0, ',', '.') }}
-                                                                ₫</span>
-                                                        </li>
-                                                    @endforeach
-                                                </ul>
-                                            @else
-                                                <p class="text-sm text-gray-400 mt-1">Không có phụ cấp</p>
-                                            @endif
-                                        </div>
-                                        <p class="text-lg font-bold text-green-600 dark:text-green-400">
-                                            +{{ number_format($tongPhuCap, 0, ',', '.') }} ₫</p>
-                                    </div>
-                                </div>
-
-                                {{-- ③ Tăng ca --}}
-                                <div class="px-5 py-4">
-                                    <div class="flex justify-between items-start gap-4">
-                                        <div>
-                                            <p class="font-medium text-gray-900 dark:text-white">③ Tiền tăng ca</p>
-                                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                                {{ $gioTangCa }} giờ × Đơn giá × Hệ số 1.5
-                                            </p>
-                                        </div>
-                                        <p class="text-lg font-bold text-indigo-600 dark:text-indigo-400">
-                                            +{{ number_format($tienTangCa, 0, ',', '.') }} ₫</p>
-                                    </div>
-                                </div>
-
-                                {{-- ④ Tổng lương Gross --}}
-                                <div class="px-5 py-4 bg-gray-50 dark:bg-gray-700/50">
-                                    <div class="flex justify-between items-center gap-4">
-                                        <div>
-                                            <p class="font-semibold text-gray-900 dark:text-white">④ TỔNG LƯƠNG (gross)</p>
-                                            <p class="text-xs text-gray-400 mt-1">= ① + ② + ③</p>
-                                        </div>
-                                        <p class="text-xl font-bold text-gray-900 dark:text-white">
-                                            {{ number_format($tongLuong, 0, ',', '.') }} ₫</p>
-                                    </div>
-                                </div>
-
-                                {{-- ⑤ Khấu trừ --}}
-                                <div class="px-5 py-4">
-                                    <div class="flex justify-between items-start gap-4">
-                                        <div class="flex-1">
-                                            <p class="font-medium text-gray-900 dark:text-white">⑤ Các khoản khấu trừ</p>
-                                            @if ($khauTruItems->count() > 0 || $thueTncn > 0)
-                                                <ul class="mt-2 space-y-1">
-                                                    @foreach ($khauTruItems as $item)
-                                                        <li
-                                                            class="text-sm text-gray-600 dark:text-gray-300 flex justify-between max-w-md">
-                                                            <span>• {{ $item['ten'] }}</span>
-                                                            <span
-                                                                class="font-medium text-red-500">-{{ number_format($item['so_tien'], 0, ',', '.') }}
-                                                                ₫</span>
-                                                        </li>
-                                                    @endforeach
-                                                    @if ($thueTncn > 0)
-                                                        <li
-                                                            class="text-sm text-gray-600 dark:text-gray-300 flex justify-between max-w-md">
-                                                            <span>• Thuế TNCN</span>
-                                                            <span
-                                                                class="font-medium text-red-500">-{{ number_format($thueTncn, 0, ',', '.') }}
-                                                                ₫</span>
-                                                        </li>
-                                                    @endif
-                                                </ul>
-                                            @else
-                                                <p class="text-sm text-gray-400 mt-1">Không có khấu trừ</p>
-                                            @endif
-                                        </div>
-                                        <p class="text-lg font-bold text-red-500 whitespace-nowrap">
-                                            -{{ number_format($tongKhauTru + $thueTncn, 0, ',', '.') }} ₫</p>
-                                    </div>
-                                </div>
-
-                                {{-- ⑥ Thực nhận --}}
-                                <div class="px-5 py-5 bg-blue-50 dark:bg-blue-950/30">
-                                    <div class="flex justify-between items-center gap-4">
-                                        <div>
-                                            <p class="font-bold text-gray-900 dark:text-white">⑥ LƯƠNG THỰC NHẬN (net)</p>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">= ④ Tổng lương − ⑤
-                                                Khấu trừ</p>
-                                        </div>
-                                        <p class="text-2xl font-extrabold text-blue-600 dark:text-sky-400">
-                                            {{ number_format($luongThucNhan, 0, ',', '.') }} ₫</p>
-                                    </div>
-                                </div>
-
+                            <div
+                                class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-600">
+                                <p class="text-sm text-gray-500 dark:text-gray-400">💰 Thực nhận</p>
+                                <p class="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                                    {{ number_format($luongGanNhat->luong_thuc_nhan, 0, ',', '.') }} ₫</p>
                             </div>
                         </div>
 
-                        {{-- GHI CHÚ --}}
+                        {{-- PHỤ CẤP --}}
+                        @if ($luongGanNhat->tong_phu_cap > 0)
+                            <div class="mb-4">
+                                <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">📌 Phụ cấp</h4>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach ($luongGanNhat->phuCapLuongs as $pc)
+                                        <span
+                                            class="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-full text-sm border border-blue-200 dark:border-blue-800">
+                                            {{ $pc->phuCap->ten ?? 'Phụ cấp' }}:
+                                            <strong>{{ number_format($pc->so_tien, 0, ',', '.') }} ₫</strong>
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- KHẤU TRỪ --}}
+                        @if ($luongGanNhat->tong_khau_tru > 0)
+                            <div class="mb-4">
+                                <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">📌 Khấu trừ</h4>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach ($luongGanNhat->khauTruLuongs as $kt)
+                                        <span
+                                            class="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 rounded-full text-sm border border-red-200 dark:border-red-800">
+                                            {{ $kt->ten_loai }}: <strong
+                                                class="text-red-600">-{{ number_format($kt->so_tien, 0, ',', '.') }}
+                                                ₫</strong>
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- KỲ LƯƠNG --}}
                         <div
-                            class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                            <p class="text-xs text-yellow-700 dark:text-yellow-300">
-                                * BHXH 8% + BHYT 1.5% + BHTN 1% tính trên lương cơ bản. Thuế TNCN tính lũy tiến theo quy
-                                định.
+                            class="mt-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                📅 Kỳ lương: Tháng {{ $luongGanNhat->luong_thang }}/{{ $luongGanNhat->luong_nam }}
+                                • Ngày công: {{ $luongGanNhat->so_ngay_cong }}/{{ $luongGanNhat->so_ngay_cong_chuan }}
                             </p>
                         </div>
                     @else
@@ -964,67 +794,40 @@
                         </div>
                     @endif
 
-                    {{-- ========================================================== --}}
                     {{-- LỊCH SỬ LƯƠNG --}}
-                    {{-- ========================================================== --}}
                     <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-
                         <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-3">📈 Lịch sử lương</h4>
-
                         @if ($hoSo->lich_su_luong && $hoSo->lich_su_luong->count() > 0)
                             <div class="overflow-x-auto">
                                 <table class="min-w-full text-sm">
                                     <thead>
                                         <tr
                                             class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
-                                            <th class="text-left p-3 font-semibold">Kỳ lương</th>
-                                            <th class="text-left p-3 font-semibold">Ngày công</th>
-                                            <th class="text-left p-3 font-semibold">Lương CB</th>
-                                            <th class="text-left p-3 font-semibold">Phụ cấp</th>
-                                            <th class="text-left p-3 font-semibold">Tăng ca</th>
-                                            <th class="text-left p-3 font-semibold">Tổng lương</th>
-                                            <th class="text-left p-3 font-semibold">Khấu trừ</th>
-                                            <th class="text-left p-3 font-semibold text-green-600">Thực nhận</th>
+                                            <th class="text-left p-2 font-semibold">Kỳ lương</th>
+                                            <th class="text-left p-2 font-semibold">Ngày công</th>
+                                            <th class="text-left p-2 font-semibold">Lương CB</th>
+                                            <th class="text-left p-2 font-semibold">Thực nhận</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach ($hoSo->lich_su_luong as $item)
                                             <tr
                                                 class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                                                <td class="p-3 font-medium">Tháng
+                                                <td class="p-2 font-medium">Tháng
                                                     {{ $item->luong_thang }}/{{ $item->luong_nam }}</td>
-                                                <td class="p-3">{{ $item->so_ngay_cong ?? 0 }}</td>
-                                                <td class="p-3">
+                                                <td class="p-2">{{ $item->so_ngay_cong ?? 0 }}</td>
+                                                <td class="p-2">
                                                     {{ number_format($item->luong_co_ban ?? 0, 0, ',', '.') }}</td>
-                                                <td class="p-3 text-blue-600">
-                                                    {{ number_format($item->tong_phu_cap ?? 0, 0, ',', '.') }}</td>
-                                                <td class="p-3 text-indigo-600">
-                                                    {{ number_format($item->tien_tang_ca ?? 0, 0, ',', '.') }}</td>
-                                                <td class="p-3 font-semibold">
-                                                    {{ number_format($item->tong_luong ?? 0, 0, ',', '.') }}</td>
-                                                <td class="p-3 text-red-600">
-                                                    -{{ number_format(($item->tong_khau_tru ?? 0) + ($item->thue_thu_nhap_ca_nhan ?? 0), 0, ',', '.') }}
-                                                </td>
-                                                <td class="p-3 font-bold text-green-600">
+                                                <td class="p-2 font-bold text-green-600">
                                                     {{ number_format($item->luong_thuc_nhan ?? 0, 0, ',', '.') }}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
-                                    <tfoot
-                                        class="bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-700">
-                                        <tr>
-                                            <td class="p-3 font-bold text-right" colspan="7">Tổng cộng</td>
-                                            <td class="p-3 font-bold text-green-600">
-                                                {{ number_format($hoSo->lich_su_luong->sum('luong_thuc_nhan'), 0, ',', '.') }}
-                                            </td>
-                                        </tr>
-                                    </tfoot>
                                 </table>
                             </div>
                         @else
                             <p class="text-gray-500 dark:text-gray-400 text-sm">Chưa có lịch sử lương</p>
                         @endif
-
                     </div>
 
                 </div>
@@ -1032,264 +835,147 @@
             </div>
         </div>
 
+        {{-- ========================================================== --}}
         {{-- TAB 5: BẢO HIỂM & THUẾ --}}
+        {{-- ========================================================== --}}
+        {{-- ========================================================== --}}
+        {{-- TAB 5: BẢO HIỂM & THUẾ --}}
+        {{-- ========================================================== --}}
         <div id="tab5" class="tab-content hidden">
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-                {{-- ⭐ BẢO HIỂM XÃ HỘI --}}
+                {{-- BẢO HIỂM XÃ HỘI --}}
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
                     <h3
                         class="text-lg font-semibold text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
                         🛡️ Bảo hiểm xã hội
                     </h3>
-
                     <div class="space-y-3">
-                        {{-- Số sổ BHXH --}}
                         <div class="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
                             <span class="text-gray-500 dark:text-gray-400">Số sổ BHXH</span>
-                            <span class="font-mono font-medium text-gray-800 dark:text-white">
-                                {{ $hoSo->so_bhxh ?? 'Chưa cập nhật' }}
-                            </span>
+                            <span
+                                class="font-mono font-medium text-gray-800 dark:text-white">{{ $hoSo->so_bhxh ?? 'Chưa cập nhật' }}</span>
                         </div>
-
-                        {{-- Mã số thuế TNCN --}}
                         <div class="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
                             <span class="text-gray-500 dark:text-gray-400">Mã số thuế TNCN</span>
-                            <span class="font-mono font-medium text-gray-800 dark:text-white">
-                                {{ $hoSo->ma_so_thue ?? 'Chưa cập nhật' }}
-                            </span>
+                            <span
+                                class="font-mono font-medium text-gray-800 dark:text-white">{{ $hoSo->ma_so_thue ?? 'Chưa cập nhật' }}</span>
                         </div>
-
-                        {{-- Ngày tham gia BHXH --}}
                         <div class="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                            <span class="text-gray-500 dark:text-gray-400">Ngày tham gia BHXH</span>
-                            <span class="font-medium text-gray-800 dark:text-white">
-                                {{ $hoSo->nguoi_dung && $hoSo->nguoi_dung->created_at
-                                    ? $hoSo->nguoi_dung->created_at->format('d/m/Y')
-                                    : 'Chưa cập nhật' }}
-                            </span>
+                            <span class="text-gray-500 dark:text-gray-400">Nơi đăng ký KCB</span>
+                            <span
+                                class="font-medium text-gray-800 dark:text-white">{{ $hoSo->noi_dang_ky_kcb ?? 'Chưa cập nhật' }}</span>
                         </div>
-
-                        {{-- Nơi đăng ký KCB --}}
-                        <div class="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                            <span class="text-gray-500 dark:text-gray-400">Nơi đăng ký KCB ban đầu</span>
-                            <span class="font-medium text-gray-800 dark:text-white">
-                                {{ $hoSo->noi_dang_ky_kcb ?? 'Chưa cập nhật' }}
-                            </span>
-                        </div>
-
-                        {{-- Mức lương đóng BHXH --}}
                         <div class="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
                             <span class="text-gray-500 dark:text-gray-400">Mức lương đóng BHXH</span>
                             <span class="font-medium text-green-600 dark:text-green-400">
                                 @php
-                                    $luongDongBhxh = 0;
-                                    if ($hopDongHieuLuc) {
-                                        $luongDongBhxh = $hopDongHieuLuc->luong_co_ban ?? 0;
-                                    } elseif ($luongGanNhat) {
-                                        $luongDongBhxh = $luongGanNhat->luong_co_ban ?? 0;
-                                    }
+                                    $luongDongBhxh =
+                                        $hopDongHieuLuc->luong_co_ban ?? ($luongGanNhat->luong_co_ban ?? 0);
                                 @endphp
                                 {{ number_format($luongDongBhxh, 0, ',', '.') }} VNĐ
                             </span>
                         </div>
-
-                        {{-- Tỷ lệ trích BHXH --}}
                         <div class="flex justify-between py-2">
-                            <span class="text-gray-500 dark:text-gray-400">Tỷ lệ trích BHXH</span>
-                            <span class="font-medium text-gray-800 dark:text-white">
-                                10.5%
-                                <span class="text-xs text-gray-400 block">(8% Hưu trí + 1.5% BHYT + 1% BHTN)</span>
-                            </span>
+                            <span class="text-gray-500 dark:text-gray-400">Mức đóng BHXH</span>
+                            <span
+                                class="font-bold text-blue-600 dark:text-blue-400">{{ number_format($luongDongBhxh * 0.105, 0, ',', '.') }}
+                                VNĐ</span>
                         </div>
                     </div>
-
-                    {{-- Tổng kết mức đóng --}}
-                    <div
-                        class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm font-semibold text-blue-700 dark:text-blue-300">📌 Mức đóng BHXH hiện
-                                tại</span>
-                            <span class="text-lg font-bold text-blue-700 dark:text-blue-300">
-                                {{ number_format($luongDongBhxh * 0.105, 0, ',', '.') }} VNĐ
-                            </span>
-                        </div>
-                        <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">Đóng hàng tháng theo mức lương hiện tại
-                        </p>
-                    </div>
-
-                    {{-- Nếu chưa có dữ liệu --}}
                     @if (!$hoSo->so_bhxh && !$hoSo->ma_so_thue)
                         <div
                             class="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                            <p class="text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2 flex-wrap">
-                                <span>⚠️</span>
-                                Thông tin bảo hiểm chưa được cập nhật.
+                            <p class="text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2">
+                                <span>⚠️</span> Thông tin bảo hiểm chưa được cập nhật.
                                 <a href="{{ route('admin.ho-so.edit', $hoSo->id) }}"
-                                    class="text-blue-600 hover:underline font-medium">
-                                    Cập nhật ngay
-                                </a>
+                                    class="text-blue-600 hover:underline font-medium">Cập nhật ngay</a>
                             </p>
                         </div>
                     @endif
                 </div>
 
-                {{-- ⭐ THUẾ TNCN - ĐƠN GIẢN HÓA --}}
+                {{-- THUẾ TNCN --}}
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
                     <h3
                         class="text-lg font-semibold text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
                         💰 Thuế TNCN
                     </h3>
 
-                    <div class="space-y-4">
-                        {{-- Giảm trừ bản thân --}}
-                        <div
-                            class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <p class="text-sm font-semibold text-green-800 dark:text-green-300">
-                                        👤 Giảm trừ bản thân
-                                    </p>
-                                    <p class="text-xs text-green-600 dark:text-green-400">Áp dụng cho mọi nhân viên</p>
-                                </div>
-                                <span class="text-xl font-bold text-green-700 dark:text-green-300">
-                                    11,000,000 VNĐ
-                                </span>
-                            </div>
+                    @php
+                        $thuNhapChiuThue = 0;
+                        if ($luongGanNhat) {
+                            $thuNhapChiuThue = max(0, ($luongGanNhat->tong_luong ?? 0) - 11000000);
+                        }
+                    @endphp
+
+                    <div class="space-y-3">
+                        <div class="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
+                            <span class="text-gray-500 dark:text-gray-400">👤 Giảm trừ bản thân</span>
+                            <span class="font-bold text-green-600 dark:text-green-400">11,000,000 VNĐ</span>
                         </div>
-
-                        {{-- Thu nhập chịu thuế --}}
-                        @php
-                            $thuNhapChiuThue = 0;
-                            if ($luongGanNhat) {
-                                $giamTruBanThan = 11000000;
-                                $thuNhapChiuThue = max(0, ($luongGanNhat->tong_luong ?? 0) - $giamTruBanThan);
-                            }
-                        @endphp
-
-                        <div
-                            class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <p class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                        📊 Thu nhập chịu thuế
-                                    </p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                                        = Gross - Giảm trừ bản thân
-                                    </p>
-                                </div>
-                                <span
-                                    class="text-xl font-bold {{ $thuNhapChiuThue > 0 ? 'text-orange-600' : 'text-green-600' }}">
-                                    {{ number_format($thuNhapChiuThue, 0, ',', '.') }} VNĐ
-                                </span>
-                            </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
+                            <span class="text-gray-500 dark:text-gray-400">📊 Thu nhập chịu thuế</span>
+                            <span class="font-bold {{ $thuNhapChiuThue > 0 ? 'text-orange-600' : 'text-green-600' }}">
+                                {{ number_format($thuNhapChiuThue, 0, ',', '.') }} VNĐ
+                            </span>
                         </div>
-
-                        {{-- Thuế TNCN phải nộp --}}
-                        @php
-                            $thueTncn = 0;
-                            if ($thuNhapChiuThue > 0) {
-                                // Bậc 1: 0-5tr → 5%
-                                if ($thuNhapChiuThue <= 5000000) {
-                                    $thueTncn = $thuNhapChiuThue * 0.05;
-                                }
-                                // Bậc 2: 5-10tr → 10%
-                                elseif ($thuNhapChiuThue <= 10000000) {
-                                    $thueTncn = 5000000 * 0.05 + ($thuNhapChiuThue - 5000000) * 0.1;
-                                }
-                                // Bậc 3: 10-18tr → 15%
-                                elseif ($thuNhapChiuThue <= 18000000) {
-                                    $thueTncn = 5000000 * 0.05 + 5000000 * 0.1 + ($thuNhapChiuThue - 10000000) * 0.15;
-                                }
-                                // Bậc 4: 18-32tr → 20%
-                                elseif ($thuNhapChiuThue <= 32000000) {
-                                    $thueTncn =
-                                        5000000 * 0.05 +
-                                        5000000 * 0.1 +
-                                        8000000 * 0.15 +
-                                        ($thuNhapChiuThue - 18000000) * 0.2;
-                                }
-                                // Bậc 5: 32-52tr → 25%
-                                elseif ($thuNhapChiuThue <= 52000000) {
-                                    $thueTncn =
-                                        5000000 * 0.05 +
-                                        5000000 * 0.1 +
-                                        8000000 * 0.15 +
-                                        14000000 * 0.2 +
-                                        ($thuNhapChiuThue - 32000000) * 0.25;
-                                }
-                                // Bậc 6: 52-80tr → 30%
-                                elseif ($thuNhapChiuThue <= 80000000) {
-                                    $thueTncn =
-                                        5000000 * 0.05 +
-                                        5000000 * 0.1 +
-                                        8000000 * 0.15 +
-                                        14000000 * 0.2 +
-                                        20000000 * 0.25 +
-                                        ($thuNhapChiuThue - 52000000) * 0.3;
-                                }
-                                // Bậc 7: >80tr → 35%
-                                else {
-                                    $thueTncn =
-                                        5000000 * 0.05 +
-                                        5000000 * 0.1 +
-                                        8000000 * 0.15 +
-                                        14000000 * 0.2 +
-                                        20000000 * 0.25 +
-                                        28000000 * 0.3 +
-                                        ($thuNhapChiuThue - 80000000) * 0.35;
-                                }
-                            }
-                        @endphp
-
-                        <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 border border-red-200 dark:border-red-800">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <p class="text-sm font-semibold text-red-800 dark:text-red-300">
-                                        🏛️ Thuế TNCN phải nộp
-                                    </p>
-                                    @if ($thuNhapChiuThue > 0)
-                                        <p class="text-xs text-red-600 dark:text-red-400">
-                                            Thu nhập chịu thuế: {{ number_format($thuNhapChiuThue, 0, ',', '.') }} VNĐ
-                                        </p>
-                                    @else
-                                        <p class="text-xs text-green-600 dark:text-green-400">
-                                            ✅ Thu nhập thấp hơn mức giảm trừ, không phải nộp thuế
-                                        </p>
-                                    @endif
-                                </div>
-                                <span class="text-xl font-bold {{ $thueTncn > 0 ? 'text-red-600' : 'text-green-600' }}">
-                                    {{ number_format($thueTncn, 0, ',', '.') }} VNĐ
-                                </span>
-                            </div>
+                        <div class="flex justify-between py-2">
+                            <span class="text-gray-500 dark:text-gray-400">🏛️ Thuế TNCN phải nộp</span>
+                            <span class="font-bold {{ $thuNhapChiuThue > 0 ? 'text-red-600' : 'text-green-600' }}">
+                                @php
+                                    $thueTncn = 0;
+                                    if ($thuNhapChiuThue <= 5000000) {
+                                        $thueTncn = $thuNhapChiuThue * 0.05;
+                                    } elseif ($thuNhapChiuThue <= 10000000) {
+                                        $thueTncn = 5000000 * 0.05 + ($thuNhapChiuThue - 5000000) * 0.1;
+                                    } elseif ($thuNhapChiuThue <= 18000000) {
+                                        $thueTncn =
+                                            5000000 * 0.05 + 5000000 * 0.1 + ($thuNhapChiuThue - 10000000) * 0.15;
+                                    } elseif ($thuNhapChiuThue <= 32000000) {
+                                        $thueTncn =
+                                            5000000 * 0.05 +
+                                            5000000 * 0.1 +
+                                            8000000 * 0.15 +
+                                            ($thuNhapChiuThue - 18000000) * 0.2;
+                                    } elseif ($thuNhapChiuThue <= 52000000) {
+                                        $thueTncn =
+                                            5000000 * 0.05 +
+                                            5000000 * 0.1 +
+                                            8000000 * 0.15 +
+                                            14000000 * 0.2 +
+                                            ($thuNhapChiuThue - 32000000) * 0.25;
+                                    } elseif ($thuNhapChiuThue <= 80000000) {
+                                        $thueTncn =
+                                            5000000 * 0.05 +
+                                            5000000 * 0.1 +
+                                            8000000 * 0.15 +
+                                            14000000 * 0.2 +
+                                            20000000 * 0.25 +
+                                            ($thuNhapChiuThue - 52000000) * 0.3;
+                                    } else {
+                                        $thueTncn =
+                                            5000000 * 0.05 +
+                                            5000000 * 0.1 +
+                                            8000000 * 0.15 +
+                                            14000000 * 0.2 +
+                                            20000000 * 0.25 +
+                                            28000000 * 0.3 +
+                                            ($thuNhapChiuThue - 80000000) * 0.35;
+                                    }
+                                @endphp
+                                {{ number_format($thueTncn, 0, ',', '.') }} VNĐ
+                            </span>
                         </div>
-
-                        {{-- Bảng bậc thuế tham khảo --}}
-                        <div
-                            class="mt-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
-                            <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">📋 Biểu thuế lũy tiến
-                                từng phần</p>
-                            <div class="grid grid-cols-2 gap-1 text-xs">
-                                <div class="text-gray-500 dark:text-gray-400">0 - 5 triệu</div>
-                                <div class="text-right text-gray-700 dark:text-gray-300">5%</div>
-                                <div class="text-gray-500 dark:text-gray-400">5 - 10 triệu</div>
-                                <div class="text-right text-gray-700 dark:text-gray-300">10%</div>
-                                <div class="text-gray-500 dark:text-gray-400">10 - 18 triệu</div>
-                                <div class="text-right text-gray-700 dark:text-gray-300">15%</div>
-                                <div class="text-gray-500 dark:text-gray-400">18 - 32 triệu</div>
-                                <div class="text-right text-gray-700 dark:text-gray-300">20%</div>
-                                <div class="text-gray-500 dark:text-gray-400">32 - 52 triệu</div>
-                                <div class="text-right text-gray-700 dark:text-gray-300">25%</div>
-                                <div class="text-gray-500 dark:text-gray-400">52 - 80 triệu</div>
-                                <div class="text-right text-gray-700 dark:text-gray-300">30%</div>
-                                <div class="text-gray-500 dark:text-gray-400">Trên 80 triệu</div>
-                                <div class="text-right text-gray-700 dark:text-gray-300">35%</div>
+                        @if ($thuNhapChiuThue == 0)
+                            <div
+                                class="mt-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                                <p class="text-xs text-green-700 dark:text-green-300">✅ Thu nhập thấp hơn mức giảm trừ,
+                                    không phải nộp thuế.</p>
                             </div>
-                        </div>
-
+                        @endif
                     </div>
-
                 </div>
 
             </div>

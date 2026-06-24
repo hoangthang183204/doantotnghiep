@@ -189,44 +189,50 @@
                         </h3>
                     </div>
                     <div class="p-6 space-y-4">
-                        <!-- IP hiện tại -->
+
+                        {{-- IP hiện tại --}}
                         <div
-                            class="flex items-center justify-between p-3 {{ in_array($currentIP, $dsIP) ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-700/50' }} rounded-lg">
+                            class="flex items-center justify-between p-3 {{ $ipStatus == 'valid' ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' : ($ipStatus == 'invalid' ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800' : 'bg-gray-50 dark:bg-gray-700/50') }} rounded-lg">
                             <div class="flex items-center">
                                 <i class="fas fa-network-wired text-blue-600 dark:text-blue-400 w-5"></i>
                                 <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">IP</span>
                             </div>
                             <div class="text-right">
                                 <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $currentIP }}</span>
-                                @if (in_array($currentIP, $dsIP))
-                                    <span class="block text-xs text-green-600 dark:text-green-400">✓ Hợp lệ</span>
+                                @if ($ipStatus == 'valid')
+                                    <span class="block text-xs text-green-600 dark:text-green-400">✓
+                                        {{ $ipMessage }}</span>
+                                @elseif($ipStatus == 'invalid')
+                                    <span class="block text-xs text-red-500 dark:text-red-400">✗ {{ $ipMessage }}</span>
                                 @else
-                                    <span class="block text-xs text-red-500 dark:text-red-400">✗ Không hợp lệ</span>
+                                    <span class="block text-xs text-gray-400">{{ $ipMessage }}</span>
                                 @endif
                             </div>
                         </div>
 
-                        <!-- WiFi hiện tại -->
+                        {{-- WiFi hiện tại --}}
                         <div
-                            class="flex items-center justify-between p-3 {{ $currentWiFi && in_array($currentWiFi, $dsWiFi) ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-700/50' }} rounded-lg">
+                            class="flex items-center justify-between p-3 {{ $wifiStatus == 'valid' ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' : ($wifiStatus == 'invalid' ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800' : 'bg-gray-50 dark:bg-gray-700/50') }} rounded-lg">
                             <div class="flex items-center">
                                 <i class="fas fa-wifi text-blue-600 dark:text-blue-400 w-5"></i>
                                 <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">WiFi</span>
                             </div>
                             <div class="text-right">
-                                <span
-                                    class="text-sm font-medium text-gray-900 dark:text-white">{{ $currentWiFi ?? 'Chưa kết nối' }}</span>
-                                @if ($currentWiFi && in_array($currentWiFi, $dsWiFi))
-                                    <span class="block text-xs text-green-600 dark:text-green-400">✓ Hợp lệ</span>
-                                @elseif($currentWiFi)
-                                    <span class="block text-xs text-red-500 dark:text-red-400">✗ Không hợp lệ</span>
+                                <span class="text-sm font-medium text-gray-900 dark:text-white">
+                                    {{ $currentWiFi ?: 'Chưa kết nối' }}
+                                </span>
+                                @if ($wifiStatus == 'valid')
+                                    <span class="block text-xs text-green-600 dark:text-green-400">✓
+                                        {{ $wifiMessage }}</span>
+                                @elseif($wifiStatus == 'invalid')
+                                    <span class="block text-xs text-red-500 dark:text-red-400">✗ {{ $wifiMessage }}</span>
                                 @else
-                                    <span class="block text-xs text-gray-400">Không xác định</span>
+                                    <span class="block text-xs text-gray-400">{{ $wifiMessage }}</span>
                                 @endif
                             </div>
                         </div>
 
-                        <!-- Thiết bị -->
+                        {{-- Thiết bị --}}
                         <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                             <div class="flex items-center">
                                 <i class="fas fa-laptop text-purple-600 dark:text-purple-400 w-5"></i>
@@ -237,18 +243,18 @@
                             </span>
                         </div>
 
-                        <!-- Phương thức -->
+                        {{-- Phương thức --}}
                         <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                             <div class="flex items-center">
                                 <i class="fas fa-check-circle text-green-600 dark:text-green-400 w-5"></i>
                                 <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Phương thức</span>
                             </div>
                             <span class="text-sm font-medium text-gray-900 dark:text-white">
-                                {{ $chamCongHomNay->phuong_thuc_cham_cong_text ?? 'Chưa chấm công' }}
+                                {{ $phuongThucText }}
                             </span>
                         </div>
 
-                        <!-- Danh sách được phép -->
+                        {{-- Danh sách được phép --}}
                         <details class="mt-4">
                             <summary
                                 class="text-sm font-medium text-blue-600 dark:text-blue-400 cursor-pointer hover:underline">
@@ -256,27 +262,41 @@
                             </summary>
                             <div class="mt-2 space-y-1">
                                 @if (count($dsIP) > 0)
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">IP được phép:</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">📡 IP được phép:</p>
                                     <div class="flex flex-wrap gap-1 mt-1">
                                         @foreach ($dsIP as $ip)
                                             <span
-                                                class="inline-block text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">{{ $ip }}</span>
+                                                class="inline-flex items-center gap-1 text-xs {{ $currentIP == $ip ? 'bg-blue-500 text-white' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' }} px-2 py-0.5 rounded-full">
+                                                @if ($currentIP == $ip)
+                                                    <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                                                @endif
+                                                {{ $ip }}
+                                            </span>
                                         @endforeach
                                     </div>
                                 @endif
+
                                 @if (count($dsWiFi) > 0)
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">WiFi được phép:</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">📶 WiFi được phép:</p>
                                     <div class="flex flex-wrap gap-1 mt-1">
                                         @foreach ($dsWiFi as $wifi)
                                             <span
-                                                class="inline-block text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">{{ $wifi }}</span>
+                                                class="inline-flex items-center gap-1 text-xs {{ $currentWiFi && $currentWiFi == $wifi ? 'bg-green-500 text-white' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' }} px-2 py-0.5 rounded-full">
+                                                @if ($currentWiFi && $currentWiFi == $wifi)
+                                                    <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                                                @endif
+                                                {{ $wifi }}
+                                            </span>
                                         @endforeach
                                     </div>
+                                @endif
+
+                                @if (count($dsIP) == 0 && count($dsWiFi) == 0)
+                                    <p class="text-xs text-gray-400">Chưa có cấu hình nào</p>
                                 @endif
                             </div>
                         </details>
 
-                        {{-- ⭐ BỎ PHẦN HIỂN THỊ "ĐANG CHỜ PHÊ DUYỆT" --}}
                     </div>
                 </div>
             </div>

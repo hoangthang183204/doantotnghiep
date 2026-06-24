@@ -40,6 +40,61 @@ class ChamCongController extends Controller
         $currentWiFi = request()->header('X-WiFi-SSID');
         $isValidLocation = CauHinhChamCong::isValidLocation($currentIP, $currentWiFi);
 
+        // ✅ THÊM: Xác định trạng thái WiFi
+        $wifiStatus = 'unknown'; // unknown, valid, invalid
+        $wifiMessage = 'Không xác định';
+
+        if ($currentWiFi) {
+            if (in_array($currentWiFi, $dsWiFi)) {
+                $wifiStatus = 'valid';
+                $wifiMessage = 'Hợp lệ';
+            } else {
+                $wifiStatus = 'invalid';
+                $wifiMessage = 'Không hợp lệ';
+            }
+        } else {
+            // ✅ Thử lấy WiFi từ chấm công hôm nay (nếu có)
+            if ($chamCongHomNay && $chamCongHomNay->ten_wifi) {
+                $currentWiFi = $chamCongHomNay->ten_wifi;
+                // Kiểm tra lại với danh sách WiFi được phép
+                if (in_array($currentWiFi, $dsWiFi)) {
+                    $wifiStatus = 'valid';
+                    $wifiMessage = 'Hợp lệ';
+                } else {
+                    $wifiStatus = 'invalid';
+                    $wifiMessage = 'Không hợp lệ';
+                }
+            } else {
+                $wifiMessage = 'Chưa kết nối';
+            }
+        }
+
+        // ✅ THÊM: Xác định trạng thái IP
+        $ipStatus = 'unknown';
+        $ipMessage = 'Không xác định';
+
+        if ($currentIP) {
+            if (in_array($currentIP, $dsIP)) {
+                $ipStatus = 'valid';
+                $ipMessage = 'Hợp lệ';
+            } else {
+                $ipStatus = 'invalid';
+                $ipMessage = 'Không hợp lệ';
+            }
+        }
+
+        // ✅ THÊM: Lấy phương thức chấm công
+        $phuongThucText = 'Chưa chấm công';
+        if ($chamCongHomNay) {
+            $phuongThucMap = [
+                'ip' => '📡 IP',
+                'wifi' => '📶 WiFi',
+                'mac' => '💻 MAC',
+                'manual' => '✍️ Nhập tay',
+            ];
+            $phuongThucText = $phuongThucMap[$chamCongHomNay->phuong_thuc_cham_cong] ?? $chamCongHomNay->phuong_thuc_cham_cong;
+        }
+
         return view('employee.cham-cong.index', compact(
             'chamCongHomNay',
             'lichSu',
@@ -49,7 +104,12 @@ class ChamCongController extends Controller
             'dsWiFi',
             'currentIP',
             'currentWiFi',
-            'isValidLocation'
+            'isValidLocation',
+            'wifiStatus',
+            'wifiMessage',
+            'ipStatus',
+            'ipMessage',
+            'phuongThucText'
         ));
     }
 
