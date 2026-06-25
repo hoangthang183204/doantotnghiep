@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Models\DangKyTangCa;
+use App\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +14,13 @@ use Illuminate\Support\Facades\Log;
 
 class TangCaController extends Controller
 {
+    protected NotificationService $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * Danh sách đơn tăng ca của tôi
      */
@@ -47,6 +55,8 @@ class TangCaController extends Controller
      */
     public function store(Request $request)
     {
+        Log::info('🚀=== TANG CA STORE CALLED ===🚀');
+        
         $request->validate([
             'ngay_tang_ca' => 'required|date|after_or_equal:today',
             'gio_bat_dau' => 'required',
@@ -56,6 +66,7 @@ class TangCaController extends Controller
         ]);
 
         $user = Auth::user();
+        Log::info('📝 User ID: ' . $user->id . ' - ' . $user->email);
 
         // Tính số giờ tăng ca
         $gioBatDau = Carbon::parse($request->gio_bat_dau);
@@ -68,7 +79,7 @@ class TangCaController extends Controller
 
         DB::beginTransaction();
         try {
-            DangKyTangCa::create([
+            $tangCa = DangKyTangCa::create([
                 'nguoi_dung_id' => $user->id,
                 'ngay_tang_ca' => $request->ngay_tang_ca,
                 'gio_bat_dau' => $request->gio_bat_dau,
@@ -79,6 +90,13 @@ class TangCaController extends Controller
                 'trang_thai' => 'cho_duyet',
             ]);
 
+            Log::info('📝 TangCa created: ' . $tangCa->id);
+
+            // ⭐ GỬI THÔNG BÁO CHO ADMIN
+            Log::info('📝 Sending overtime notification to admins...');
+            $this->notificationService->notifyOvertime($tangCa, 'created');
+            Log::info('📝 Overtime notification sent successfully');
+
             DB::commit();
 
             return redirect()->route('employee.tang-ca.index')
@@ -86,7 +104,8 @@ class TangCaController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('Tang ca error: ' . $e->getMessage());
+            Log::error('❌ Tang ca error: ' . $e->getMessage());
+            Log::error('❌ Stack trace: ' . $e->getTraceAsString());
             return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
         }
     }
