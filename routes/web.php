@@ -222,6 +222,14 @@ Route::prefix('admin')
             [BangLuongController::class, 'guiTatCaEmail']
         )->name('bang-luong.gui-tat-ca-email');
         Route::post('/bang-luong/luong-nhan-vien/{luongId}/gui-email', [BangLuongController::class, 'guiEmailLuong'])->whereNumber('luongId')->name('bang-luong.gui-email');
+    '/bang-luong/{id}/gui-tat-ca-email',
+    [BangLuongController::class, 'guiTatCaEmail']
+)->name('bang-luong.gui-tat-ca-email');
+Route::get(
+    'bang-luong/{id}/export',
+    [BangLuongController::class, 'export']
+)->name('bang-luong.export');
+        Route::post('/bang-luong/luong-nhan-vien/{luongId}/gui-email',[BangLuongController::class, 'guiEmailLuong'])->whereNumber('luongId')->name('bang-luong.gui-email');
         Route::put('/bang-luong/{id}/chot', [BangLuongController::class, 'chot'])->whereNumber('id')->name('bang-luong.chot');
         Route::put('/bang-luong/{id}/thanh-toan', [BangLuongController::class, 'thanhToan'])->whereNumber('id')->name('bang-luong.thanh-toan');
         Route::delete('/bang-luong/{id}', [BangLuongController::class, 'destroy'])->whereNumber('id')->name('bang-luong.destroy');

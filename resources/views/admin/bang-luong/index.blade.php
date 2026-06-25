@@ -63,6 +63,12 @@
                                     <i class="fa-regular fa-eye"></i> <span>Xem</span>
                                 </a>
 
+                                <a href="{{ route('admin.bang-luong.export', $bl->id) }}"
+   class="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-slate-700 rounded-lg"
+   title="Xuất Excel">
+    <i class="fa-solid fa-file-excel"></i>
+</a>
+
                                 @if($bl->la_nhap)
                                     <form action="{{ route('admin.bang-luong.chot', $bl->id) }}" method="POST"
                                           onsubmit="return confirm('Chốt bảng lương này? Sau khi chốt sẽ không sửa/xoá được.')">

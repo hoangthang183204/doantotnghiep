@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\ChiTietBangLuongExport;
 use App\Http\Controllers\Controller;
+use App\Mail\PhieuLuongMail;
 use App\Models\BangLuong;
 use App\Models\LuongNhanVien;
 use App\Models\NguoiDung;
 use App\Services\TinhLuongService;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
-use App\Mail\PhieuLuongMail;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Maatwebsite\Excel\Facades\Excel;
 
 class BangLuongController extends Controller
 {
@@ -200,6 +202,21 @@ public function guiTatCaEmail($id)
     return back()->with(
         'success',
         "Đã gửi {$soLuong} phiếu lương thành công."
+    );
+}
+public function export($id)
+{
+    $bangLuong = BangLuong::findOrFail($id);
+
+    $fileName = 'bang_luong_' .
+        $bangLuong->thang .
+        '_' .
+        $bangLuong->nam .
+        '.xlsx';
+
+    return Excel::download(
+        new ChiTietBangLuongExport($id),
+        $fileName
     );
 }
 }
