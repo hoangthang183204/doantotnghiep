@@ -4,12 +4,20 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\DangKyTangCa;
+use App\Services\NotificationService;
 use App\Models\PhongBan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class TangCaController extends Controller
 {
+
+    protected NotificationService $notificationService;  
+
+    public function __construct(NotificationService $notificationService)  
+    {
+        $this->notificationService = $notificationService;
+    }
     /**
      * Danh sách đăng ký tăng ca
      */

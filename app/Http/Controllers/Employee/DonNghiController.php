@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use App\Models\DonXinNghi;
 use App\Models\LoaiNghiPhep;
+use App\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,39 +15,36 @@ use Illuminate\Support\Facades\Log;
 
 class DonNghiController extends Controller
 {
-    /**
-     * Lấy số dư nghỉ phép của user
-     */
+    protected NotificationService $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     private function getSoDuNghiPhep($userId)
     {
         $soNgayPhepNam = 12;
-        
         $soNgayDaNghi = DonXinNghi::where('nguoi_dung_id', $userId)
             ->where('trang_thai', 'da_duyet')
             ->whereYear('ngay_bat_dau', Carbon::now()->year)
             ->sum('so_ngay_nghi');
-        
-        $soDu = $soNgayPhepNam - $soNgayDaNghi;
-        
+
         return [
             'so_ngay_phep_nam' => $soNgayPhepNam,
             'so_ngay_da_nghi' => $soNgayDaNghi,
-            'so_du_con_lai' => max(0, $soDu),
+            'so_du_con_lai' => max(0, $soNgayPhepNam - $soNgayDaNghi),
         ];
     }
 
     public function index(Request $request)
     {
         $user = Auth::user();
-
         $query = DonXinNghi::where('nguoi_dung_id', $user->id);
 
-        // Lọc theo trạng thái
         if ($request->filled('trang_thai')) {
             $query->where('trang_thai', $request->trang_thai);
         }
-
-        // Lọc theo ngày
         if ($request->filled('tu_ngay')) {
             $query->whereDate('ngay_bat_dau', '>=', $request->tu_ngay);
         }
@@ -56,7 +54,6 @@ class DonNghiController extends Controller
 
         $danhSachDon = $query->orderBy('created_at', 'desc')->paginate(10);
 
-        // ⭐ THỐNG KÊ CHÍNH XÁC
         $thongKe = [
             'tong' => DonXinNghi::where('nguoi_dung_id', $user->id)->count(),
             'cho_duyet' => DonXinNghi::where('nguoi_dung_id', $user->id)->where('trang_thai', 'cho_duyet')->count(),
@@ -81,6 +78,8 @@ class DonNghiController extends Controller
 
     public function store(Request $request)
     {
+        Log::info('🚀=== STORE FUNCTION CALLED ===🚀');
+        
         $request->validate([
             'loai_nghi_id' => 'required|exists:loai_nghi_phep,id',
             'ngay_bat_dau' => 'required|date|after_or_equal:today',
@@ -91,14 +90,14 @@ class DonNghiController extends Controller
         ]);
 
         $user = Auth::user();
-
-        // Kiểm tra số dư
+        Log::info('📝 User ID: ' . $user->id . ' - ' . $user->email);
+        
         $soDu = $this->getSoDuNghiPhep($user->id);
+
         if ($request->so_ngay_nghi > $soDu['so_du_con_lai']) {
             return back()->withErrors(['so_ngay_nghi' => 'Số ngày nghỉ vượt quá số dư nghỉ phép hiện tại (' . $soDu['so_du_con_lai'] . ' ngày)']);
         }
 
-        // Kiểm tra trùng lặp
         $exists = DonXinNghi::where('nguoi_dung_id', $user->id)
             ->where('trang_thai', 'cho_duyet')
             ->where(function ($q) use ($request) {
@@ -111,14 +110,13 @@ class DonNghiController extends Controller
             return back()->withErrors(['ngay_bat_dau' => 'Bạn đã có đơn nghỉ trùng khoảng thời gian này đang chờ duyệt!']);
         }
 
-        // Tạo mã đơn
         $latestDon = DonXinNghi::orderBy('id', 'desc')->first();
         $nextId = $latestDon ? $latestDon->id + 1 : 1;
         $maDonNghi = 'DN' . date('Ymd') . str_pad($nextId, 4, '0', STR_PAD_LEFT);
 
         DB::beginTransaction();
         try {
-            DonXinNghi::create([
+            $donNghi = DonXinNghi::create([
                 'ma_don_nghi' => $maDonNghi,
                 'nguoi_dung_id' => $user->id,
                 'loai_nghi_phep_id' => $request->loai_nghi_id,
@@ -131,6 +129,13 @@ class DonNghiController extends Controller
                 'cap_duyet_hien_tai' => 1,
             ]);
 
+            Log::info('📝 DonNghi created: ' . $donNghi->id);
+
+            // ⭐ GỬI THÔNG BÁO CHO ADMIN
+            Log::info('📝 Sending notification to admins...');
+            $this->notificationService->notifyLeaveRequest($donNghi, 'created');
+            Log::info('📝 Notification sent successfully');
+
             DB::commit();
 
             return redirect()->route('employee.don-nghi.index')
@@ -138,7 +143,8 @@ class DonNghiController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('Don nghi error: ' . $e->getMessage());
+            Log::error('❌ Don nghi error: ' . $e->getMessage());
+            Log::error('❌ Stack trace: ' . $e->getTraceAsString());
             return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
         }
     }
@@ -146,14 +152,9 @@ class DonNghiController extends Controller
     public function show($id)
     {
         $user = Auth::user();
-        
-        $donNghi = DonXinNghi::with([
-            'loaiNghiPhep',
-            'nguoiDung.hoSo',
-            'nguoiDuyet.hoSo'
-        ])
-        ->where('nguoi_dung_id', $user->id)
-        ->findOrFail($id);
+        $donNghi = DonXinNghi::with(['loaiNghiPhep', 'nguoiDung.hoSo'])
+            ->where('nguoi_dung_id', $user->id)
+            ->findOrFail($id);
 
         return view('employee.don-nghi.show', compact('donNghi'));
     }
@@ -217,9 +218,7 @@ class DonNghiController extends Controller
             ->where('trang_thai', 'cho_duyet')
             ->findOrFail($id);
 
-        $donNghi->update([
-            'trang_thai' => 'huy_bo'
-        ]);
+        $donNghi->update(['trang_thai' => 'huy_bo']);
 
         return redirect()->route('employee.don-nghi.index')
             ->with('success', '🚫 Đã hủy đơn xin nghỉ phép!');

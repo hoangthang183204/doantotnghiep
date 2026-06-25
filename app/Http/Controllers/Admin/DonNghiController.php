@@ -8,19 +8,27 @@ use Illuminate\Http\Request;
 use App\Models\DonXinNghi;
 use App\Models\NguoiDung;
 use App\Models\LoaiNghiPhep;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 
 class DonNghiController extends Controller
 {
+
+    protected NotificationService $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
     /**
      * Danh sách đơn xin nghỉ (có filter)
      */
     public function index(Request $request)
     {
         $query = DonXinNghi::with([
-            'nguoiDung.hoSo', 
-            'banGiaoCho.hoSo', 
-            'loaiNghiPhep', 
+            'nguoiDung.hoSo',
+            'banGiaoCho.hoSo',
+            'loaiNghiPhep',
             'nguoiDuyet.hoSo'
         ]);
 
@@ -105,58 +113,6 @@ class DonNghiController extends Controller
 
         return view('admin.don_nghi.show', compact('donNghi'));
     }
-
-    /**
-     * Cập nhật trạng thái đơn xin nghỉ
-     */
-    public function capNhatTrangThai(Request $request, $id)
-    {
-        $request->validate([
-            'trang_thai' => 'required|in:da_duyet,tu_choi,cho_duyet',
-            'ly_do_tu_choi' => 'nullable|string|max:500',
-        ]);
-
-        try {
-            $donNghi = DonXinNghi::findOrFail($id);
-
-            // ⚠️ KIỂM TRA: KHÔNG CHO PHÉP THAY ĐỔI ĐƠN ĐÃ HỦY
-            if ($donNghi->trang_thai == 'huy_bo') {
-                return redirect()->back()->with('error', '❌ Đơn này đã bị hủy, không thể thay đổi trạng thái!');
-            }
-
-            // Cập nhật trạng thái
-            $donNghi->trang_thai = $request->trang_thai;
-
-            if ($request->trang_thai == 'da_duyet' || $request->trang_thai == 'tu_choi') {
-                $donNghi->nguoi_duyet_id = auth()->id();
-                $donNghi->thoi_gian_duyet = now();
-            }
-
-            if ($request->trang_thai == 'tu_choi') {
-                $donNghi->ghi_chu = $request->ly_do_tu_choi ?? 'Không có lý do';
-            }
-
-            if ($request->trang_thai == 'cho_duyet') {
-                $donNghi->nguoi_duyet_id = null;
-                $donNghi->thoi_gian_duyet = null;
-                $donNghi->ghi_chu = null;
-            }
-
-            $donNghi->save();
-
-            $thongBao = match ($request->trang_thai) {
-                'cho_duyet' => 'Đã hoàn tác đơn về trạng thái Chờ duyệt!',
-                'da_duyet' => 'Đã duyệt đơn nghỉ phép thành công!',
-                'tu_choi' => 'Đã từ chối đơn nghỉ phép!',
-                default => 'Cập nhật thành công!',
-            };
-
-            return redirect()->back()->with('success', $thongBao);
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
-        }
-    }
-
     /**
      * Duyệt hàng loạt
      */
@@ -191,5 +147,84 @@ class DonNghiController extends Controller
                 'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+
+
+    public function capNhatTrangThai(Request $request, $id)
+    {
+        $request->validate([
+            'trang_thai' => 'required|in:da_duyet,tu_choi,cho_duyet',
+            'ly_do_tu_choi' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $donNghi = DonXinNghi::findOrFail($id);
+
+            if ($donNghi->trang_thai == 'huy_bo') {
+                return redirect()->back()->with('error', '❌ Đơn này đã bị hủy, không thể thay đổi trạng thái!');
+            }
+
+            $donNghi->trang_thai = $request->trang_thai;
+
+            if ($request->trang_thai == 'da_duyet' || $request->trang_thai == 'tu_choi') {
+                $donNghi->nguoi_duyet_id = auth()->id();
+                $donNghi->thoi_gian_duyet = now();
+            }
+
+            if ($request->trang_thai == 'tu_choi') {
+                $donNghi->ghi_chu = $request->ly_do_tu_choi ?? 'Không có lý do';
+            }
+
+            if ($request->trang_thai == 'cho_duyet') {
+                $donNghi->nguoi_duyet_id = null;
+                $donNghi->thoi_gian_duyet = null;
+                $donNghi->ghi_chu = null;
+            }
+
+            $donNghi->save();
+
+            // ⭐⭐⭐ GỬI THÔNG BÁO KHI DUYỆT/TỪ CHỐI ⭐⭐⭐
+            $action = $request->trang_thai === 'da_duyet' ? 'approved' : 'rejected';
+            if (in_array($request->trang_thai, ['da_duyet', 'tu_choi'])) {
+                $this->notificationService->notifyLeaveRequest($donNghi, $action);
+            }
+
+            $thongBao = match ($request->trang_thai) {
+                'cho_duyet' => 'Đã hoàn tác đơn về trạng thái Chờ duyệt!',
+                'da_duyet' => 'Đã duyệt đơn nghỉ phép thành công!',
+                'tu_choi' => 'Đã từ chối đơn nghỉ phép!',
+                default => 'Cập nhật thành công!',
+            };
+
+            return redirect()->back()->with('success', $thongBao);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        }
+    }
+
+    public function reject(Request $request, $id)
+    {
+        $donNghi = DonXinNghi::findOrFail($id);
+        $donNghi->trang_thai = 'tu_choi';
+        $donNghi->ghi_chu = $request->ly_do_tu_choi;
+        $donNghi->save();
+
+        // ⭐⭐⭐ GỬI THÔNG BÁO TỪ CHỐI ⭐⭐⭐
+        $this->notificationService->notifyLeaveRequest($donNghi, 'rejected');
+
+        return redirect()->back()->with('error', 'Đã từ chối đơn nghỉ phép');
+    }
+
+    public function cancel($id)
+    {
+        $donNghi = DonXinNghi::findOrFail($id);
+        $donNghi->trang_thai = 'huy_bo';
+        $donNghi->save();
+
+        // ⭐⭐⭐ GỬI THÔNG BÁO HỦY ĐƠN ⭐⭐⭐
+        $this->notificationService->notifyLeaveRequest($donNghi, 'cancelled');
+
+        return redirect()->back()->with('success', 'Đã hủy đơn nghỉ phép');
     }
 }

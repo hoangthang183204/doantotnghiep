@@ -36,6 +36,10 @@ use App\Http\Controllers\Employee\YeuCauChinhCongController;
 use App\Http\Controllers\Employee\HopDongController;
 use App\Http\Controllers\Employee\QuyDinhController as EmployeeQuyDinhController;
 use App\Http\Controllers\Admin\TrungTuyenController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Models\DonXinNghi;
+use App\Models\NguoiDung;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Mail;
 
 // =============================================
@@ -63,6 +67,63 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::prefix('admin')
     ->name('admin.')
     ->group(function () {
+
+        Route::get('/api/notifications', function () {
+            $user = auth()->user();
+
+            if (!$user) {
+                return response()->json(['data' => [], 'unread_count' => 0]);
+            }
+
+            $notifications = $user->notifications()
+                ->orderBy('created_at', 'desc')
+                ->limit(20)
+                ->get()
+                ->map(function ($notification) {
+                    $data = $notification->data;
+                    if (is_string($data)) {
+                        $data = json_decode($data, true);
+                    }
+                    return [
+                        'id' => $notification->id,
+                        'data' => $data,
+                        'read_at' => $notification->read_at,
+                        'created_at' => $notification->created_at,
+                    ];
+                });
+
+            return response()->json([
+                'data' => $notifications,
+                'unread_count' => $user->unreadNotifications()->count(),
+            ]);
+        })->name('api.notifications');
+
+        // ⭐ THÊM ROUTE ĐỂ LẤY SỐ LƯỢNG CHƯA ĐỌC ⭐
+        Route::get('/api/notifications/unread-count', function () {
+            $user = auth()->user();
+            return response()->json(['count' => $user ? $user->unreadNotifications()->count() : 0]);
+        });
+
+        // ⭐ THÊM ROUTE ĐÁNH DẤU ĐÃ ĐỌC ⭐
+        Route::post('/api/notifications/{id}/mark-as-read', function ($id) {
+            $user = auth()->user();
+            if (!$user) {
+                return response()->json(['success' => false], 401);
+            }
+            $notification = $user->notifications()->findOrFail($id);
+            $notification->markAsRead();
+            return response()->json(['success' => true]);
+        });
+
+        // ⭐ THÊM ROUTE ĐÁNH DẤU TẤT CẢ ĐÃ ĐỌC ⭐
+        Route::post('/api/notifications/mark-all-as-read', function () {
+            $user = auth()->user();
+            if (!$user) {
+                return response()->json(['success' => false], 401);
+            }
+            $user->unreadNotifications()->update(['read_at' => now()]);
+            return response()->json(['success' => true]);
+        });
 
         // ========== DASHBOARD ==========
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
@@ -144,6 +205,12 @@ Route::prefix('admin')
             Route::post('/bulk-action', [DonNghiController::class, 'bulkAction'])->name('bulk');
         });
 
+        Route::get('/notifications', [App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/notifications/mark-all-read', [App\Http\Controllers\Admin\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+        Route::get('/notifications/{id}/mark-read', [App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+        Route::delete('/notifications/{id}', [App\Http\Controllers\Admin\NotificationController::class, 'destroy'])->name('notifications.destroy');
+
+
         // ========== LƯƠNG (BẢNG LƯƠNG THÁNG) ==========
         Route::get('/bang-luong', [BangLuongController::class, 'index'])->name('bang-luong.index');
         Route::get('/bang-luong/create', [BangLuongController::class, 'create'])->name('bang-luong.create');
@@ -151,6 +218,10 @@ Route::prefix('admin')
         Route::get('/bang-luong/{id}', [BangLuongController::class, 'show'])->whereNumber('id')->name('bang-luong.show');
         Route::get('/bang-luong/{id}/nhan-vien/{luongId}', [BangLuongController::class, 'chiTietNhanVien'])->whereNumber(['id', 'luongId'])->name('bang-luong.chi-tiet-nhan-vien');
         Route::post(
+            '/bang-luong/{id}/gui-tat-ca-email',
+            [BangLuongController::class, 'guiTatCaEmail']
+        )->name('bang-luong.gui-tat-ca-email');
+        Route::post('/bang-luong/luong-nhan-vien/{luongId}/gui-email', [BangLuongController::class, 'guiEmailLuong'])->whereNumber('luongId')->name('bang-luong.gui-email');
     '/bang-luong/{id}/gui-tat-ca-email',
     [BangLuongController::class, 'guiTatCaEmail']
 )->name('bang-luong.gui-tat-ca-email');
@@ -169,13 +240,13 @@ Route::get(
         //test//
         Route::get('/test-mail', function () {
 
-    Mail::raw('Test gửi mail HRFlow', function ($message) {
-        $message->to('lehuuvan16092006@gmail.com')
-                ->subject('Test Mail');
-    });
+            Mail::raw('Test gửi mail HRFlow', function ($message) {
+                $message->to('lehuuvan16092006@gmail.com')
+                    ->subject('Test Mail');
+            });
 
-    return 'OK';
-});
+            return 'OK';
+        });
 
         // ========== QUẢN LÝ LƯƠNG ==========
 
@@ -347,6 +418,8 @@ Route::prefix('employee')
             Route::post('/{id}/huy', [EmployeeDonNghiController::class, 'huy'])->name('huy');
         });
 
+
+
         // ========== HỒ SƠ CÁ NHÂN ==========
         Route::prefix('ho-so')->name('ho-so.')->group(function () {
             Route::get('/', [EmployeeHoSoController::class, 'index'])->name('index');
@@ -354,11 +427,53 @@ Route::prefix('employee')
             Route::post('/change-password', [EmployeeHoSoController::class, 'changePassword'])->name('change-password');
         });
         // ========== BẢNG LƯƠNG ==========
-        // ========== BẢNG LƯƠNG ==========
         Route::prefix('bang-luong')->name('bang-luong.')->group(function () {
             Route::get('/', [EmployeeBangLuongController::class, 'index'])->name('index');
             Route::get('/{id}', [EmployeeBangLuongController::class, 'show'])->name('show');
         });
+
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+        Route::get('/notifications/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+        Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
     });
 // ========== QUY ĐỊNH ==========
 Route::get('/quy-dinh', [EmployeeQuyDinhController::class, 'index'])->name('employee.quydinh.index');
+
+Route::get('/test-notification', function () {
+    $user = auth()->user();
+
+    if (!$user) {
+        return '❌ Chưa đăng nhập!';
+    }
+
+    try {
+        // Lấy admin
+        $admin = NguoiDung::where('vai_tro_id', 1)->first();
+
+        if (!$admin) {
+            return '❌ Không tìm thấy admin!';
+        }
+
+        // Tạo đơn nghỉ giả
+        $donNghi = new DonXinNghi([
+            'id' => 999,
+            'ma_don_nghi' => 'DN_TEST_' . time(),
+            'nguoi_dung_id' => $user->id,
+            'loai_nghi_phep_id' => 1,
+            'ngay_bat_dau' => now(),
+            'ngay_ket_thuc' => now()->addDay(),
+            'so_ngay_nghi' => 1,
+            'ly_do' => 'Test notification',
+            'trang_thai' => 'cho_duyet',
+        ]);
+        $donNghi->nguoiDung = $user;
+
+        $service = app(NotificationService::class);
+        $service->sendToUser($admin, new \App\Notifications\LeaveRequestNotification($donNghi, 'created'));
+
+        return '✅ Đã gửi thông báo test đến admin: ' . $admin->email;
+    } catch (\Exception $e) {
+        return '❌ Lỗi: ' . $e->getMessage();
+    }
+});
