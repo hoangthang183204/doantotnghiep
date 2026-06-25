@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="min-h-screen p-6 bg-gray-50 dark:bg-slate-900">
-<div class="max-w-5xl mx-auto space-y-6">
+<div class="max-w-[1700px] mx-auto space-y-6 px-4">
 
     <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Tính lương nhân viên</h1>
