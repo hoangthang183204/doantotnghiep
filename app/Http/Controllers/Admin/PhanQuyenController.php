@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\VaiTro;
 use App\Models\Quyen;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class PhanQuyenController extends Controller
 {
@@ -14,20 +15,31 @@ class PhanQuyenController extends Controller
         $roles = VaiTro::with('quyens')->get();
         return view('admin.phan-quyen.index', compact('roles'));
     }
-    
+
     public function edit($id)
     {
         $role = VaiTro::with('quyens')->findOrFail($id);
         $permissions = Quyen::orderBy('nhom')->orderBy('id')->get()->groupBy('nhom');
-        
+
         return view('admin.phan-quyen.edit', compact('role', 'permissions'));
     }
-    
+
     public function update(Request $request, $id)
     {
         $role = VaiTro::findOrFail($id);
+
+        if ($role->la_vai_tro_he_thong) {
+            return redirect()->route('admin.phan-quyen.index')
+                ->with('error', 'Không thể phân quyền cho vai trò hệ thống!');
+        }
+
+        $request->validate([
+            'permissions' => 'array',
+            'permissions.*' => 'exists:quyen,id'
+        ]);
+
         $role->quyens()->sync($request->permissions ?? []);
-        
+
         return redirect()->route('admin.phan-quyen.index')
             ->with('success', 'Phân quyền cho vai trò "' . $role->ten_hien_thi . '" thành công!');
     }

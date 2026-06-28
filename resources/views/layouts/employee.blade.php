@@ -5,11 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'HRM System') - Nhân viên</title>
+    <title>@yield('title', 'HR Flow')</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+
     <script>
         tailwind.config = {
             darkMode: 'class'
@@ -26,64 +28,26 @@
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
-
         .sidebar::-webkit-scrollbar {
             display: none;
         }
-
         .sidebar nav {
             overflow-y: auto;
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
-
         .sidebar nav::-webkit-scrollbar {
-            display: none;
-        }
-
-        .sidebar {
-            overflow-y: auto;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-
-        .sidebar::-webkit-scrollbar {
             display: none;
         }
 
         body {
             background-color: #f9fafb;
         }
-
         .dark body {
             background-color: #111827;
         }
 
-        /* Sidebar text hidden khi thu gọn */
-        .sidebar.collapsed .logo-container,
-        .sidebar.collapsed .menu-text,
-        .sidebar.collapsed .user-text {
-            display: none !important;
-        }
-
-        .sidebar.collapsed .menu-toggle {
-            justify-content: center;
-            padding-left: 0.5rem;
-            padding-right: 0.5rem;
-        }
-
-        .sidebar.collapsed .menu-toggle span:first-child {
-            margin-right: 0 !important;
-        }
-
-        .sidebar.collapsed .submenu {
-            display: none !important;
-        }
-
-        .sidebar.collapsed .toggle-btn {
-            display: flex !important;
-        }
-
+        /* Sidebar */
         .sidebar {
             position: fixed;
             left: 0;
@@ -95,81 +59,35 @@
             box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
             transition: width 0.3s ease-in-out;
             overflow-y: auto;
-            overflow-y: hidden;
         }
-
-        .submenu {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
         .dark .sidebar {
             background-color: #1f2937;
         }
-
         .sidebar.collapsed {
             width: 64px;
         }
 
-        .main-wrapper {
-            margin-left: 260px;
-            transition: margin-left 0.3s ease-in-out;
-            min-height: 100vh;
-        }
-
-        .card {
-            background-color: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-        }
-
-        .dark .card {
-            background-color: #1f2937;
-        }
-
-        .dark .text-gray-900 {
-            color: #ffffff;
-        }
-
-        .dark .text-gray-600 {
-            color: #9ca3af;
-        }
-
-        .dark .text-gray-500 {
-            color: #6b7280;
-        }
-
-        .dark .border-gray-200 {
-            border-color: #374151;
-        }
-
-        .dark .bg-white {
-            background-color: #1f2937;
-        }
-
-        .submenu.hidden {
-            display: none;
-        }
-
+        .sidebar.collapsed .logo-container,
         .sidebar.collapsed .menu-text,
-        .sidebar.collapsed .logo-text,
-        .sidebar.collapsed .user-text {
+        .sidebar.collapsed .user-text,
+        .sidebar.collapsed .logo-text {
             display: none !important;
         }
-
         .sidebar.collapsed .menu-toggle {
             justify-content: center;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
         }
-
         .sidebar.collapsed .menu-toggle span:first-child {
             margin-right: 0 !important;
         }
-
         .sidebar.collapsed .submenu {
             display: none !important;
         }
+        .sidebar.collapsed .toggle-btn {
+            display: flex !important;
+        }
 
-        /* Tooltip */
         .sidebar.collapsed .menu-toggle:hover::after,
         .sidebar.collapsed a:hover::after {
             content: attr(data-title);
@@ -185,15 +103,70 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
+        .submenu {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .submenu.hidden {
+            display: none;
+        }
+
+        .main-wrapper {
+            margin-left: 260px;
+            transition: margin-left 0.3s ease-in-out;
+            min-height: 100vh;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+        }
+        .dark .card {
+            background-color: #1f2937;
+        }
+        .dark .text-gray-900 {
+            color: #ffffff;
+        }
+        .dark .text-gray-600 {
+            color: #9ca3af;
+        }
+        .dark .text-gray-500 {
+            color: #6b7280;
+        }
+        .dark .border-gray-200 {
+            border-color: #374151;
+        }
+        .dark .bg-white {
+            background-color: #1f2937;
+        }
+
         header {
             position: sticky;
             top: 0;
             z-index: 40;
             background-color: white;
         }
-
         .dark header {
             background-color: #1f2937;
+        }
+
+        /* Mobile */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+                width: 280px;
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            .main-wrapper {
+                margin-left: 0 !important;
+            }
+            .main-wrapper.collapsed {
+                margin-left: 0 !important;
+            }
         }
     </style>
 
@@ -201,46 +174,25 @@
 </head>
 
 <body class="bg-gray-50 dark:bg-gray-900">
-    @include('employee.partials.sidebar')
+    {{-- Sidebar chung --}}
+    @include('layouts.partials.sidebar')
 
     <div class="main-wrapper" id="mainWrapper">
-        @include('employee.partials.header')
+        {{-- Header chung --}}
+        @include('layouts.partials.header')
 
         <main class="p-4 md:p-6">
-            @if(session('success'))
-                <div class="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-300 px-4 py-3 rounded-lg mb-4 flex items-center justify-between">
-                    <div class="flex items-center">
-                        <i class="fas fa-check-circle mr-2 text-green-500 dark:text-green-400"></i>
-                        <span>{{ session('success') }}</span>
-                    </div>
-                    <button type="button" class="text-green-500 dark:text-green-400 hover:text-green-700" onclick="this.parentElement.remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            @endif
-
-            @if(session('error'))
-                <div class="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300 px-4 py-3 rounded-lg mb-4 flex items-center justify-between">
-                    <div class="flex items-center">
-                        <i class="fas fa-exclamation-circle mr-2 text-red-500 dark:text-red-400"></i>
-                        <span>{{ session('error') }}</span>
-                    </div>
-                    <button type="button" class="text-red-500 dark:text-red-400 hover:text-red-700" onclick="this.parentElement.remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            @endif
+            {{-- Alert --}}
+            @include('layouts.partials.alerts')
 
             @yield('content')
         </main>
 
-        @include('employee.partials.footer')
+        {{-- Footer chung --}}
+        @include('layouts.partials.footer')
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <script>
         // Theme Toggle
         const themeToggle = document.getElementById('themeToggle');
@@ -351,6 +303,8 @@
                 }
             }
         });
+
+        console.log('✅ Master layout loaded');
     </script>
     @stack('scripts')
 </body>

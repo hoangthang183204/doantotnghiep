@@ -87,14 +87,18 @@ class NguoiDungController extends Controller
             'ten_dang_nhap' => $request->ten_dang_nhap,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'vai_tro_id' => $request->vai_tro_id,
             'phong_ban_id' => $request->phong_ban_id,
             'chuc_vu_id' => $request->chuc_vu_id,
             'trang_thai' => 1,
             'trang_thai_cong_viec' => 'dang_lam',
         ]);
 
-        // TỰ ĐỘNG TẠO HỒ SƠ
+        // ⭐ QUAN TRỌNG: Gán vai trò cho user
+        if ($request->filled('vai_tro_id')) {
+            $user->vaiTros()->attach($request->vai_tro_id);
+        }
+
+        // Tạo hồ sơ
         $lastId = HoSoNguoiDung::max('id') ?? 0;
         $maNhanVien = 'NV' . str_pad($lastId + 1, 3, '0', STR_PAD_LEFT);
 
@@ -152,29 +156,35 @@ class NguoiDungController extends Controller
         $request->validate([
             'ten_dang_nhap' => 'required|unique:nguoi_dung,ten_dang_nhap,' . $id,
             'email' => 'required|email|unique:nguoi_dung,email,' . $id,
+            'vai_tro_id' => 'nullable|exists:vai_tro,id',
         ]);
 
         $data = [
             'ten_dang_nhap' => $request->ten_dang_nhap,
             'email' => $request->email,
-            'vai_tro_id' => $request->vai_tro_id,
             'phong_ban_id' => $request->phong_ban_id,
             'chuc_vu_id' => $request->chuc_vu_id,
             'trang_thai' => $request->trang_thai ?? 1,
         ];
 
-        // Chỉ update password nếu có nhập
         if ($request->filled('password')) {
             $data['password'] = bcrypt($request->password);
         }
 
         $user->update($data);
 
-        // Nếu đổi tên đăng nhập thì cập nhật lại tên trong hồ sơ
+        // ⭐ QUAN TRỌNG: Cập nhật vai trò vào bảng nguoi_dung_vai_tro
+        if ($request->filled('vai_tro_id')) {
+            // Xóa tất cả role cũ và gán role mới
+            $user->vaiTros()->sync([$request->vai_tro_id]);
+        } else {
+            // Nếu không chọn role nào thì xóa hết
+            $user->vaiTros()->detach();
+        }
+
+        // Cập nhật tên hồ sơ nếu có thay đổi
         if ($user->hoSo && $request->ten_dang_nhap != $user->getOriginal('ten_dang_nhap')) {
-            $user->hoSo->update([
-                'ten' => $request->ten_dang_nhap
-            ]);
+            $user->hoSo->update(['ten' => $request->ten_dang_nhap]);
         }
 
         return redirect()->route('admin.nguoi-dung.index')

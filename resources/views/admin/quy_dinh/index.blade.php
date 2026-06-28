@@ -717,7 +717,7 @@
         </div>
     </div>
 
-    <form action="{{ route('admin.quydinh.update') }}" method="POST">
+    <form action="{{ route('admin.quy-dinh.update') }}" method="POST">
         @csrf
         <div id="modalLichSu" class="hr-modal">
             <div class="hr-modal-content">

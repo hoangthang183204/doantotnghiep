@@ -1,4 +1,5 @@
 <?php
+// app/Http/Controllers/Auth/LoginController.php
 
 namespace App\Http\Controllers\Auth;
 
@@ -161,24 +162,35 @@ class LoginController extends Controller
 
         // Lấy danh sách vai trò của user
         $roleNames = $user->vaiTros->pluck('name')->toArray();
+        
+        // ===== THÊM LOG ĐỂ DEBUG =====
+        \Log::info('User roles:', ['user_id' => $user->id, 'email' => $user->email, 'roles' => $roleNames]);
 
-        // Kiểm tra admin
+        // ============================================================
+        // ===== PHÂN QUYỀN CHUYỂN HƯỚNG THEO VAI TRÒ =====
+        // ============================================================
+        
+        // 1. ADMIN -> admin dashboard
         if (array_intersect($roleNames, ['admin', 'Super Admin', 'Admin'])) {
             return redirect()->route('admin.dashboard');
         }
 
-        // Kiểm tra HR
+        // 2. HR -> admin dashboard (có quyền quản trị nhân sự)
         if (in_array('hr', $roleNames) || in_array('HR', $roleNames)) {
-            // HR có thể vào admin hoặc trang riêng
             return redirect()->route('admin.dashboard');
         }
 
-        // Kiểm tra Trưởng phòng
+        // 3. TRƯỞNG PHÒNG -> admin dashboard (có quyền xem báo cáo, duyệt đơn)
         if (in_array('truong_phong', $roleNames)) {
-            return redirect()->route('employee.dashboard');
+            return redirect()->route('admin.dashboard');
         }
 
-        // Mặc định: Nhân viên
+        // 4. KẾ TOÁN -> admin dashboard (có quyền xem lương)
+        if (in_array('ke_toan', $roleNames)) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        // 5. Mặc định: NHÂN VIÊN -> employee dashboard
         return redirect()->route('employee.dashboard');
     }
 

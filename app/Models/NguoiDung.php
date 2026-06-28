@@ -281,23 +281,6 @@ class NguoiDung extends Authenticatable implements JWTSubject
         return $this->ten_dang_nhap;
     }
 
-    // =============================================
-    // PERMISSION
-    // =============================================
-
-    /**
-     * Kiểm tra quyền của user
-     */
-    public function hasPermission($permissionName)
-    {
-        foreach ($this->vaiTros as $vaiTro) {
-            if ($vaiTro->hasPermission($permissionName)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     /**
      * Alias cho hasPermission
      */
@@ -306,11 +289,58 @@ class NguoiDung extends Authenticatable implements JWTSubject
         return $this->hasPermission($permissionName);
     }
 
-    /**
-     * Kiểm tra user có phải admin không
-     */
-    public function isAdmin(): bool
+    public function isAdmin()
     {
-        return $this->vai_tro_id === 1;
+        return $this->vaiTros()->whereIn('name', ['admin', 'Super Admin'])->exists();
+    }
+
+    public function isHR()
+    {
+        return $this->vaiTros()->where('name', 'hr')->exists();
+    }
+
+    public function isTruongPhong()
+    {
+        return $this->vaiTros()->where('name', 'truong_phong')->exists();
+    }
+
+    public function isNhanVien()
+    {
+        return $this->vaiTros()->where('name', 'nhan_vien')->exists();
+    }
+
+    public function hasPermission($permissionName)
+    {
+        // Admin có tất cả quyền
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        // Lấy tất cả quyền của user
+        $permissions = $this->vaiTros->flatMap(function ($role) {
+            return $role->quyens->pluck('name');
+        })->unique();
+
+        return $permissions->contains($permissionName);
+    }
+
+    public function hasAnyPermission($permissionNames)
+    {
+        foreach ($permissionNames as $permission) {
+            if ($this->hasPermission($permission)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function hasAllPermissions($permissionNames)
+    {
+        foreach ($permissionNames as $permission) {
+            if (!$this->hasPermission($permission)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

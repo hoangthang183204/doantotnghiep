@@ -9,7 +9,7 @@ class TinTuyenDungController extends Controller
 {
     public function index()
     {
-        return view('admin.tin-tuyen-dung.index');
+        
     }
 
     public function create()

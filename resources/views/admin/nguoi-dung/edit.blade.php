@@ -217,25 +217,24 @@
                                     </select>
                                 </div>
 
+
                                 {{-- QUYỀN NGƯỜI DÙNG --}}
                                 <div>
                                     <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                                        Quyền người dùng
+                                        <i class="fas fa-user-tag mr-1 text-gray-400"></i> Quyền người dùng
                                     </label>
 
                                     <select name="vai_tro_id"
                                         class="w-full px-3 py-2 rounded-lg
-                               border border-gray-300 dark:border-gray-600
-                               bg-white dark:bg-gray-700
-                               text-gray-900 dark:text-white">
+               border border-gray-300 dark:border-gray-600
+               bg-white dark:bg-gray-700
+               text-gray-900 dark:text-white">
 
-                                        <option value="">
-                                            -- Chọn quyền --
-                                        </option>
+                                        <option value="">-- Chọn quyền --</option>
 
                                         @foreach ($vaiTros as $vt)
                                             <option value="{{ $vt->id }}"
-                                                {{ old('vai_tro_id', $user->vai_tro_id) == $vt->id ? 'selected' : '' }}>
+                                                {{ old('vai_tro_id', $currentRoleId ?? ($user->vai_tro_id ?? '')) == $vt->id ? 'selected' : '' }}>
                                                 {{ $vt->ten_hien_thi }}
                                             </option>
                                         @endforeach
