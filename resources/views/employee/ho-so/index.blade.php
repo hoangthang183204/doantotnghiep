@@ -34,11 +34,10 @@
         {{-- ================= HEADER ================= --}}
         <div
             class="rounded-2xl p-6
-            bg-gradient-to-r
-            from-blue-600 to-indigo-600
-            dark:from-slate-800 dark:to-slate-900
-            text-white
-            border border-blue-500/20 dark:border-slate-700">
+            bg-white dark:bg-slate-800
+            border border-gray-200 dark:border-slate-700
+            shadow-sm
+            text-gray-800 dark:text-white">
 
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
 
@@ -46,7 +45,7 @@
 
                     @if ($user->hoSo?->anh_dai_dien)
                         <img src="{{ asset('storage/' . $user->hoSo->anh_dai_dien) }}"
-                            class="w-20 h-20 rounded-2xl object-cover border-4 border-white/20">
+                            class="w-20 h-20 rounded-2xl object-cover border-4 border-gray-400 dark:border-slate-500">
                     @else
                         <div class="w-20 h-20 rounded-2xl bg-white/20 flex items-center justify-center text-2xl font-bold">
                             {{ strtoupper(substr($user->ho_ten, 0, 1)) }}
@@ -58,17 +57,17 @@
                             {{ $user->ho_ten }}
                         </h1>
 
-                        <p class="text-blue-100">
+                        <p class="text-gray-500 dark:text-gray-400">
                             {{ $user->email }}
                         </p>
 
                         <div class="flex flex-wrap gap-2 mt-2">
 
-                            <span class="px-3 py-1 rounded-full bg-white/15 text-sm">
+                            <span class="px-3 py-1 rounded-full bg-gray-100 dark:bg-slate-700 text-sm">
                                 {{ $user->vai_tro?->ten_hien_thi }}
                             </span>
 
-                            <span class="px-3 py-1 rounded-full bg-white/15 text-sm">
+                            <span class="px-3 py-1 rounded-full bg-gray-100 dark:bg-slate-700 text-sm">
                                 {{ $user->phong_ban?->ten_phong_ban }}
                             </span>
 
