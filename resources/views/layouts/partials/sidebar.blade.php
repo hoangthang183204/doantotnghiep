@@ -112,7 +112,7 @@
             {{-- ========================================================== --}}
 
             {{-- 1a. Tổng quan (Admin) - Super Admin luôn thấy, người khác có quyền mới thấy --}}
-            @if ($isSuperAdmin || $canViewDashboardAdmin)
+            @if(!$isSuperAdmin)
                 <li>
                     <a href="{{ route('admin.dashboard') }}"
                         class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'admin.dashboard' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
@@ -205,7 +205,7 @@
             {{-- ========================================================== --}}
             {{-- ⭐ 3. HỒ SƠ CÁ NHÂN (EMPLOYEE) - CHỈ HIỂN THỊ KHI KHÔNG PHẢI SUPER ADMIN --}}
             {{-- ========================================================== --}}
-            @if ($showEmployeeMenus && $canViewProfile)
+            @if(!$isSuperAdmin)
                 <li>
                     <a href="{{ route('employee.ho-so.index') }}"
                         class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.ho-so.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
