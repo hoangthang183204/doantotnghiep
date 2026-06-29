@@ -199,25 +199,31 @@ class HoSoController extends Controller
 
                 if ($cv) {
 
-                    $oldFile = $cv->duong_dan_file ?? $cv->tep_tin;
+                    $oldFile = $cv->duong_dan_file;
 
-                    if (
-                        $oldFile &&
-                        Storage::disk('public')->exists($oldFile)
-                    ) {
+                    if ($oldFile && Storage::disk('public')->exists($oldFile)) {
                         Storage::disk('public')->delete($oldFile);
                     }
                 }
 
-                $path = $request
-                    ->file('cv_file')
-                    ->store('cv', 'public');
+                // Lấy file upload
+                $file = $request->file('cv_file');
+
+                // Lưu file
+                $path = $file->store('cv', 'public');
 
                 $hosoNhanSu->cv()->updateOrCreate(
                     [],
                     [
-                        'tep_tin' => $path,
-                        'duong_dan_file' => $path,
+                        'nguoi_dung_id'     => Auth::id(),
+                        'loai_tai_lieu'     => 'cv',
+                        'tieu_de'           => 'CV',
+                        'ten_file_goc'      => $file->getClientOriginalName(),
+                        'duong_dan_file'    => $path,
+                        'kich_thuoc_file'   => $file->getSize(),
+                        'loai_mime'         => $file->getMimeType(),
+                        'nguoi_tai_len_id'  => Auth::id(),
+                        'thoi_gian_tai_len' => now(),
                     ]
                 );
             }
