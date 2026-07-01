@@ -1,34 +1,9 @@
 <?php
 
-namespace App\Models;
+// app/Helpers/helpers.php
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class UngVien extends Model
-{
-    use HasFactory;
-
-    protected $table = 'ung_vien';
-
-    protected $fillable = [
-        'ma_ho_so',
-        'ho',
-        'ten',
-        'email',
-        'so_dien_thoai',
-        'tin_tuyen_dung_id',
-        'phong_ban_id',
-        'kinh_nghiem',
-        'luong_mong_muon',
-        'trang_thai',
-        'nguoi_dung_id',
-        'ghi_chu',
-        'cv_path',
-    ];
-
-    // Accessor để lấy trạng thái tiếng Việt
-    public function getTrangThaiTextAttribute()
+if (!function_exists('getTrangThaiUngVien')) {
+    function getTrangThaiUngVien($status)
     {
         $statuses = [
             'moi_nop' => 'Mới nộp',
@@ -43,11 +18,12 @@ class UngVien extends Model
             'tam_dung' => 'Tạm dừng',
         ];
 
-        return $statuses[$this->trang_thai] ?? $this->trang_thai;
+        return $statuses[$status] ?? $status;
     }
+}
 
-    // Accessor để lấy màu sắc cho trạng thái
-    public function getTrangThaiColorAttribute()
+if (!function_exists('getTrangThaiColorUngVien')) {
+    function getTrangThaiColorUngVien($status)
     {
         $colors = [
             'moi_nop' => 'blue',
@@ -62,14 +38,15 @@ class UngVien extends Model
             'tam_dung' => 'orange',
         ];
 
-        return $colors[$this->trang_thai] ?? 'gray';
+        return $colors[$status] ?? 'gray';
     }
+}
 
-    // Accessor để lấy badge HTML
-    public function getTrangThaiBadgeAttribute()
+if (!function_exists('getTrangThaiBadgeUngVien')) {
+    function getTrangThaiBadgeUngVien($status)
     {
-        $text = $this->trang_thai_text;
-        $color = $this->trang_thai_color;
+        $text = getTrangThaiUngVien($status);
+        $color = getTrangThaiColorUngVien($status);
         
         $colorClasses = [
             'blue' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
@@ -86,21 +63,5 @@ class UngVien extends Model
         $class = $colorClasses[$color] ?? $colorClasses['gray'];
 
         return '<span class="px-3 py-1 rounded-full text-xs font-semibold ' . $class . '">' . $text . '</span>';
-    }
-
-    // Quan hệ
-    public function tinTuyenDung()
-    {
-        return $this->belongsTo(TinTuyenDung::class, 'tin_tuyen_dung_id');
-    }
-
-    public function phongBan()
-    {
-        return $this->belongsTo(PhongBan::class, 'phong_ban_id');
-    }
-
-    public function nguoiDung()
-    {
-        return $this->belongsTo(NguoiDung::class, 'nguoi_dung_id');
     }
 }

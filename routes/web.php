@@ -240,16 +240,28 @@ Route::prefix('admin')
         });
 
         // ========== TUYỂN DỤNG - CHỈ HR VÀ ADMIN ==========
+        // ========== TUYỂN DỤNG - CHỈ HR VÀ ADMIN ==========
         Route::prefix('tin-tuyen-dung')->name('tin-tuyen-dung.')->middleware(['CheckPermission:recruitment.index'])->group(function () {
+            // CRUD cơ bản
             Route::get('/', [TinTuyenDungController::class, 'index'])->name('index');
-            Route::get('/{id}', [TinTuyenDungController::class, 'show'])->name('show');
             Route::get('/create', [TinTuyenDungController::class, 'create'])->name('create')->middleware('CheckPermission:recruitment.create');
             Route::post('/', [TinTuyenDungController::class, 'store'])->name('store')->middleware('CheckPermission:recruitment.create');
+            Route::get('/{id}', [TinTuyenDungController::class, 'show'])->name('show');
             Route::get('/{id}/edit', [TinTuyenDungController::class, 'edit'])->name('edit')->middleware('CheckPermission:recruitment.edit');
             Route::put('/{id}', [TinTuyenDungController::class, 'update'])->name('update')->middleware('CheckPermission:recruitment.edit');
             Route::delete('/{id}', [TinTuyenDungController::class, 'destroy'])->name('destroy')->middleware('CheckPermission:recruitment.delete');
-        });
 
+            // Chức năng quản lý trạng thái
+            Route::post('/{id}/publish', [TinTuyenDungController::class, 'publish'])->name('publish')->middleware('CheckPermission:recruitment.edit');
+            Route::post('/{id}/stop', [TinTuyenDungController::class, 'stop'])->name('stop')->middleware('CheckPermission:recruitment.edit');
+            Route::post('/{id}/end', [TinTuyenDungController::class, 'end'])->name('end')->middleware('CheckPermission:recruitment.edit');
+
+            // Gửi email thông báo
+            Route::post('/{id}/send-email', [TinTuyenDungController::class, 'sendEmail'])->name('send-email')->middleware('CheckPermission:recruitment.edit');
+
+            // Thống kê
+            Route::get('/thong-ke', [TinTuyenDungController::class, 'statistics'])->name('statistics');
+        });
         // ========== VAI TRÒ - CHỈ ADMIN ==========
         Route::prefix('vai-tro')->name('vai-tro.')->middleware(['CheckPermission:role.view'])->group(function () {
             Route::get('/', [VaiTroController::class, 'index'])->name('index');
@@ -336,6 +348,7 @@ Route::prefix('admin')
         });
 
         // ========== ỨNG VIÊN - CHỈ HR VÀ ADMIN ==========
+        // ========== ỨNG VIÊN - CHỈ HR VÀ ADMIN ==========
         Route::prefix('ung-vien')->name('ung_vien.')->middleware(['CheckPermission:recruitment.candidate'])->group(function () {
             Route::get('/', [UngVienController::class, 'index'])->name('index');
             Route::get('/archived/list', [UngVienController::class, 'archived'])->name('archived');
@@ -349,13 +362,20 @@ Route::prefix('admin')
             Route::get('/{id}', [UngVienController::class, 'show'])->name('show');
             Route::put('/{id}', [UngVienController::class, 'update'])->name('update')->middleware('CheckPermission:recruitment.candidate_edit');
             Route::delete('/{id}', [UngVienController::class, 'destroy'])->name('destroy')->middleware('CheckPermission:recruitment.candidate_delete');
+
+            // THÊM CÁC ROUTE MỚI
+            Route::post('/{id}/update-status', [UngVienController::class, 'updateStatus'])->name('update-status')->middleware('CheckPermission:recruitment.candidate_edit');
+            Route::post('/{id}/approve', [UngVienController::class, 'approve'])->name('approve')->middleware('CheckPermission:recruitment.candidate_edit');
+            Route::post('/{id}/reject', [UngVienController::class, 'reject'])->name('reject')->middleware('CheckPermission:recruitment.candidate_edit');
+            Route::post('/{id}/schedule-interview', [UngVienController::class, 'scheduleInterview'])->name('schedule-interview')->middleware('CheckPermission:recruitment.candidate_edit');
         });
 
         // ========== TRÚNG TUYỂN - CHỈ HR VÀ ADMIN ==========
+        // ========== TRÚNG TUYỂN - CHỈ HR VÀ ADMIN ==========
         Route::prefix('trung-tuyen')->name('trung-tuyen.')->middleware(['CheckPermission:recruitment.passed'])->group(function () {
             Route::get('/', [TrungTuyenController::class, 'index'])->name('index');
+            Route::post('/{id}/convert', [TrungTuyenController::class, 'convertToEmployee'])->name('convert')->middleware('CheckPermission:recruitment.passed');
         });
-
         // ========== TEST ROUTE ==========
         Route::get('/test-mail', function () {
             Mail::raw('Test gửi mail HRFlow', function ($message) {
