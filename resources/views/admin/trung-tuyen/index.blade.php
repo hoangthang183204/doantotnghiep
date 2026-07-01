@@ -111,7 +111,7 @@
                                 <td class="px-5 py-4">
                                     <div class="flex justify-center gap-2">
                                         @if(!isset($item->nguoi_dung_id) || $item->nguoi_dung_id == null)
-                                            <form action="{{ route('admin.trung_tuyen.convert', $item->id) }}" method="POST"
+                                            <form action="{{ route('admin.trung-tuyen.convert', $item->id) }}" method="POST"
                                                 onsubmit="return confirm('Xác nhận tạo tài khoản nhân viên chính thức cho ứng viên này?')">
                                                 @csrf
                                                 <button type="submit" 
