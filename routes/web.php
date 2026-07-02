@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ChucVuController;
 use App\Http\Controllers\Admin\ChamCongController;
 use App\Http\Controllers\Admin\DonNghiController;
 use App\Http\Controllers\Admin\BangLuongController;
+use App\Http\Controllers\Admin\DaoTaoController;
 use App\Http\Controllers\Admin\PhuCapController;
 use App\Http\Controllers\Admin\TinTuyenDungController;
 use App\Http\Controllers\Admin\UngVienController;
@@ -336,6 +337,32 @@ Route::prefix('admin')
             Route::get('/edit', [QuyDinhController::class, 'edit'])->name('edit');
             Route::post('/update', [QuyDinhController::class, 'update'])->name('update');
         });
+        // ========== ĐÀO TẠO ==========
+Route::prefix('dao-tao')->name('dao-tao.')->middleware(['CheckPermission:hoso.edit'])->group(function () {
+
+        Route::get('/', [DaoTaoController::class, 'index'])->name('index');
+
+        Route::get('/create', [DaoTaoController::class, 'create'])->name('create');
+
+        Route::post('/', [DaoTaoController::class, 'store'])->name('store');
+
+        // Thống kê
+        Route::get('/thong-ke', [DaoTaoController::class, 'thongKe'])->name('thong-ke');
+
+        // Xuất Excel
+        Route::get('/export/excel', [DaoTaoController::class, 'export'])->name('export');
+
+        // Chi tiết
+        Route::get('/{id}', [DaoTaoController::class, 'show'])->name('show');
+
+        // Sửa
+        Route::get('/{id}/edit', [DaoTaoController::class, 'edit'])->name('edit');
+
+        Route::put('/{id}', [DaoTaoController::class, 'update'])->name('update');
+
+        // Xóa
+        Route::delete('/{id}', [DaoTaoController::class, 'destroy'])->name('destroy');
+    });
 
         // ========== HỢP ĐỒNG - CHỈ HR VÀ ADMIN ==========
         Route::prefix('hop-dong')->name('hop-dong.')->middleware(['CheckPermission:contract.index'])->group(function () {
