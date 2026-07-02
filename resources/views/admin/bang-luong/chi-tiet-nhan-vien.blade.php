@@ -13,7 +13,7 @@
 
 @section('content')
 <div class="min-h-screen p-6 bg-gray-50 dark:bg-slate-900">
-<div class="max-w-4xl mx-auto space-y-6">
+<div class="max-w-6xl mx-auto space-y-6">
 
     {{-- HEADER --}}
     <div class="flex flex-wrap justify-between items-start gap-3">
@@ -31,16 +31,36 @@
     </div>
 
     {{-- NET SALARY BANNER --}}
-    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl p-6 flex flex-wrap justify-between items-center gap-4 shadow">
-        <div>
-            <p class="text-blue-100 text-sm">Lương thực nhận tháng {{ $luong->luong_thang }}/{{ $luong->luong_nam }}</p>
-            <p class="text-4xl font-extrabold mt-1">{{ number_format($luong->luong_thuc_nhan) }} đ</p>
-        </div>
-        <div class="text-right text-sm text-blue-100 space-y-1">
-            <p>Tổng lương: <span class="font-semibold text-white">{{ number_format($luong->tong_luong) }} đ</span></p>
-            <p>Tổng khấu trừ: <span class="font-semibold text-white">-{{ number_format($luong->tong_khau_tru) }} đ</span></p>
-        </div>
+
+<div class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-8 py-5 flex justify-between items-center shadow-sm">
+
+    <div>
+        <p class="text-gray-500 dark:text-slate-400 text-sm">
+            Lương thực nhận tháng {{ $luong->luong_thang }}/{{ $luong->luong_nam }}
+        </p>
+
+        <p class="text-2xl font-bold font-extrabold text-gray-900 dark:text-white mt-2">
+            {{ number_format($luong->luong_thuc_nhan) }} đ
+        </p>
     </div>
+
+    <div class="text-right space-y-2">
+        <p class="text-gray-500 dark:text-slate-300 text-lg">
+            Tổng lương:
+            <span class="font-bold text-gray-900 dark:text-white">
+                {{ number_format($luong->tong_luong) }} đ
+            </span>
+        </p>
+
+        <p class="text-gray-500 dark:text-slate-300 text-lg">
+            Tổng khấu trừ:
+            <span class="font-bold text-red-600 dark:text-red-400">
+                -{{ number_format($luong->tong_khau_tru) }} đ
+            </span>
+        </p>
+    </div>
+
+</div>
 
     {{-- BƯỚC 1-2: NGÀY CÔNG & LƯƠNG CƠ BẢN --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
