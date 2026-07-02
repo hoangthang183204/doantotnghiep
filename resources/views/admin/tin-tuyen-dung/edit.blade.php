@@ -39,7 +39,7 @@
         </div>
     @endif
 
-    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
         <form method="POST" action="{{ route('admin.tin-tuyen-dung.update', $tinTuyenDung->id) }}" class="space-y-6">
             @csrf
             @method('PUT')
@@ -50,7 +50,7 @@
                     Mã tin
                 </label>
                 <input type="text" value="{{ $tinTuyenDung->ma }}" 
-                       class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 cursor-not-allowed outline-none text-sm"
+                       class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white bg-gray-100 dark:bg-gray-700 cursor-not-allowed outline-none text-sm"
                        disabled>
             </div>
 
@@ -60,7 +60,7 @@
                     Tiêu đề <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="tieu_de" value="{{ old('tieu_de', $tinTuyenDung->tieu_de) }}" 
-                       class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none text-sm"
+                       class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
                        placeholder="Nhập tiêu đề tin tuyển dụng" required>
                 @error('tieu_de')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -73,7 +73,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Phòng ban <span class="text-red-500">*</span>
                     </label>
-                    <select name="phong_ban_id" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none text-sm" required>
+                    <select name="phong_ban_id" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm" required>
                         <option value="">-- Chọn phòng ban --</option>
                         @foreach($phongBans as $phongBan)
                             <option value="{{ $phongBan->id }}" {{ old('phong_ban_id', $tinTuyenDung->phong_ban_id) == $phongBan->id ? 'selected' : '' }}>
@@ -90,7 +90,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Chức vụ <span class="text-red-500">*</span>
                     </label>
-                    <select name="chuc_vu_id" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none text-sm" required>
+                    <select name="chuc_vu_id" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm" required>
                         <option value="">-- Chọn chức vụ --</option>
                         @foreach($chucVus as $chucVu)
                             <option value="{{ $chucVu->id }}" {{ old('chuc_vu_id', $tinTuyenDung->chuc_vu_id) == $chucVu->id ? 'selected' : '' }}>
@@ -110,7 +110,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Vai trò
                     </label>
-                    <select name="vai_tro_id" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none text-sm">
+                    <select name="vai_tro_id" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm">
                         <option value="">-- Chọn vai trò --</option>
                         @foreach($vaiTros as $vaiTro)
                             <option value="{{ $vaiTro->id }}" {{ old('vai_tro_id', $tinTuyenDung->vai_tro_id) == $vaiTro->id ? 'selected' : '' }}>
@@ -127,7 +127,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Loại hợp đồng <span class="text-red-500">*</span>
                     </label>
-                    <select name="loai_hop_dong" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none text-sm" required>
+                    <select name="loai_hop_dong" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm" required>
                         <option value="thu_viec" {{ old('loai_hop_dong', $tinTuyenDung->loai_hop_dong) == 'thu_viec' ? 'selected' : '' }}>Thử việc</option>
                         <option value="xac_dinh_thoi_han" {{ old('loai_hop_dong', $tinTuyenDung->loai_hop_dong) == 'xac_dinh_thoi_han' ? 'selected' : '' }}>Xác định thời hạn</option>
                         <option value="khong_xac_dinh_thoi_han" {{ old('loai_hop_dong', $tinTuyenDung->loai_hop_dong) == 'khong_xac_dinh_thoi_han' ? 'selected' : '' }}>Không xác định thời hạn</option>
@@ -144,7 +144,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Cấp độ kinh nghiệm <span class="text-red-500">*</span>
                     </label>
-                    <select name="cap_do_kinh_nghiem" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none text-sm" required>
+                    <select name="cap_do_kinh_nghiem" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm" required>
                         <option value="intern" {{ old('cap_do_kinh_nghiem', $tinTuyenDung->cap_do_kinh_nghiem) == 'intern' ? 'selected' : '' }}>Thực tập sinh</option>
                         <option value="fresher" {{ old('cap_do_kinh_nghiem', $tinTuyenDung->cap_do_kinh_nghiem) == 'fresher' ? 'selected' : '' }}>Fresher</option>
                         <option value="junior" {{ old('cap_do_kinh_nghiem', $tinTuyenDung->cap_do_kinh_nghiem) == 'junior' ? 'selected' : '' }}>Junior</option>
@@ -161,7 +161,7 @@
                         Số lượng cần tuyển <span class="text-red-500">*</span>
                     </label>
                     <input type="number" name="so_vi_tri" value="{{ old('so_vi_tri', $tinTuyenDung->so_vi_tri) }}" 
-                           class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none text-sm"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
                            min="1" required>
                     @error('so_vi_tri')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -176,7 +176,7 @@
                         Kinh nghiệm tối thiểu (năm)
                     </label>
                     <input type="number" name="kinh_nghiem_toi_thieu" value="{{ old('kinh_nghiem_toi_thieu', $tinTuyenDung->kinh_nghiem_toi_thieu ?? 0) }}" 
-                           class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none text-sm"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
                            min="0">
                     @error('kinh_nghiem_toi_thieu')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -188,7 +188,7 @@
                         Kinh nghiệm tối đa (năm)
                     </label>
                     <input type="number" name="kinh_nghiem_toi_da" value="{{ old('kinh_nghiem_toi_da', $tinTuyenDung->kinh_nghiem_toi_da ?? 0) }}" 
-                           class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none text-sm"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
                            min="0">
                     @error('kinh_nghiem_toi_da')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -203,7 +203,7 @@
                         Lương tối thiểu (VNĐ)
                     </label>
                     <input type="number" name="luong_toi_thieu" value="{{ old('luong_toi_thieu', $tinTuyenDung->luong_toi_thieu) }}" 
-                           class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none text-sm"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
                            step="1000" min="0" placeholder="VD: 5000000">
                     @error('luong_toi_thieu')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -215,7 +215,7 @@
                         Lương tối đa (VNĐ)
                     </label>
                     <input type="number" name="luong_toi_da" value="{{ old('luong_toi_da', $tinTuyenDung->luong_toi_da) }}" 
-                           class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none text-sm"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
                            step="1000" min="0" placeholder="VD: 15000000">
                     @error('luong_toi_da')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -229,7 +229,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Trạng thái <span class="text-red-500">*</span>
                     </label>
-                    <select name="trang_thai" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none text-sm" required>
+                    <select name="trang_thai" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm" required>
                         <option value="nhap" {{ old('trang_thai', $tinTuyenDung->trang_thai) == 'nhap' ? 'selected' : '' }}>Nháp</option>
                         <option value="dang_tuyen" {{ old('trang_thai', $tinTuyenDung->trang_thai) == 'dang_tuyen' ? 'selected' : '' }}>Đăng tuyển</option>
                         <option value="tam_dung" {{ old('trang_thai', $tinTuyenDung->trang_thai) == 'tam_dung' ? 'selected' : '' }}>Tạm dừng</option>
@@ -246,7 +246,7 @@
                     </label>
                     <input type="date" name="han_nop_ho_so" 
                            value="{{ old('han_nop_ho_so', $tinTuyenDung->han_nop_ho_so ? $tinTuyenDung->han_nop_ho_so->format('Y-m-d') : '') }}" 
-                           class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none text-sm"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
                            required>
                     @error('han_nop_ho_so')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -260,7 +260,7 @@
                     Mô tả công việc <span class="text-red-500">*</span>
                 </label>
                 <textarea name="mo_ta_cong_viec" rows="5" 
-                          class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none text-sm"
+                          class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
                           placeholder="Mô tả chi tiết công việc..." required>{{ old('mo_ta_cong_viec', $tinTuyenDung->mo_ta_cong_viec) }}</textarea>
                 @error('mo_ta_cong_viec')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -273,7 +273,7 @@
                     Yêu cầu <span class="text-gray-400 text-xs">(mỗi dòng là 1 yêu cầu)</span>
                 </label>
                 <textarea name="yeu_cau" rows="4" 
-                          class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none text-sm"
+                          class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
                           placeholder="Tốt nghiệp Đại học chuyên ngành CNTT&#10;Có ít nhất 2 năm kinh nghiệm&#10;Thành thạo PHP/Laravel">{{ old('yeu_cau', $yeuCau) }}</textarea>
                 @error('yeu_cau')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -286,7 +286,7 @@
                     Phúc lợi <span class="text-gray-400 text-xs">(mỗi dòng là 1 phúc lợi)</span>
                 </label>
                 <textarea name="phuc_loi" rows="4" 
-                          class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none text-sm"
+                          class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
                           placeholder="Lương thưởng hấp dẫn&#10;Bảo hiểm đầy đủ&#10;Đào tạo chuyên sâu">{{ old('phuc_loi', $phucLoi) }}</textarea>
                 @error('phuc_loi')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -299,7 +299,7 @@
                     Kỹ năng yêu cầu <span class="text-gray-400 text-xs">(mỗi dòng là 1 kỹ năng)</span>
                 </label>
                 <textarea name="ky_nang_yeu_cau" rows="3" 
-                          class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none text-sm"
+                          class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
                           placeholder="PHP&#10;Laravel&#10;MySQL&#10;Git">{{ old('ky_nang_yeu_cau', $kyNang) }}</textarea>
                 @error('ky_nang_yeu_cau')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -312,7 +312,7 @@
                     Trình độ học vấn
                 </label>
                 <input type="text" name="trinh_do_hoc_van" value="{{ old('trinh_do_hoc_van', $tinTuyenDung->trinh_do_hoc_van) }}" 
-                       class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none text-sm"
+                       class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
                        placeholder="VD: Đại học, Cao đẳng,...">
                 @error('trinh_do_hoc_van')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -332,7 +332,7 @@
             </div>
 
             <!-- Submit -->
-            <div class="flex items-center gap-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+            <div class="flex items-center gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button type="submit" 
                         class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition shadow-sm">
                     Cập nhật

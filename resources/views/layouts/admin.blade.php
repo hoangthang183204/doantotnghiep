@@ -7,10 +7,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'HRM System') - Admin</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
 
@@ -21,40 +24,58 @@
     </script>
 
     <style>
-        * { font-family: 'Inter', sans-serif; }
+        * {
+            font-family: 'Inter', sans-serif;
+        }
 
         .sidebar {
             overflow-y: auto;
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
-        .sidebar::-webkit-scrollbar { display: none; }
+
+        .sidebar::-webkit-scrollbar {
+            display: none;
+        }
+
         .sidebar nav {
             overflow-y: auto;
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
-        .sidebar nav::-webkit-scrollbar { display: none; }
 
-        body { background-color: #f9fafb; }
-        .dark body { background-color: #111827; }
+        .sidebar nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        body {
+            background-color: #f9fafb;
+        }
+
+        .dark body {
+            background-color: #111827;
+        }
 
         .sidebar.collapsed .logo-container,
         .sidebar.collapsed .menu-text,
         .sidebar.collapsed .user-text {
             display: none !important;
         }
+
         .sidebar.collapsed .menu-toggle {
             justify-content: center;
             padding-left: 0.5rem;
             padding-right: 0.5rem;
         }
+
         .sidebar.collapsed .menu-toggle span:first-child {
             margin-right: 0 !important;
         }
+
         .sidebar.collapsed .submenu {
             display: none !important;
         }
+
         .sidebar.collapsed .toggle-btn {
             display: flex !important;
         }
@@ -71,9 +92,19 @@
             transition: width 0.3s ease-in-out;
             overflow-y: auto;
         }
-        .submenu { max-height: 300px; overflow-y: auto; }
-        .dark .sidebar { background-color: #1f2937; }
-        .sidebar.collapsed { width: 64px; }
+
+        .submenu {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .dark .sidebar {
+            background-color: #1f2937;
+        }
+
+        .sidebar.collapsed {
+            width: 64px;
+        }
 
         .main-wrapper {
             margin-left: 260px;
@@ -86,23 +117,52 @@
             border-radius: 0.5rem;
             box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
         }
-        .dark .card { background-color: #1f2937; }
-        .dark .text-gray-900 { color: #ffffff; }
-        .dark .text-gray-600 { color: #9ca3af; }
-        .dark .text-gray-500 { color: #6b7280; }
-        .dark .border-gray-200 { border-color: #374151; }
-        .dark .bg-white { background-color: #1f2937; }
 
-        .submenu.hidden { display: none; }
+        .dark .card {
+            background-color: #1f2937;
+        }
+
+        .dark .text-gray-900 {
+            color: #ffffff;
+        }
+
+        .dark .text-gray-600 {
+            color: #9ca3af;
+        }
+
+        .dark .text-gray-500 {
+            color: #6b7280;
+        }
+
+        .dark .border-gray-200 {
+            border-color: #374151;
+        }
+
+        .dark .bg-white {
+            background-color: #1f2937;
+        }
+
+        .submenu.hidden {
+            display: none;
+        }
 
         .sidebar.collapsed .menu-text,
         .sidebar.collapsed .logo-text,
         .sidebar.collapsed .user-text {
             display: none !important;
         }
-        .sidebar.collapsed .menu-toggle { justify-content: center; }
-        .sidebar.collapsed .menu-toggle span:first-child { margin-right: 0 !important; }
-        .sidebar.collapsed .submenu { display: none !important; }
+
+        .sidebar.collapsed .menu-toggle {
+            justify-content: center;
+        }
+
+        .sidebar.collapsed .menu-toggle span:first-child {
+            margin-right: 0 !important;
+        }
+
+        .sidebar.collapsed .submenu {
+            display: none !important;
+        }
 
         .sidebar.collapsed .menu-toggle:hover::after,
         .sidebar.collapsed a:hover::after {
@@ -125,14 +185,20 @@
             z-index: 40;
             background-color: white;
         }
-        .dark header { background-color: #1f2937; }
 
-        .dropdown-transition { transition: all 0.2s ease-in-out; }
+        .dark header {
+            background-color: #1f2937;
+        }
+
+        .dropdown-transition {
+            transition: all 0.2s ease-in-out;
+        }
 
         .notification-dropdown {
             min-width: 320px;
             max-width: 420px;
         }
+
         @media (max-width: 640px) {
             .notification-dropdown {
                 min-width: 280px;

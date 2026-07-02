@@ -8,6 +8,7 @@ use App\Models\PhongBan;
 use App\Models\ChucVu;
 use App\Models\UngVien;
 use App\Models\VaiTro;
+use App\Models\LichSuEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -16,20 +17,56 @@ use App\Mail\TinTuyenDungMail;
 
 class TinTuyenDungController extends Controller
 {
-    /**
-     * Hiển thị danh sách tin tuyển dụng
-     */
     public function index(Request $request)
     {
         $query = TinTuyenDung::with(['phongBan', 'chucVu', 'vaiTro', 'nguoiDang', 'ungViens']);
 
-        // ... code lọc ...
+        // Tìm kiếm theo tiêu đề hoặc mô tả
+        if ($request->filled('keyword')) {
+            $keyword = $request->keyword;
+            $query->where(function ($q) use ($keyword) {
+                $q->where('tieu_de', 'like', "%{$keyword}%")
+                    ->orWhere('mo_ta_cong_viec', 'like', "%{$keyword}%")
+                    ->orWhere('ma', 'like', "%{$keyword}%");
+            });
+        }
+
+        // Lọc theo trạng thái
+        if ($request->filled('status')) {
+            $query->where('trang_thai', $request->status);
+        }
+
+        // Lọc theo phòng ban
+        if ($request->filled('phong_ban_id')) {
+            $query->where('phong_ban_id', $request->phong_ban_id);
+        }
+
+        // Lọc theo chức vụ
+        if ($request->filled('chuc_vu_id')) {
+            $query->where('chuc_vu_id', $request->chuc_vu_id);
+        }
 
         $tinTuyenDungs = $query->latest()->paginate(10);
         $phongBans = PhongBan::all();
         $chucVus = ChucVu::all();
 
-        return view('admin.tin-tuyen-dung.index', compact('tinTuyenDungs', 'phongBans', 'chucVus'));
+        // THỐNG KÊ TỔNG QUAN
+        $tongQuan = [
+            'tong_tin' => TinTuyenDung::count(),
+            'nhap' => TinTuyenDung::where('trang_thai', 'nhap')->count(),
+            'dang_tuyen' => TinTuyenDung::where('trang_thai', 'dang_tuyen')->count(),
+            'tam_dung' => TinTuyenDung::where('trang_thai', 'tam_dung')->count(),
+            'ket_thuc' => TinTuyenDung::where('trang_thai', 'ket_thuc')->count(),
+            'tong_ung_vien' => UngVien::count(),
+            // THÊM THỐNG KÊ ỨNG VIÊN THEO TRẠNG THÁI
+            'ung_vien_moi_nop' => UngVien::where('trang_thai', 'moi_nop')->count(),
+            'ung_vien_cho_duyet' => UngVien::where('trang_thai', 'cho_duyet')->count(),
+            'ung_vien_da_duyet' => UngVien::where('trang_thai', 'da_duyet')->count(),
+            'ung_vien_dat' => UngVien::where('trang_thai', 'dat')->count(),
+            'ung_vien_khong_dat' => UngVien::where('trang_thai', 'khong_dat')->count(),
+        ];
+
+        return view('admin.tin-tuyen-dung.index', compact('tinTuyenDungs', 'phongBans', 'chucVus', 'tongQuan'));
     }
     /**
      * Hiển thị form tạo tin tuyển dụng mới
@@ -396,12 +433,6 @@ class TinTuyenDungController extends Controller
         }
     }
 
-    /**
-     * Gửi email thông báo cho ứng viên
-     */
-    /**
-     * Gửi email thông báo cho ứng viên
-     */
     public function sendEmail(Request $request, $id)
     {
         try {
@@ -409,6 +440,7 @@ class TinTuyenDungController extends Controller
                 'tieu_de' => 'required|string|max:255',
                 'noi_dung' => 'required|string',
                 'loai_ung_vien' => 'nullable|array',
+                'loai_email' => 'nullable|in:thong_bao,phong_van,ket_qua',
             ]);
 
             $tinTuyenDung = TinTuyenDung::with(['phongBan'])->findOrFail($id);
@@ -428,12 +460,26 @@ class TinTuyenDungController extends Controller
 
             $dem = 0;
             $errors = [];
+            $loaiEmail = $request->loai_email ?? 'thong_bao';
 
             foreach ($ungViens as $ungVien) {
                 if ($ungVien->email) {
                     try {
+                        // Lưu lịch sử email - ĐÃ SỬA
+                        $lichSuEmail = LichSuEmail::create([
+                            'ung_vien_id' => $ungVien->id,
+                            'tin_tuyen_dung_id' => $tinTuyenDung->id,
+                            'nguoi_gui_id' => Auth::id(),
+                            'tieu_de' => $request->tieu_de,
+                            'noi_dung' => $request->noi_dung,
+                            'trang_thai' => 'da_gui',
+                            'thoi_gian_gui' => now(),
+                            'email_nguoi_nhan' => $ungVien->email, // Lưu email người nhận
+                            'loai_email' => $loaiEmail,
+                        ]);
+
                         // Gửi email sử dụng Mailable
-                        Mail::to($ungVien->email)->send(new \App\Mail\TinTuyenDungMail(
+                        Mail::to($ungVien->email)->send(new TinTuyenDungMail(
                             $ungVien,
                             $tinTuyenDung,
                             $request->tieu_de,
@@ -459,6 +505,7 @@ class TinTuyenDungController extends Controller
             return redirect()->back()->with('error', 'Có lỗi xảy ra khi gửi email: ' . $e->getMessage());
         }
     }
+
 
     /**
      * Lấy thống kê số lượng ứng viên theo tin tuyển dụng

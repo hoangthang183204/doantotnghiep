@@ -74,7 +74,7 @@
     @endif
 
     <!-- Thông tin tin tuyển dụng -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
         <div class="p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -166,7 +166,7 @@
 
             <!-- Mô tả công việc -->
             @if($tinTuyenDung->mo_ta_cong_viec)
-            <div class="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Mô tả công việc</h4>
                 <div class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
                     {{ $tinTuyenDung->mo_ta_cong_viec }}
@@ -176,7 +176,7 @@
 
             <!-- Yêu cầu -->
             @if(!empty($yeuCau))
-            <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Yêu cầu</h4>
                 <ul class="list-disc list-inside text-gray-600 dark:text-gray-300 text-sm space-y-1">
                     @foreach($yeuCau as $item)
@@ -188,7 +188,7 @@
 
             <!-- Phúc lợi -->
             @if(!empty($phucLoi))
-            <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Phúc lợi</h4>
                 <ul class="list-disc list-inside text-gray-600 dark:text-gray-300 text-sm space-y-1">
                     @foreach($phucLoi as $item)
@@ -200,7 +200,7 @@
 
             <!-- Kỹ năng yêu cầu -->
             @if(!empty($kyNang))
-            <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Kỹ năng yêu cầu</h4>
                 <div class="flex flex-wrap gap-2">
                     @foreach($kyNang as $item)
@@ -214,7 +214,7 @@
 
             <!-- Trình độ học vấn -->
             @if($tinTuyenDung->trinh_do_hoc_van)
-            <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Trình độ học vấn</h4>
                 <div class="text-gray-600 dark:text-gray-300 text-sm">
                     {{ $tinTuyenDung->trinh_do_hoc_van }}
@@ -225,26 +225,26 @@
     </div>
 
     <!-- Thống kê ứng viên -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Thống kê ứng viên</h3>
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 text-center">
+            <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 text-center border border-blue-100 dark:border-blue-800">
                 <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ $thongKe['tong'] }}</div>
                 <div class="text-xs text-gray-500 dark:text-gray-400">Tổng</div>
             </div>
-            <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-4 text-center">
+            <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-4 text-center border border-yellow-100 dark:border-yellow-800">
                 <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{{ $thongKe['cho_duyet'] }}</div>
                 <div class="text-xs text-gray-500 dark:text-gray-400">Chờ duyệt</div>
             </div>
-            <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 text-center">
-                <div class="text-2xl font-bold text-green-600 dark:text-green-400">{{ $thongKe['da_duyet'] }}</div>
+            <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 text-center border border-blue-100 dark:border-blue-800">
+                <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ $thongKe['da_duyet'] }}</div>
                 <div class="text-xs text-gray-500 dark:text-gray-400">Đã duyệt</div>
             </div>
-            <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 text-center">
+            <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 text-center border border-green-100 dark:border-green-800">
                 <div class="text-2xl font-bold text-green-600 dark:text-green-400">{{ $thongKe['dat'] }}</div>
                 <div class="text-xs text-gray-500 dark:text-gray-400">Trúng tuyển</div>
             </div>
-            <div class="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 text-center">
+            <div class="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 text-center border border-red-100 dark:border-red-800">
                 <div class="text-2xl font-bold text-red-600 dark:text-red-400">{{ $thongKe['khong_dat'] }}</div>
                 <div class="text-xs text-gray-500 dark:text-gray-400">Không đạt</div>
             </div>
@@ -253,7 +253,7 @@
 
     <!-- Gửi email -->
     @if($tinTuyenDung->ungViens->count() > 0)
-    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Gửi email thông báo cho ứng viên</h3>
         <form method="POST" action="{{ route('admin.tin-tuyen-dung.send-email', $tinTuyenDung->id) }}" class="space-y-4">
             @csrf
@@ -262,7 +262,7 @@
                     Tiêu đề email <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="tieu_de" 
-                       class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none text-sm"
+                       class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
                        placeholder="VD: Thông báo kết quả tuyển dụng" required>
             </div>
             <div>
@@ -270,7 +270,7 @@
                     Nội dung email <span class="text-red-500">*</span>
                 </label>
                 <textarea name="noi_dung" rows="5" 
-                          class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none text-sm"
+                          class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
                           placeholder="Nhập nội dung email..." required></textarea>
             </div>
             <div>
@@ -316,9 +316,9 @@
     </div>
     @endif
 
-    <!-- Danh sách ứng viên - Chỉ hiển thị, không có thao tác -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+    <!-- Danh sách ứng viên -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
             <h3 class="font-semibold text-gray-900 dark:text-white">Danh sách ứng viên đã ứng tuyển</h3>
             <span class="text-sm text-gray-500 dark:text-gray-400">Tổng: {{ $tinTuyenDung->ungViens->count() }}</span>
         </div>
@@ -326,34 +326,33 @@
             <table class="w-full table-auto">
                 <thead>
                     <tr class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-xs uppercase">
-                        <th class="px-5 py-4 text-left">Mã HS</th>
-                        <th class="px-5 py-4 text-left">Họ tên</th>
-                        <th class="px-5 py-4 text-left">Email</th>
-                        <th class="px-5 py-4 text-center">Trạng thái</th>
-                        <th class="px-5 py-4 text-center">Ngày nộp</th>
-                        <th class="px-5 py-4 text-center">Hành động</th>
+                        <th class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-left">Mã HS</th>
+                        <th class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-left">Họ tên</th>
+                        <th class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-left">Email</th>
+                        <th class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-center">Trạng thái</th>
+                        <th class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-center">Ngày nộp</th>
+                        <th class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 text-center">Hành động</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                <tbody>
                     @forelse($tinTuyenDung->ungViens as $ungVien)
                         <tr class="hover:bg-blue-50/40 dark:hover:bg-gray-700/40 transition">
-                            <td class="px-5 py-4">
+                            <td class="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
                                 <span class="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-700 text-xs font-semibold text-gray-900 dark:text-white">
                                     {{ $ungVien->ma_ho_so }}
                                 </span>
                             </td>
-                            <td class="px-5 py-4 font-semibold text-gray-900 dark:text-white">
+                            <td class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 font-semibold text-gray-900 dark:text-white">
                                 {{ $ungVien->ho }} {{ $ungVien->ten }}
                             </td>
-                            <td class="px-5 py-4 text-gray-600 dark:text-gray-300">{{ $ungVien->email }}</td>
-                            <td class="px-5 py-4 text-center">
+                            <td class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300">{{ $ungVien->email }}</td>
+                            <td class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 text-center">
                                 {!! $ungVien->trang_thai_badge !!}
                             </td>
-                            <td class="px-5 py-4 text-center text-sm text-gray-600 dark:text-gray-300">
+                            <td class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 text-center text-sm text-gray-600 dark:text-gray-300">
                                 {{ $ungVien->created_at ? $ungVien->created_at->format('d/m/Y H:i') : '---' }}
                             </td>
-                            <td class="px-5 py-4 text-center">
-                                <!-- CHỈ GIỮ LẠI NÚT XEM -->
+                            <td class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 text-center">
                                 <a href="{{ route('admin.ung_vien.show', $ungVien->id) }}" 
                                    class="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-medium hover:bg-blue-100 dark:hover:bg-blue-900/50 transition">
                                     Xem
@@ -362,7 +361,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center py-10 text-gray-500 dark:text-gray-400">
+                            <td colspan="6" class="text-center py-10 text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
                                 <div class="flex flex-col items-center gap-2">
                                     <svg class="w-12 h-12 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>

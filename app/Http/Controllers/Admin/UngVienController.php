@@ -18,7 +18,6 @@ class UngVienController extends Controller
     {
         $query = UngVien::with(['tinTuyenDung', 'phongBan']);
 
-        // Tìm kiếm
         if ($request->filled('keyword')) {
             $keyword = $request->keyword;
             $query->where(function ($q) use ($keyword) {
@@ -30,12 +29,10 @@ class UngVienController extends Controller
             });
         }
 
-        // Lọc theo trạng thái
         if ($request->filled('trang_thai')) {
             $query->where('trang_thai', $request->trang_thai);
         }
 
-        // Lọc theo tin tuyển dụng
         if ($request->filled('tin_tuyen_dung_id')) {
             $query->where('tin_tuyen_dung_id', $request->tin_tuyen_dung_id);
         }
@@ -59,11 +56,83 @@ class UngVienController extends Controller
     }
 
     /**
+     * Hiển thị form tạo ứng viên mới
+     */
+    public function create()
+    {
+        $tinTuyenDungs = TinTuyenDung::where('trang_thai', 'dang_tuyen')->get();
+        $phongBans = PhongBan::all();
+        return view('admin.ung-vien.create', compact('tinTuyenDungs', 'phongBans'));
+    }
+
+    /**
+     * Lưu ứng viên mới
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'ho' => 'required|string|max:50',
+            'ten' => 'required|string|max:50',
+            'email' => 'required|email|unique:ung_vien,email',
+            'so_dien_thoai' => 'required|string|max:15',
+            'tin_tuyen_dung_id' => 'required|exists:tin_tuyen_dung,id',
+            'phong_ban_id' => 'nullable|exists:phong_ban,id',
+            'luong_mong_muon' => 'nullable|numeric|min:0',
+            'trang_thai' => 'required|in:moi_nop,cho_duyet,da_duyet,dat,khong_dat',
+            'cv' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
+            'ghi_chu' => 'nullable|string',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Tạo mã hồ sơ
+            $maHoSo = 'UV' . date('Ymd') . rand(100, 999);
+            
+            // Upload CV
+            $cvPath = null;
+            if ($request->hasFile('cv')) {
+                $cvPath = $request->file('cv')->store('cv', 'public');
+            }
+
+            // Lưu ứng viên
+            $ungVien = UngVien::create([
+                'ma_ho_so' => $maHoSo,
+                'ho' => $request->ho,
+                'ten' => $request->ten,
+                'email' => $request->email,
+                'so_dien_thoai' => $request->so_dien_thoai,
+                'tin_tuyen_dung_id' => $request->tin_tuyen_dung_id,
+                'phong_ban_id' => $request->phong_ban_id,
+                'luong_mong_muon' => $request->luong_mong_muon,
+                'trang_thai' => $request->trang_thai,
+                'cv_path' => $cvPath,
+                'ghi_chu' => $request->ghi_chu,
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('admin.ung_vien.index')
+                ->with('success', 'Thêm ứng viên "' . $ungVien->ho . ' ' . $ungVien->ten . '" thành công!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->with('error', 'Có lỗi xảy ra: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    /**
      * Hiển thị chi tiết ứng viên
      */
     public function show($id)
     {
-        $ungVien = UngVien::with(['tinTuyenDung', 'phongBan'])->findOrFail($id);
+        $ungVien = UngVien::with([
+            'tinTuyenDung', 
+            'phongBan',
+            'lichSuEmails.nguoiGui'
+        ])->findOrFail($id);
         
         return view('admin.ung-vien.show', compact('ungVien'));
     }
@@ -84,6 +153,12 @@ class UngVienController extends Controller
             if ($ungVien->trang_thai == 'dat' || $ungVien->trang_thai == 'khong_dat') {
                 return redirect()->back()
                     ->with('warning', 'Ứng viên đã ở trạng thái cuối cùng, không thể thay đổi.');
+            }
+
+            // Nếu trạng thái cũ là chờ duyệt, không cho phép quay lại mới nộp
+            if ($ungVien->trang_thai == 'cho_duyet' && $request->trang_thai == 'moi_nop') {
+                return redirect()->back()
+                    ->with('warning', 'Ứng viên đã ở trạng thái chờ duyệt, không thể quay lại mới nộp.');
             }
 
             $oldStatus = $ungVien->trang_thai;
@@ -177,93 +252,5 @@ class UngVienController extends Controller
         ];
 
         return $statuses[$status] ?? $status;
-    }
-
-    // ... các method khác ...
-
-    /**
-     * Helper: Lấy text trạng thái
-     */
-
-    /**
-     * Tạo form tạo ứng viên mới
-     */
-    public function create()
-    {
-        $tinTuyenDungs = TinTuyenDung::where('trang_thai', 'dang_tuyen')->get();
-        $phongBans = PhongBan::all();
-        return view('admin.ung-vien.create', compact('tinTuyenDungs', 'phongBans'));
-    }
-
-    /**
-     * Lưu ứng viên mới
-     */
-    public function store(Request $request)
-    {
-        // Code xử lý lưu ứng viên
-    }
-
-    /**
-     * Cập nhật ứng viên
-     */
-    public function update(Request $request, $id)
-    {
-        // Code xử lý cập nhật ứng viên
-    }
-
-    /**
-     * Xóa ứng viên
-     */
-    public function destroy($id)
-    {
-        // Code xử lý xóa ứng viên
-    }
-
-    /**
-     * Lưu trữ ứng viên
-     */
-    public function archive($id)
-    {
-        // Code xử lý lưu trữ ứng viên
-    }
-
-    /**
-     * Khôi phục ứng viên
-     */
-    public function restore($id)
-    {
-        // Code xử lý khôi phục ứng viên
-    }
-
-    /**
-     * Danh sách ứng viên đã lưu trữ
-     */
-    public function archived()
-    {
-        // Code xử lý hiển thị ứng viên đã lưu trữ
-    }
-
-    /**
-     * Danh sách email phỏng vấn
-     */
-    public function emailList()
-    {
-        // Code xử lý danh sách email
-    }
-
-    /**
-     * Tạo email phỏng vấn
-     */
-    public function createEmail()
-    {
-        // Code xử lý tạo email
-    }
-
-    /**
-     * Gửi email phỏng vấn
-     */
-    public function sendEmail(Request $request)
-    {
-        // Code xử lý gửi email
     }
 }

@@ -19,7 +19,6 @@ class UngVien extends Model
         'so_dien_thoai',
         'tin_tuyen_dung_id',
         'phong_ban_id',
-        'kinh_nghiem',
         'luong_mong_muon',
         'trang_thai',
         'nguoi_dung_id',
@@ -56,7 +55,7 @@ class UngVien extends Model
             'hen_phong_van' => 'purple',
             'cho_phong_van' => 'indigo',
             'da_phong_van' => 'cyan',
-            'dat' => 'green',
+            'dat' => 'emerald',
             'khong_dat' => 'red',
             'da_huy' => 'gray',
             'tam_dung' => 'orange',
@@ -81,26 +80,38 @@ class UngVien extends Model
             'cyan' => 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
             'gray' => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400',
             'orange' => 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+            'emerald' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
         ];
 
         $class = $colorClasses[$color] ?? $colorClasses['gray'];
 
-        return '<span class="px-3 py-1 rounded-full text-xs font-semibold ' . $class . '">' . $text . '</span>';
+        return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ' . $class . '">
+                    <span class="w-1.5 h-1.5 rounded-full bg-current opacity-60"></span>
+                    ' . $text . '
+                </span>';
     }
 
-    // Quan hệ
+    // Quan hệ với tin tuyển dụng
     public function tinTuyenDung()
     {
         return $this->belongsTo(TinTuyenDung::class, 'tin_tuyen_dung_id');
     }
 
+    // Quan hệ với phòng ban
     public function phongBan()
     {
         return $this->belongsTo(PhongBan::class, 'phong_ban_id');
     }
 
+    // Quan hệ với người dùng
     public function nguoiDung()
     {
         return $this->belongsTo(NguoiDung::class, 'nguoi_dung_id');
+    }
+
+    // Quan hệ với lịch sử email
+    public function lichSuEmails()
+    {
+        return $this->hasMany(LichSuEmail::class, 'ung_vien_id');
     }
 }
