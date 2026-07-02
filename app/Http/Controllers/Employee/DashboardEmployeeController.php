@@ -152,6 +152,25 @@ class DashboardEmployeeController extends Controller
             $chartData[] = $soNgay;
         }
 
+        // ⭐⭐⭐ LOGIC ĐỌC SỐ DƯ PHÉP ĐỘNG TỪ DATABASE ⭐⭐⭐
+        $soDuPhep = \App\Models\SoDuPhep::where('nguoi_dung_id', $user->id)
+            ->where('nam', $namHienTai)
+            ->first();
+
+        // Nếu hệ thống chưa khởi tạo dữ liệu cho nhân viên này, tự tạo bản ghi mẫu bọc lót
+        if (!$soDuPhep) {
+            $soDuPhep = \App\Models\SoDuPhep::create([
+                'nguoi_dung_id' => $user->id,
+                'nam' => $namHienTai,
+                'phep_nam_moi' => 12.0,
+                'phep_cu_chuyen_sang' => 0.0,
+                'phep_da_dung' => 0.0
+            ]);
+        }
+
+        $tongPhepDuocHuong = $soDuPhep->phep_nam_moi + $soDuPhep->phep_cu_chuyen_sang;
+        $soDuConLai = max(0, $tongPhepDuocHuong - $soDuPhep->phep_da_dung);
+
         return view('employee.dashboard', compact(
             'hoTen',
             'email',
@@ -173,7 +192,8 @@ class DashboardEmployeeController extends Controller
             'tongNhanVien',
             'topEmployees',
             'chartLabels',
-            'chartData'
+            'chartData',
+            'soDuConLai'
         ));
     }
 }

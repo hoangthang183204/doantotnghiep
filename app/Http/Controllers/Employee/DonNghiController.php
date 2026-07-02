@@ -23,19 +23,41 @@ class DonNghiController extends Controller
     }
 
     private function getSoDuNghiPhep($userId)
-    {
-        $soNgayPhepNam = 12;
-        $soNgayDaNghi = DonXinNghi::where('nguoi_dung_id', $userId)
-            ->where('trang_thai', 'da_duyet')
-            ->whereYear('ngay_bat_dau', Carbon::now()->year)
-            ->sum('so_ngay_nghi');
+{
+    $namHienTai = Carbon::now()->year;
 
-        return [
-            'so_ngay_phep_nam' => $soNgayPhepNam,
-            'so_ngay_da_nghi' => $soNgayDaNghi,
-            'so_du_con_lai' => max(0, $soNgayPhepNam - $soNgayDaNghi),
-        ];
+    // Lấy cấu hình phép từ bảng so_du_phep
+    $soDuPhep = \App\Models\SoDuPhep::where('nguoi_dung_id', $userId)
+        ->where('nam', $namHienTai)
+        ->first();
+
+    // Nếu dữ liệu năm nay chưa được khởi tạo, tự động tạo nhanh bản ghi mẫu để tránh crash giao diện
+    if (!$soDuPhep) {
+        $soDuPhep = \App\Models\SoDuPhep::create([
+            'nguoi_dung_id' => $userId,
+            'nam' => $namHienTai,
+            'phep_nam_moi' => 12.0,
+            'phep_cu_chuyen_sang' => 0.0,
+            'phep_da_dung' => 0.0
+        ]);
     }
+
+    $tongPhepDuocHuong = $soDuPhep->phep_nam_moi + $soDuPhep->phep_cu_chuyen_sang;
+    $soNgayDaNghi = $soDuPhep->phep_da_dung;
+    $soDuConLai = max(0, $tongPhepDuocHuong - $soNgayDaNghi);
+
+    // Bật trạng thái cảnh báo nếu số dư còn dưới hoặc bằng 3 ngày
+    $canhBaoSapHet = $soDuConLai <= 3.0;
+
+    return [
+        'so_ngay_phep_nam' => $tongPhepDuocHuong,
+        'phep_nam_moi' => $soDuPhep->phep_nam_moi,
+        'phep_cu_chuyen_sang' => $soDuPhep->phep_cu_chuyen_sang,
+        'so_ngay_da_nghi' => $soNgayDaNghi,
+        'so_du_con_lai' => $soDuConLai,
+        'canh_bao_sap_het' => $canhBaoSapHet,
+    ];
+}
 
     public function index(Request $request)
     {

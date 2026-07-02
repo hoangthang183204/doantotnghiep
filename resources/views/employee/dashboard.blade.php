@@ -169,9 +169,9 @@
                 </div>
             </div>
 
+            
             <!-- Số ngày nghỉ phép -->
-            <div
-                class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
                 <div class="flex items-start justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Nghỉ phép</p>
@@ -184,8 +184,11 @@
                 </div>
                 <div class="mt-3">
                     <div class="flex items-center text-sm">
-                        <span class="text-gray-600 dark:text-gray-400">Còn lại</span>
-                        <span class="ml-2 font-semibold text-gray-900 dark:text-white">12 ngày</span>
+                        <span class="text-gray-600 dark:text-gray-400">Số dư khả dụng</span>
+                        {{-- Hiển thị số ngày phép động từ Database --}}
+                        <span class="ml-2 font-bold text-green-600 dark:text-green-400">
+                            {{ $soDuConLai }} ngày
+                        </span>
                     </div>
                 </div>
             </div>

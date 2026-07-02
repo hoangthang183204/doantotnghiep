@@ -248,43 +248,73 @@
         @endif
     </div>
 
-    {{-- Số dư nghỉ phép --}}
-    <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                    <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    {{-- Số dư nghỉ phép và Cảnh báo sắp hết phép --}}
+    <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        
+        {{-- Khối thông báo cảnh báo động --}}
+        @if($soDu['canh_bao_sap_het'])
+            <div class="mb-4 p-4 text-sm text-amber-800 dark:text-amber-200 rounded-lg bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-amber-600 dark:text-amber-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+                <span class="font-medium">Cảnh báo:</span>&nbsp;Số dư nghỉ phép của bạn sắp hết (Còn lại {{ $soDu['so_du_con_lai'] }} ngày). Vui lòng cân nhắc kế hoạch nghỉ phép hợp lý.
+            </div>
+        @endif
+
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div class="flex items-start space-x-4">
+                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 002-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
                 </div>
                 <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Số dư nghỉ phép</p>
-                    <div class="flex items-baseline gap-2">
-                        <p class="text-xl font-bold text-gray-900 dark:text-white">
-                            {{ $soDu['so_du_con_lai'] ?? 12 }}
-                            <span class="text-sm font-normal text-gray-500">/ {{ $soDu['so_ngay_phep_nam'] ?? 12 }} ngày</span>
-                        </p>
-                        @if(($soDu['so_ngay_da_nghi'] ?? 0) > 0)
-                            <span class="text-xs text-gray-500 dark:text-gray-400">
-                                (Đã nghỉ {{ number_format($soDu['so_ngay_da_nghi'] ?? 0, 0) }} ngày)
-                            </span>
-                        @endif
+                    <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-1">Chi tiết số dư nghỉ phép năm {{ now()->year }}</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm mt-2">
+                        <div class="bg-gray-50 dark:bg-gray-700/40 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700">
+                            <p class="text-xs text-gray-400">Phép năm mới</p>
+                            <p class="font-semibold text-gray-700 dark:text-gray-300">{{ $soDu['phep_nam_moi'] }} ngày</p>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-700/40 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700">
+                            <p class="text-xs text-gray-400">Phép cũ chuyển sang</p>
+                            <p class="font-semibold text-gray-700 dark:text-gray-300">{{ $soDu['phep_cu_chuyen_sang'] }} ngày</p>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-700/40 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700">
+                            <p class="text-xs text-gray-400">Đã sử dụng</p>
+                            <p class="font-semibold text-red-600 dark:text-red-400">{{ $soDu['so_ngay_da_nghi'] }} ngày</p>
+                        </div>
+                        <div class="bg-blue-50 dark:bg-blue-900/20 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                            <p class="text-xs text-blue-600 dark:text-blue-400 font-medium">Số dư khả dụng</p>
+                            <p class="font-bold text-blue-700 dark:text-blue-300 text-base">{{ $soDu['so_du_con_lai'] }} ngày</p>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="mt-3 md:mt-0">
-                <span class="text-sm text-gray-500 dark:text-gray-400">{{ now()->format('d/m/Y') }}</span>
+            
+            <div class="text-right flex-shrink-0">
+                <span class="text-xs font-medium text-gray-400 bg-gray-100 dark:bg-gray-700 px-2.5 py-1 rounded-full">
+                    Cập nhật: {{ now()->format('d/m/Y H:i') }}
+                </span>
             </div>
         </div>
-        {{-- Thanh tiến trình --}}
-        <div class="mt-3">
-            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                @php
-                    $soDuConLai = $soDu['so_du_con_lai'] ?? 0;
-                    $soNgayPhepNam = $soDu['so_ngay_phep_nam'] ?? 12;
-                    $phanTram = $soNgayPhepNam > 0 ? ($soDuConLai / $soNgayPhepNam) * 100 : 0;
-                @endphp
-                <div class="bg-green-500 h-2 rounded-full transition-all duration-500" 
+
+        {{-- Thanh tiến trình (Progress Bar) thay đổi màu động --}}
+        <div class="mt-5">
+            @php
+                $soDuConLai = $soDu['so_du_con_lai'] ?? 0;
+                $soNgayPhepNam = $soDu['so_ngay_phep_nam'] ?? 12;
+                $phanTram = $soNgayPhepNam > 0 ? ($soDuConLai / $soNgayPhepNam) * 100 : 0;
+                
+                // Chuyển màu thanh trạng thái dựa vào số ngày phép còn lại
+                $colorClass = 'bg-green-500';
+                if ($soDuConLai <= 1) {
+                    $colorClass = 'bg-red-500';
+                } elseif ($soDuConLai <= 3) {
+                    $colorClass = 'bg-amber-500';
+                }
+            @endphp
+            <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-3 overflow-hidden border border-gray-200/50 dark:border-gray-600">
+                <div class="{{ $colorClass }} h-3 rounded-full transition-all duration-500 shadow-inner" 
                      style="width: {{ min(100, $phanTram) }}%"></div>
             </div>
         </div>
