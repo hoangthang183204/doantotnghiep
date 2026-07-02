@@ -135,14 +135,14 @@
                         </div>
 
                         <div>
-                                <label class="label-ui">Hình thức xử lý</label>
-                                <input type="text" name="hinh_thuc" value="{{ old('hinh_thuc') }}" class="input-ui"
-                                    placeholder="VD: Khiển trách bằng văn bản, đình chỉ...">
-                                @error('hinh_thuc')
-                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            
+                            <label class="label-ui">Hình thức xử lý</label>
+                            <input type="text" name="hinh_thuc" value="{{ old('hinh_thuc') }}" class="input-ui"
+                                placeholder="VD: Khiển trách bằng văn bản, đình chỉ...">
+                            @error('hinh_thuc')
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         {{-- SỐ QUYẾT ĐỊNH --}}
                         <div>
                             <label class="label-ui">Số quyết định</label>
@@ -167,11 +167,20 @@
                     <div class="px-10 py-7 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-4">
 
                         <a href="{{ route('admin.khen-thuong-ky-luat.index') }}"
-                            class="px-6 py-3 rounded-2xl border border-slate-300 dark:border-slate-700">
+                            class="px-6 py-3 rounded-2xl
+           border border-slate-300 dark:border-slate-700
+           bg-white dark:bg-slate-900
+           text-slate-700 dark:text-slate-200
+           hover:bg-slate-100 dark:hover:bg-slate-800
+           transition">
                             Hủy
                         </a>
 
-                        <button type="submit" class="px-7 py-3 rounded-2xl bg-red-600 text-white font-semibold">
+                        <button type="submit"
+                            class="px-7 py-3 rounded-2xl
+           bg-red-600 hover:bg-red-700
+           text-white font-semibold
+           transition shadow-lg shadow-red-600/20">
                             Lưu kỷ luật
                         </button>
 
