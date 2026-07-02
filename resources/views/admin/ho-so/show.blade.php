@@ -838,9 +838,6 @@
         {{-- ========================================================== --}}
         {{-- TAB 5: BẢO HIỂM & THUẾ --}}
         {{-- ========================================================== --}}
-        {{-- ========================================================== --}}
-        {{-- TAB 5: BẢO HIỂM & THUẾ --}}
-        {{-- ========================================================== --}}
         <div id="tab5" class="tab-content hidden">
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1021,13 +1018,7 @@
                                         ✅ Kết quả: {{ $item->ket_qua }}
                                     </div>
                                 @endif
-                                @if ($item->chi_phi)
-                                    <div class="text-xs text-gray-500 mt-1">💰 Chi phí:
-                                        {{ number_format($item->chi_phi, 0, ',', '.') }} VNĐ</div>
-                                @endif
-                                @if ($item->ghi_chu)
-                                    <p class="text-xs text-gray-500 mt-1">📌 {{ $item->ghi_chu }}</p>
-                                @endif
+                                {{-- ⭐ BỎ CHI PHÍ VÀ GHI CHÚ --}}
                             </div>
                         @endforeach
                     </div>
@@ -1104,7 +1095,7 @@
                 class="text-lg font-semibold text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
                 📊 Tổng hợp
             </h3>
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div
                     class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-center border border-blue-200 dark:border-blue-800">
                     <div class="text-3xl font-bold text-blue-600 dark:text-blue-400">
@@ -1124,13 +1115,6 @@
                         {{ $hoSo->khen_thuong_ky_luat?->where('loai', 'ky_luat')->count() ?? 0 }}
                     </div>
                     <div class="text-sm text-gray-500 dark:text-gray-400">Kỷ luật</div>
-                </div>
-                <div
-                    class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 text-center border border-yellow-200 dark:border-yellow-800">
-                    <div class="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-                        {{ number_format($hoSo->khen_thuong_ky_luat?->where('loai', 'khen_thuong')->sum('so_tien') ?? 0, 0, ',', '.') }}
-                    </div>
-                    <div class="text-sm text-gray-500 dark:text-gray-400">Tổng thưởng (VNĐ)</div>
                 </div>
                 <div
                     class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 text-center border border-purple-200 dark:border-purple-800">

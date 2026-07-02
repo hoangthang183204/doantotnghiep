@@ -23,41 +23,41 @@ class DonNghiController extends Controller
     }
 
     private function getSoDuNghiPhep($userId)
-{
-    $namHienTai = Carbon::now()->year;
+    {
+        $namHienTai = Carbon::now()->year;
 
-    // Lấy cấu hình phép từ bảng so_du_phep
-    $soDuPhep = \App\Models\SoDuPhep::where('nguoi_dung_id', $userId)
-        ->where('nam', $namHienTai)
-        ->first();
+        // Lấy cấu hình phép từ bảng so_du_phep
+        $soDuPhep = \App\Models\SoDuPhep::where('nguoi_dung_id', $userId)
+            ->where('nam', $namHienTai)
+            ->first();
 
-    // Nếu dữ liệu năm nay chưa được khởi tạo, tự động tạo nhanh bản ghi mẫu để tránh crash giao diện
-    if (!$soDuPhep) {
-        $soDuPhep = \App\Models\SoDuPhep::create([
-            'nguoi_dung_id' => $userId,
-            'nam' => $namHienTai,
-            'phep_nam_moi' => 12.0,
-            'phep_cu_chuyen_sang' => 0.0,
-            'phep_da_dung' => 0.0
-        ]);
+        // Nếu dữ liệu năm nay chưa được khởi tạo, tự động tạo nhanh bản ghi mẫu để tránh crash giao diện
+        if (!$soDuPhep) {
+            $soDuPhep = \App\Models\SoDuPhep::create([
+                'nguoi_dung_id' => $userId,
+                'nam' => $namHienTai,
+                'phep_nam_moi' => 12.0,
+                'phep_cu_chuyen_sang' => 0.0,
+                'phep_da_dung' => 0.0
+            ]);
+        }
+
+        $tongPhepDuocHuong = $soDuPhep->phep_nam_moi + $soDuPhep->phep_cu_chuyen_sang;
+        $soNgayDaNghi = $soDuPhep->phep_da_dung;
+        $soDuConLai = max(0, $tongPhepDuocHuong - $soNgayDaNghi);
+
+        // Bật trạng thái cảnh báo nếu số dư còn dưới hoặc bằng 3 ngày
+        $canhBaoSapHet = $soDuConLai <= 3.0;
+
+        return [
+            'so_ngay_phep_nam' => $tongPhepDuocHuong,
+            'phep_nam_moi' => $soDuPhep->phep_nam_moi,
+            'phep_cu_chuyen_sang' => $soDuPhep->phep_cu_chuyen_sang,
+            'so_ngay_da_nghi' => $soNgayDaNghi,
+            'so_du_con_lai' => $soDuConLai,
+            'canh_bao_sap_het' => $canhBaoSapHet,
+        ];
     }
-
-    $tongPhepDuocHuong = $soDuPhep->phep_nam_moi + $soDuPhep->phep_cu_chuyen_sang;
-    $soNgayDaNghi = $soDuPhep->phep_da_dung;
-    $soDuConLai = max(0, $tongPhepDuocHuong - $soNgayDaNghi);
-
-    // Bật trạng thái cảnh báo nếu số dư còn dưới hoặc bằng 3 ngày
-    $canhBaoSapHet = $soDuConLai <= 3.0;
-
-    return [
-        'so_ngay_phep_nam' => $tongPhepDuocHuong,
-        'phep_nam_moi' => $soDuPhep->phep_nam_moi,
-        'phep_cu_chuyen_sang' => $soDuPhep->phep_cu_chuyen_sang,
-        'so_ngay_da_nghi' => $soNgayDaNghi,
-        'so_du_con_lai' => $soDuConLai,
-        'canh_bao_sap_het' => $canhBaoSapHet,
-    ];
-}
 
     public function index(Request $request)
     {
@@ -101,7 +101,7 @@ class DonNghiController extends Controller
     public function store(Request $request)
     {
         Log::info('🚀=== STORE FUNCTION CALLED ===🚀');
-        
+
         $request->validate([
             'loai_nghi_id' => 'required|exists:loai_nghi_phep,id',
             'ngay_bat_dau' => 'required|date|after_or_equal:today',
@@ -113,7 +113,7 @@ class DonNghiController extends Controller
 
         $user = Auth::user();
         Log::info('📝 User ID: ' . $user->id . ' - ' . $user->email);
-        
+
         $soDu = $this->getSoDuNghiPhep($user->id);
 
         if ($request->so_ngay_nghi > $soDu['so_du_con_lai']) {
@@ -153,16 +153,32 @@ class DonNghiController extends Controller
 
             Log::info('📝 DonNghi created: ' . $donNghi->id);
 
-            // ⭐ GỬI THÔNG BÁO CHO ADMIN
-            Log::info('📝 Sending notification to admins...');
-            $this->notificationService->notifyLeaveRequest($donNghi, 'created');
-            Log::info('📝 Notification sent successfully');
+            // ⭐⭐ SỬA LẠI: GỬI THÔNG BÁO CHO ADMIN + TRƯỞNG PHÒNG ⭐⭐
+            try {
+                Log::info('📝 Bắt đầu gửi thông báo...');
+
+                // Lấy ADMIN + TRƯỞNG PHÒNG
+                $recipients = \App\Models\NguoiDung::whereHas('vaiTros', function ($q) {
+                    $q->whereIn('name', ['admin', 'Super Admin', 'truong_phong']);
+                })->get();
+
+                Log::info('📝 Số người nhận: ' . $recipients->count());
+
+                foreach ($recipients as $recipient) {
+                    $recipient->notify(new \App\Notifications\LeaveRequestNotification($donNghi, 'created'));
+                    Log::info('📝 Đã gửi thông báo đến: ' . $recipient->email);
+                }
+
+                Log::info('📝 Gửi thông báo thành công!');
+            } catch (\Exception $e) {
+                Log::error('❌ Lỗi gửi thông báo: ' . $e->getMessage());
+                // Không throw exception để vẫn tạo được đơn
+            }
 
             DB::commit();
 
             return redirect()->route('employee.don-nghi.index')
                 ->with('success', '✅ Đã gửi đơn xin nghỉ phép thành công!');
-
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('❌ Don nghi error: ' . $e->getMessage());
@@ -225,7 +241,6 @@ class DonNghiController extends Controller
 
             return redirect()->route('employee.don-nghi.index')
                 ->with('success', '✅ Đã cập nhật đơn xin nghỉ phép!');
-
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Don nghi update error: ' . $e->getMessage());

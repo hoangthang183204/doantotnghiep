@@ -266,7 +266,7 @@
                                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </span>
-                                <span class="flex-1 text-left font-medium menu-text">Chấm công</span>
+                                <span class="flex-1 text-left font-medium menu-text">Quản lý chấm công</span>
                                 <svg class="w-4 h-4 transition-transform duration-200 arrow-icon flex-shrink-0 {{ in_array($currentRoute, ['admin.cham-cong.index', 'admin.tang-ca.index', 'admin.yeu-cau-dieu-chinh-cong.index']) ? 'rotate-180' : '' }}"
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

@@ -131,6 +131,11 @@ Route::prefix('admin')
         Route::prefix('ho-so')->name('ho-so.')->middleware(['CheckPermission:hoso.index'])->group(function () {
             Route::get('/', [HoSoController::class, 'index'])->name('index');
             Route::get('/create', [HoSoController::class, 'create'])->name('create');
+            Route::get('/template', [HoSoController::class, 'downloadTemplate'])->name('template');
+
+            // ⭐ ROUTE EXPORT - ĐẶT TRƯỚC ROUTE {id}
+            Route::get('/export', [HoSoController::class, 'export'])->name('export');
+            Route::post('/import', [HoSoController::class, 'import'])->name('import');
             Route::get('/{id}/edit', [HoSoController::class, 'edit'])->name('edit')->middleware('CheckPermission:hoso.edit');
             Route::put('/{id}', [HoSoController::class, 'update'])->name('update')->middleware('CheckPermission:hoso.edit');
             Route::get('/{id}', [HoSoController::class, 'show'])->name('show')->middleware('CheckPermission:hoso.show');
@@ -139,6 +144,8 @@ Route::prefix('admin')
             Route::get('/cv/view/{id}', [HoSoController::class, 'viewCv'])->name('cv.view')->middleware('CheckPermission:hoso.show');
             Route::get('/{id}/view-cv', [HoSoController::class, 'viewCv'])->name('view-cv')->middleware('CheckPermission:hoso.show');
             Route::get('/{id}/view-contract', [HoSoController::class, 'viewContract'])->name('view-contract')->middleware('CheckPermission:hoso.show');
+            Route::post('/{id}/resign', [HoSoController::class, 'resign'])->name('resign');
+            Route::post('/{id}/activate', [HoSoController::class, 'activate'])->name('activate');
         });
 
         // ========== QUẢN LÝ NGƯỜI DÙNG - CHỈ ADMIN ==========

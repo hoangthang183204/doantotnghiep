@@ -71,6 +71,7 @@ class NguoiDungController extends Controller
     }
 
     // Lưu user - TỰ ĐỘNG TẠO HỒ SƠ
+    // Lưu user - TỰ ĐỘNG TẠO HỒ SƠ
     public function store(Request $request)
     {
         $request->validate([
@@ -87,13 +88,14 @@ class NguoiDungController extends Controller
             'ten_dang_nhap' => $request->ten_dang_nhap,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'vai_tro_id' => $request->vai_tro_id, // ⭐ THÊM DÒNG NÀY
             'phong_ban_id' => $request->phong_ban_id,
             'chuc_vu_id' => $request->chuc_vu_id,
             'trang_thai' => 1,
             'trang_thai_cong_viec' => 'dang_lam',
         ]);
 
-        // ⭐ QUAN TRỌNG: Gán vai trò cho user
+        // ⭐ QUAN TRỌNG: Gán vai trò cho user (bảng trung gian)
         if ($request->filled('vai_tro_id')) {
             $user->vaiTros()->attach($request->vai_tro_id);
         }
@@ -149,6 +151,7 @@ class NguoiDungController extends Controller
     }
 
     // Cập nhật
+    // Cập nhật
     public function update(Request $request, $id)
     {
         $user = NguoiDung::findOrFail($id);
@@ -173,12 +176,18 @@ class NguoiDungController extends Controller
 
         $user->update($data);
 
-        // ⭐ QUAN TRỌNG: Cập nhật vai trò vào bảng nguoi_dung_vai_tro
+        // ⭐ QUAN TRỌNG: Cập nhật vai trò
         if ($request->filled('vai_tro_id')) {
-            // Xóa tất cả role cũ và gán role mới
+            // Cập nhật cột vai_tro_id trong bảng nguoi_dung
+            $user->vai_tro_id = $request->vai_tro_id;
+            $user->save();
+
+            // Cập nhật bảng trung gian
             $user->vaiTros()->sync([$request->vai_tro_id]);
         } else {
             // Nếu không chọn role nào thì xóa hết
+            $user->vai_tro_id = null;
+            $user->save();
             $user->vaiTros()->detach();
         }
 
