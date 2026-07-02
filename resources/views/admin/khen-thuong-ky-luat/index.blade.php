@@ -262,8 +262,6 @@
 
                                 <th class="p-4 font-medium">Loại</th>
 
-                                <th class="p-4 font-medium">Tiêu đề</th>
-
                                 <th class="p-4 font-medium">Ngày</th>
 
                                 <th class="p-4 font-medium text-right">Số tiền</th>
@@ -324,25 +322,6 @@
                                                 ⚠️ Kỷ luật
 
                                             </span>
-                                        @endif
-
-                                    </td>
-
-                                    {{-- Tiêu đề --}}
-                                    <td class="p-4">
-
-                                        <div class="font-medium text-gray-800 dark:text-slate-200">
-
-                                            {{ $item->ten }}
-
-                                        </div>
-
-                                        @if ($item->noi_dung)
-                                            <div class="text-xs text-gray-500 dark:text-slate-400 mt-1 line-clamp-2">
-
-                                                {{ $item->noi_dung }}
-
-                                            </div>
                                         @endif
 
                                     </td>
