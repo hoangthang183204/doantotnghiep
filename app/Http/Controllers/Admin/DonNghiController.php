@@ -152,56 +152,87 @@ class DonNghiController extends Controller
 
 
     public function capNhatTrangThai(Request $request, $id)
-    {
-        $request->validate([
-            'trang_thai' => 'required|in:da_duyet,tu_choi,cho_duyet',
-            'ly_do_tu_choi' => 'nullable|string|max:500',
-        ]);
+{
+    $request->validate([
+        'trang_thai' => 'required|in:da_duyet,tu_choi,cho_duyet',
+        'ly_do_tu_choi' => 'nullable|string|max:500',
+    ]);
 
-        try {
-            $donNghi = DonXinNghi::findOrFail($id);
+    // Bắt đầu dùng Transaction để đảm bảo tính toàn vẹn dữ liệu (nếu trừ phép lỗi thì hủy duyệt đơn)
+    DB::beginTransaction();
 
-            if ($donNghi->trang_thai == 'huy_bo') {
-                return redirect()->back()->with('error', '❌ Đơn này đã bị hủy, không thể thay đổi trạng thái!');
-            }
+    try {
+        $donNghi = DonXinNghi::findOrFail($id);
 
-            $donNghi->trang_thai = $request->trang_thai;
-
-            if ($request->trang_thai == 'da_duyet' || $request->trang_thai == 'tu_choi') {
-                $donNghi->nguoi_duyet_id = auth()->id();
-                $donNghi->thoi_gian_duyet = now();
-            }
-
-            if ($request->trang_thai == 'tu_choi') {
-                $donNghi->ghi_chu = $request->ly_do_tu_choi ?? 'Không có lý do';
-            }
-
-            if ($request->trang_thai == 'cho_duyet') {
-                $donNghi->nguoi_duyet_id = null;
-                $donNghi->thoi_gian_duyet = null;
-                $donNghi->ghi_chu = null;
-            }
-
-            $donNghi->save();
-
-            // ⭐⭐⭐ GỬI THÔNG BÁO KHI DUYỆT/TỪ CHỐI ⭐⭐⭐
-            $action = $request->trang_thai === 'da_duyet' ? 'approved' : 'rejected';
-            if (in_array($request->trang_thai, ['da_duyet', 'tu_choi'])) {
-                $this->notificationService->notifyLeaveRequest($donNghi, $action);
-            }
-
-            $thongBao = match ($request->trang_thai) {
-                'cho_duyet' => 'Đã hoàn tác đơn về trạng thái Chờ duyệt!',
-                'da_duyet' => 'Đã duyệt đơn nghỉ phép thành công!',
-                'tu_choi' => 'Đã từ chối đơn nghỉ phép!',
-                default => 'Cập nhật thành công!',
-            };
-
-            return redirect()->back()->with('success', $thongBao);
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        if ($donNghi->trang_thai == 'huy_bo') {
+            return redirect()->back()->with('error', '❌ Đơn này đã bị hủy, không thể thay đổi trạng thái!');
         }
+
+        // Lưu lại trạng thái cũ trước khi update để check logic hoàn tác
+        $trangThaiCu = $donNghi->trang_thai;
+        $trangThaiMoi = $request->trang_thai;
+
+        $donNghi->trang_thai = $trangThaiMoi;
+
+        if ($trangThaiMoi == 'da_duyet' || $trangThaiMoi == 'tu_choi') {
+            $donNghi->nguoi_duyet_id = auth()->id();
+            $donNghi->thoi_gian_duyet = now();
+        }
+
+        if ($trangThaiMoi == 'tu_choi') {
+            $donNghi->ghi_chu = $request->ly_do_tu_choi ?? 'Không có lý do';
+        }
+
+        if ($trangThaiMoi == 'cho_duyet') {
+            $donNghi->nguoi_duyet_id = null;
+            $donNghi->thoi_gian_duyet = null;
+            $donNghi->ghi_chu = null;
+        }
+
+        $donNghi->save();
+
+        // ⭐⭐⭐ LOGIC KHẤU TRỪ / HOÀN TÁC SỐ DƯ PHÉP ĐỘNG ⭐⭐⭐
+        $namDonNghi = \Carbon\Carbon::parse($donNghi->ngay_bat_dau)->year;
+
+        // Tìm hoặc tự khởi tạo bản ghi số dư phép năm đó của nhân viên
+        $soDuPhep = \App\Models\SoDuPhep::firstOrCreate(
+            ['nguoi_dung_id' => $donNghi->nguoi_dung_id, 'nam' => $namDonNghi],
+            ['phep_nam_moi' => 12.0, 'phep_cu_chuyen_sang' => 0.0, 'phep_da_dung' => 0.0]
+        );
+
+        // Trường hợp 1: Chuyển từ trạng thái khác SANG "Đã duyệt" -> Trừ số dư phép (Tăng phep_da_dung)
+        if ($trangThaiMoi === 'da_duyet' && $trangThaiCu !== 'da_duyet') {
+            $soDuPhep->increment('phep_da_dung', $donNghi->so_ngay_nghi);
+        }
+        
+        // Trường hợp 2: Hoàn tác từ "Đã duyệt" QUAY VỀ trạng thái khác -> Hoàn lại số dư phép (Giảm phep_da_dung)
+        elseif ($trangThaiCu === 'da_duyet' && $trangThaiMoi !== 'da_duyet') {
+            // Đảm bảo không trừ âm giá trị phep_da_dung
+            $soDuPhep->phep_da_dung = max(0, $soDuPhep->phep_da_dung - $donNghi->so_ngay_nghi);
+            $soDuPhep->save();
+        }
+
+        // ⭐⭐⭐ GỬI THÔNG BÁO KHI DUYỆT/TỪ CHỐI ⭐⭐⭐
+        $action = $trangThaiMoi === 'da_duyet' ? 'approved' : 'rejected';
+        if (in_array($trangThaiMoi, ['da_duyet', 'tu_choi'])) {
+            $this->notificationService->notifyLeaveRequest($donNghi, $action);
+        }
+
+        DB::commit(); // Mọi thứ chạy mượt mà, lưu vào DB
+
+        $thongBao = match ($trangThaiMoi) {
+            'cho_duyet' => 'Đã hoàn tác đơn về trạng thái Chờ duyệt và hoàn lại số dư phép!',
+            'da_duyet' => 'Đã duyệt đơn nghỉ phép và khấu trừ số dư phép thành công!',
+            'tu_choi' => 'Đã từ chối đơn nghỉ phép!',
+            default => 'Cập nhật thành công!',
+        };
+
+        return redirect()->back()->with('success', $thongBao);
+    } catch (\Exception $e) {
+        DB::rollback(); // Có biến cố gì xảy ra, lập tức khôi phục trạng thái cũ
+        return redirect()->back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
     }
+}
 
     public function reject(Request $request, $id)
     {

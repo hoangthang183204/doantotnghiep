@@ -13,3 +13,5 @@ Schedule::command('luong:chot')
     ->monthlyOn(1, '02:00')
     ->timezone('Asia/Ho_Chi_Minh')
     ->withoutOverlapping();
+Schedule::command('leave:reset-annual')->yearly();
+
