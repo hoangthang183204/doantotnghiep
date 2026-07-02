@@ -560,6 +560,29 @@
             @endif
 
             {{-- ========================================================== --}}
+            {{-- ⭐ ĐÀO TẠO --}}
+            {{-- ========================================================== --}}
+            @if(auth()->user()->hasPermission('dao-tao.index'))
+                <li>
+                    <a href="{{ route('admin.dao-tao.index') }}"
+                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'admin.dao-tao.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <span class="w-5 h-5 mr-3 flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.8"
+                                stroke="currentColor"
+                                class="w-6 h-6">
+                                <path stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M12 14 3 9l9-5 9 5-9 5Zm0 0v6m6-8v4c0 1.5-2.7 3-6 3s-6-1.5-6-3v-4"/>
+                            </svg>
+                        </span>
+                        <span class="font-medium menu-text">Đào tạo</span>
+                    </a>
+                </li>
+            @endif                
+            {{-- ========================================================== --}}
             {{-- ⭐ KHEN THƯỞNG / KỶ LUẬT --}}
             {{-- ========================================================== --}}
             @if ($showAdminMenus && $canViewReward)
