@@ -9,12 +9,13 @@ use App\Models\PhongBan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+
 class TangCaController extends Controller
 {
 
-    protected NotificationService $notificationService;  
+    protected NotificationService $notificationService;
 
-    public function __construct(NotificationService $notificationService)  
+    public function __construct(NotificationService $notificationService)
     {
         $this->notificationService = $notificationService;
     }
@@ -122,6 +123,9 @@ class TangCaController extends Controller
             'ly_do_tu_choi'   => null,
         ]);
 
+        // ⭐ GỬI THÔNG BÁO CHO NHÂN VIÊN
+        $this->notificationService->notifyOvertime($dangKy, 'approved');
+
         return redirect()->back()->with('success', 'Đã phê duyệt đơn tăng ca thành công.');
     }
 
@@ -132,8 +136,6 @@ class TangCaController extends Controller
     {
         $request->validate([
             'ly_do_tu_choi' => 'required|string|max:500',
-        ], [
-            'ly_do_tu_choi.required' => 'Vui lòng nhập lý do từ chối.',
         ]);
 
         $dangKy = DangKyTangCa::findOrFail($id);
@@ -149,19 +151,15 @@ class TangCaController extends Controller
             'ly_do_tu_choi'   => $request->ly_do_tu_choi,
         ]);
 
+        // ⭐ GỬI THÔNG BÁO CHO NHÂN VIÊN
+        $this->notificationService->notifyOvertime($dangKy, 'rejected');
+
         return redirect()->back()->with('success', 'Đã từ chối đơn tăng ca.');
     }
 
-    /**
-     * Phê duyệt hàng loạt
-     */
-    /**
-     * Phê duyệt hàng loạt
-     */
     public function duyetHangLoat(Request $request)
     {
         try {
-            // Decode ids nếu là JSON string
             $ids = $request->ids;
             if (is_string($ids)) {
                 $ids = json_decode($ids, true);
@@ -174,13 +172,22 @@ class TangCaController extends Controller
                 ], 400);
             }
 
-            $soLuong = DangKyTangCa::whereIn('id', $ids)
+            $tangCaList = DangKyTangCa::whereIn('id', $ids)
                 ->where('trang_thai', 'cho_duyet')
-                ->update([
+                ->get();
+
+            $soLuong = 0;
+            foreach ($tangCaList as $tangCa) {
+                $tangCa->update([
                     'trang_thai'      => 'da_duyet',
                     'nguoi_duyet_id'  => Auth::id(),
                     'thoi_gian_duyet' => now(),
                 ]);
+
+                // ⭐ GỬI THÔNG BÁO CHO TỪNG NHÂN VIÊN
+                $this->notificationService->notifyOvertime($tangCa, 'approved');
+                $soLuong++;
+            }
 
             if ($soLuong == 0) {
                 return response()->json([

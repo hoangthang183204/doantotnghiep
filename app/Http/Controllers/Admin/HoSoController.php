@@ -18,6 +18,11 @@ use App\Models\TaiLieu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
+use App\Exports\NhanVienExport;
+use App\Imports\NhanVienImport;
+use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
+
 class HoSoController extends Controller
 {
     /**
@@ -37,6 +42,13 @@ class HoSoController extends Controller
                     ->orWhere('so_dien_thoai', 'like', "%{$keyword}%")
                     ->orWhere('cmnd_cccd', 'like', "%{$keyword}%")
                     ->orWhereRaw("CONCAT(ho, ' ', ten) LIKE ?", ["%{$keyword}%"]);
+            });
+        }
+
+        if ($request->filled('email')) {
+            $email = trim($request->email);
+            $query->whereHas('nguoi_dung', function ($q) use ($email) {
+                $q->where('email', 'like', "%{$email}%");
             });
         }
 
@@ -474,5 +486,198 @@ class HoSoController extends Controller
     {
         // TODO: Implement export to Excel
         return redirect()->back()->with('info', 'Tính năng đang phát triển');
+    }
+
+
+    public function export(Request $request)
+    {
+        $filters = [
+            'phong_ban_id' => $request->phong_ban_id,
+            'trang_thai' => $request->trang_thai,
+        ];
+
+        $fileName = 'danh_sach_nhan_vien_' . date('Y-m-d_H-i-s') . '.xlsx';
+
+        return Excel::download(new NhanVienExport($filters), $fileName);
+    }
+
+    /**
+     * Import danh sách nhân viên từ Excel
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:5120',
+        ]);
+
+        try {
+            $import = new NhanVienImport();
+            Excel::import($import, $request->file('file'));
+
+            $successCount = $import->getSuccessCount();
+            $errorCount = $import->getErrorCount();
+            $errors = $import->getErrors();
+
+            // Log chi tiết lỗi
+            Log::info('Import results:', [
+                'success' => $successCount,
+                'errors' => $errorCount,
+                'error_details' => $errors
+            ]);
+
+            // ⭐ HIỂN THỊ KẾT QUẢ CHI TIẾT
+            if ($successCount > 0 && $errorCount == 0) {
+                return redirect()->back()->with('success', "✅ Import thành công {$successCount} nhân viên!");
+            } elseif ($successCount > 0 && $errorCount > 0) {
+                $message = "⚠️ Import thành công {$successCount} nhân viên, thất bại {$errorCount} bản ghi.";
+                if (!empty($errors)) {
+                    $message .= '<br><br>❌ Chi tiết lỗi:<br>';
+                    $message .= '<ul style="list-style:disc; padding-left:20px; max-height:200px; overflow-y:auto;">';
+                    foreach (array_slice($errors, 0, 20) as $error) {
+                        $message .= "<li style=\"color:#dc2626;\">{$error}</li>";
+                    }
+                    if (count($errors) > 20) {
+                        $message .= '<li>... (+' . (count($errors) - 20) . ' lỗi khác)</li>';
+                    }
+                    $message .= '</ul>';
+                }
+                return redirect()->back()->with('warning', $message);
+            } else {
+                $message = "❌ Import thất bại! Không có bản ghi nào được thêm.";
+                if (!empty($errors)) {
+                    $message .= '<br><br>❌ Chi tiết lỗi:<br>';
+                    $message .= '<ul style="list-style:disc; padding-left:20px; max-height:200px; overflow-y:auto;">';
+                    foreach (array_slice($errors, 0, 20) as $error) {
+                        $message .= "<li style=\"color:#dc2626;\">{$error}</li>";
+                    }
+                    $message .= '</ul>';
+                }
+                return redirect()->back()->with('error', $message);
+            }
+        } catch (\Exception $e) {
+            Log::error('Import exception: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return redirect()->back()->with('error', '❌ Lỗi hệ thống: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Tải file mẫu import
+     */
+    public function downloadTemplate()
+    {
+        $fileName = 'mau_import_nhan_vien_day_du.csv';
+
+        $headers = [
+            'Mã nhân viên',
+            'Họ',
+            'Tên',
+            'Email (*)',
+            'Email công ty',
+            'Số điện thoại',
+            'Ngày sinh',
+            'Giới tính (Nam/Nữ/Khác)',
+            'Tình trạng hôn nhân (Độc thân/Đã kết hôn/Ly hôn/Góa)',
+            'Phòng ban',
+            'Chức vụ',
+            'Địa chỉ hiện tại',
+            'Địa chỉ thường trú',
+            'CMND/CCCD',
+            'Số hộ chiếu',
+            'Liên hệ khẩn cấp',
+            'SĐT khẩn cấp',
+            'Quan hệ khẩn cấp',
+            'Chủ tài khoản',
+            'Số tài khoản',
+            'Tên ngân hàng',
+            'Chi nhánh ngân hàng',
+            'Số BHXH',
+            'Mã số thuế',
+            'Nơi đăng ký KCB',
+            'Trạng thái (Đang làm việc/Đã nghỉ việc)',
+            'Kỹ năng (Tên|cấp_độ; Tên|cấp_độ)',
+            'Chứng chỉ (Tên|tổ_chức|năm|ngày_hết_hạn; ...)',
+            'Dự án (Tên|vai_trò|ngày_bắt_đầu|ngày_kết_thúc|mô_tả|trạng_thái; ...)',
+            'Người phụ thuộc (Họ_tên|ngày_sinh|quan_hệ|mã_số_thuế; ...)',
+            'Đào tạo (Tên_khóa_học|tổ_chức|ngày_bắt_đầu|ngày_kết_thúc|kết_quả|có_chứng_chỉ|chi_phí|ghi_chú; ...)',
+            'Khen thưởng/Kỷ luật (loại|tên|ngày|nội_dung|hình_thức|số_tiền|quyết_định_số; ...)',
+        ];
+
+        // Dữ liệu mẫu
+        $sampleData = [
+            '',                           // Mã nhân viên (để trống tự sinh)
+            'Nguyễn',                     // Họ
+            'Văn A',                      // Tên
+            'nguyenvana@example.com',     // Email (*)
+            'a.nguyen@company.com',       // Email công ty
+            '0901234567',                 // Số điện thoại
+            '15/01/1990',                 // Ngày sinh
+            'Nam',                        // Giới tính
+            'Độc thân',                   // Tình trạng hôn nhân
+            'Phòng Công Nghệ',            // Phòng ban
+            'Lập Trình Viên',             // Chức vụ
+            'Hà Nội',                     // Địa chỉ hiện tại
+            'Hà Nội',                     // Địa chỉ thường trú
+            '001201000001',               // CMND/CCCD
+            '',                           // Số hộ chiếu
+            'Nguyễn Văn B',               // Liên hệ khẩn cấp
+            '0987654321',                 // SĐT khẩn cấp
+            'Cha',                        // Quan hệ khẩn cấp
+            'Nguyễn Văn A',               // Chủ tài khoản
+            '123456789',                  // Số tài khoản
+            'Vietcombank',                // Tên ngân hàng
+            'Hà Nội',                     // Chi nhánh ngân hàng
+            '010123456789',               // Số BHXH
+            '1234567890-1',               // Mã số thuế
+            'Bệnh viện Bạch Mai',         // Nơi đăng ký KCB
+            'Đang làm việc',              // Trạng thái
+            'Laravel|Thành thạo; ReactJS|Trung cấp; Python|Chuyên gia',  // Kỹ năng
+            'AWS Certified Developer|Amazon|2025|31/12/2028; IELTS 7.0|British Council|2024|',  // Chứng chỉ
+            'HRM System|Lead Developer|01/03/2024|30/11/2024|Xây dựng hệ thống HRM|Hoàn thành; E-commerce|Full-stack|01/08/2023|31/01/2024|Website bán hàng|Hoàn thành',  // Dự án
+            'Nguyễn Văn C|20/08/2020|con|1234567890-2',  // Người phụ thuộc
+            'AWS Cloud Practitioner|Amazon|01/06/2025|30/06/2025|Đạt 92%|1|5000000|Khóa học cloud; Scrum Master|Scrum Alliance|01/01/2024||Đạt|1|8000000|',  // Đào tạo
+            'khen_thuong|Nhân viên xuất sắc|31/12/2025|Hoàn thành vượt mức KPI|Tiền mặt|5000000|QD-2025-001',  // Khen thưởng/Kỷ luật
+        ];
+
+        $callback = function () use ($headers, $sampleData) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM
+
+            // Ghi header
+            fputcsv($file, $headers);
+
+            // Ghi dữ liệu mẫu
+            fputcsv($file, $sampleData);
+
+            // Ghi thêm 1 dòng trống để hướng dẫn
+            fputcsv($file, array_fill(0, count($headers), ''));
+
+            // Ghi hướng dẫn
+            $guidelines = [
+                '📌 HƯỚNG DẪN NHẬP LIỆU:',
+                '- (*) Email là bắt buộc, không được trùng trong hệ thống',
+                '- Mã nhân viên để trống hệ thống sẽ tự sinh (NVxxxx)',
+                '- Trạng thái: Đang làm việc hoặc Đã nghỉ việc',
+                '- Ngày tháng: định dạng d/m/Y (ví dụ: 15/01/1990)',
+                '- Kỹ năng: Tên|cấp_độ (cấp_độ: Cơ bản, Trung cấp, Thành thạo, Chuyên gia)',
+                '- Chứng chỉ: Tên|tổ_chức|năm|ngày_hết_hạn (ngày hết hạn để trống nếu vĩnh viễn)',
+                '- Dự án: Tên|vai_trò|ngày_bắt_đầu|ngày_kết_thúc|mô_tả|trạng_thái (trạng_thái: Đang thực hiện, Hoàn thành, Tạm dừng)',
+                '- Người phụ thuộc: Họ_tên|ngày_sinh|quan_hệ|mã_số_thuế (quan_hệ: con, vo, chong, cha, me, khac)',
+                '- Đào tạo: Tên_khóa_học|tổ_chức|ngày_bắt_đầu|ngày_kết_thúc|kết_quả|có_chứng_chỉ(0/1)|chi_phí|ghi_chú',
+                '- Khen thưởng/Kỷ luật: loại|tên|ngày|nội_dung|hình_thức|số_tiền|quyết_định_số (loại: khen_thuong, ky_luat)',
+                '- Nhiều giá trị trong cùng 1 ô: phân cách bằng dấu chấm phẩy (;)',
+            ];
+
+            foreach ($guidelines as $line) {
+                fputcsv($file, [$line]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
     }
 }

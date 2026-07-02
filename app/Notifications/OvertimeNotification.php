@@ -6,9 +6,8 @@ namespace App\Notifications;
 use App\Models\DangKyTangCa;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
-class OvertimeNotification extends Notification implements ShouldQueue
+class OvertimeNotification extends Notification
 {
     use Queueable;
 
@@ -28,13 +27,11 @@ class OvertimeNotification extends Notification implements ShouldQueue
 
     public function toDatabase($notifiable): array
     {
-        // Lấy tên nhân viên
         $employeeName = 'Nhân viên';
         if ($this->tangCa->nguoiDung && $this->tangCa->nguoiDung->hoSo) {
             $employeeName = $this->tangCa->nguoiDung->hoSo->ho . ' ' . $this->tangCa->nguoiDung->hoSo->ten;
         }
 
-        // Cấu hình theo action
         $config = [
             'created' => [
                 'title' => '⏰ Đăng ký tăng ca mới',
@@ -64,15 +61,16 @@ class OvertimeNotification extends Notification implements ShouldQueue
 
         $data = $config[$this->action] ?? $config['created'];
 
-        // Xác định user là admin hay nhân viên
+        // ⭐ Xác định user là admin hay nhân viên
         $isAdmin = false;
-        if ($notifiable && $notifiable->vaiTro) {
-            $isAdmin = in_array($notifiable->vaiTro->name, ['admin', 'Super Admin', 'Admin']);
+        if ($notifiable && method_exists($notifiable, 'vaiTros')) {
+            $roles = $notifiable->vaiTros->pluck('name')->toArray();
+            $isAdmin = array_intersect($roles, ['admin', 'Super Admin']);
         }
 
-        // Tạo URL đúng theo role
+        // ⭐ Tạo URL đúng theo role
         $prefix = $isAdmin ? 'admin' : 'employee';
-        $url = '/' . $prefix . '/tang-ca/' . $this->tangCa->id;
+        $url = url('/' . $prefix . '/tang-ca/' . $this->tangCa->id);
 
         return array_merge($data, [
             'tang_ca_id' => $this->tangCa->id,
