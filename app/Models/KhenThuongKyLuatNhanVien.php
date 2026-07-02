@@ -9,6 +9,7 @@ class KhenThuongKyLuatNhanVien extends Model
 {
     protected $table = 'khen_thuong_ky_luat_nhan_vien';
 
+    
     protected $fillable = [
         'ho_so_id',
         'loai',
@@ -19,6 +20,9 @@ class KhenThuongKyLuatNhanVien extends Model
         'so_tien',
         'quyet_dinh_so',
         'nguoi_ky_id',
+        'muc_do',
+        'bang_chung',
+        'quyet_dinh_file',
     ];
 
     protected $casts = [
@@ -43,8 +47,18 @@ class KhenThuongKyLuatNhanVien extends Model
 
     public function getMauLoaiAttribute(): string
     {
-        return $this->loai == 'khen_thuong' 
-            ? 'bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500' 
+        return $this->loai == 'khen_thuong'
+            ? 'bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500'
             : 'bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500';
+    }
+
+    public function getMucDoTextAttribute(): ?string
+    {
+        return match ($this->muc_do) {
+            'canh_cao' => 'Cảnh cáo',
+            'khien_trach' => 'Khiển trách',
+            'sa_thai' => 'Sa thải',
+            default => null,
+        };
     }
 }

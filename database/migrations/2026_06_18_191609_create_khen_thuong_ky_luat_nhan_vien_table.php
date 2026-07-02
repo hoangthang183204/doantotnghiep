@@ -17,8 +17,14 @@ return new class extends Migration
             $table->text('noi_dung')->nullable();
             $table->string('hinh_thuc')->nullable();
             $table->decimal('so_tien', 15, 2)->nullable();
+
+            $table->string('muc_do')->nullable();
+
             $table->string('quyet_dinh_so')->nullable();
             $table->foreignId('nguoi_ky_id')->nullable()->constrained('nguoi_dung')->onDelete('set null');
+
+            $table->string('bang_chung')->nullable();
+            $table->string('quyet_dinh_file')->nullable();
             $table->timestamps();
         });
     }

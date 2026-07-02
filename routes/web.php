@@ -283,26 +283,51 @@ Route::prefix('admin')
             ->middleware(['CheckPermission:hoso.edit'])
             ->group(function () {
 
-                Route::get('/', [KhenThuongKyLuatController::class, 'index'])->name('index');
+                // ================= INDEX =================
+                Route::get('/', [KhenThuongKyLuatController::class, 'index'])
+                    ->name('index');
 
-                Route::get('/create', [KhenThuongKyLuatController::class, 'create'])->name('create');
+                // ================= CREATE (GỘP LOGIC) =================
+                Route::get('/create/khen-thuong', [KhenThuongKyLuatController::class, 'createKhenThuong'])
+                    ->name('khen-thuong.create');
 
-                Route::post('/', [KhenThuongKyLuatController::class, 'store'])->name('store');
+                Route::get('/create/ky-luat', [KhenThuongKyLuatController::class, 'createKyLuat'])
+                    ->name('ky-luat.create');
 
-                // ✅ FIX: route cố định đặt trước route động
+                // ================= STORE (GỘP PREFIX LOGIC) =================
+                Route::post('/khen-thuong', [KhenThuongKyLuatController::class, 'storeKhenThuong'])
+                    ->name('khen-thuong.store');
+
+                Route::post('/ky-luat', [KhenThuongKyLuatController::class, 'storeKyLuat'])
+                    ->name('ky-luat.store');
+
+                    // ================= STATISTICS =================
                 Route::get('/thong-ke', [KhenThuongKyLuatController::class, 'thongKe'])
                     ->name('thong-ke');
 
+                // ================= SHOW =================
+                Route::get('/{id}', [KhenThuongKyLuatController::class, 'show'])
+                    ->name('show');
+
+                // ================= EDIT (GIỮ 1 ENTRY POINT) =================
+                Route::get('/{id}/edit', [KhenThuongKyLuatController::class, 'edit'])
+                    ->name('edit');
+
+                // ================= UPDATE (TÁCH THEO LOẠI) =================
+                Route::put('/{id}/khen-thuong', [KhenThuongKyLuatController::class, 'updateKhenThuong'])
+                    ->name('khen-thuong.update');
+
+                Route::put('/{id}/ky-luat', [KhenThuongKyLuatController::class, 'updateKyLuat'])
+                    ->name('ky-luat.update');
+
+                // ================= DELETE =================
+                Route::delete('/{id}', [KhenThuongKyLuatController::class, 'destroy'])
+                    ->name('destroy');
+
+                // ================= EXPORT =================
                 Route::get('/export/excel', [KhenThuongKyLuatController::class, 'export'])
                     ->name('export');
 
-                Route::get('/{id}', [KhenThuongKyLuatController::class, 'show'])->name('show');
-
-                Route::get('/{id}/edit', [KhenThuongKyLuatController::class, 'edit'])->name('edit');
-
-                Route::put('/{id}', [KhenThuongKyLuatController::class, 'update'])->name('update');
-
-                Route::delete('/{id}', [KhenThuongKyLuatController::class, 'destroy'])->name('destroy');
             });
 
         // ========== QUY ĐỊNH - CHỈ ADMIN ==========
