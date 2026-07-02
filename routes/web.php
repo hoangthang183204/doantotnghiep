@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\HoSoCaNhanController;
 use App\Http\Controllers\Admin\QuanLyThoiGianController;
 use App\Http\Controllers\Admin\LuongController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\KhenThuongKyLuatController;
 use App\Http\Controllers\Employee\BangLuongController as EmployeeBangLuongController;
 use App\Http\Controllers\Employee\DashboardEmployeeController;
 use App\Http\Controllers\Employee\ChamCongController as EmployeeChamCongController;
@@ -275,6 +276,34 @@ Route::prefix('admin')
 
         // ========== LOẠI NGHỈ PHÉP - CHỈ HR VÀ ADMIN ==========
         Route::resource('loai-nghi-phep', LoaiNghiController::class)->middleware(['CheckPermission:leave_type.index']);
+
+        // ========== KHEN THƯỞNG VÀ KỶ LUẬT - CHỈ HR VÀ ADMIN ==========
+        Route::prefix('khen-thuong-ky-luat')
+            ->name('khen-thuong-ky-luat.')
+            ->middleware(['CheckPermission:hoso.edit'])
+            ->group(function () {
+
+                Route::get('/', [KhenThuongKyLuatController::class, 'index'])->name('index');
+
+                Route::get('/create', [KhenThuongKyLuatController::class, 'create'])->name('create');
+
+                Route::post('/', [KhenThuongKyLuatController::class, 'store'])->name('store');
+
+                // ✅ FIX: route cố định đặt trước route động
+                Route::get('/thong-ke', [KhenThuongKyLuatController::class, 'thongKe'])
+                    ->name('thong-ke');
+
+                Route::get('/export/excel', [KhenThuongKyLuatController::class, 'export'])
+                    ->name('export');
+
+                Route::get('/{id}', [KhenThuongKyLuatController::class, 'show'])->name('show');
+
+                Route::get('/{id}/edit', [KhenThuongKyLuatController::class, 'edit'])->name('edit');
+
+                Route::put('/{id}', [KhenThuongKyLuatController::class, 'update'])->name('update');
+
+                Route::delete('/{id}', [KhenThuongKyLuatController::class, 'destroy'])->name('destroy');
+            });
 
         // ========== QUY ĐỊNH - CHỈ ADMIN ==========
         Route::prefix('quy-dinh')->name('quy-dinh.')->middleware(['CheckPermission:setting.general'])->group(function () {
