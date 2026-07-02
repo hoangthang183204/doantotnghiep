@@ -71,7 +71,7 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-gray-700 dark:text-gray-300">
-                                {{ $chucVu->phong_ban->ten_phong_ban ?? '-' }}
+                                {{ $chucVu->phongBan->ten_phong_ban ?? '-' }}
                             </td>
                             <td class="px-4 py-3 text-center text-gray-700 dark:text-gray-300">
                                 <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-xs font-semibold">

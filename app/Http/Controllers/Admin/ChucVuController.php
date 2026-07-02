@@ -12,8 +12,8 @@ class ChucVuController extends Controller
 {
     public function index()
     {
-        $chucVus = ChucVu::with('phong_ban')
-            ->withCount('nguoi_dungs')
+        $chucVus = ChucVu::with('phongBan')
+            ->withCount('nguoiDungs') // Sửa từ 'nguoi_dungs' thành 'nguoiDungs'
             ->orderBy('id', 'asc')
             ->paginate(10);
 
@@ -118,7 +118,7 @@ class ChucVuController extends Controller
     {
         $chucVu = ChucVu::findOrFail($id);
         
-        $hasEmployees = $chucVu->nguoi_dungs()->exists();
+        $hasEmployees = $chucVu->nguoiDungs()->exists();
         
         if ($hasEmployees) {
             $newStatus = $chucVu->trang_thai == 1 ? 0 : 1;
@@ -138,7 +138,7 @@ class ChucVuController extends Controller
     public function orgChart()
     {
         $phongBans = PhongBan::with(['chucVus' => function($query) {
-            $query->withCount('nguoi_dungs')
+            $query->withCount('nguoiDungs')
                   ->orderBy('id');
         }])->where('trang_thai', 1)->get();
         
@@ -152,8 +152,8 @@ class ChucVuController extends Controller
         $activeChucVus = ChucVu::where('trang_thai', 1)->count();
         $inactiveChucVus = ChucVu::where('trang_thai', 0)->count();
         
-        $topChucVus = ChucVu::with('phong_ban')
-            ->withCount('nguoi_dungs')
+        $topChucVus = ChucVu::with('phongBan')
+            ->withCount('nguoiDungs')
             ->orderBy('nguoi_dungs_count', 'desc')
             ->take(5)
             ->get();
