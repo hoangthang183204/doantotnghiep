@@ -179,14 +179,15 @@
                             </div>
                         </div>
 
-                        @if (!$isKhenThuong)
-                            <div>
-                                <div class="text-slate-500 text-xs">Mức độ kỷ luật</div>
-                                <div class="font-semibold text-slate-800 dark:text-white">
-                                    {{ $ktkl->muc_do_text ?? '---' }}
-                                </div>
+                        <div>
+                            <div class="text-slate-500 text-xs">
+                                {{ $isKhenThuong ? 'Mức độ khen thưởng' : 'Mức độ kỷ luật' }}
                             </div>
-                        @endif
+
+                            <div class="font-semibold text-slate-800 dark:text-white">
+                                {{ $ktkl->muc_do_text ?? '---' }}
+                            </div>
+                        </div>
 
                         <div>
                             <div class="text-slate-500 text-xs">Người ký</div>

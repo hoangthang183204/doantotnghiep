@@ -9,43 +9,50 @@
         <div class="max-w-7xl mx-auto space-y-6">
 
             {{-- HEADER --}}
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
 
-                <div>
+                {{-- Tiêu đề --}}
+                <div class="flex-1">
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
                         Khen thưởng / Kỷ luật
                     </h1>
 
-                    <p class="text-gray-500 dark:text-slate-400 mt-1">
+                    <p class="mt-1 text-gray-500 dark:text-slate-400">
                         Quản lý toàn bộ quyết định khen thưởng và kỷ luật nhân viên.
                     </p>
                 </div>
 
-                <div class="flex items-center gap-2">
+                {{-- Các nút chức năng --}}
+                <div class="flex flex-wrap justify-end gap-2">
 
-                    {{-- EXPORT --}}
+                    <a href="{{ route('admin.khen-thuong-ky-luat.thuong-cuoi-nam') }}"
+                        class="inline-flex items-center px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white transition">
+                        <i class="fa-solid fa-money-bill-wave mr-2"></i>
+                        Thưởng cuối năm
+                    </a>
+
                     <a href="{{ route('admin.khen-thuong-ky-luat.export') }}"
-                        class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition">
+                        class="inline-flex items-center px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition">
                         <i class="fa-solid fa-file-excel mr-2"></i>
                         Xuất Excel
                     </a>
 
-                    {{-- THÊM KHEN THƯỞNG --}}
                     <a href="{{ route('admin.khen-thuong-ky-luat.khen-thuong.create') }}"
-                        class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition">
+                        class="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition">
                         <i class="fa-solid fa-trophy mr-2"></i>
                         Thêm khen thưởng
                     </a>
 
-                    {{-- THÊM KỶ LUẬT --}}
                     <a href="{{ route('admin.khen-thuong-ky-luat.ky-luat.create') }}"
-                        class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition">
+                        class="inline-flex items-center px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition">
                         <i class="fa-solid fa-triangle-exclamation mr-2"></i>
                         Thêm kỷ luật
                     </a>
 
                 </div>
-            </div>
+
+            </div> 
+
 
             @include('layouts.partials.alerts')
 
