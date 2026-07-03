@@ -6,7 +6,7 @@
 
 <div class="space-y-6">
 
-    <div class="flex items-center justify-between">
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-6 flex items-center justify-between">
         <div>
             <h1 class="text-2xl font-bold text-gray-800 dark:text-white">
                 Chi tiết khóa đào tạo
@@ -25,12 +25,12 @@
         </a>
     </div>
 
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-6">
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
             <div>
-                <label class="text-sm text-gray-500">
+                <label class="text-sm font-medium text-gray-500 dark:text-gray-400">
                     Mã nhân viên
                 </label>
 
@@ -40,7 +40,7 @@
             </div>
 
             <div>
-                <label class="text-sm text-gray-500">
+                <label class="text-sm font-medium text-gray-500 dark:text-gray-400">
                     Nhân viên
                 </label>
 
@@ -50,61 +50,61 @@
             </div>
 
             <div>
-                <label class="text-sm text-gray-500">
+                <label class="text-sm font-medium text-gray-500 dark:text-gray-400">
                     Tên khóa học
                 </label>
 
-                <div class="mt-1 font-semibold">
+                <div class="mt-1 font-semibold text-gray-800 dark:text-white">
                     {{ $daoTao->ten_khoa_hoc }}
                 </div>
             </div>
 
             <div>
-                <label class="text-sm text-gray-500">
+                <label class="text-sm font-medium text-gray-500 dark:text-gray-400">
                     Đơn vị đào tạo
                 </label>
 
-                <div class="mt-1">
+                <div class="mt-1 font-medium text-gray-800 dark:text-gray-100">
                     {{ $daoTao->to_chuc ?: '-' }}
                 </div>
             </div>
 
             <div>
-                <label class="text-sm text-gray-500">
+                <label class="text-sm font-medium text-gray-500 dark:text-gray-400">
                     Ngày bắt đầu
                 </label>
 
-                <div class="mt-1">
+                <div class="mt-1 font-medium text-gray-800 dark:text-gray-100">
                     {{ $daoTao->ngay_bat_dau->format('d/m/Y') }}
                 </div>
             </div>
 
             <div>
-                <label class="text-sm text-gray-500">
+                <label class="text-sm font-medium text-gray-500 dark:text-gray-400">
                     Ngày kết thúc
                 </label>
 
-                <div class="mt-1">
+                <div class="mt-1 font-medium text-gray-800 dark:text-gray-100">
                     {{ optional($daoTao->ngay_ket_thuc)->format('d/m/Y') ?? '-' }}
                 </div>
             </div>
 
             <div>
-                <label class="text-sm text-gray-500">
+                <label class="text-sm font-medium text-gray-500 dark:text-gray-400">
                     Kết quả
                 </label>
 
-                <div class="mt-1">
+                <div class="mt-1 font-medium text-gray-800 dark:text-gray-100">
                     {{ $daoTao->ket_qua ?: '-' }}
                 </div>
             </div>
 
             <div>
-                <label class="text-sm text-gray-500">
+                <label class="text-sm font-medium text-gray-500 dark:text-gray-400">
                     Có chứng chỉ
                 </label>
 
-                <div class="mt-1">
+                <div class="mt-1 font-medium text-gray-800 dark:text-gray-100">
 
                     @if($daoTao->co_chung_chi)
 
@@ -124,7 +124,7 @@
             </div>
 
             <div>
-                <label class="text-sm text-gray-500">
+                <label class="text-sm font-medium text-gray-500 dark:text-gray-400">
                     Chi phí
                 </label>
 
@@ -139,11 +139,11 @@
 
         <div>
 
-            <label class="text-sm text-gray-500">
+            <label class="text-sm font-medium text-gray-500 dark:text-gray-400">
                 Ghi chú
             </label>
 
-            <div class="mt-2 p-4 rounded-lg bg-gray-50 dark:bg-gray-900">
+            <div class="mt-2 p-4 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
 
                 {{ $daoTao->ghi_chu ?: 'Không có ghi chú.' }}
 

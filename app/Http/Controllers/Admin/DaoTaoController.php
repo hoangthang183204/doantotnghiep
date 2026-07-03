@@ -106,36 +106,27 @@ class DaoTaoController extends Controller
     ));
     }
     public function update(Request $request, $id)
-    {
+{
     $request->validate([
-        'ho_so_id' => 'required|exists:ho_so_nguoi_dung,id',
-        'ten_khoa_hoc' => 'required|max:255',
-        'to_chuc' => 'nullable|max:255',
-        'ngay_bat_dau' => 'required|date',
-        'ngay_ket_thuc' => 'nullable|date|after_or_equal:ngay_bat_dau',
-        'ket_qua' => 'nullable|max:255',
-        'chi_phi' => 'nullable|numeric|min:0',
-        'ghi_chu' => 'nullable',
+        'ngay_ket_thuc' => 'nullable|date',
+        'ket_qua'       => 'nullable|string|max:255',
+        'co_chung_chi'  => 'required|boolean',
+        'ghi_chu'       => 'nullable|string',
     ]);
 
     $daoTao = DaoTaoNhanVien::findOrFail($id);
 
     $daoTao->update([
-        'ho_so_id' => $request->ho_so_id,
-        'ten_khoa_hoc' => $request->ten_khoa_hoc,
-        'to_chuc' => $request->to_chuc,
-        'ngay_bat_dau' => $request->ngay_bat_dau,
         'ngay_ket_thuc' => $request->ngay_ket_thuc,
-        'ket_qua' => $request->ket_qua,
-        'co_chung_chi' => $request->has('co_chung_chi'),
-        'chi_phi' => $request->chi_phi,
-        'ghi_chu' => $request->ghi_chu,
+        'ket_qua'       => $request->ket_qua,
+        'co_chung_chi'  => $request->co_chung_chi,
+        'ghi_chu'       => $request->ghi_chu,
     ]);
 
     return redirect()
-        ->route('admin.dao-tao.index')
-        ->with('success', 'Cập nhật khóa đào tạo thành công.');
-    }
+        ->route('admin.dao-tao.show', $daoTao->id)
+        ->with('success','Cập nhật kết quả đào tạo thành công.');
+}
     public function destroy($id)
     {
     DaoTaoNhanVien::findOrFail($id)->delete();

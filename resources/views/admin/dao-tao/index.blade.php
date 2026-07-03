@@ -11,7 +11,7 @@
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 
         <div>
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
                 Quản lý đào tạo nhân viên
             </h1>
             <p class="text-gray-500 dark:text-gray-400 mt-1">
@@ -49,11 +49,15 @@
                     name="search"
                     value="{{ request('search') }}"
                     placeholder="Tìm theo tên nhân viên, mã nhân viên hoặc tên khóa học..."
-                    class="w-full rounded-lg border border-gray-300 dark:border-gray-700
-                           bg-white dark:bg-gray-900
-                           px-4 py-2
-                           focus:ring-2 focus:ring-blue-500
-                           focus:border-blue-500">
+                    class="w-full
+                        px-3 py-2
+                        border border-gray-300 dark:border-gray-600
+                        rounded-lg
+                        bg-white dark:bg-gray-700
+                        text-gray-900 dark:text-white
+                        placeholder-gray-400 dark:placeholder-gray-500
+                        focus:ring-2 focus:ring-blue-500
+                        focus:border-blue-500">
             </div>
 
             <div class="flex gap-2">
@@ -90,21 +94,21 @@
 
                     <tr>
 
-                        <th class="px-4 py-3 text-center">#</th>
+                        <th class="px-4 py-3 text-center text-gray-800 dark:text-gray-200">#</th>
 
-                        <th class="px-4 py-3 text-left">Mã NV</th>
+                        <th class="px-4 py-3 text-left text-gray-800 dark:text-gray-200">Mã NV</th>
 
-                        <th class="px-4 py-3 text-left">Nhân viên</th>
+                        <th class="px-4 py-3 text-left text-gray-800 dark:text-gray-200">Nhân viên</th>
 
-                        <th class="px-4 py-3 text-left">Khóa học</th>
+                        <th class="px-4 py-3 text-left text-gray-800 dark:text-gray-200">Khóa học</th>
 
-                        <th class="px-4 py-3 text-left">Đơn vị</th>
+                        <th class="px-4 py-3 text-left text-gray-800 dark:text-gray-200">Đơn vị</th>
 
-                        <th class="px-4 py-3 text-center">Bắt đầu</th>
+                        <th class="px-4 py-3 text-center text-gray-800 dark:text-gray-200">Bắt đầu</th>
 
-                        <th class="px-4 py-3 text-center">Kết thúc</th>
+                        <th class="px-4 py-3 text-center text-gray-800 dark:text-gray-200">Kết thúc</th>
 
-                        <th class="px-4 py-3 text-center">Thao tác</th>
+                        <th class="px-4 py-3 text-center text-gray-800 dark:text-gray-200">Thao tác</th>
 
                     </tr>
 
@@ -114,37 +118,37 @@
 
                 @forelse($daoTaos as $item)
 
-                    <tr class="border-t hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <tr class="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition">
 
-                        <td class="px-4 py-3 text-center">
+                        <td class="px-4 py-3 text-center text-gray-800 dark:text-gray-200">
                             {{ $loop->iteration + ($daoTaos->currentPage()-1)*$daoTaos->perPage() }}
                         </td>
 
-                        <td class="px-4 py-3 font-medium">
+                        <td class="px-4 py-3 font-medium text-gray-800 dark:text-white">
                             {{ $item->hoSo->ma_nhan_vien }}
                         </td>
 
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 text-gray-800 dark:text-gray-200">
                             {{ $item->hoSo->ho_ten }}
                         </td>
 
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 text-gray-800 dark:text-gray-200">
                             {{ $item->ten_khoa_hoc }}
                         </td>
 
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 text-gray-800 dark:text-gray-200">
                             {{ $item->to_chuc ?? '-' }}
                         </td>
 
-                        <td class="px-4 py-3 text-center">
+                        <td class="px-4 py-3 text-center text-gray-800 dark:text-gray-200">
                             {{ optional($item->ngay_bat_dau)->format('d/m/Y') }}
                         </td>
 
-                        <td class="px-4 py-3 text-center">
+                        <td class="px-4 py-3 text-center text-gray-800 dark:text-gray-200">
                             {{ optional($item->ngay_ket_thuc)->format('d/m/Y') ?? '-' }}
                         </td>
 
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 text-gray-800 dark:text-gray-200">
 
                             <div class="flex justify-center gap-1.5">
 
