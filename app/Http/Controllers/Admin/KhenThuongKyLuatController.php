@@ -7,6 +7,7 @@ use App\Models\HoSo;
 use App\Models\NguoiDung;
 use App\Models\PhongBan;
 use App\Models\KhenThuongKyLuatNhanVien;
+use App\Models\LuongNhanVien;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\KhenThuongKyLuatExport;
@@ -23,9 +24,9 @@ class KhenThuongKyLuatController extends Controller
 
         if ($request->filled('search')) {
             $keyword = $request->search;
-
+        
             $query->whereHas('hoSo.nguoi_dung', function ($q) use ($keyword) {
-                $q->where('ma_nhan_vien', 'like', "%$keyword%")
+                $q->where('ma_nhan_vien', 'like', "%$keyword%") // Đoạn này sẽ khớp chính xác mã nhân viên truyền từ URL sang
                     ->orWhere('ho', 'like', "%$keyword%")
                     ->orWhere('ten', 'like', "%$keyword%")
                     ->orWhereRaw("CONCAT(ho,' ',ten) LIKE ?", ["%$keyword%"]);
@@ -110,6 +111,7 @@ class KhenThuongKyLuatController extends Controller
             'ho_so_id' => 'required|exists:ho_so_nguoi_dung,id',
             'ten' => 'required|max:255',
             'ngay' => 'required|date',
+            'muc_do' => 'required|in:kha,gioi,xuat_sac',
             'so_tien' => 'nullable|numeric|min:0',
             'hinh_thuc' => 'nullable|max:255',
             'quyet_dinh_so' => 'nullable|max:255',
@@ -183,6 +185,7 @@ class KhenThuongKyLuatController extends Controller
             'ho_so_id' => 'required|exists:ho_so_nguoi_dung,id',
             'ten' => 'required|max:255',
             'ngay' => 'required|date',
+            'muc_do' => 'required|in:kha,gioi,xuat_sac',
             'so_tien' => 'nullable|numeric|min:0',
             'hinh_thuc' => 'nullable|max:255',
             'quyet_dinh_so' => 'nullable|max:255',
@@ -311,5 +314,84 @@ class KhenThuongKyLuatController extends Controller
             'chartTheoThang',
             'chartPhongBan'
         ));
+    }
+    private function tinhDiem($quyetDinh)
+    {
+        if ($quyetDinh->loai === 'khen_thuong') {
+
+            return match ($quyetDinh->muc_do) {
+                'kha' => 5,
+                'gioi' => 10,
+                'xuat_sac' => 20,
+                default => 0,
+            };
+        }
+
+        return match ($quyetDinh->muc_do) {
+            'khien_trach' => -5,
+            'canh_cao' => -10,
+            'sa_thai' => -20,
+            default => 0,
+        };
+    }
+
+    public function tinhThuong(Request $request)
+    {
+        $nam = $request->input('nam', now()->year);
+
+        $hoSos = HoSo::with([
+            'nguoi_dung.phongBan',
+            'khen_thuong_ky_luat'
+        ])->get();
+
+
+        $ketQua = [];
+
+        foreach ($hoSos as $hoSo) {
+
+            // Các quyết định trong năm
+            $quyetDinhs = $hoSo->khen_thuong_ky_luat
+                ->whereBetween('ngay', [
+                    $nam . '-01-01',
+                    $nam . '-12-31'
+                ]);
+
+            // Tính tổng điểm
+            $tongDiem = 0;
+
+            foreach ($quyetDinhs as $item) {
+                $tongDiem += $this->tinhDiem($item);
+            }
+
+            // Lấy bảng lương tháng 12
+            $luong = LuongNhanVien::where('nguoi_dung_id', $hoSo->nguoi_dung_id)
+                ->where('luong_nam', $nam)
+                ->orderByDesc('luong_thang')
+                ->first();
+
+            // Nếu chưa có bảng lương
+            $thuongCoBan = $luong?->tong_luong ?? 0;
+
+            // Tính thưởng cuối năm
+            $thuongCuoiNam = $thuongCoBan * (1 + ($tongDiem / 100));
+
+            if ($thuongCuoiNam < 0) {
+                $thuongCuoiNam = 0;
+            }
+
+            $ketQua[] = [
+                'hoSo' => $hoSo,
+                'tong_diem' => $tongDiem,
+                'thuong_co_ban' => $thuongCoBan,
+                'thuong_cuoi_nam' => $thuongCuoiNam,
+                'tong_khen_thuong' => $quyetDinhs->where('loai', 'khen_thuong')->count(),
+                'tong_ky_luat' => $quyetDinhs->where('loai', 'ky_luat')->count(),
+            ];
+        }
+
+        return view(
+            'admin.khen-thuong-ky-luat.thuong-cuoi-nam',
+            compact('ketQua', 'nam')
+        );
     }
 }

@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ChucVuController;
 use App\Http\Controllers\Admin\ChamCongController;
 use App\Http\Controllers\Admin\DonNghiController;
 use App\Http\Controllers\Admin\BangLuongController;
+use App\Http\Controllers\Admin\ChungChiNhanVienController;
 use App\Http\Controllers\Admin\DaoTaoController;
 use App\Http\Controllers\Admin\PhuCapController;
 use App\Http\Controllers\Admin\TinTuyenDungController;
@@ -291,51 +292,44 @@ Route::prefix('admin')
             ->middleware(['CheckPermission:hoso.edit'])
             ->group(function () {
 
-                // ================= INDEX =================
                 Route::get('/', [KhenThuongKyLuatController::class, 'index'])
                     ->name('index');
 
-                // ================= CREATE (GỘP LOGIC) =================
                 Route::get('/create/khen-thuong', [KhenThuongKyLuatController::class, 'createKhenThuong'])
                     ->name('khen-thuong.create');
 
                 Route::get('/create/ky-luat', [KhenThuongKyLuatController::class, 'createKyLuat'])
                     ->name('ky-luat.create');
 
-                // ================= STORE (GỘP PREFIX LOGIC) =================
                 Route::post('/khen-thuong', [KhenThuongKyLuatController::class, 'storeKhenThuong'])
                     ->name('khen-thuong.store');
 
                 Route::post('/ky-luat', [KhenThuongKyLuatController::class, 'storeKyLuat'])
                     ->name('ky-luat.store');
 
-                    // ================= STATISTICS =================
+                Route::get('/export/excel', [KhenThuongKyLuatController::class, 'export'])
+                    ->name('export');
+
                 Route::get('/thong-ke', [KhenThuongKyLuatController::class, 'thongKe'])
                     ->name('thong-ke');
 
-                // ================= SHOW =================
+                Route::get('/thuong-cuoi-nam', [KhenThuongKyLuatController::class, 'tinhThuong'])
+                    ->name('thuong-cuoi-nam');
+
                 Route::get('/{id}', [KhenThuongKyLuatController::class, 'show'])
                     ->name('show');
 
-                // ================= EDIT (GIỮ 1 ENTRY POINT) =================
                 Route::get('/{id}/edit', [KhenThuongKyLuatController::class, 'edit'])
                     ->name('edit');
 
-                // ================= UPDATE (TÁCH THEO LOẠI) =================
                 Route::put('/{id}/khen-thuong', [KhenThuongKyLuatController::class, 'updateKhenThuong'])
                     ->name('khen-thuong.update');
 
                 Route::put('/{id}/ky-luat', [KhenThuongKyLuatController::class, 'updateKyLuat'])
                     ->name('ky-luat.update');
 
-                // ================= DELETE =================
                 Route::delete('/{id}', [KhenThuongKyLuatController::class, 'destroy'])
                     ->name('destroy');
-
-                // ================= EXPORT =================
-                Route::get('/export/excel', [KhenThuongKyLuatController::class, 'export'])
-                    ->name('export');
-
             });
 
         // ========== QUY ĐỊNH - CHỈ ADMIN ==========
@@ -345,32 +339,49 @@ Route::prefix('admin')
             Route::post('/update', [QuyDinhController::class, 'update'])->name('update');
         });
         // ========== ĐÀO TẠO ==========
-Route::prefix('dao-tao')->name('dao-tao.')->middleware(['CheckPermission:hoso.edit'])->group(function () {
+        Route::prefix('dao-tao')->name('dao-tao.')->middleware(['CheckPermission:hoso.edit'])->group(function () {
 
-        Route::get('/', [DaoTaoController::class, 'index'])->name('index');
+            Route::get('/', [DaoTaoController::class, 'index'])->name('index');
 
-        Route::get('/create', [DaoTaoController::class, 'create'])->name('create');
+            Route::get('/create', [DaoTaoController::class, 'create'])->name('create');
 
-        Route::post('/', [DaoTaoController::class, 'store'])->name('store');
+            Route::post('/', [DaoTaoController::class, 'store'])->name('store');
 
-        // Thống kê
-        Route::get('/thong-ke', [DaoTaoController::class, 'thongKe'])->name('thong-ke');
+            // Thống kê
+            Route::get('/thong-ke', [DaoTaoController::class, 'thongKe'])->name('thong-ke');
 
-        // Xuất Excel
-        Route::get('/export/excel', [DaoTaoController::class, 'export'])->name('export');
+            // Xuất Excel
+            Route::get('/export/excel', [DaoTaoController::class, 'export'])->name('export');
 
-        // Chi tiết
-        Route::get('/{id}', [DaoTaoController::class, 'show'])->name('show');
+            // Chi tiết
+            Route::get('/{id}', [DaoTaoController::class, 'show'])->name('show');
 
-        // Sửa
-        Route::get('/{id}/edit', [DaoTaoController::class, 'edit'])->name('edit');
+            // Sửa
+            Route::get('/{id}/edit', [DaoTaoController::class, 'edit'])->name('edit');
 
-        Route::put('/{id}', [DaoTaoController::class, 'update'])->name('update');
+            Route::put('/{id}', [DaoTaoController::class, 'update'])->name('update');
 
-        // Xóa
-        Route::delete('/{id}', [DaoTaoController::class, 'destroy'])->name('destroy');
-    });
+            // Xóa
+            Route::delete('/{id}', [DaoTaoController::class, 'destroy'])->name('destroy');
+        });
+        // ========== CHỨNG CHỈ ==========
+        Route::prefix('chung-chi')->name('chung-chi.')->middleware(['CheckPermission:hoso.edit'])->group(function () {
 
+                Route::get('/', [ChungChiNhanVienController::class, 'index'])
+                    ->name('index');
+
+                Route::get('/{id}', [ChungChiNhanVienController::class, 'show'])
+                    ->name('show');
+
+                Route::get('/{id}/edit', [ChungChiNhanVienController::class, 'edit'])
+                    ->name('edit');
+
+                Route::put('/{id}', [ChungChiNhanVienController::class, 'update'])
+                    ->name('update');
+
+                Route::delete('/{id}', [ChungChiNhanVienController::class, 'destroy'])
+                    ->name('destroy');
+            });
         // ========== HỢP ĐỒNG - CHỈ HR VÀ ADMIN ==========
         Route::prefix('hop-dong')->name('hop-dong.')->middleware(['CheckPermission:contract.index'])->group(function () {
             Route::get('/', [HopDongLaoDongController::class, 'index'])->name('index');

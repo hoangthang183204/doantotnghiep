@@ -118,6 +118,37 @@
                             <input type="text" name="hinh_thuc" value="{{ old('hinh_thuc') }}" class="input-ui">
                         </div>
 
+                        {{-- MỨC ĐỘ KHEN THƯỞNG --}}
+                        <div>
+                            <label class="label-ui">
+                                <i class="fa-solid fa-ranking-star text-amber-500"></i>
+                                Mức độ khen thưởng <span class="text-red-500">*</span>
+                            </label>
+
+                            <select name="muc_do" class="input-ui dark:[color-scheme:dark]" required>
+                                <option value="">-- Chọn mức độ --</option>
+
+                                <option value="kha" {{ old('muc_do') == 'kha' ? 'selected' : '' }}>
+                                    ⭐ Khá
+                                </option>
+
+                                <option value="gioi" {{ old('muc_do') == 'gioi' ? 'selected' : '' }}>
+                                    🥈 Giỏi
+                                </option>
+
+                                <option value="xuat_sac" {{ old('muc_do') == 'xuat_sac' ? 'selected' : '' }}>
+                                    🏆 Xuất sắc
+                                </option>
+                            </select>
+
+                            @error('muc_do')
+                                <p class="mt-2 text-sm text-red-500">
+                                    <i class="fa-solid fa-circle-exclamation mr-1"></i>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+
                         {{-- SỐ TIỀN --}}
                         <div>
                             <label class="label-ui">
