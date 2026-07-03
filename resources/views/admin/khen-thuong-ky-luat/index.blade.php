@@ -241,8 +241,12 @@
 
                                     {{-- NHÂN VIÊN --}}
                                     <td class="p-4">
-                                        <div class="font-semibold text-gray-900 dark:text-white">
-                                            {{ $item->hoSo?->ho_ten }}
+                                        <div class="font-semibold">
+                                            <!-- Khi click vào tên sẽ tự động lọc ra toàn bộ lịch sử khen thưởng / kỷ luật của nhân viên đó -->
+                                            <a href="{{ route('admin.khen-thuong-ky-luat.index', ['search' => $item->hoSo?->ma_nhan_vien]) }}"
+                                                class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline transition">
+                                                {{ $item->hoSo?->ho_ten }}
+                                            </a>
                                         </div>
                                         <div class="text-xs text-gray-500 dark:text-slate-400">
                                             {{ $item->hoSo?->ma_nhan_vien }}

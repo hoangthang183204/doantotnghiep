@@ -23,9 +23,9 @@ class KhenThuongKyLuatController extends Controller
 
         if ($request->filled('search')) {
             $keyword = $request->search;
-
+        
             $query->whereHas('hoSo.nguoi_dung', function ($q) use ($keyword) {
-                $q->where('ma_nhan_vien', 'like', "%$keyword%")
+                $q->where('ma_nhan_vien', 'like', "%$keyword%") // Đoạn này sẽ khớp chính xác mã nhân viên truyền từ URL sang
                     ->orWhere('ho', 'like', "%$keyword%")
                     ->orWhere('ten', 'like', "%$keyword%")
                     ->orWhereRaw("CONCAT(ho,' ',ten) LIKE ?", ["%$keyword%"]);
