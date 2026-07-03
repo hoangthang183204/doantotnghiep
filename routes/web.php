@@ -292,51 +292,44 @@ Route::prefix('admin')
             ->middleware(['CheckPermission:hoso.edit'])
             ->group(function () {
 
-                // ================= INDEX =================
                 Route::get('/', [KhenThuongKyLuatController::class, 'index'])
                     ->name('index');
 
-                // ================= CREATE (GỘP LOGIC) =================
                 Route::get('/create/khen-thuong', [KhenThuongKyLuatController::class, 'createKhenThuong'])
                     ->name('khen-thuong.create');
 
                 Route::get('/create/ky-luat', [KhenThuongKyLuatController::class, 'createKyLuat'])
                     ->name('ky-luat.create');
 
-                // ================= STORE (GỘP PREFIX LOGIC) =================
                 Route::post('/khen-thuong', [KhenThuongKyLuatController::class, 'storeKhenThuong'])
                     ->name('khen-thuong.store');
 
                 Route::post('/ky-luat', [KhenThuongKyLuatController::class, 'storeKyLuat'])
                     ->name('ky-luat.store');
 
-                    // ================= STATISTICS =================
+                Route::get('/export/excel', [KhenThuongKyLuatController::class, 'export'])
+                    ->name('export');
+
                 Route::get('/thong-ke', [KhenThuongKyLuatController::class, 'thongKe'])
                     ->name('thong-ke');
 
-                // ================= SHOW =================
+                Route::get('/thuong-cuoi-nam', [KhenThuongKyLuatController::class, 'tinhThuong'])
+                    ->name('thuong-cuoi-nam');
+
                 Route::get('/{id}', [KhenThuongKyLuatController::class, 'show'])
                     ->name('show');
 
-                // ================= EDIT (GIỮ 1 ENTRY POINT) =================
                 Route::get('/{id}/edit', [KhenThuongKyLuatController::class, 'edit'])
                     ->name('edit');
 
-                // ================= UPDATE (TÁCH THEO LOẠI) =================
                 Route::put('/{id}/khen-thuong', [KhenThuongKyLuatController::class, 'updateKhenThuong'])
                     ->name('khen-thuong.update');
 
                 Route::put('/{id}/ky-luat', [KhenThuongKyLuatController::class, 'updateKyLuat'])
                     ->name('ky-luat.update');
 
-                // ================= DELETE =================
                 Route::delete('/{id}', [KhenThuongKyLuatController::class, 'destroy'])
                     ->name('destroy');
-
-                // ================= EXPORT =================
-                Route::get('/export/excel', [KhenThuongKyLuatController::class, 'export'])
-                    ->name('export');
-
             });
 
         // ========== QUY ĐỊNH - CHỈ ADMIN ==========
