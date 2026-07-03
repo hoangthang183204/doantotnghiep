@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ChucVuController;
 use App\Http\Controllers\Admin\ChamCongController;
 use App\Http\Controllers\Admin\DonNghiController;
 use App\Http\Controllers\Admin\BangLuongController;
+use App\Http\Controllers\Admin\ChungChiNhanVienController;
 use App\Http\Controllers\Admin\DaoTaoController;
 use App\Http\Controllers\Admin\PhuCapController;
 use App\Http\Controllers\Admin\TinTuyenDungController;
@@ -363,7 +364,24 @@ Route::prefix('admin')
             // Xóa
             Route::delete('/{id}', [DaoTaoController::class, 'destroy'])->name('destroy');
         });
+        // ========== CHỨNG CHỈ ==========
+        Route::prefix('chung-chi')->name('chung-chi.')->middleware(['CheckPermission:hoso.edit'])->group(function () {
 
+                Route::get('/', [ChungChiNhanVienController::class, 'index'])
+                    ->name('index');
+
+                Route::get('/{id}', [ChungChiNhanVienController::class, 'show'])
+                    ->name('show');
+
+                Route::get('/{id}/edit', [ChungChiNhanVienController::class, 'edit'])
+                    ->name('edit');
+
+                Route::put('/{id}', [ChungChiNhanVienController::class, 'update'])
+                    ->name('update');
+
+                Route::delete('/{id}', [ChungChiNhanVienController::class, 'destroy'])
+                    ->name('destroy');
+            });
         // ========== HỢP ĐỒNG - CHỈ HR VÀ ADMIN ==========
         Route::prefix('hop-dong')->name('hop-dong.')->middleware(['CheckPermission:contract.index'])->group(function () {
             Route::get('/', [HopDongLaoDongController::class, 'index'])->name('index');
