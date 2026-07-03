@@ -312,9 +312,9 @@ class NguoiDung extends Authenticatable implements JWTSubject
     public function hasPermission($permissionName)
     {
         // Admin có tất cả quyền
-        if ($this->isAdmin()) {
-            return true;
-        }
+        // if ($this->isAdmin()) {
+        //     return true;
+        // }
 
         // Lấy tất cả quyền của user
         $permissions = $this->vaiTros->flatMap(function ($role) {
