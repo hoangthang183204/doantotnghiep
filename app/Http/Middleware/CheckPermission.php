@@ -17,16 +17,22 @@ class CheckPermission
             }
             return redirect()->route('login');
         }
-        
+
         $user = Auth::user();
-        
-        // ============================================================
-        // 1. ADMIN có tất cả quyền
-        // ============================================================
-        if ($user->vaiTros()->whereIn('name', ['admin', 'Super Admin'])->exists()) {
+
+        // ⭐ THÊM: Bỏ qua kiểm tra cho route Phân quyền
+        $currentRoute = $request->route()->getName();
+        $ignoreRoutes = [
+            'admin.phan-quyen.index',
+            'admin.phan-quyen.edit',
+            'admin.phan-quyen.update',
+            'admin.phan-quyen.store'
+        ];
+
+        if (in_array($currentRoute, $ignoreRoutes)) {
             return $next($request);
         }
-        
+
         // ============================================================
         // 2. KIỂM TRA QUYỀN CỤ THỂ
         // ============================================================
@@ -37,10 +43,10 @@ class CheckPermission
                     'permission' => $permission
                 ], 403);
             }
-            
+
             abort(403, 'Bạn không có quyền truy cập chức năng này!');
         }
-        
+
         return $next($request);
     }
 }
