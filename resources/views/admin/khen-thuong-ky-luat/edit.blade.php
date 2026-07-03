@@ -156,7 +156,50 @@
                             <input type="text" name="ten" value="{{ old('ten', $ktkl->ten) }}" class="input-ui">
                         </div>
 
-                        {{-- CONDITIONAL --}}
+                        {{-- MỨC ĐỘ --}}
+                        <div>
+                            <label class="label-ui">
+                                <i
+                                    class="fa-solid {{ $ktkl->loai === 'khen_thuong' ? 'fa-award' : 'fa-triangle-exclamation' }}"></i>
+
+                                {{ $ktkl->loai === 'khen_thuong' ? 'Mức độ khen thưởng' : 'Mức độ kỷ luật' }}
+                            </label>
+
+                            <select name="muc_do" class="input-ui">
+
+                                @if ($ktkl->loai === 'khen_thuong')
+                                    <option value="kha" {{ old('muc_do', $ktkl->muc_do) == 'kha' ? 'selected' : '' }}>
+                                        Khá (+5 điểm)
+                                    </option>
+
+                                    <option value="gioi" {{ old('muc_do', $ktkl->muc_do) == 'gioi' ? 'selected' : '' }}>
+                                        Giỏi (+10 điểm)
+                                    </option>
+
+                                    <option value="xuat_sac"
+                                        {{ old('muc_do', $ktkl->muc_do) == 'xuat_sac' ? 'selected' : '' }}>
+                                        Xuất sắc (+20 điểm)
+                                    </option>
+                                @else
+                                    <option value="khien_trach"
+                                        {{ old('muc_do', $ktkl->muc_do) == 'khien_trach' ? 'selected' : '' }}>
+                                        Khiển trách (-5 điểm)
+                                    </option>
+
+                                    <option value="canh_cao"
+                                        {{ old('muc_do', $ktkl->muc_do) == 'canh_cao' ? 'selected' : '' }}>
+                                        Cảnh cáo (-10 điểm)
+                                    </option>
+
+                                    <option value="sa_thai"
+                                        {{ old('muc_do', $ktkl->muc_do) == 'sa_thai' ? 'selected' : '' }}>
+                                        Sa thải (-20 điểm)
+                                    </option>
+                                @endif
+
+                            </select>
+                        </div>
+
                         @if ($ktkl->loai === 'khen_thuong')
                             {{-- BẰNG CHỨNG --}}
                             <div>
@@ -169,49 +212,29 @@
 
                                 @if ($ktkl->bang_chung)
                                     <a href="{{ Storage::url($ktkl->bang_chung) }}" target="_blank"
-                                        class="text-blue-500 text-sm">
-                                        Xem hiện tại
+                                        class="inline-flex items-center gap-2 mt-2 text-sm text-blue-600 hover:underline">
+                                        <i class="fa-solid fa-eye"></i>
+                                        Xem bằng chứng hiện tại
                                     </a>
                                 @endif
                             </div>
 
-                            {{-- QUYẾT ĐỊNH FILE --}}
+                            {{-- FILE QUYẾT ĐỊNH --}}
                             <div>
                                 <label class="label-ui">
                                     <i class="fa-solid fa-file-contract"></i>
-                                    Quyết định
+                                    File quyết định
                                 </label>
 
                                 <input type="file" name="quyet_dinh_file" class="input-ui">
 
                                 @if ($ktkl->quyet_dinh_file)
                                     <a href="{{ Storage::url($ktkl->quyet_dinh_file) }}" target="_blank"
-                                        class="text-blue-500 text-sm">
-                                        Xem hiện tại
+                                        class="inline-flex items-center gap-2 mt-2 text-sm text-blue-600 hover:underline">
+                                        <i class="fa-solid fa-eye"></i>
+                                        Xem file hiện tại
                                     </a>
                                 @endif
-                            </div>
-                        @else
-                            {{-- MỨC ĐỘ KỶ LUẬT --}}
-                            <div>
-                                <label class="label-ui">
-                                    <i class="fa-solid fa-triangle-exclamation"></i>
-                                    Mức độ kỷ luật
-                                </label>
-
-                                <select name="muc_do" class="input-ui">
-                                    <option value="canh_cao" @selected(old('muc_do', $ktkl->muc_do) == 'canh_cao')>
-                                        Cảnh cáo
-                                    </option>
-
-                                    <option value="khien_trach" @selected(old('muc_do', $ktkl->muc_do) == 'khien_trach')>
-                                        Khiển trách
-                                    </option>
-
-                                    <option value="sa_thai" @selected(old('muc_do', $ktkl->muc_do) == 'sa_thai')>
-                                        Sa thải
-                                    </option>
-                                </select>
                             </div>
                         @endif
 
