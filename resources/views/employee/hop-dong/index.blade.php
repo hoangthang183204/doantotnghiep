@@ -345,7 +345,7 @@
                                         </ol>
                                     </div>
 
-                                    <form action="{{ route('employee.hopdong.update-status', $hopDong->id) }}"
+                                    <form action="{{ route('employee.hop-dong.update-status', $hopDong->id) }}"
                                         method="POST" enctype="multipart/form-data" id="kyForm">
                                         @csrf
                                         @method('PATCH')
