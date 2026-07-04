@@ -561,7 +561,7 @@
             function getWiFiSSID() {
                 const saved = localStorage.getItem('wifi_ssid');
                 if (saved) return saved;
-                return 'TP-Link_9FDC';
+                return 'HRFlow_WiFi';
             }
 
             function getMACAddress() {

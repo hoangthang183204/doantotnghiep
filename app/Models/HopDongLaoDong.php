@@ -123,9 +123,6 @@ class HopDongLaoDong extends Model
         };
     }
 
-    /**
-     * Lấy màu sắc cho trạng thái
-     */
     public function getMauTrangThaiAttribute(): string
     {
         return match ($this->trang_thai_hop_dong) {
