@@ -541,33 +541,40 @@
 
                     <div id="skills-container">
                         @php
-                            // Lấy hoSo từ hoSoNguoiDung
                             $hoSoData = $user->hoSo?->hoSo;
                             $kyNangList = $hoSoData?->ky_nang ?? [];
                         @endphp
 
                         @forelse($kyNangList as $skill)
                             <div class="item skill-item border rounded-xl p-4 mb-4" data-id="{{ $skill->id }}">
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-sm text-gray-500">ID: {{ $skill->id }}</span>
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="text-sm text-gray-500">#{{ $loop->iteration }}</span>
                                     <button type="button" onclick="removeItem(this, 'skills')" class="btn-remove">
                                         <i class="fa-solid fa-trash"></i> Xóa
                                     </button>
                                 </div>
                                 <div class="grid md:grid-cols-2 gap-4">
-                                    <input class="input" name="skills[{{ $skill->id }}][ten_ky_nang]"
-                                        value="{{ $skill->ten_ky_nang }}" placeholder="Tên kỹ năng">
-                                    <select class="input" name="skills[{{ $skill->id }}][cap_do]">
-                                        <option value="Cơ bản" @selected($skill->cap_do == 'Cơ bản')>Cơ bản</option>
-                                        <option value="Trung cấp" @selected($skill->cap_do == 'Trung cấp')>Trung cấp</option>
-                                        <option value="Thành thạo" @selected($skill->cap_do == 'Thành thạo')>Thành thạo</option>
-                                        <option value="Chuyên gia" @selected($skill->cap_do == 'Chuyên gia')>Chuyên gia</option>
-                                    </select>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tên kỹ năng
+                                            *</label>
+                                        <input class="input" name="skills[{{ $skill->id }}][ten_ky_nang]"
+                                            value="{{ $skill->ten_ky_nang }}" placeholder="VD: PHP, Laravel, JavaScript">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Cấp độ</label>
+                                        <select class="input" name="skills[{{ $skill->id }}][cap_do]">
+                                            <option value="Cơ bản" @selected($skill->cap_do == 'Cơ bản')>Cơ bản</option>
+                                            <option value="Trung cấp" @selected($skill->cap_do == 'Trung cấp')>Trung cấp</option>
+                                            <option value="Thành thạo" @selected($skill->cap_do == 'Thành thạo')>Thành thạo</option>
+                                            <option value="Chuyên gia" @selected($skill->cap_do == 'Chuyên gia')>Chuyên gia</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         @empty
                             <div class="text-gray-500 text-center py-4" id="no-skills">
-                                Chưa có dữ liệu. Nhấn "Thêm kỹ năng" để tạo mới.
+                                <i class="fa-regular fa-face-frown text-2xl block mb-2"></i>
+                                Chưa có kỹ năng nào. Nhấn "Thêm kỹ năng" để tạo mới.
                             </div>
                         @endforelse
                     </div>
@@ -596,29 +603,48 @@
                         @endphp
 
                         @forelse($chungChiList as $cc)
-                            <div class="item certificate-item border rounded-xl p-3 mb-3" data-id="{{ $cc->id }}">
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-sm text-gray-500">ID: {{ $cc->id }}</span>
+                            <div class="item certificate-item border rounded-xl p-4 mb-4" data-id="{{ $cc->id }}">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="text-sm text-gray-500">#{{ $loop->iteration }}</span>
                                     <button type="button" onclick="removeItem(this, 'certificates')" class="btn-remove">
                                         <i class="fa-solid fa-trash"></i> Xóa
                                     </button>
                                 </div>
-                                <div class="grid md:grid-cols-4 gap-3">
-                                    <input class="input" name="certificates[{{ $cc->id }}][ten_chung_chi]"
-                                        value="{{ $cc->ten_chung_chi }}" placeholder="Tên chứng chỉ">
-                                    <input class="input" name="certificates[{{ $cc->id }}][to_chuc_cap]"
-                                        value="{{ $cc->to_chuc_cap }}" placeholder="Tổ chức">
-                                    <input type="number" class="input"
-                                        name="certificates[{{ $cc->id }}][nam_cap]" value="{{ $cc->nam_cap }}"
-                                        placeholder="Năm">
-                                    <input type="date" class="input"
-                                        name="certificates[{{ $cc->id }}][ngay_het_han]"
-                                        value="{{ optional($cc->ngay_het_han)->format('Y-m-d') }}">
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tên chứng chỉ
+                                            *</label>
+                                        <input class="input" name="certificates[{{ $cc->id }}][ten_chung_chi]"
+                                            value="{{ $cc->ten_chung_chi }}"
+                                            placeholder="VD: Chứng chỉ PHP, TOEIC, IELTS">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tổ chức
+                                            cấp</label>
+                                        <input class="input" name="certificates[{{ $cc->id }}][to_chuc_cap]"
+                                            value="{{ $cc->to_chuc_cap }}"
+                                            placeholder="VD: Đại học Bách Khoa, Microsoft">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Năm cấp</label>
+                                        <input type="number" class="input"
+                                            name="certificates[{{ $cc->id }}][nam_cap]"
+                                            value="{{ $cc->nam_cap }}" placeholder="VD: 2023" min="1900"
+                                            max="{{ date('Y') }}">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ngày hết
+                                            hạn</label>
+                                        <input type="date" class="input"
+                                            name="certificates[{{ $cc->id }}][ngay_het_han]"
+                                            value="{{ optional($cc->ngay_het_han)->format('Y-m-d') }}">
+                                    </div>
                                 </div>
                             </div>
                         @empty
                             <div class="text-gray-500 text-center py-4" id="no-certificates">
-                                Chưa có dữ liệu. Nhấn "Thêm chứng chỉ" để tạo mới.
+                                <i class="fa-regular fa-face-frown text-2xl block mb-2"></i>
+                                Chưa có chứng chỉ nào. Nhấn "Thêm chứng chỉ" để tạo mới.
                             </div>
                         @endforelse
                     </div>
@@ -647,31 +673,70 @@
                         @endphp
 
                         @forelse($daoTaoList as $dt)
-                            <div class="item training-item border rounded-xl p-3 mb-3" data-id="{{ $dt->id }}">
-                                <div class="flex justify-between items-center mb-2">
+                            <div class="item training-item border rounded-xl p-4 mb-4" data-id="{{ $dt->id }}">
+                                <div class="flex justify-between items-center mb-3">
                                     <span class="text-sm text-gray-500">#{{ $loop->iteration }}</span>
                                     <button type="button" onclick="removeItem(this, 'trainings')" class="btn-remove">
                                         <i class="fa-solid fa-trash"></i> Xóa
                                     </button>
                                 </div>
-                                <div class="grid md:grid-cols-5 gap-3">
-                                    <input class="input" name="trainings[{{ $dt->id }}][ten_khoa_hoc]"
-                                        value="{{ $dt->ten_khoa_hoc }}" placeholder="Khóa học">
-                                    <input class="input" name="trainings[{{ $dt->id }}][to_chuc]"
-                                        value="{{ $dt->to_chuc }}" placeholder="Tổ chức">
-                                    <input class="input" name="trainings[{{ $dt->id }}][ket_qua]"
-                                        value="{{ $dt->ket_qua }}" placeholder="Kết quả">
-                                    <input type="date" class="input"
-                                        name="trainings[{{ $dt->id }}][ngay_bat_dau]"
-                                        value="{{ optional($dt->ngay_bat_dau)->format('Y-m-d') }}">
-                                    <input type="date" class="input"
-                                        name="trainings[{{ $dt->id }}][ngay_ket_thuc]"
-                                        value="{{ optional($dt->ngay_ket_thuc)->format('Y-m-d') }}">
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tên khóa học
+                                            *</label>
+                                        <input class="input" name="trainings[{{ $dt->id }}][ten_khoa_hoc]"
+                                            value="{{ $dt->ten_khoa_hoc }}" placeholder="VD: Khóa học Laravel Nâng cao">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tổ chức đào
+                                            tạo</label>
+                                        <input class="input" name="trainings[{{ $dt->id }}][to_chuc]"
+                                            value="{{ $dt->to_chuc }}" placeholder="VD: CodeGym, FPT Software">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Kết quả</label>
+                                        <input class="input" name="trainings[{{ $dt->id }}][ket_qua]"
+                                            value="{{ $dt->ket_qua }}" placeholder="VD: Xuất sắc, Giỏi, Đạt">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Có chứng
+                                            chỉ?</label>
+                                        <select class="input" name="trainings[{{ $dt->id }}][co_chung_chi]">
+                                            <option value="0" @selected($dt->co_chung_chi == false || $dt->co_chung_chi == null)>Không</option>
+                                            <option value="1" @selected($dt->co_chung_chi == true)>Có</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Chi phí</label>
+                                        <input type="number" class="input"
+                                            name="trainings[{{ $dt->id }}][chi_phi]" value="{{ $dt->chi_phi }}"
+                                            placeholder="VD: 5000000" min="0" step="1000">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ngày bắt
+                                            đầu</label>
+                                        <input type="date" class="input"
+                                            name="trainings[{{ $dt->id }}][ngay_bat_dau]"
+                                            value="{{ optional($dt->ngay_bat_dau)->format('Y-m-d') }}">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ngày kết
+                                            thúc</label>
+                                        <input type="date" class="input"
+                                            name="trainings[{{ $dt->id }}][ngay_ket_thuc]"
+                                            value="{{ optional($dt->ngay_ket_thuc)->format('Y-m-d') }}">
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ghi chú</label>
+                                        <input class="input" name="trainings[{{ $dt->id }}][ghi_chu]"
+                                            value="{{ $dt->ghi_chu }}" placeholder="Nhập ghi chú (nếu có)">
+                                    </div>
                                 </div>
                             </div>
                         @empty
                             <div class="text-gray-500 text-center py-4" id="no-trainings">
-                                Chưa có dữ liệu đào tạo. Nhấn "Thêm khóa học" để tạo mới.
+                                <i class="fa-regular fa-face-frown text-2xl block mb-2"></i>
+                                Chưa có khóa học đào tạo nào. Nhấn "Thêm khóa học" để tạo mới.
                             </div>
                         @endforelse
                     </div>
@@ -709,7 +774,10 @@
                                 </div>
                                 <div class="grid md:grid-cols-3 gap-3">
                                     <input class="input" name="dependents[{{ $npt->id }}][ho_ten]"
-                                        value="{{ $npt->ho_ten }}" placeholder="Họ tên">
+                                        value="{{ $npt->ho_ten }}" placeholder="Họ tên *">
+                                    <input type="date" class="input"
+                                        name="dependents[{{ $npt->id }}][ngay_sinh]"
+                                        value="{{ optional($npt->ngay_sinh)->format('Y-m-d') }}" placeholder="Ngày sinh">
                                     <select class="input" name="dependents[{{ $npt->id }}][quan_he]">
                                         <option value="con" @selected($npt->quan_he == 'con')>Con</option>
                                         <option value="vo" @selected($npt->quan_he == 'vo')>Vợ</option>
@@ -720,6 +788,16 @@
                                     </select>
                                     <input class="input" name="dependents[{{ $npt->id }}][ma_so_thue]"
                                         value="{{ $npt->ma_so_thue }}" placeholder="Mã số thuế">
+                                    <input type="date" class="input"
+                                        name="dependents[{{ $npt->id }}][ngay_bat_dau]"
+                                        value="{{ optional($npt->ngay_bat_dau)->format('Y-m-d') }}"
+                                        placeholder="Ngày bắt đầu">
+                                    <input type="date" class="input"
+                                        name="dependents[{{ $npt->id }}][ngay_ket_thuc]"
+                                        value="{{ optional($npt->ngay_ket_thuc)->format('Y-m-d') }}"
+                                        placeholder="Ngày kết thúc">
+                                    <input class="input" name="dependents[{{ $npt->id }}][ghi_chu]"
+                                        value="{{ $npt->ghi_chu }}" placeholder="Ghi chú">
                                 </div>
                             </div>
                         @empty
@@ -1280,24 +1358,30 @@
 
                 const newId = 'new_' + Date.now();
                 const html = `
-                    <div class="item skill-item border rounded-xl p-4 mb-4" data-id="${newId}">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm text-gray-500">Mới</span>
-                            <button type="button" onclick="removeItem(this, 'skills')" class="btn-remove">
-                                <i class="fa-solid fa-trash"></i> Xóa
-                            </button>
-                        </div>
-                        <div class="grid md:grid-cols-2 gap-4">
-                            <input class="input" name="new_skills[${newId}][ten_ky_nang]" placeholder="Tên kỹ năng">
-                            <select class="input" name="new_skills[${newId}][cap_do]">
-                                <option value="Cơ bản">Cơ bản</option>
-                                <option value="Trung cấp">Trung cấp</option>
-                                <option value="Thành thạo">Thành thạo</option>
-                                <option value="Chuyên gia">Chuyên gia</option>
-                            </select>
-                        </div>
-                    </div>
-                `;
+        <div class="item skill-item border rounded-xl p-4 mb-4" data-id="${newId}">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-sm text-gray-500">Mới</span>
+                <button type="button" onclick="removeItem(this, 'skills')" class="btn-remove">
+                    <i class="fa-solid fa-trash"></i> Xóa
+                </button>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tên kỹ năng *</label>
+                    <input class="input" name="new_skills[${newId}][ten_ky_nang]" placeholder="VD: PHP, Laravel, JavaScript">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Cấp độ</label>
+                    <select class="input" name="new_skills[${newId}][cap_do]">
+                        <option value="Cơ bản">Cơ bản</option>
+                        <option value="Trung cấp">Trung cấp</option>
+                        <option value="Thành thạo">Thành thạo</option>
+                        <option value="Chuyên gia">Chuyên gia</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    `;
                 container.insertAdjacentHTML('beforeend', html);
             }
 
@@ -1312,21 +1396,33 @@
 
                 const newId = 'new_' + Date.now();
                 const html = `
-                    <div class="item certificate-item border rounded-xl p-3 mb-3" data-id="${newId}">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm text-gray-500">Mới</span>
-                            <button type="button" onclick="removeItem(this, 'certificates')" class="btn-remove">
-                                <i class="fa-solid fa-trash"></i> Xóa
-                            </button>
-                        </div>
-                        <div class="grid md:grid-cols-4 gap-3">
-                            <input class="input" name="new_certificates[${newId}][ten_chung_chi]" placeholder="Tên chứng chỉ">
-                            <input class="input" name="new_certificates[${newId}][to_chuc_cap]" placeholder="Tổ chức">
-                            <input type="number" class="input" name="new_certificates[${newId}][nam_cap]" placeholder="Năm">
-                            <input type="date" class="input" name="new_certificates[${newId}][ngay_het_han]">
-                        </div>
-                    </div>
-                `;
+        <div class="item certificate-item border rounded-xl p-4 mb-4" data-id="${newId}">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-sm text-gray-500">Mới</span>
+                <button type="button" onclick="removeItem(this, 'certificates')" class="btn-remove">
+                    <i class="fa-solid fa-trash"></i> Xóa
+                </button>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tên chứng chỉ *</label>
+                    <input class="input" name="new_certificates[${newId}][ten_chung_chi]" placeholder="VD: Chứng chỉ PHP, TOEIC">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tổ chức cấp</label>
+                    <input class="input" name="new_certificates[${newId}][to_chuc_cap]" placeholder="VD: Đại học Bách Khoa">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Năm cấp</label>
+                    <input type="number" class="input" name="new_certificates[${newId}][nam_cap]" placeholder="VD: 2023" min="1900" max="${new Date().getFullYear()}">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ngày hết hạn</label>
+                    <input type="date" class="input" name="new_certificates[${newId}][ngay_het_han]">
+                </div>
+            </div>
+        </div>
+    `;
                 container.insertAdjacentHTML('beforeend', html);
             }
 
@@ -1341,22 +1437,52 @@
 
                 const newId = 'new_' + Date.now();
                 const html = `
-                    <div class="item training-item border rounded-xl p-3 mb-3" data-id="${newId}">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm text-gray-500">Mới</span>
-                            <button type="button" onclick="removeItem(this, 'trainings')" class="btn-remove">
-                                <i class="fa-solid fa-trash"></i> Xóa
-                            </button>
-                        </div>
-                        <div class="grid md:grid-cols-5 gap-3">
-                            <input class="input" name="new_trainings[${newId}][ten_khoa_hoc]" placeholder="Khóa học">
-                            <input class="input" name="new_trainings[${newId}][to_chuc]" placeholder="Tổ chức">
-                            <input class="input" name="new_trainings[${newId}][ket_qua]" placeholder="Kết quả">
-                            <input type="date" class="input" name="new_trainings[${newId}][ngay_bat_dau]">
-                            <input type="date" class="input" name="new_trainings[${newId}][ngay_ket_thuc]">
-                        </div>
-                    </div>
-                `;
+        <div class="item training-item border rounded-xl p-4 mb-4" data-id="${newId}">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-sm text-gray-500">Mới</span>
+                <button type="button" onclick="removeItem(this, 'trainings')" class="btn-remove">
+                    <i class="fa-solid fa-trash"></i> Xóa
+                </button>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tên khóa học *</label>
+                    <input class="input" name="new_trainings[${newId}][ten_khoa_hoc]" placeholder="VD: Khóa học Laravel Nâng cao">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tổ chức đào tạo</label>
+                    <input class="input" name="new_trainings[${newId}][to_chuc]" placeholder="VD: CodeGym, FPT Software">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Kết quả</label>
+                    <input class="input" name="new_trainings[${newId}][ket_qua]" placeholder="VD: Xuất sắc, Giỏi, Đạt">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Có chứng chỉ?</label>
+                    <select class="input" name="new_trainings[${newId}][co_chung_chi]">
+                        <option value="0">Không</option>
+                        <option value="1">Có</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Chi phí</label>
+                    <input type="number" class="input" name="new_trainings[${newId}][chi_phi]" placeholder="VD: 5000000" min="0" step="1000">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ngày bắt đầu</label>
+                    <input type="date" class="input" name="new_trainings[${newId}][ngay_bat_dau]">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ngày kết thúc</label>
+                    <input type="date" class="input" name="new_trainings[${newId}][ngay_ket_thuc]">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ghi chú</label>
+                    <input class="input" name="new_trainings[${newId}][ghi_chu]" placeholder="Nhập ghi chú (nếu có)">
+                </div>
+            </div>
+        </div>
+    `;
                 container.insertAdjacentHTML('beforeend', html);
             }
 
@@ -1371,27 +1497,52 @@
 
                 const newId = 'new_' + Date.now();
                 const html = `
-                    <div class="item dependent-item border rounded-xl p-3 mb-3" data-id="${newId}">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm text-gray-500">Mới</span>
-                            <button type="button" onclick="removeItem(this, 'dependents')" class="btn-remove">
-                                <i class="fa-solid fa-trash"></i> Xóa
-                            </button>
-                        </div>
-                        <div class="grid md:grid-cols-3 gap-3">
-                            <input class="input" name="new_dependents[${newId}][ho_ten]" placeholder="Họ tên">
-                            <select class="input" name="new_dependents[${newId}][quan_he]">
-                                <option value="con">Con</option>
-                                <option value="vo">Vợ</option>
-                                <option value="chong">Chồng</option>
-                                <option value="cha">Cha</option>
-                                <option value="me">Mẹ</option>
-                                <option value="khac">Khác</option>
-                            </select>
-                            <input class="input" name="new_dependents[${newId}][ma_so_thue]" placeholder="Mã số thuế">
-                        </div>
-                    </div>
-                `;
+        <div class="item dependent-item border rounded-xl p-3 mb-3" data-id="${newId}">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-sm text-gray-500">Mới</span>
+                <button type="button" onclick="removeItem(this, 'dependents')" class="btn-remove">
+                    <i class="fa-solid fa-trash"></i> Xóa
+                </button>
+            </div>
+            <div class="grid md:grid-cols-3 gap-3">
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Họ tên *</label>
+                    <input class="input" name="new_dependents[${newId}][ho_ten]" placeholder="Nhập họ tên">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ngày sinh</label>
+                    <input type="date" class="input" name="new_dependents[${newId}][ngay_sinh]">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Quan hệ</label>
+                    <select class="input" name="new_dependents[${newId}][quan_he]">
+                        <option value="con">Con</option>
+                        <option value="vo">Vợ</option>
+                        <option value="chong">Chồng</option>
+                        <option value="cha">Cha</option>
+                        <option value="me">Mẹ</option>
+                        <option value="khac">Khác</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Mã số thuế</label>
+                    <input class="input" name="new_dependents[${newId}][ma_so_thue]" placeholder="Nhập mã số thuế">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ngày bắt đầu</label>
+                    <input type="date" class="input" name="new_dependents[${newId}][ngay_bat_dau]">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ngày kết thúc</label>
+                    <input type="date" class="input" name="new_dependents[${newId}][ngay_ket_thuc]">
+                </div>
+                <div class="md:col-span-3">
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ghi chú</label>
+                    <input class="input" name="new_dependents[${newId}][ghi_chu]" placeholder="Nhập ghi chú (nếu có)">
+                </div>
+            </div>
+        </div>
+    `;
                 container.insertAdjacentHTML('beforeend', html);
             }
 
