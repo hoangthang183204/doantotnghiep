@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class HoSoController extends Controller
 {
@@ -35,11 +36,9 @@ class HoSoController extends Controller
             'vai_tro',
         ]);
 
-        // Load thêm các quan hệ con từ HoSo (QUAN TRỌNG: sửa cách load)
+        // Load thêm các quan hệ con từ HoSo
         if ($user->hoSo) {
-            // Lấy hoSo (bảng ho_so) từ hoSoNguoiDung
-            $hoSo = $user->hoSo->hoSo; // Quan hệ hoSo trong HoSoNguoiDung
-            
+            $hoSo = $user->hoSo->hoSo;
             if ($hoSo) {
                 $hoSo->load([
                     'ky_nang',
@@ -165,16 +164,15 @@ class HoSoController extends Controller
         $hoSoNguoiDung->update($data);
 
         // ============================================
-        // 3. LẤY HOẶC TẠO HỒ SƠ (HoSo) - Bảng chứa các quan hệ con
+        // 3. LẤY HOẶC TẠO HỒ SƠ (HoSo)
         // ============================================
-        $hoSo = $hoSoNguoiDung->hoSo; // SỬA: gọi quan hệ hoSo từ HoSoNguoiDung
+        $hoSo = $hoSoNguoiDung->hoSo;
 
         if (!$hoSo) {
             $hoSo = HoSo::create([
                 'nguoi_dung_id' => $user->id,
             ]);
 
-            // Cập nhật lại quan hệ nếu có trường ho_so_id
             if (Schema::hasColumn('ho_so_nguoi_dung', 'ho_so_id')) {
                 $hoSoNguoiDung->ho_so_id = $hoSo->id;
                 $hoSoNguoiDung->save();
@@ -185,7 +183,6 @@ class HoSoController extends Controller
         // 4. XỬ LÝ CV
         // ============================================
         if ($request->hasFile('cv_file')) {
-            // Xóa CV cũ
             $cvCu = $hoSo->cv;
             if ($cvCu && $cvCu->duong_dan_file && Storage::disk('public')->exists($cvCu->duong_dan_file)) {
                 Storage::disk('public')->delete($cvCu->duong_dan_file);
@@ -209,7 +206,7 @@ class HoSoController extends Controller
         }
 
         // ============================================
-        // 5. HÀM XỬ LÝ XÓA - Chuyển chuỗi thành mảng
+        // 5. HÀM XỬ LÝ XÓA
         // ============================================
         $parseDeleteIds = function ($input) {
             if (empty($input)) {
@@ -225,12 +222,11 @@ class HoSoController extends Controller
             return [];
         };
 
-        // Bắt đầu transaction để đảm bảo toàn vẹn dữ liệu
         DB::beginTransaction();
 
         try {
             // ============================================
-            // 6. XÓA KỸ NĂNG - Xóa trực tiếp khỏi database
+            // 6. XÓA KỸ NĂNG
             // ============================================
             $deleteSkills = $parseDeleteIds($request->input('delete_skills'));
             if (!empty($deleteSkills)) {
@@ -238,10 +234,9 @@ class HoSoController extends Controller
                     ->where('ho_so_id', $hoSo->id)
                     ->delete();
 
-                \Log::info('Deleted skills from employee', [
+                Log::info('Deleted skills', [
                     'ids' => $deleteSkills,
                     'user_id' => $user->id,
-                    'ho_so_id' => $hoSo->id,
                     'deleted_count' => $deletedCount
                 ]);
             }
@@ -282,7 +277,7 @@ class HoSoController extends Controller
                     ->where('ho_so_id', $hoSo->id)
                     ->delete();
 
-                \Log::info('Deleted certificates from employee', [
+                Log::info('Deleted certificates', [
                     'ids' => $deleteCertificates,
                     'user_id' => $user->id,
                     'deleted_count' => $deletedCount
@@ -329,7 +324,7 @@ class HoSoController extends Controller
                     ->where('ho_so_id', $hoSo->id)
                     ->delete();
 
-                \Log::info('Deleted trainings from employee', [
+                Log::info('Deleted trainings', [
                     'ids' => $deleteTrainings,
                     'user_id' => $user->id,
                     'deleted_count' => $deletedCount
@@ -347,8 +342,11 @@ class HoSoController extends Controller
                             'ten_khoa_hoc' => $dt['ten_khoa_hoc'] ?? null,
                             'to_chuc' => $dt['to_chuc'] ?? null,
                             'ket_qua' => $dt['ket_qua'] ?? null,
-                            'ngay_bat_dau' => $dt['ngay_bat_dau'] ?? null,
-                            'ngay_ket_thuc' => $dt['ngay_ket_thuc'] ?? null,
+                            'co_chung_chi' => isset($dt['co_chung_chi']) ? (bool)$dt['co_chung_chi'] : false,
+                            'chi_phi' => !empty($dt['chi_phi']) ? $dt['chi_phi'] : null,
+                            'ghi_chu' => $dt['ghi_chu'] ?? null,
+                            'ngay_bat_dau' => !empty($dt['ngay_bat_dau']) ? $dt['ngay_bat_dau'] : null,
+                            'ngay_ket_thuc' => !empty($dt['ngay_ket_thuc']) ? $dt['ngay_ket_thuc'] : null,
                         ]);
                 }
             }
@@ -358,13 +356,21 @@ class HoSoController extends Controller
             // ============================================
             if ($request->filled('new_trainings')) {
                 foreach ($request->new_trainings as $dt) {
+                    // Kiểm tra dữ liệu hợp lệ
+                    if (empty($dt['ten_khoa_hoc'])) {
+                        continue;
+                    }
+
                     DaoTaoNhanVien::create([
                         'ho_so_id' => $hoSo->id,
                         'ten_khoa_hoc' => $dt['ten_khoa_hoc'] ?? null,
                         'to_chuc' => $dt['to_chuc'] ?? null,
                         'ket_qua' => $dt['ket_qua'] ?? null,
-                        'ngay_bat_dau' => $dt['ngay_bat_dau'] ?? null,
-                        'ngay_ket_thuc' => $dt['ngay_ket_thuc'] ?? null,
+                        'co_chung_chi' => isset($dt['co_chung_chi']) ? (bool)$dt['co_chung_chi'] : false,
+                        'chi_phi' => !empty($dt['chi_phi']) ? $dt['chi_phi'] : null,
+                        'ghi_chu' => $dt['ghi_chu'] ?? null,
+                        'ngay_bat_dau' => !empty($dt['ngay_bat_dau']) ? $dt['ngay_bat_dau'] : null,
+                        'ngay_ket_thuc' => !empty($dt['ngay_ket_thuc']) ? $dt['ngay_ket_thuc'] : null,
                     ]);
                 }
             }
@@ -378,7 +384,7 @@ class HoSoController extends Controller
                     ->where('ho_so_id', $hoSo->id)
                     ->delete();
 
-                \Log::info('Deleted dependents from employee', [
+                Log::info('Deleted dependents', [
                     'ids' => $deleteDependents,
                     'user_id' => $user->id,
                     'deleted_count' => $deletedCount
@@ -390,13 +396,24 @@ class HoSoController extends Controller
             // ============================================
             if ($request->filled('dependents')) {
                 foreach ($request->dependents as $id => $npt) {
+                    $updateData = [
+                        'ho_ten' => $npt['ho_ten'] ?? null,
+                        'ngay_sinh' => !empty($npt['ngay_sinh']) ? $npt['ngay_sinh'] : null,
+                        'quan_he' => $npt['quan_he'] ?? 'con',
+                        'ma_so_thue' => $npt['ma_so_thue'] ?? null,
+                        'ngay_bat_dau' => !empty($npt['ngay_bat_dau']) ? $npt['ngay_bat_dau'] : null,
+                        'ngay_ket_thuc' => !empty($npt['ngay_ket_thuc']) ? $npt['ngay_ket_thuc'] : null,
+                        'ghi_chu' => $npt['ghi_chu'] ?? null,
+                    ];
+
+                    Log::info('Updating dependent', [
+                        'id' => $id,
+                        'data' => $updateData
+                    ]);
+
                     NguoiPhuThuoc::where('id', $id)
                         ->where('ho_so_id', $hoSo->id)
-                        ->update([
-                            'ho_ten' => $npt['ho_ten'] ?? null,
-                            'quan_he' => $npt['quan_he'] ?? null,
-                            'ma_so_thue' => $npt['ma_so_thue'] ?? null,
-                        ]);
+                        ->update($updateData);
                 }
             }
 
@@ -404,28 +421,40 @@ class HoSoController extends Controller
             // 17. THÊM MỚI NGƯỜI PHỤ THUỘC
             // ============================================
             if ($request->filled('new_dependents')) {
-                foreach ($request->new_dependents as $npt) {
+                Log::info('Adding new dependents', [
+                    'count' => count($request->new_dependents),
+                    'data' => $request->new_dependents
+                ]);
+
+                foreach ($request->new_dependents as $key => $npt) {
+                    // Kiểm tra dữ liệu hợp lệ
+                    if (empty($npt['ho_ten'])) {
+                        Log::warning('Skipping dependent with empty ho_ten', ['key' => $key]);
+                        continue;
+                    }
+
                     NguoiPhuThuoc::create([
                         'ho_so_id' => $hoSo->id,
                         'ho_ten' => $npt['ho_ten'] ?? null,
-                        'quan_he' => $npt['quan_he'] ?? null,
+                        'ngay_sinh' => !empty($npt['ngay_sinh']) ? $npt['ngay_sinh'] : null,
+                        'quan_he' => $npt['quan_he'] ?? 'con',
                         'ma_so_thue' => $npt['ma_so_thue'] ?? null,
+                        'ngay_bat_dau' => !empty($npt['ngay_bat_dau']) ? $npt['ngay_bat_dau'] : null,
+                        'ngay_ket_thuc' => !empty($npt['ngay_ket_thuc']) ? $npt['ngay_ket_thuc'] : null,
+                        'ghi_chu' => $npt['ghi_chu'] ?? null,
                     ]);
                 }
             }
 
-            // Commit transaction nếu tất cả thành công
             DB::commit();
 
             return redirect()
                 ->route('employee.ho-so.index')
                 ->with('success', 'Cập nhật hồ sơ thành công');
-
         } catch (\Exception $e) {
-            // Rollback nếu có lỗi
             DB::rollBack();
 
-            \Log::error('Error updating employee profile', [
+            Log::error('Error updating employee profile', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -433,7 +462,8 @@ class HoSoController extends Controller
 
             return redirect()
                 ->back()
-                ->with('error', 'Có lỗi xảy ra khi cập nhật hồ sơ. Vui lòng thử lại.');
+                ->withInput()
+                ->with('error', 'Có lỗi xảy ra khi cập nhật hồ sơ: ' . $e->getMessage());
         }
     }
 
