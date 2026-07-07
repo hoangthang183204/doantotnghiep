@@ -354,6 +354,12 @@
                     if ($canViewSalary && Route::has('admin.bang-luong.index')) {
                         $submenuLuong[] = ['title' => 'Bảng lương', 'route' => 'admin.bang-luong.index'];
                     }
+                    if ($canViewSalary && Route::has('admin.khau-tru-khac.index')) {
+                        $submenuLuong[] = ['title' => 'Khấu trừ khác', 'route' => 'admin.khau-tru-khac.index'];
+                    }
+                    if ($canViewSalary && Route::has('admin.thong-ke-luong.index')) {
+                        $submenuLuong[] = ['title' => 'Thống kê quỹ lương', 'route' => 'admin.thong-ke-luong.index'];
+                    }
                     if ($canViewAllowance && Route::has('admin.phu-cap.index')) {
                         $submenuLuong[] = ['title' => 'Phụ cấp', 'route' => 'admin.phu-cap.index'];
                     }
@@ -361,9 +367,9 @@
                 @if (!empty($submenuLuong))
                     <li>
                         <details class="menu-details"
-                            {{ in_array($currentRoute, ['admin.bang-luong.index', 'admin.phu-cap.index']) ? 'open' : '' }}>
+                            {{ in_array($currentRoute, ['admin.bang-luong.index', 'admin.khau-tru-khac.index', 'admin.thong-ke-luong.index', 'admin.phu-cap.index']) ? 'open' : '' }}>
                             <summary
-                                class="flex items-center w-full px-3 py-2.5 rounded-lg transition-colors cursor-pointer {{ in_array($currentRoute, ['admin.bang-luong.index', 'admin.phu-cap.index']) ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                class="flex items-center w-full px-3 py-2.5 rounded-lg transition-colors cursor-pointer {{ in_array($currentRoute, ['admin.bang-luong.index', 'admin.khau-tru-khac.index', 'admin.thong-ke-luong.index', 'admin.phu-cap.index']) ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                                 <span class="w-5 h-5 mr-3 flex-shrink-0">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                         stroke="currentColor" stroke-width="1.5">
@@ -372,7 +378,7 @@
                                     </svg>
                                 </span>
                                 <span class="flex-1 text-left font-medium menu-text">Lương</span>
-                                <svg class="w-4 h-4 transition-transform duration-200 arrow-icon flex-shrink-0 {{ in_array($currentRoute, ['admin.bang-luong.index', 'admin.phu-cap.index']) ? 'rotate-180' : '' }}"
+                                <svg class="w-4 h-4 transition-transform duration-200 arrow-icon flex-shrink-0 {{ in_array($currentRoute, ['admin.bang-luong.index', 'admin.khau-tru-khac.index', 'admin.thong-ke-luong.index', 'admin.phu-cap.index']) ? 'rotate-180' : '' }}"
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7"></path>

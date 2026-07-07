@@ -24,10 +24,16 @@
                 — Kỳ lương tháng {{ $luong->luong_thang }}/{{ $luong->luong_nam }}
             </p>
         </div>
-        <a href="{{ route('admin.bang-luong.show', $bangLuong->id) }}"
-           class="px-4 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 rounded-lg hover:opacity-80">
-            <i class="fa-solid fa-arrow-left mr-1"></i> Quay lại bảng lương
-        </a>
+        <div class="flex gap-2">
+            <a href="{{ route('admin.bang-luong.phieu-luong-pdf', [$bangLuong->id, $luong->id]) }}"
+               class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm">
+                <i class="fa-solid fa-file-pdf mr-1"></i> Xuất PDF
+            </a>
+            <a href="{{ route('admin.bang-luong.show', $bangLuong->id) }}"
+               class="px-4 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 rounded-lg hover:opacity-80">
+                <i class="fa-solid fa-arrow-left mr-1"></i> Quay lại bảng lương
+            </a>
+        </div>
     </div>
 
     {{-- NET SALARY BANNER --}}
