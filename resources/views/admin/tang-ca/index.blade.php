@@ -459,14 +459,19 @@
                     'Từ chối hàng loạt thành công!', reason));
             }
 
+            // ⭐ SỬA HÀM pheDuyet - DÙNG JAVASCRIPT TẠO URL
             function pheDuyet(id, trangThai) {
                 currentPheDuyetId = id;
                 const modalTitle = document.getElementById('modalTitle');
                 const btnPheDuyet = document.getElementById('btnPheDuyet');
                 const trangThaiInput = document.getElementById('trangThaiDuyet');
                 const ghiChu = document.getElementById('ghiChuPheDuyet');
+                const form = document.getElementById('pheDuyetForm');
 
                 trangThaiInput.value = trangThai;
+
+                // ⭐ TẠO URL BẰNG JAVASCRIPT
+                const baseUrl = window.location.origin;
 
                 if (trangThai === 'da_duyet') {
                     modalTitle.textContent = '✅ Phê duyệt tăng ca';
@@ -475,6 +480,8 @@
                     btnPheDuyet.classList.add('bg-green-600', 'hover:bg-green-700');
                     ghiChu.placeholder = 'Nhập ghi chú (nếu có)...';
                     ghiChu.removeAttribute('required');
+                    // ⭐ SET ACTION BẰNG JAVASCRIPT
+                    form.action = `${baseUrl}/admin/tang-ca/${id}/duyet`;
                 } else {
                     modalTitle.textContent = '❌ Từ chối tăng ca';
                     btnPheDuyet.textContent = 'Xác nhận từ chối';
@@ -482,15 +489,18 @@
                     btnPheDuyet.classList.add('bg-red-600', 'hover:bg-red-700');
                     ghiChu.placeholder = 'Nhập lý do từ chối (bắt buộc)...';
                     ghiChu.setAttribute('required', 'required');
+                    // ⭐ SET ACTION BẰNG JAVASCRIPT
+                    form.action = `${baseUrl}/admin/tang-ca/${id}/tu-choi`;
                 }
 
-                document.getElementById('pheDuyetForm').reset();
+                form.reset();
                 if (modalPheDuyet) {
                     modalPheDuyet.classList.remove('hidden');
                     modalPheDuyet.classList.add('flex');
                 }
             }
 
+            // ⭐ SỬA SUBMIT FORM
             document.getElementById('pheDuyetForm')?.addEventListener('submit', function(e) {
                 e.preventDefault();
                 if (!currentPheDuyetId) return;
@@ -503,28 +513,22 @@
                     return;
                 }
 
-                const formData = new FormData();
-                formData.append('_token', '{{ csrf_token() }}');
-                formData.append('trang_thai', trangThai);
-                if (lyDo) formData.append('ly_do_tu_choi', lyDo);
+                // Nếu là từ chối, thêm hidden field cho ly_do_tu_choi
+                if (trangThai === 'tu_choi') {
+                    // Xóa input cũ nếu có
+                    const oldInput = this.querySelector('input[name="ly_do_tu_choi"]');
+                    if (oldInput) oldInput.remove();
 
-                fetch(`/admin/tang-ca/${currentPheDuyetId}/phe-duyet`, {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert(data.message);
-                            location.reload();
-                        } else {
-                            alert('Có lỗi xảy ra: ' + (data.message || 'Vui lòng thử lại'));
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Có lỗi xảy ra khi xử lý!');
-                    });
+                    // Tạo input mới
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'ly_do_tu_choi';
+                    input.value = lyDo;
+                    this.appendChild(input);
+                }
+
+                // Submit form
+                this.submit();
             });
 
             function closePheDuyetModal() {
@@ -533,6 +537,7 @@
                     modalPheDuyet.classList.remove('flex');
                 }
                 document.getElementById('pheDuyetForm').reset();
+                document.getElementById('pheDuyetForm').action = '';
             }
 
             function showReason(reason) {
@@ -576,6 +581,7 @@
                 confirmCallback = null;
             }
 
+            // Đóng modal khi click ra ngoài
             if (modalPheDuyet) {
                 modalPheDuyet.addEventListener('click', function(e) {
                     if (e.target === this) closePheDuyetModal();
@@ -592,5 +598,5 @@
                 });
             }
         </script>
-    @endpush
-@endsection
+        @endpush@endpush
+    @endsection
