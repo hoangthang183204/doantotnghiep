@@ -34,10 +34,10 @@
         {{-- ================= HEADER ================= --}}
         <div
             class="rounded-2xl p-6
-            bg-white dark:bg-slate-800
-            border border-gray-200 dark:border-slate-700
-            shadow-sm
-            text-gray-800 dark:text-white">
+        bg-white dark:bg-slate-800
+        border border-gray-200 dark:border-slate-700
+        shadow-sm
+        text-gray-800 dark:text-white">
 
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
 
@@ -156,10 +156,10 @@
 
                     <button type="submit"
                         class="inline-flex items-center gap-2
-                       px-5 py-2.5 rounded-xl
-                       bg-blue-600 text-white
-                       hover:bg-blue-700
-                       transition">
+                    px-5 py-2.5 rounded-xl
+                    bg-blue-600 text-white
+                    hover:bg-blue-700
+                    transition">
 
                         <i class="fa-solid fa-key"></i>
 
@@ -177,7 +177,8 @@
         <div class="profile-card">
             <div class="font-semibold mb-4">Thông Tin Cá Nhân</div>
 
-            <form action="{{ route('employee.ho-so.update') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('employee.ho-so.update') }}" method="POST" enctype="multipart/form-data"
+                id="profileForm">
                 @csrf
                 @method('PUT')
 
@@ -204,28 +205,24 @@
 
                 </div>
 
-                {{-- ================= ADDRESS & ID (FIXED ADMIN STYLE) ================= --}}
+                {{-- ================= ADDRESS & ID ================= --}}
                 <div class="mt-6">
 
                     <div class="font-semibold mb-3">Địa chỉ & Giấy tờ</div>
 
                     <div class="grid md:grid-cols-2 gap-4">
 
-                        {{-- Địa chỉ hiện tại --}}
                         <input name="dia_chi_hien_tai" class="input"
                             value="{{ old('dia_chi_hien_tai', $user->hoSo?->dia_chi_hien_tai) }}"
                             placeholder="Chưa cập nhật địa chỉ hiện tại">
 
-                        {{-- Địa chỉ thường trú --}}
                         <input name="dia_chi_thuong_tru" class="input"
                             value="{{ old('dia_chi_thuong_tru', $user->hoSo?->dia_chi_thuong_tru) }}"
                             placeholder="Chưa cập nhật địa chỉ thường trú">
 
-                        {{-- CCCD --}}
                         <input name="cmnd_cccd" class="input" value="{{ old('cmnd_cccd', $user->hoSo?->cmnd_cccd) }}"
                             placeholder="Chưa cập nhật CCCD / CMND">
 
-                        {{-- Hộ chiếu --}}
                         <input name="so_ho_chieu" class="input"
                             value="{{ old('so_ho_chieu', $user->hoSo?->so_ho_chieu) }}"
                             placeholder="Chưa cập nhật số hộ chiếu">
@@ -304,7 +301,6 @@
                         {{-- ================= AVATAR ================= --}}
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
 
-                            {{-- INPUT --}}
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Ảnh đại diện
@@ -318,7 +314,6 @@
                                 </p>
                             </div>
 
-                            {{-- PREVIEW CARD --}}
                             <div class="flex justify-center">
                                 <div
                                     class="w-32 h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center overflow-hidden shadow-sm">
@@ -514,7 +509,7 @@
                                 Chọn CV
 
                                 <input id="cv_file" type="file" name="cv_file" accept=".pdf,.doc,.docx"
-                                    class="hidden">
+                                    class="hidden" onchange="showCvFile(this)">
 
                             </label>
 
@@ -529,222 +524,288 @@
 
                 {{-- ================= SKILLS ================= --}}
                 <div class="profile-card">
-
-                    <div class="flex items-center gap-3 mb-5">
-                        <div class="section-icon">
-                            <i class="fa-solid fa-brain"></i>
+                    <div class="flex items-center justify-between mb-5">
+                        <div class="flex items-center gap-3">
+                            <div class="section-icon">
+                                <i class="fa-solid fa-brain"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-lg">Kỹ năng chuyên môn</h3>
+                                <p class="text-sm text-gray-500">Cập nhật kỹ năng làm việc</p>
+                            </div>
                         </div>
-
-                        <div>
-                            <h3 class="font-semibold text-lg">
-                                Kỹ năng chuyên môn
-                            </h3>
-                            <p class="text-sm text-gray-500">
-                                Cập nhật kỹ năng làm việc
-                            </p>
-                        </div>
+                        <button type="button" onclick="addSkill()" class="btn-add">
+                            <i class="fa-solid fa-plus"></i> Thêm kỹ năng
+                        </button>
                     </div>
 
-                    @forelse($user->hoSo?->hoSo?->ky_nang ?? [] as $skill)
-                        <div class="border rounded-xl p-4 mb-4">
+                    <div id="skills-container">
+                        @php
+                            $hoSoData = $user->hoSo?->hoSo;
+                            $kyNangList = $hoSoData?->ky_nang ?? [];
+                        @endphp
 
-                            <div class="grid md:grid-cols-2 gap-4">
-
-                                <input class="input" name="skills[{{ $skill->id }}][ten_ky_nang]"
-                                    value="{{ $skill->ten_ky_nang }}">
-
-                                <select class="input" name="skills[{{ $skill->id }}][cap_do]">
-
-                                    <option value="Cơ bản" @selected($skill->cap_do == 'Cơ bản')>
-                                        Cơ bản
-                                    </option>
-
-                                    <option value="Trung cấp" @selected($skill->cap_do == 'Trung cấp')>
-                                        Trung cấp
-                                    </option>
-
-                                    <option value="Thành thạo" @selected($skill->cap_do == 'Thành thạo')>
-                                        Thành thạo
-                                    </option>
-
-                                    <option value="Chuyên gia" @selected($skill->cap_do == 'Chuyên gia')>
-                                        Chuyên gia
-                                    </option>
-
-                                </select>
-
+                        @forelse($kyNangList as $skill)
+                            <div class="item skill-item border rounded-xl p-4 mb-4" data-id="{{ $skill->id }}">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="text-sm text-gray-500">#{{ $loop->iteration }}</span>
+                                    <button type="button" onclick="removeItem(this, 'skills')" class="btn-remove">
+                                        <i class="fa-solid fa-trash"></i> Xóa
+                                    </button>
+                                </div>
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tên kỹ năng
+                                            *</label>
+                                        <input class="input" name="skills[{{ $skill->id }}][ten_ky_nang]"
+                                            value="{{ $skill->ten_ky_nang }}" placeholder="VD: PHP, Laravel, JavaScript">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Cấp độ</label>
+                                        <select class="input" name="skills[{{ $skill->id }}][cap_do]">
+                                            <option value="Cơ bản" @selected($skill->cap_do == 'Cơ bản')>Cơ bản</option>
+                                            <option value="Trung cấp" @selected($skill->cap_do == 'Trung cấp')>Trung cấp</option>
+                                            <option value="Thành thạo" @selected($skill->cap_do == 'Thành thạo')>Thành thạo</option>
+                                            <option value="Chuyên gia" @selected($skill->cap_do == 'Chuyên gia')>Chuyên gia</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
-
-                        </div>
-
-                    @empty
-                        <div class="text-gray-500">
-                            Chưa có dữ liệu.
-                        </div>
-                    @endforelse
-
+                        @empty
+                            <div class="text-gray-500 text-center py-4" id="no-skills">
+                                <i class="fa-regular fa-face-frown text-2xl block mb-2"></i>
+                                Chưa có kỹ năng nào. Nhấn "Thêm kỹ năng" để tạo mới.
+                            </div>
+                        @endforelse
+                    </div>
                 </div>
 
                 {{-- ================= CERTIFICATE ================= --}}
                 <div class="profile-card">
-
-                    <div class="section-header">
-
-                        <div class="section-icon">
-                            <i class="fa-solid fa-award"></i>
+                    <div class="flex items-center justify-between mb-5">
+                        <div class="flex items-center gap-3">
+                            <div class="section-icon">
+                                <i class="fa-solid fa-award"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-lg">Chứng chỉ</h3>
+                                <p class="text-sm text-gray-500">Chứng nhận và bằng cấp chuyên môn</p>
+                            </div>
                         </div>
-
-                        <div>
-                            <h3 class="font-semibold text-lg">
-                                Chứng chỉ
-                            </h3>
-
-                            <p class="text-sm text-gray-500">
-                                Chứng nhận và bằng cấp chuyên môn
-                            </p>
-                        </div>
-
+                        <button type="button" onclick="addCertificate()" class="btn-add">
+                            <i class="fa-solid fa-plus"></i> Thêm chứng chỉ
+                        </button>
                     </div>
 
-                    @foreach ($user->hoSo?->hoSo?->chung_chi ?? [] as $cc)
-                        <div class="border rounded-xl p-3 mb-3">
+                    <div id="certificates-container">
+                        @php
+                            $chungChiList = $hoSoData?->chung_chi ?? [];
+                        @endphp
 
-                            <div class="grid md:grid-cols-4 gap-3">
-
-                                <input class="input" name="certificates[{{ $cc->id }}][ten_chung_chi]"
-                                    value="{{ $cc->ten_chung_chi }}" placeholder="Tên chứng chỉ">
-
-                                <input class="input" name="certificates[{{ $cc->id }}][to_chuc_cap]"
-                                    value="{{ $cc->to_chuc_cap }}" placeholder="Tổ chức">
-
-                                <input type="number" class="input" name="certificates[{{ $cc->id }}][nam_cap]"
-                                    value="{{ $cc->nam_cap }}" placeholder="Năm">
-
-                                <input type="date" class="input"
-                                    name="certificates[{{ $cc->id }}][ngay_het_han]"
-                                    value="{{ optional($cc->ngay_het_han)->format('Y-m-d') }}">
-
+                        @forelse($chungChiList as $cc)
+                            <div class="item certificate-item border rounded-xl p-4 mb-4" data-id="{{ $cc->id }}">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="text-sm text-gray-500">#{{ $loop->iteration }}</span>
+                                    <button type="button" onclick="removeItem(this, 'certificates')" class="btn-remove">
+                                        <i class="fa-solid fa-trash"></i> Xóa
+                                    </button>
+                                </div>
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tên chứng chỉ
+                                            *</label>
+                                        <input class="input" name="certificates[{{ $cc->id }}][ten_chung_chi]"
+                                            value="{{ $cc->ten_chung_chi }}"
+                                            placeholder="VD: Chứng chỉ PHP, TOEIC, IELTS">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tổ chức
+                                            cấp</label>
+                                        <input class="input" name="certificates[{{ $cc->id }}][to_chuc_cap]"
+                                            value="{{ $cc->to_chuc_cap }}"
+                                            placeholder="VD: Đại học Bách Khoa, Microsoft">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Năm cấp</label>
+                                        <input type="number" class="input"
+                                            name="certificates[{{ $cc->id }}][nam_cap]"
+                                            value="{{ $cc->nam_cap }}" placeholder="VD: 2023" min="1900"
+                                            max="{{ date('Y') }}">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ngày hết
+                                            hạn</label>
+                                        <input type="date" class="input"
+                                            name="certificates[{{ $cc->id }}][ngay_het_han]"
+                                            value="{{ optional($cc->ngay_het_han)->format('Y-m-d') }}">
+                                    </div>
+                                </div>
                             </div>
-
-                        </div>
-                    @endforeach
-
+                        @empty
+                            <div class="text-gray-500 text-center py-4" id="no-certificates">
+                                <i class="fa-regular fa-face-frown text-2xl block mb-2"></i>
+                                Chưa có chứng chỉ nào. Nhấn "Thêm chứng chỉ" để tạo mới.
+                            </div>
+                        @endforelse
+                    </div>
                 </div>
 
                 {{-- ================= TRAINING ================= --}}
                 <div class="profile-card">
-
-                    <div class="section-header">
-
-                        <div class="section-icon">
-                            <i class="fa-solid fa-graduation-cap"></i>
+                    <div class="flex items-center justify-between mb-5">
+                        <div class="flex items-center gap-3">
+                            <div class="section-icon">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-lg">Đào tạo</h3>
+                                <p class="text-sm text-gray-500">Khóa học đã tham gia</p>
+                            </div>
                         </div>
-
-                        <div>
-                            <h3 class="font-semibold text-lg">
-                                Đào tạo
-                            </h3>
-
-                            <p class="text-sm text-gray-500">
-                                Khóa học đã tham gia
-                            </p>
-                        </div>
-
+                        <button type="button" onclick="addTraining()" class="btn-add">
+                            <i class="fa-solid fa-plus"></i> Thêm khóa học
+                        </button>
                     </div>
 
-                    @foreach ($user->hoSo?->hoSo?->dao_tao ?? [] as $dt)
-                        <div class="border rounded-xl p-3 mb-3">
+                    <div id="trainings-container">
+                        @php
+                            $daoTaoList = $hoSoData?->dao_tao ?? [];
+                        @endphp
 
-                            <div class="grid md:grid-cols-5 gap-3">
-
-                                <input class="input" name="trainings[{{ $dt->id }}][ten_khoa_hoc]"
-                                    value="{{ $dt->ten_khoa_hoc }}" placeholder="Khóa học">
-
-                                <input class="input" name="trainings[{{ $dt->id }}][to_chuc]"
-                                    value="{{ $dt->to_chuc }}" placeholder="Tổ chức">
-
-                                <input class="input" name="trainings[{{ $dt->id }}][ket_qua]"
-                                    value="{{ $dt->ket_qua }}" placeholder="Kết quả">
-
-                                <input type="date" class="input" name="trainings[{{ $dt->id }}][ngay_bat_dau]"
-                                    value="{{ optional($dt->ngay_bat_dau)->format('Y-m-d') }}">
-
-                                <input type="date" class="input"
-                                    name="trainings[{{ $dt->id }}][ngay_ket_thuc]"
-                                    value="{{ optional($dt->ngay_ket_thuc)->format('Y-m-d') }}">
-
+                        @forelse($daoTaoList as $dt)
+                            <div class="item training-item border rounded-xl p-4 mb-4" data-id="{{ $dt->id }}">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="text-sm text-gray-500">#{{ $loop->iteration }}</span>
+                                    <button type="button" onclick="removeItem(this, 'trainings')" class="btn-remove">
+                                        <i class="fa-solid fa-trash"></i> Xóa
+                                    </button>
+                                </div>
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tên khóa học
+                                            *</label>
+                                        <input class="input" name="trainings[{{ $dt->id }}][ten_khoa_hoc]"
+                                            value="{{ $dt->ten_khoa_hoc }}" placeholder="VD: Khóa học Laravel Nâng cao">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tổ chức đào
+                                            tạo</label>
+                                        <input class="input" name="trainings[{{ $dt->id }}][to_chuc]"
+                                            value="{{ $dt->to_chuc }}" placeholder="VD: CodeGym, FPT Software">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Kết quả</label>
+                                        <input class="input" name="trainings[{{ $dt->id }}][ket_qua]"
+                                            value="{{ $dt->ket_qua }}" placeholder="VD: Xuất sắc, Giỏi, Đạt">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Có chứng
+                                            chỉ?</label>
+                                        <select class="input" name="trainings[{{ $dt->id }}][co_chung_chi]">
+                                            <option value="0" @selected($dt->co_chung_chi == false || $dt->co_chung_chi == null)>Không</option>
+                                            <option value="1" @selected($dt->co_chung_chi == true)>Có</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Chi phí</label>
+                                        <input type="number" class="input"
+                                            name="trainings[{{ $dt->id }}][chi_phi]" value="{{ $dt->chi_phi }}"
+                                            placeholder="VD: 5000000" min="0" step="1000">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ngày bắt
+                                            đầu</label>
+                                        <input type="date" class="input"
+                                            name="trainings[{{ $dt->id }}][ngay_bat_dau]"
+                                            value="{{ optional($dt->ngay_bat_dau)->format('Y-m-d') }}">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ngày kết
+                                            thúc</label>
+                                        <input type="date" class="input"
+                                            name="trainings[{{ $dt->id }}][ngay_ket_thuc]"
+                                            value="{{ optional($dt->ngay_ket_thuc)->format('Y-m-d') }}">
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ghi chú</label>
+                                        <input class="input" name="trainings[{{ $dt->id }}][ghi_chu]"
+                                            value="{{ $dt->ghi_chu }}" placeholder="Nhập ghi chú (nếu có)">
+                                    </div>
+                                </div>
                             </div>
-
-                        </div>
-                    @endforeach
-
+                        @empty
+                            <div class="text-gray-500 text-center py-4" id="no-trainings">
+                                <i class="fa-regular fa-face-frown text-2xl block mb-2"></i>
+                                Chưa có khóa học đào tạo nào. Nhấn "Thêm khóa học" để tạo mới.
+                            </div>
+                        @endforelse
+                    </div>
                 </div>
 
                 {{-- ================= DEPENDENT ================= --}}
                 <div class="profile-card">
-
-                    <div class="section-header">
-
-                        <div class="section-icon">
-                            <i class="fa-solid fa-people-roof"></i>
+                    <div class="flex items-center justify-between mb-5">
+                        <div class="flex items-center gap-3">
+                            <div class="section-icon">
+                                <i class="fa-solid fa-people-roof"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-lg">Người phụ thuộc</h3>
+                                <p class="text-sm text-gray-500">Thông tin giảm trừ gia cảnh</p>
+                            </div>
                         </div>
-
-                        <div>
-                            <h3 class="font-semibold text-lg">
-                                Người phụ thuộc
-                            </h3>
-
-                            <p class="text-sm text-gray-500">
-                                Thông tin giảm trừ gia cảnh
-                            </p>
-                        </div>
-
+                        <button type="button" onclick="addDependent()" class="btn-add">
+                            <i class="fa-solid fa-plus"></i> Thêm người phụ thuộc
+                        </button>
                     </div>
 
-                    @foreach ($user->hoSo?->hoSo?->nguoiPhuThuoc ?? [] as $npt)
-                        <div class="border rounded-xl p-3 mb-3">
+                    <div id="dependents-container">
+                        @php
+                            $nguoiPhuThuocList = $hoSoData?->nguoiPhuThuoc ?? [];
+                        @endphp
 
-                            <div class="grid md:grid-cols-3 gap-3">
-
-                                <input class="input" name="dependents[{{ $npt->id }}][ho_ten]"
-                                    value="{{ $npt->ho_ten }}" placeholder="Họ tên">
-
-                                <select class="input" name="dependents[{{ $npt->id }}][quan_he]">
-
-                                    <option value="con" @selected($npt->quan_he == 'con')>
-                                        Con
-                                    </option>
-
-                                    <option value="vo" @selected($npt->quan_he == 'vo')>
-                                        Vợ
-                                    </option>
-
-                                    <option value="chong" @selected($npt->quan_he == 'chong')>
-                                        Chồng
-                                    </option>
-
-                                    <option value="cha" @selected($npt->quan_he == 'cha')>
-                                        Cha
-                                    </option>
-
-                                    <option value="me" @selected($npt->quan_he == 'me')>
-                                        Mẹ
-                                    </option>
-
-                                    <option value="khac" @selected($npt->quan_he == 'khac')>
-                                        Khác
-                                    </option>
-
-                                </select>
-
-                                <input class="input" name="dependents[{{ $npt->id }}][ma_so_thue]"
-                                    value="{{ $npt->ma_so_thue }}" placeholder="Mã số thuế">
-
+                        @forelse($nguoiPhuThuocList as $npt)
+                            <div class="item dependent-item border rounded-xl p-3 mb-3" data-id="{{ $npt->id }}">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm text-gray-500">#{{ $loop->iteration }}</span>
+                                    <button type="button" onclick="removeItem(this, 'dependents')" class="btn-remove">
+                                        <i class="fa-solid fa-trash"></i> Xóa
+                                    </button>
+                                </div>
+                                <div class="grid md:grid-cols-3 gap-3">
+                                    <input class="input" name="dependents[{{ $npt->id }}][ho_ten]"
+                                        value="{{ $npt->ho_ten }}" placeholder="Họ tên *">
+                                    <input type="date" class="input"
+                                        name="dependents[{{ $npt->id }}][ngay_sinh]"
+                                        value="{{ optional($npt->ngay_sinh)->format('Y-m-d') }}" placeholder="Ngày sinh">
+                                    <select class="input" name="dependents[{{ $npt->id }}][quan_he]">
+                                        <option value="con" @selected($npt->quan_he == 'con')>Con</option>
+                                        <option value="vo" @selected($npt->quan_he == 'vo')>Vợ</option>
+                                        <option value="chong" @selected($npt->quan_he == 'chong')>Chồng</option>
+                                        <option value="cha" @selected($npt->quan_he == 'cha')>Cha</option>
+                                        <option value="me" @selected($npt->quan_he == 'me')>Mẹ</option>
+                                        <option value="khac" @selected($npt->quan_he == 'khac')>Khác</option>
+                                    </select>
+                                    <input class="input" name="dependents[{{ $npt->id }}][ma_so_thue]"
+                                        value="{{ $npt->ma_so_thue }}" placeholder="Mã số thuế">
+                                    <input type="date" class="input"
+                                        name="dependents[{{ $npt->id }}][ngay_bat_dau]"
+                                        value="{{ optional($npt->ngay_bat_dau)->format('Y-m-d') }}"
+                                        placeholder="Ngày bắt đầu">
+                                    <input type="date" class="input"
+                                        name="dependents[{{ $npt->id }}][ngay_ket_thuc]"
+                                        value="{{ optional($npt->ngay_ket_thuc)->format('Y-m-d') }}"
+                                        placeholder="Ngày kết thúc">
+                                    <input class="input" name="dependents[{{ $npt->id }}][ghi_chu]"
+                                        value="{{ $npt->ghi_chu }}" placeholder="Ghi chú">
+                                </div>
                             </div>
-
-                        </div>
-                    @endforeach
-
+                        @empty
+                            <div class="text-gray-500 text-center py-4" id="no-dependents">
+                                Chưa có dữ liệu người phụ thuộc. Nhấn "Thêm người phụ thuộc" để tạo mới.
+                            </div>
+                        @endforelse
+                    </div>
                 </div>
 
                 {{-- ================= CONTRACT ================= --}}
@@ -934,6 +995,12 @@
 
                 </div>
 
+                {{-- ================= HIDDEN INPUTS ================= --}}
+                <input type="hidden" name="delete_skills" id="delete_skills" value="">
+                <input type="hidden" name="delete_certificates" id="delete_certificates" value="">
+                <input type="hidden" name="delete_trainings" id="delete_trainings" value="">
+                <input type="hidden" name="delete_dependents" id="delete_dependents" value="">
+
                 <div class="sticky bottom-5 z-20 flex justify-end gap-3 mt-10">
 
                     <button type="reset" class="px-4 py-2 rounded-xl border bg-white dark:bg-gray-700">
@@ -1097,6 +1164,432 @@
                 filter: invert(1);
                 cursor: pointer;
             }
+
+            /* ===== BUTTONS ===== */
+            .btn-add {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 6px 14px;
+                font-size: 13px;
+                font-weight: 500;
+                border-radius: 10px;
+                background: #10b981;
+                color: #fff;
+                border: none;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                white-space: nowrap;
+                height: 36px;
+                min-width: 120px;
+                justify-content: center;
+            }
+
+            .btn-add:hover {
+                background: #059669;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            }
+
+            .btn-add:active {
+                transform: translateY(0);
+            }
+
+            .btn-remove {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                padding: 4px 12px;
+                font-size: 12px;
+                font-weight: 500;
+                border-radius: 8px;
+                background: #fee2e2;
+                color: #dc2626;
+                border: none;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                height: 30px;
+            }
+
+            .btn-remove:hover {
+                background: #fecaca;
+                color: #b91c1c;
+            }
+
+            .dark .btn-remove {
+                background: rgba(220, 38, 38, 0.15);
+                color: #f87171;
+            }
+
+            .dark .btn-remove:hover {
+                background: rgba(220, 38, 38, 0.25);
+                color: #fca5a5;
+            }
+
+            .dark .btn-add {
+                background: #059669;
+            }
+
+            .dark .btn-add:hover {
+                background: #047857;
+            }
+
+            .deleted {
+                display: none !important;
+            }
         </style>
+
+        {{-- ================= JAVASCRIPT ================= --}}
+        <script>
+            // ==========================================
+            // DANH SÁCH ID CẦN XÓA
+            // ==========================================
+            let deleteItems = {
+                skills: [],
+                certificates: [],
+                trainings: [],
+                dependents: []
+            };
+
+            // ==========================================
+            // HÀM XÓA
+            // ==========================================
+            function removeItem(btn, type) {
+                console.log('🔍 removeItem called', {
+                    btn,
+                    type
+                });
+
+                // Tìm item cha - Tìm phần tử có class 'item'
+                const item = btn.closest('.item');
+
+                if (!item) {
+                    console.error('❌ Cannot find parent item');
+                    alert('Không tìm thấy item để xóa!');
+                    return;
+                }
+
+                const id = item.dataset.id;
+                console.log('📌 Found item with ID:', id);
+
+                if (!id) {
+                    console.error('❌ No ID found');
+                    alert('Không tìm thấy ID!');
+                    return;
+                }
+
+                // Lấy container (parent element)
+                const container = item.parentElement;
+
+                // Kiểm tra container có tồn tại không
+                if (!container) {
+                    console.error('❌ Container not found');
+                    return;
+                }
+
+                // Nếu là item mới
+                if (String(id).startsWith('new_')) {
+                    console.log('🗑️ Removing new item');
+                    item.remove();
+                    checkEmptyContainer(container, type);
+                    return;
+                }
+
+                // Thêm vào danh sách xóa
+                if (!deleteItems[type].includes(id)) {
+                    deleteItems[type].push(id);
+                    console.log(`✅ Added ID ${id} to delete list for ${type}`);
+                }
+
+                // Cập nhật hidden input
+                updateDeleteInput(type);
+
+                // Xóa khỏi DOM
+                item.remove();
+                checkEmptyContainer(container, type);
+            }
+
+            // ==========================================
+            // CẬP NHẬT HIDDEN INPUT
+            // ==========================================
+            function updateDeleteInput(type) {
+                const hiddenInput = document.getElementById(`delete_${type}`);
+                if (hiddenInput) {
+                    const value = deleteItems[type].join(',');
+                    hiddenInput.value = value;
+                    console.log(`📝 Updated delete_${type}:`, value);
+                }
+            }
+
+            // ==========================================
+            // KIỂM TRA CONTAINER RỖNG
+            // ==========================================
+            function checkEmptyContainer(container, type) {
+                const items = container.querySelectorAll('.item');
+                if (items.length === 0) {
+                    const messages = {
+                        'skills-container': 'Chưa có dữ liệu. Nhấn "Thêm kỹ năng" để tạo mới.',
+                        'certificates-container': 'Chưa có dữ liệu. Nhấn "Thêm chứng chỉ" để tạo mới.',
+                        'trainings-container': 'Chưa có dữ liệu đào tạo. Nhấn "Thêm khóa học" để tạo mới.',
+                        'dependents-container': 'Chưa có dữ liệu người phụ thuộc. Nhấn "Thêm người phụ thuộc" để tạo mới.'
+                    };
+
+                    const id = container.id;
+                    const msg = messages[id] || 'Chưa có dữ liệu';
+
+                    if (!container.querySelector('[id^="no-"]')) {
+                        container.innerHTML = `
+                            <div class="text-gray-500 text-center py-4" id="no-${id.split('-')[0]}">
+                                ${msg}
+                            </div>
+                        `;
+                    }
+                }
+            }
+
+            // ==========================================
+            // THÊM KỸ NĂNG
+            // ==========================================
+            function addSkill() {
+                console.log('➕ Adding skill');
+                const container = document.getElementById('skills-container');
+                const emptyMsg = container.querySelector('[id^="no-"]');
+                if (emptyMsg) emptyMsg.remove();
+
+                const newId = 'new_' + Date.now();
+                const html = `
+        <div class="item skill-item border rounded-xl p-4 mb-4" data-id="${newId}">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-sm text-gray-500">Mới</span>
+                <button type="button" onclick="removeItem(this, 'skills')" class="btn-remove">
+                    <i class="fa-solid fa-trash"></i> Xóa
+                </button>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tên kỹ năng *</label>
+                    <input class="input" name="new_skills[${newId}][ten_ky_nang]" placeholder="VD: PHP, Laravel, JavaScript">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Cấp độ</label>
+                    <select class="input" name="new_skills[${newId}][cap_do]">
+                        <option value="Cơ bản">Cơ bản</option>
+                        <option value="Trung cấp">Trung cấp</option>
+                        <option value="Thành thạo">Thành thạo</option>
+                        <option value="Chuyên gia">Chuyên gia</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    `;
+                container.insertAdjacentHTML('beforeend', html);
+            }
+
+            // ==========================================
+            // THÊM CHỨNG CHỈ
+            // ==========================================
+            function addCertificate() {
+                console.log('➕ Adding certificate');
+                const container = document.getElementById('certificates-container');
+                const emptyMsg = container.querySelector('[id^="no-"]');
+                if (emptyMsg) emptyMsg.remove();
+
+                const newId = 'new_' + Date.now();
+                const html = `
+        <div class="item certificate-item border rounded-xl p-4 mb-4" data-id="${newId}">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-sm text-gray-500">Mới</span>
+                <button type="button" onclick="removeItem(this, 'certificates')" class="btn-remove">
+                    <i class="fa-solid fa-trash"></i> Xóa
+                </button>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tên chứng chỉ *</label>
+                    <input class="input" name="new_certificates[${newId}][ten_chung_chi]" placeholder="VD: Chứng chỉ PHP, TOEIC">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tổ chức cấp</label>
+                    <input class="input" name="new_certificates[${newId}][to_chuc_cap]" placeholder="VD: Đại học Bách Khoa">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Năm cấp</label>
+                    <input type="number" class="input" name="new_certificates[${newId}][nam_cap]" placeholder="VD: 2023" min="1900" max="${new Date().getFullYear()}">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ngày hết hạn</label>
+                    <input type="date" class="input" name="new_certificates[${newId}][ngay_het_han]">
+                </div>
+            </div>
+        </div>
+    `;
+                container.insertAdjacentHTML('beforeend', html);
+            }
+
+            // ==========================================
+            // THÊM ĐÀO TẠO
+            // ==========================================
+            function addTraining() {
+                console.log('➕ Adding training');
+                const container = document.getElementById('trainings-container');
+                const emptyMsg = container.querySelector('[id^="no-"]');
+                if (emptyMsg) emptyMsg.remove();
+
+                const newId = 'new_' + Date.now();
+                const html = `
+        <div class="item training-item border rounded-xl p-4 mb-4" data-id="${newId}">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-sm text-gray-500">Mới</span>
+                <button type="button" onclick="removeItem(this, 'trainings')" class="btn-remove">
+                    <i class="fa-solid fa-trash"></i> Xóa
+                </button>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tên khóa học *</label>
+                    <input class="input" name="new_trainings[${newId}][ten_khoa_hoc]" placeholder="VD: Khóa học Laravel Nâng cao">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tổ chức đào tạo</label>
+                    <input class="input" name="new_trainings[${newId}][to_chuc]" placeholder="VD: CodeGym, FPT Software">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Kết quả</label>
+                    <input class="input" name="new_trainings[${newId}][ket_qua]" placeholder="VD: Xuất sắc, Giỏi, Đạt">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Có chứng chỉ?</label>
+                    <select class="input" name="new_trainings[${newId}][co_chung_chi]">
+                        <option value="0">Không</option>
+                        <option value="1">Có</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Chi phí</label>
+                    <input type="number" class="input" name="new_trainings[${newId}][chi_phi]" placeholder="VD: 5000000" min="0" step="1000">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ngày bắt đầu</label>
+                    <input type="date" class="input" name="new_trainings[${newId}][ngay_bat_dau]">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ngày kết thúc</label>
+                    <input type="date" class="input" name="new_trainings[${newId}][ngay_ket_thuc]">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ghi chú</label>
+                    <input class="input" name="new_trainings[${newId}][ghi_chu]" placeholder="Nhập ghi chú (nếu có)">
+                </div>
+            </div>
+        </div>
+    `;
+                container.insertAdjacentHTML('beforeend', html);
+            }
+
+            // ==========================================
+            // THÊM NGƯỜI PHỤ THUỘC
+            // ==========================================
+            function addDependent() {
+                console.log('➕ Adding dependent');
+                const container = document.getElementById('dependents-container');
+                const emptyMsg = container.querySelector('[id^="no-"]');
+                if (emptyMsg) emptyMsg.remove();
+
+                const newId = 'new_' + Date.now();
+                const html = `
+        <div class="item dependent-item border rounded-xl p-3 mb-3" data-id="${newId}">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-sm text-gray-500">Mới</span>
+                <button type="button" onclick="removeItem(this, 'dependents')" class="btn-remove">
+                    <i class="fa-solid fa-trash"></i> Xóa
+                </button>
+            </div>
+            <div class="grid md:grid-cols-3 gap-3">
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Họ tên *</label>
+                    <input class="input" name="new_dependents[${newId}][ho_ten]" placeholder="Nhập họ tên">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ngày sinh</label>
+                    <input type="date" class="input" name="new_dependents[${newId}][ngay_sinh]">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Quan hệ</label>
+                    <select class="input" name="new_dependents[${newId}][quan_he]">
+                        <option value="con">Con</option>
+                        <option value="vo">Vợ</option>
+                        <option value="chong">Chồng</option>
+                        <option value="cha">Cha</option>
+                        <option value="me">Mẹ</option>
+                        <option value="khac">Khác</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Mã số thuế</label>
+                    <input class="input" name="new_dependents[${newId}][ma_so_thue]" placeholder="Nhập mã số thuế">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ngày bắt đầu</label>
+                    <input type="date" class="input" name="new_dependents[${newId}][ngay_bat_dau]">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ngày kết thúc</label>
+                    <input type="date" class="input" name="new_dependents[${newId}][ngay_ket_thuc]">
+                </div>
+                <div class="md:col-span-3">
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ghi chú</label>
+                    <input class="input" name="new_dependents[${newId}][ghi_chu]" placeholder="Nhập ghi chú (nếu có)">
+                </div>
+            </div>
+        </div>
+    `;
+                container.insertAdjacentHTML('beforeend', html);
+            }
+
+            // ==========================================
+            // HIỂN THỊ TÊN FILE CV
+            // ==========================================
+            function showCvFile(input) {
+                const fileName = document.getElementById('cvFileName');
+                if (input.files && input.files[0]) {
+                    fileName.textContent = '📎 Đã chọn: ' + input.files[0].name;
+                    fileName.classList.remove('hidden');
+                } else {
+                    fileName.classList.add('hidden');
+                }
+            }
+
+            // ==========================================
+            // KIỂM TRA FORM TRƯỚC KHI SUBMIT
+            // ==========================================
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('✅ Script loaded successfully');
+                console.log('📌 Functions:', {
+                    removeItem: typeof removeItem,
+                    addSkill: typeof addSkill,
+                    addCertificate: typeof addCertificate,
+                    addTraining: typeof addTraining,
+                    addDependent: typeof addDependent
+                });
+
+                const form = document.getElementById('profileForm');
+                if (form) {
+                    form.addEventListener('submit', function(e) {
+                        // Cập nhật lại tất cả hidden inputs trước khi submit
+                        updateDeleteInput('skills');
+                        updateDeleteInput('certificates');
+                        updateDeleteInput('trainings');
+                        updateDeleteInput('dependents');
+
+                        console.log('=== FORM SUBMITTED ===');
+                        console.log('delete_skills:', document.getElementById('delete_skills')?.value);
+                        console.log('delete_certificates:', document.getElementById('delete_certificates')
+                            ?.value);
+                        console.log('delete_trainings:', document.getElementById('delete_trainings')?.value);
+                        console.log('delete_dependents:', document.getElementById('delete_dependents')?.value);
+                    });
+                }
+            });
+        </script>
 
     @endsection

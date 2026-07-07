@@ -8,6 +8,7 @@ use App\Mail\PhieuLuongMail;
 use App\Models\BangLuong;
 use App\Models\LuongNhanVien;
 use App\Models\NguoiDung;
+use App\Services\PdfService;
 use App\Services\TinhLuongService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -16,7 +17,10 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class BangLuongController extends Controller
 {
-    public function __construct(private TinhLuongService $tinhLuong) {}
+    public function __construct(
+        private TinhLuongService $tinhLuong,
+        private PdfService $pdf
+    ) {}
 
     /** Danh sách bảng lương */
     public function index()
@@ -219,4 +223,45 @@ public function export($id)
         $fileName
     );
 }
+
+    /** Xuất báo cáo bảng lương tháng ra PDF */
+    public function exportPdf($id)
+    {
+        $bangLuong = BangLuong::with([
+            'luongNhanViens.nguoiDung.ho_so',
+            'luongNhanViens.nguoiDung.chuc_vu',
+        ])->findOrFail($id);
+
+        $fileName = 'bang_luong_' . $bangLuong->thang . '_' . $bangLuong->nam . '.pdf';
+
+        return $this->pdf->download(
+            'admin.bang-luong.pdf.bang-luong',
+            ['bangLuong' => $bangLuong, 'ngayXuat' => now()->format('d/m/Y H:i')],
+            $fileName,
+            'landscape'
+        );
+    }
+
+    /** Xuất phiếu lương 1 nhân viên ra PDF */
+    public function phieuLuongPdf($id, $luongId)
+    {
+        $luong = LuongNhanVien::with([
+            'nguoiDung.ho_so',
+            'nguoiDung.chuc_vu',
+            'phuCapLuongs.phuCap',
+            'khauTruLuongs',
+        ])->where('bang_luong_id', $id)->findOrFail($luongId);
+
+        $hoTen = trim(($luong->nguoiDung->ho_so->ho ?? '') . ' ' . ($luong->nguoiDung->ho_so->ten ?? ''))
+            ?: ($luong->nguoiDung->ten_dang_nhap ?? 'NV');
+
+        $fileName = 'phieu_luong_' . $luong->nguoi_dung_id . '_' . $luong->luong_thang . '_' . $luong->luong_nam . '.pdf';
+
+        return $this->pdf->download(
+            'admin.bang-luong.pdf.phieu-luong',
+            ['luong' => $luong, 'hoTen' => $hoTen, 'ngayXuat' => now()->format('d/m/Y H:i')],
+            $fileName,
+            'portrait'
+        );
+    }
 }

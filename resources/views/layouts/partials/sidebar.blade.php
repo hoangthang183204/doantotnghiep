@@ -54,7 +54,6 @@
     $canViewDaoTao = $user->hasPermission('dao-tao.index');
 
     $hasAdminPermission =
-        $canViewDashboardAdmin ||
         $canViewEmployee ||
         $canViewUser ||
         $canViewDepartment ||
@@ -74,8 +73,7 @@
         $canViewLeaveType ||
         $canViewRegulation ||
         $canViewTime ||
-        $canManagePermission ||
-        $canViewDaoTao;
+        $canManagePermission;
 
     $showAdminMenus = $hasAdminPermission;
     $showEmployeeMenus =
@@ -99,7 +97,7 @@
 <aside id="sidebar" class="sidebar">
     <!-- Logo -->
     <div class="flex items-center justify-between px-4 py-4 border-b dark:border-gray-700">
-        <a href="{{ $showAdminMenus ? route('admin.dashboard') : ($showEmployeeMenus ? route('employee.dashboard') : route('login')) }}"
+        <a href="{{ $isSuperAdmin ? route('admin.dashboard') : ($showAdminMenus ? route('admin.dashboard') : route('employee.dashboard')) }}"
             class="flex items-center space-x-2 logo-container">
             <div
                 class="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -209,28 +207,22 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     stroke="currentColor" stroke-width="1.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                        d="M19 9l-7 7-7-7"></path>
                                 </svg>
-                            </span>
-                            <span class="flex-1 text-left font-medium menu-text">Nhân sự</span>
-                            <svg class="w-4 h-4 transition-transform duration-200 arrow-icon flex-shrink-0 {{ in_array($currentRoute, array_column($submenuNhanSu, 'route')) ? 'rotate-180' : '' }}"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </summary>
-                        <ul class="pl-10 mt-1 space-y-1">
-                            @foreach ($submenuNhanSu as $sub)
-                                <li>
-                                    <a href="{{ route($sub['route']) }}"
-                                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors {{ $currentRoute == $sub['route'] ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                                        <span class="menu-text">{{ $sub['title'] }}</span>
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </details>
-                </li>
+                            </summary>
+                            <ul class="pl-10 mt-1 space-y-1">
+                                @foreach ($submenuNhanSu as $sub)
+                                    <li>
+                                        <a href="{{ route($sub['route']) }}"
+                                            class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors {{ $currentRoute == $sub['route'] ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                            <span class="menu-text">{{ $sub['title'] }}</span>
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </details>
+                    </li>
+                @endif
             @endif
 
             {{-- 🔹 QUẢN LÝ CHẤM CÔNG (ADMIN) --}}
@@ -256,28 +248,22 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     stroke="currentColor" stroke-width="1.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        d="M19 9l-7 7-7-7"></path>
                                 </svg>
-                            </span>
-                            <span class="flex-1 text-left font-medium menu-text">Quản lý chấm công</span>
-                            <svg class="w-4 h-4 transition-transform duration-200 arrow-icon flex-shrink-0 {{ in_array($currentRoute, array_column($submenuChamCongAdmin, 'route')) ? 'rotate-180' : '' }}"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </summary>
-                        <ul class="pl-10 mt-1 space-y-1">
-                            @foreach ($submenuChamCongAdmin as $sub)
-                                <li>
-                                    <a href="{{ route($sub['route']) }}"
-                                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors {{ $currentRoute == $sub['route'] ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                                        <span class="menu-text">{{ $sub['title'] }}</span>
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </details>
-                </li>
+                            </summary>
+                            <ul class="pl-10 mt-1 space-y-1">
+                                @foreach ($submenuChamCongAdmin as $sub)
+                                    <li>
+                                        <a href="{{ route($sub['route']) }}"
+                                            class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors {{ $currentRoute == $sub['route'] ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                            <span class="menu-text">{{ $sub['title'] }}</span>
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </details>
+                    </li>
+                @endif
             @endif
 
             {{-- 🔹 ĐƠN XIN TĂNG CA (EMPLOYEE) --}}
@@ -334,28 +320,22 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     stroke="currentColor" stroke-width="1.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        d="M19 9l-7 7-7-7"></path>
                                 </svg>
-                            </span>
-                            <span class="flex-1 text-left font-medium menu-text">Lương</span>
-                            <svg class="w-4 h-4 transition-transform duration-200 arrow-icon flex-shrink-0 {{ in_array($currentRoute, array_column($submenuLuong, 'route')) ? 'rotate-180' : '' }}"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </summary>
-                        <ul class="pl-10 mt-1 space-y-1">
-                            @foreach ($submenuLuong as $sub)
-                                <li>
-                                    <a href="{{ route($sub['route']) }}"
-                                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors {{ $currentRoute == $sub['route'] ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                                        <span class="menu-text">{{ $sub['title'] }}</span>
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </details>
-                </li>
+                            </summary>
+                            <ul class="pl-10 mt-1 space-y-1">
+                                @foreach ($submenuLuong as $sub)
+                                    <li>
+                                        <a href="{{ route($sub['route']) }}"
+                                            class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors {{ $currentRoute == $sub['route'] ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                            <span class="menu-text">{{ $sub['title'] }}</span>
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </details>
+                    </li>
+                @endif
             @endif
 
             {{-- 🔹 BẢNG LƯƠNG CỦA TÔI (EMPLOYEE) --}}
@@ -482,45 +462,75 @@
             @if ($canViewReward)
                 @php
                     $submenuReward = [];
+
                     if (Route::has('admin.khen-thuong-ky-luat.index')) {
-                        $submenuReward[] = ['title' => 'Danh sách', 'route' => 'admin.khen-thuong-ky-luat.index'];
+                        $submenuReward[] = [
+                            'title' => 'Danh sách',
+                            'route' => 'admin.khen-thuong-ky-luat.index',
+                        ];
                     }
+
                     if (Route::has('admin.khen-thuong-ky-luat.thong-ke')) {
-                        $submenuReward[] = ['title' => 'Thống kê', 'route' => 'admin.khen-thuong-ky-luat.thong-ke'];
+                        $submenuReward[] = [
+                            'title' => 'Thống kê',
+                            'route' => 'admin.khen-thuong-ky-luat.thong-ke',
+                        ];
                     }
                 @endphp
+
                 @if (!empty($submenuReward))
                     <li>
                         <details class="menu-details"
                             {{ str_starts_with($currentRoute, 'admin.khen-thuong-ky-luat.') ? 'open' : '' }}>
+
                             <summary
                                 class="flex items-center w-full px-3 py-2.5 rounded-lg transition-colors cursor-pointer {{ str_starts_with($currentRoute, 'admin.khen-thuong-ky-luat.') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                                 <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                         stroke="currentColor" stroke-width="1.5">
+
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M16.5 18.75h-9A2.25 2.25 0 015.25 16.5v-9A2.25 2.25 0 017.5 5.25h4.5l2.25 2.25h2.25A2.25 2.25 0 0118.75 9.75v6.75A2.25 2.25 0 0116.5 18.75z" />
+
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M12 9.75l.9 1.83 2.02.29-1.46 1.42.34 2.01L12 14.36l-1.8.94.34-2.01-1.46-1.42 2.02-.29L12 9.75z" />
                                     </svg>
                                 </span>
-                                <span class="flex-1 text-left font-medium menu-text">Khen thưởng / Kỷ luật</span>
-                                <svg class="w-4 h-4 transition-transform duration-200 arrow-icon flex-shrink-0 {{ str_starts_with($currentRoute, 'admin.khen-thuong-ky-luat.') ? 'rotate-180' : '' }}"
+
+                                <span class="flex-1 text-left font-medium menu-text">
+                                    Khen thưởng / Kỷ luật
+                                </span>
+
+                                <svg class="w-4 h-4 transition-transform duration-200 arrow-icon flex-shrink-0
+                        {{ str_starts_with($currentRoute, 'admin.khen-thuong-ky-luat.') ? 'rotate-180' : '' }}"
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7" />
                                 </svg>
+
                             </summary>
+
                             <ul class="pl-10 mt-1 space-y-1">
+
                                 @foreach ($submenuReward as $sub)
                                     <li>
                                         <a href="{{ route($sub['route']) }}"
-                                            class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors {{ $currentRoute == $sub['route'] ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                                            <span class="menu-text">{{ $sub['title'] }}</span>
+                                            class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors
+                                {{ $currentRoute == $sub['route']
+                                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+
+                                            <span class="menu-text">
+                                                {{ $sub['title'] }}
+                                            </span>
+
                                         </a>
                                     </li>
                                 @endforeach
+
                             </ul>
+
                         </details>
                     </li>
                 @endif
@@ -580,7 +590,7 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     stroke="currentColor" stroke-width="1.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                        d="M19 9l-7 7-7-7"></path>
                                 </svg>
                             </span>
                             <span class="flex-1 text-left font-medium menu-text">Cài đặt</span>
@@ -632,3 +642,61 @@
         </ul>
     </nav>
 </aside>
+
+<style>
+    .sidebar .menu-toggle,
+    .sidebar>ul>li>a {
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    .sidebar .menu-toggle .w-5,
+    .sidebar>ul>li>a .w-5 {
+        width: 24px !important;
+        min-width: 24px !important;
+        height: 24px !important;
+        margin-right: 12px !important;
+    }
+
+    .sidebar.collapsed {
+        width: 70px !important;
+    }
+
+    .sidebar.collapsed .menu-toggle,
+    .sidebar.collapsed>ul>li>a {
+        justify-content: center !important;
+        padding: 10px 0 !important;
+    }
+
+    .sidebar.collapsed .menu-toggle .w-5,
+    .sidebar.collapsed>ul>li>a .w-5 {
+        margin-right: 0 !important;
+    }
+
+    .sidebar.collapsed .menu-text,
+    .sidebar.collapsed .logo-text,
+    .sidebar.collapsed .arrow-icon {
+        display: none !important;
+    }
+
+    .sidebar.collapsed .submenu {
+        display: none !important;
+    }
+
+    .menu-details summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .menu-details summary {
+        list-style: none;
+        cursor: pointer;
+    }
+
+    .menu-details[open] .arrow-icon {
+        transform: rotate(180deg);
+    }
+
+    .menu-details {
+        display: block;
+    }
+</style>

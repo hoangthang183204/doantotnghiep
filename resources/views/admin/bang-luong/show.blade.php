@@ -29,6 +29,12 @@
         </button>
     </form>
 
+    {{-- Xuất báo cáo PDF --}}
+    <a href="{{ route('admin.bang-luong.export-pdf', $bangLuong->id) }}"
+       class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm">
+        <i class="fa-solid fa-file-pdf mr-1"></i> Xuất PDF
+    </a>
+
 
             @if($bangLuong->la_nhap)
             <form action="{{ route('admin.bang-luong.chot', $bangLuong->id) }}" method="POST"
@@ -127,6 +133,12 @@
            class="inline-flex items-center gap-1 px-3 py-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-700 rounded-lg text-xs">
             <i class="fa-solid fa-receipt"></i>
             Xem
+        </a>
+
+        <a href="{{ route('admin.bang-luong.phieu-luong-pdf', [$bangLuong->id, $lnv->id]) }}"
+           class="inline-flex items-center gap-1 px-3 py-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-slate-700 rounded-lg text-xs">
+            <i class="fa-solid fa-file-pdf"></i>
+            PDF
         </a>
 
         <form action="{{ route('admin.bang-luong.gui-email', $lnv->id) }}"
