@@ -4,42 +4,19 @@
     $currentRoute = request()->route()->getName();
     $user = Auth::user();
 
-    // ==========================================================
-    // KIỂM TRA PERMISSION - DÙNG hasPermission()
-    // ==========================================================
+    // ============================================================
+    // ⭐ KIỂM TRA VAI TRÒ
+    // ============================================================
+    $isAdmin = $user->vaiTros()->whereIn('name', ['admin', 'Super Admin'])->exists();
+    $isHR = $user->vaiTros()->where('name', 'hr')->exists();
+    $isTruongPhong = $user->vaiTros()->where('name', 'truong_phong')->exists();
+    $isAdminOrHR = $isAdmin || $isHR || $isTruongPhong;
 
-    // ⭐ DASHBOARD
+    // ============================================================
+    // ⭐ KIỂM TRA PERMISSION
+    // ============================================================
     $canViewDashboardAdmin = $user->hasPermission('dashboard.admin');
     $canViewDashboardEmployee = $user->hasPermission('dashboard.employee');
-
-    // Admin Permissions
-    $canViewEmployee = $user->hasPermission('hoso.index');
-    $canViewUser = $user->hasPermission('user.view');
-    $canViewDepartment = $user->hasPermission('department.view');
-    $canViewChucVu = $user->hasPermission('chucvu.view');
-    $canViewRole = $user->hasPermission('role.view');
-    $canManagePermission = $user->hasPermission('setting.permission');
-
-    $canViewAttendance = $user->hasPermission('attendance.index');
-    $canManageOvertime = $user->hasPermission('attendance.overtime_approve');
-    $canApproveAdjustment = $user->hasPermission('attendance.adjustment_approve');
-
-    $canViewSalary = $user->hasPermission('salary.index');
-    $canViewAllowance = $user->hasPermission('allowance.index');
-
-    $canViewReward = $user->hasPermission('khen_thuong.view');
-
-    $canViewRecruitment = $user->hasPermission('recruitment.index');
-    $canViewCandidate = $user->hasPermission('recruitment.candidate');
-    $canViewPassed = $user->hasPermission('recruitment.passed');
-
-    $canViewContract = $user->hasPermission('contract.index');
-    $canApproveLeave = $user->hasPermission('leave.approve');
-    $canViewLeaveType = $user->hasPermission('leave_type.index');
-    $canViewRegulation = $user->hasPermission('regulation.view');
-    $canViewTime = $user->hasPermission('time.index');
-
-    // Employee Permissions
     $canViewProfile = $user->hasPermission('profile.view') || $user->hasPermission('hoso.personal');
     $canCheckin = $user->hasPermission('attendance.checkin');
     $canCheckout = $user->hasPermission('attendance.checkout');
@@ -54,11 +31,28 @@
     $canRequestLeave = $user->hasPermission('leave.request');
     $canViewRegulationEmployee = $user->hasPermission('regulation.employee');
     $canViewNotifications = $user->hasPermission('notification.view');
-
-    // ⭐ ĐÀO TẠO
+    $canViewEmployee = $user->hasPermission('hoso.index');
+    $canViewUser = $user->hasPermission('user.view');
+    $canViewDepartment = $user->hasPermission('department.view');
+    $canViewChucVu = $user->hasPermission('chucvu.view');
+    $canViewRole = $user->hasPermission('role.view');
+    $canViewAttendance = $user->hasPermission('attendance.index');
+    $canManageOvertime = $user->hasPermission('attendance.overtime_approve');
+    $canApproveAdjustment = $user->hasPermission('attendance.adjustment_approve');
+    $canViewSalary = $user->hasPermission('salary.index');
+    $canViewAllowance = $user->hasPermission('allowance.index');
+    $canViewReward = $user->hasPermission('khen_thuong.view');
+    $canViewRecruitment = $user->hasPermission('recruitment.index');
+    $canViewCandidate = $user->hasPermission('recruitment.candidate');
+    $canViewPassed = $user->hasPermission('recruitment.passed');
+    $canViewContract = $user->hasPermission('contract.index');
+    $canApproveLeave = $user->hasPermission('leave.approve');
+    $canViewLeaveType = $user->hasPermission('leave_type.index');
+    $canViewRegulation = $user->hasPermission('regulation.view');
+    $canViewTime = $user->hasPermission('time.index');
+    $canManagePermission = $user->hasPermission('setting.permission');
     $canViewDaoTao = $user->hasPermission('dao-tao.index');
 
-    // ⭐ KIỂM TRA USER CÓ QUYỀN ADMIN (để hiển thị menu admin)
     $hasAdminPermission =
         $canViewDashboardAdmin ||
         $canViewEmployee ||
@@ -83,8 +77,6 @@
         $canManagePermission ||
         $canViewDaoTao;
 
-    // ⭐ QUYẾT ĐỊNH HIỂN THỊ
-    // KHÔNG AUTO ADMIN - TẤT CẢ DỰA VÀO PERMISSION
     $showAdminMenus = $hasAdminPermission;
     $showEmployeeMenus =
         $canViewDashboardEmployee ||
@@ -128,44 +120,67 @@
         <ul class="space-y-1">
 
             {{-- ========================================================== --}}
-            {{-- ⭐ CHỈ HIỂN THỊ MENU KHI CÓ QUYỀN --}}
+            {{-- ⭐ 1. CHẤM CÔNG - ĐẶT LÊN ĐẦU TIÊN (QUAN TRỌNG NHẤT) --}}
+            {{-- ========================================================== --}}
+            @if ($canCheckin || $canCheckout || $canViewAttendanceHistory)
+                <li>
+                    <a href="{{ route('employee.cham-cong.index') }}"
+                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.cham-cong.index' || $currentRoute == 'employee.cham-cong.history' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </span>
+                        <span class="font-medium menu-text">Chấm công</span>
+                    </a>
+                </li>
+            @endif
+
+            {{-- ========================================================== --}}
+            {{-- ⭐ 2. THỐNG KÊ CÁ NHÂN / TỔNG QUAN --}}
+            {{-- ========================================================== --}}
+            @if ($canViewDashboardAdmin || $canViewDashboardEmployee)
+                <li>
+                    <a href="{{ $isAdminOrHR ? route('admin.dashboard') : route('employee.dashboard') }}"
+                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'admin.dashboard' || $currentRoute == 'employee.dashboard' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                        </span>
+                        <span class="font-medium menu-text">{{ $isAdminOrHR ? 'Tổng quan' : 'Thống kê cá nhân' }}</span>
+                    </a>
+                </li>
+            @endif
+
+            {{-- ========================================================== --}}
+            {{-- ⭐ 3. HỒ SƠ CÁ NHÂN --}}
+            {{-- ========================================================== --}}
+            @if ($canViewProfile)
+                <li>
+                    <a href="{{ route('employee.ho-so.index') }}"
+                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.ho-so.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </span>
+                        <span class="font-medium menu-text">Hồ sơ cá nhân</span>
+                    </a>
+                </li>
+            @endif
+
+            {{-- ========================================================== --}}
+            {{-- ⭐ 4. CÁC MENU KHÁC --}}
             {{-- ========================================================== --}}
 
-            {{-- 1. Tổng quan (Admin) - CHỈ KHI CÓ QUYỀN dashboard.admin --}}
-            @if ($canViewDashboardAdmin)
-                <li>
-                    <a href="{{ route('admin.dashboard') }}"
-                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'admin.dashboard' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                            </svg>
-                        </span>
-                        <span class="font-medium menu-text">📊 Tổng quan</span>
-                    </a>
-                </li>
-            @endif
-
-            {{-- 2. Thống kê cá nhân (Employee) - CHỈ KHI CÓ QUYỀN dashboard.employee --}}
-            @if ($canViewDashboardEmployee)
-                <li>
-                    <a href="{{ route('employee.dashboard') }}"
-                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.dashboard' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                            </svg>
-                        </span>
-                        <span class="font-medium menu-text">👤 Thống kê cá nhân</span>
-                    </a>
-                </li>
-            @endif
-
-            {{-- 3. NHÂN SỰ - CHỈ HIỂN THỊ KHI CÓ QUYỀN --}}
+            {{-- 🔹 NHÂN SỰ (ADMIN) --}}
             @php
                 $submenuNhanSu = [];
                 if ($canViewEmployee && Route::has('admin.ho-so.index')) {
@@ -190,7 +205,7 @@
                         {{ in_array($currentRoute, array_column($submenuNhanSu, 'route')) ? 'open' : '' }}>
                         <summary
                             class="flex items-center w-full px-3 py-2.5 rounded-lg transition-colors cursor-pointer {{ in_array($currentRoute, array_column($submenuNhanSu, 'route')) ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                            <span class="w-5 h-5 mr-3 flex-shrink-0">
+                            <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     stroke="currentColor" stroke-width="1.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -218,24 +233,7 @@
                 </li>
             @endif
 
-            {{-- 4. HỒ SƠ CÁ NHÂN - CHỈ KHI CÓ QUYỀN --}}
-            @if ($canViewProfile)
-                <li>
-                    <a href="{{ route('employee.ho-so.index') }}"
-                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.ho-so.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                        </span>
-                        <span class="font-medium menu-text">Hồ sơ cá nhân</span>
-                    </a>
-                </li>
-            @endif
-
-            {{-- 5. QUẢN LÝ CHẤM CÔNG (ADMIN) - CHỈ KHI CÓ QUYỀN --}}
+            {{-- 🔹 QUẢN LÝ CHẤM CÔNG (ADMIN) --}}
             @php
                 $submenuChamCongAdmin = [];
                 if ($canViewAttendance && Route::has('admin.cham-cong.index')) {
@@ -254,7 +252,7 @@
                         {{ in_array($currentRoute, array_column($submenuChamCongAdmin, 'route')) ? 'open' : '' }}>
                         <summary
                             class="flex items-center w-full px-3 py-2.5 rounded-lg transition-colors cursor-pointer {{ in_array($currentRoute, array_column($submenuChamCongAdmin, 'route')) ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                            <span class="w-5 h-5 mr-3 flex-shrink-0">
+                            <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     stroke="currentColor" stroke-width="1.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -282,29 +280,12 @@
                 </li>
             @endif
 
-            {{-- 6. CHẤM CÔNG (EMPLOYEE) - CHỈ KHI CÓ QUYỀN --}}
-            @if ($canCheckin || $canCheckout || $canViewAttendanceHistory)
-                <li>
-                    <a href="{{ route('employee.cham-cong.index') }}"
-                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.cham-cong.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </span>
-                        <span class="font-medium menu-text">Chấm công</span>
-                    </a>
-                </li>
-            @endif
-
-            {{-- 7. ĐƠN XIN TĂNG CA (EMPLOYEE) - CHỈ KHI CÓ QUYỀN --}}
+            {{-- 🔹 ĐƠN XIN TĂNG CA (EMPLOYEE) --}}
             @if ($canCreateOvertime || $canViewOvertime)
                 <li>
                     <a href="{{ route('employee.tang-ca.index') }}"
                         class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.tang-ca.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0">
+                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -316,12 +297,12 @@
                 </li>
             @endif
 
-            {{-- 8. YÊU CẦU CHỈNH CÔNG (EMPLOYEE) - CHỈ KHI CÓ QUYỀN --}}
+            {{-- 🔹 YÊU CẦU CHỈNH CÔNG (EMPLOYEE) --}}
             @if ($canCreateAdjustment || $canViewAdjustment)
                 <li>
                     <a href="{{ route('employee.yeu-cau-chinh-cong.index') }}"
                         class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.yeu-cau-chinh-cong.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0">
+                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -333,7 +314,7 @@
                 </li>
             @endif
 
-            {{-- 9. LƯƠNG (ADMIN) - CHỈ KHI CÓ QUYỀN --}}
+            {{-- 🔹 LƯƠNG (ADMIN) --}}
             @php
                 $submenuLuong = [];
                 if ($canViewSalary && Route::has('admin.bang-luong.index')) {
@@ -349,7 +330,7 @@
                         {{ in_array($currentRoute, array_column($submenuLuong, 'route')) ? 'open' : '' }}>
                         <summary
                             class="flex items-center w-full px-3 py-2.5 rounded-lg transition-colors cursor-pointer {{ in_array($currentRoute, array_column($submenuLuong, 'route')) ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                            <span class="w-5 h-5 mr-3 flex-shrink-0">
+                            <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     stroke="currentColor" stroke-width="1.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -377,12 +358,12 @@
                 </li>
             @endif
 
-            {{-- 10. BẢNG LƯƠNG CỦA TÔI (EMPLOYEE) - CHỈ KHI CÓ QUYỀN --}}
+            {{-- 🔹 BẢNG LƯƠNG CỦA TÔI (EMPLOYEE) --}}
             @if ($canViewPayroll)
                 <li>
                     <a href="{{ route('employee.bang-luong.index') }}"
                         class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.bang-luong.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0">
+                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -393,77 +374,31 @@
                     </a>
                 </li>
             @endif
+            
 
-            {{-- 11. TUYỂN DỤNG (ADMIN) - CHỈ KHI CÓ QUYỀN --}}
-            @php
-                $submenuTuyenDung = [];
-                if ($canViewRecruitment && Route::has('admin.tin-tuyen-dung.index')) {
-                    $submenuTuyenDung[] = ['title' => 'Tin tuyển dụng', 'route' => 'admin.tin-tuyen-dung.index'];
-                }
-                if ($canViewCandidate && Route::has('admin.ung_vien.index')) {
-                    $submenuTuyenDung[] = ['title' => 'Danh sách ứng viên', 'route' => 'admin.ung_vien.index'];
-                }
-                if ($canViewPassed && Route::has('admin.trung-tuyen.index')) {
-                    $submenuTuyenDung[] = ['title' => 'Trúng tuyển', 'route' => 'admin.trung-tuyen.index'];
-                }
-            @endphp
-            @if (!empty($submenuTuyenDung))
-                <li>
-                    <details class="menu-details"
-                        {{ in_array($currentRoute, array_column($submenuTuyenDung, 'route')) ? 'open' : '' }}>
-                        <summary
-                            class="flex items-center w-full px-3 py-2.5 rounded-lg transition-colors cursor-pointer {{ in_array($currentRoute, array_column($submenuTuyenDung, 'route')) ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                            <span class="w-5 h-5 mr-3 flex-shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor" stroke-width="1.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                            </span>
-                            <span class="flex-1 text-left font-medium menu-text">Tuyển dụng</span>
-                            <svg class="w-4 h-4 transition-transform duration-200 arrow-icon flex-shrink-0 {{ in_array($currentRoute, array_column($submenuTuyenDung, 'route')) ? 'rotate-180' : '' }}"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </summary>
-                        <ul class="pl-10 mt-1 space-y-1">
-                            @foreach ($submenuTuyenDung as $sub)
-                                <li>
-                                    <a href="{{ route($sub['route']) }}"
-                                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors {{ $currentRoute == $sub['route'] ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                                        <span class="menu-text">{{ $sub['title'] }}</span>
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </details>
-                </li>
-            @endif
-
-            {{-- 12. HỢP ĐỒNG (ADMIN) - CHỈ KHI CÓ QUYỀN --}}
+            {{-- 🔹 HỢP ĐỒNG (ADMIN) --}}
             @if ($canViewContract)
                 <li>
                     <a href="{{ route('admin.hop-dong.index') }}"
                         class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'admin.hop-dong.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0">
+                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                         </span>
-                        <span class="font-medium menu-text">Hợp đồng</span>
+                        <span class="font-medium menu-text">Quản lý hợp đồng</span>
                     </a>
                 </li>
             @endif
 
-            {{-- 13. HỢP ĐỒNG CỦA TÔI (EMPLOYEE) - CHỈ KHI CÓ QUYỀN --}}
+            {{-- 🔹 HỢP ĐỒNG CỦA TÔI (EMPLOYEE) --}}
             @if ($canViewContractPersonal)
                 <li>
                     <a href="{{ route('employee.hop-dong.index') }}"
                         class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.hop-dong.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0">
+                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -475,12 +410,12 @@
                 </li>
             @endif
 
-            {{-- 14. DUYỆT ĐƠN (ADMIN) - CHỈ KHI CÓ QUYỀN --}}
+            {{-- 🔹 DUYỆT ĐƠN (ADMIN) --}}
             @if ($canApproveLeave)
                 <li>
                     <a href="{{ route('admin.don_nghi.index') }}"
                         class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'admin.don_nghi.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0">
+                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -492,12 +427,12 @@
                 </li>
             @endif
 
-            {{-- 15. ĐƠN NGHỈ PHÉP (EMPLOYEE) - CHỈ KHI CÓ QUYỀN --}}
+            {{-- 🔹 ĐƠN NGHỈ PHÉP (EMPLOYEE) --}}
             @if ($canViewLeaveHistory || $canRequestLeave)
                 <li>
                     <a href="{{ route('employee.don-nghi.index') }}"
                         class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.don-nghi.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0">
+                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -509,12 +444,12 @@
                 </li>
             @endif
 
-            {{-- 16. LOẠI NGHỈ PHÉP (ADMIN) - CHỈ KHI CÓ QUYỀN --}}
+            {{-- 🔹 LOẠI NGHỈ PHÉP (ADMIN) --}}
             @if ($canViewLeaveType)
                 <li>
                     <a href="{{ route('admin.loai-nghi-phep.index') }}"
                         class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'admin.loai-nghi-phep.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0">
+                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -526,25 +461,24 @@
                 </li>
             @endif
 
-            {{-- 17. ĐÀO TẠO (ADMIN) - CHỈ KHI CÓ QUYỀN --}}
+            {{-- 🔹 ĐÀO TẠO (ADMIN) --}}
             @if ($canViewDaoTao)
                 <li>
                     <a href="{{ route('admin.dao-tao.index') }}"
                         class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'admin.dao-tao.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0">
+                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                             </svg>
-
                         </span>
                         <span class="font-medium menu-text">Đào tạo</span>
                     </a>
                 </li>
             @endif
 
-            {{-- 18. KHEN THƯỞNG / KỶ LUẬT (ADMIN) - CHỈ KHI CÓ QUYỀN --}}
+            {{-- 🔹 KHEN THƯỞNG / KỶ LUẬT (ADMIN) --}}
             @if ($canViewReward)
                 @php
                     $submenuReward = [];
@@ -561,7 +495,7 @@
                             {{ str_starts_with($currentRoute, 'admin.khen-thuong-ky-luat.') ? 'open' : '' }}>
                             <summary
                                 class="flex items-center w-full px-3 py-2.5 rounded-lg transition-colors cursor-pointer {{ str_starts_with($currentRoute, 'admin.khen-thuong-ky-luat.') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                                <span class="w-5 h-5 mr-3 flex-shrink-0">
+                                <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                         stroke="currentColor" stroke-width="1.5">
                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -592,12 +526,12 @@
                 @endif
             @endif
 
-            {{-- 19. QUY ĐỊNH - CHỈ KHI CÓ QUYỀN --}}
+            {{-- 🔹 QUY ĐỊNH (ADMIN) --}}
             @if ($canViewRegulation && Route::has('admin.quy-dinh.index'))
                 <li>
                     <a href="{{ route('admin.quy-dinh.index') }}"
                         class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'admin.quy-dinh.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0">
+                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -609,12 +543,12 @@
                 </li>
             @endif
 
-            {{-- 20. QUY ĐỊNH (EMPLOYEE) - CHỈ KHI CÓ QUYỀN --}}
+            {{-- 🔹 QUY ĐỊNH (EMPLOYEE) --}}
             @if ($canViewRegulationEmployee)
                 <li>
                     <a href="{{ route('employee.quydinh.index') }}"
                         class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.quydinh.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0">
+                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -626,7 +560,7 @@
                 </li>
             @endif
 
-            {{-- 21. CÀI ĐẶT - CHỈ KHI CÓ QUYỀN --}}
+            {{-- 🔹 CÀI ĐẶT (ADMIN) --}}
             @php
                 $submenuCaiDat = [];
                 if ($canManagePermission && Route::has('admin.phan-quyen.index')) {
@@ -642,7 +576,7 @@
                         {{ in_array($currentRoute, array_column($submenuCaiDat, 'route')) ? 'open' : '' }}>
                         <summary
                             class="flex items-center w-full px-3 py-2.5 rounded-lg transition-colors cursor-pointer {{ in_array($currentRoute, array_column($submenuCaiDat, 'route')) ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                            <span class="w-5 h-5 mr-3 flex-shrink-0">
+                            <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     stroke="currentColor" stroke-width="1.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -670,12 +604,12 @@
                 </li>
             @endif
 
-            {{-- 22. THÔNG BÁO - CHỈ KHI CÓ QUYỀN --}}
+            {{-- 🔹 THÔNG BÁO --}}
             @if ($canViewNotifications)
                 <li>
-                    <a href="{{ route('admin.notifications.index') }}"
-                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'admin.notifications.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0">
+                    <a href="{{ route('employee.notifications.index') }}"
+                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.notifications.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -683,6 +617,14 @@
                             </svg>
                         </span>
                         <span class="font-medium menu-text">Thông báo</span>
+                        @php
+                            $unreadCount = $user->unreadNotifications->count();
+                        @endphp
+                        @if ($unreadCount > 0)
+                            <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                                {{ $unreadCount }}
+                            </span>
+                        @endif
                     </a>
                 </li>
             @endif

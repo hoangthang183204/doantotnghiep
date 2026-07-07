@@ -150,7 +150,7 @@ class LoginController extends Controller
     }
 
     /**
-     * Chuyển hướng dựa trên vai trò
+     * ⭐ Chuyển hướng dựa trên vai trò (ĐÃ SỬA)
      */
     protected function redirectBasedOnRole()
     {
@@ -163,35 +163,40 @@ class LoginController extends Controller
         // Lấy danh sách vai trò của user
         $roleNames = $user->vaiTros->pluck('name')->toArray();
         
-        // ===== THÊM LOG ĐỂ DEBUG =====
+        // ===== LOG ĐỂ DEBUG =====
         \Log::info('User roles:', ['user_id' => $user->id, 'email' => $user->email, 'roles' => $roleNames]);
 
         // ============================================================
         // ===== PHÂN QUYỀN CHUYỂN HƯỚNG THEO VAI TRÒ =====
         // ============================================================
         
-        // 1. ADMIN -> admin dashboard
+        // 1️⃣ ADMIN -> admin dashboard
         if (array_intersect($roleNames, ['admin', 'Super Admin', 'Admin'])) {
             return redirect()->route('admin.dashboard');
         }
 
-        // 2. HR -> admin dashboard (có quyền quản trị nhân sự)
+        // 2️⃣ HR -> admin dashboard (có quyền quản trị nhân sự)
         if (in_array('hr', $roleNames) || in_array('HR', $roleNames)) {
             return redirect()->route('admin.dashboard');
         }
 
-        // 3. TRƯỞNG PHÒNG -> admin dashboard (có quyền xem báo cáo, duyệt đơn)
+        // 3️⃣ TRƯỞNG PHÒNG -> admin dashboard (có quyền xem báo cáo, duyệt đơn)
         if (in_array('truong_phong', $roleNames)) {
             return redirect()->route('admin.dashboard');
         }
 
-        // 4. KẾ TOÁN -> admin dashboard (có quyền xem lương)
+        // 4️⃣ KẾ TOÁN -> admin dashboard (có quyền xem lương)
         if (in_array('ke_toan', $roleNames)) {
             return redirect()->route('admin.dashboard');
         }
 
-        // 5. Mặc định: NHÂN VIÊN -> employee dashboard
-        return redirect()->route('employee.dashboard');
+        // ============================================================
+        // ⭐ 5️⃣ NHÂN VIÊN -> CHUYỂN ĐẾN TRANG CHẤM CÔNG
+        // ============================================================
+        // Thêm thông báo chào mừng
+        session()->flash('info', '👋 Chào mừng bạn! Vui lòng chấm công để bắt đầu ngày làm việc.');
+        
+        return redirect()->route('employee.cham-cong.index');
     }
 
     /**
