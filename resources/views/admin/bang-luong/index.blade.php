@@ -69,6 +69,12 @@
     <i class="fa-solid fa-file-excel"></i>
 </a>
 
+                                <a href="{{ route('admin.bang-luong.export-pdf', $bl->id) }}"
+   class="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-slate-700 rounded-lg"
+   title="Xuất PDF">
+    <i class="fa-solid fa-file-pdf"></i>
+</a>
+
                                 @if($bl->la_nhap)
                                     <form action="{{ route('admin.bang-luong.chot', $bl->id) }}" method="POST"
                                           onsubmit="return confirm('Chốt bảng lương này? Sau khi chốt sẽ không sửa/xoá được.')">

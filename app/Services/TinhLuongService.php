@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\BangLuong;
 use App\Models\ChamCong;
 use App\Models\HopDongLaoDong;
+use App\Models\KhauTruKhac;
 use App\Models\KhauTruLuong;
 use App\Models\LuongNhanVien;
 use App\Models\NguoiDung;
@@ -91,14 +92,25 @@ class TinhLuongService
             - $tongBaoHiem - self::GIAM_TRU_BAN_THAN;
         $thueTNCN = $this->tinhThueTNCN(max(0, $thuNhapChiuThue));
 
-        $tongKhauTru = round($tongBaoHiem + $thueTNCN, 2);
-
         $chiTietKhauTru = [
             ['loai' => 'bhxh',      'so_tien' => $bhxh,     'ghi_chu' => 'BHXH 8% lương cơ bản'],
             ['loai' => 'bhyt',      'so_tien' => $bhyt,     'ghi_chu' => 'BHYT 1.5% lương cơ bản'],
             ['loai' => 'bhtn',      'so_tien' => $bhtn,     'ghi_chu' => 'BHTN 1% lương cơ bản'],
             ['loai' => 'thue_tncn', 'so_tien' => $thueTNCN, 'ghi_chu' => 'Thuế TNCN luỹ tiến'],
         ];
+
+        // --- BƯỚC 7b: Khấu trừ khác (tạm ứng, phạt, bồi thường...) do admin nhập ---
+        $khauTruKhac      = $this->layKhauTruKhac($nguoiDungId, $thang, $nam);
+        $tongKhauTruKhac  = $khauTruKhac['tong'];
+        foreach ($khauTruKhac['chi_tiet'] as $kt) {
+            $chiTietKhauTru[] = [
+                'loai'    => 'khau_tru_khac',
+                'so_tien' => $kt['so_tien'],
+                'ghi_chu' => $kt['ghi_chu'],
+            ];
+        }
+
+        $tongKhauTru = round($tongBaoHiem + $thueTNCN + $tongKhauTruKhac, 2);
 
         // --- BƯỚC 8: Lương thực nhận (net) ---
         $luongThucNhan = round($tongLuong - $tongKhauTru, 2);
@@ -136,6 +148,8 @@ class TinhLuongService
             'tong_bao_hiem'        => $tongBaoHiem,
             'thu_nhap_chiu_thue'   => max(0, round($thuNhapChiuThue, 2)),
             'thue_thu_nhap_ca_nhan' => $thueTNCN,
+            'tong_khau_tru_khac'   => $tongKhauTruKhac,
+            'chi_tiet_khau_tru_khac' => $khauTruKhac['chi_tiet'],
             'tong_khau_tru'        => $tongKhauTru,
             'chi_tiet_khau_tru'    => $chiTietKhauTru,
 
@@ -346,6 +360,33 @@ class TinhLuongService
         )), 2);
 
         return ['tong' => $tong, 'tong_chiu_thue' => $tongChiuThue, 'chi_tiet' => $chiTiet];
+    }
+
+    /**
+     * Lấy & tổng hợp các khoản khấu trừ khác (tạm ứng, phạt...) trong tháng.
+     * Chỉ tính các khoản còn hiệu lực.
+     */
+    private function layKhauTruKhac(int $nguoiDungId, int $thang, int $nam): array
+    {
+        $khoan = KhauTruKhac::where('nguoi_dung_id', $nguoiDungId)
+            ->where('thang', $thang)
+            ->where('nam', $nam)
+            ->where('trang_thai', 'hieu_luc')
+            ->get();
+
+        $chiTiet = [];
+        foreach ($khoan as $k) {
+            $nhan = KhauTruKhac::$loaiLabels[$k->loai] ?? 'Khấu trừ khác';
+            $chiTiet[] = [
+                'so_tien' => (float) $k->so_tien,
+                'ghi_chu' => trim($nhan . ($k->ly_do ? ': ' . $k->ly_do : '')),
+            ];
+        }
+
+        return [
+            'tong'     => round(array_sum(array_column($chiTiet, 'so_tien')), 2),
+            'chi_tiet' => $chiTiet,
+        ];
     }
 
     /** Quy đổi giá trị phụ cấp ra tiền (hỗ trợ % lương cơ bản) */

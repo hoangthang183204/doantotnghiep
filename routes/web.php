@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\ChucVuController;
 use App\Http\Controllers\Admin\ChamCongController;
 use App\Http\Controllers\Admin\DonNghiController;
 use App\Http\Controllers\Admin\BangLuongController;
+use App\Http\Controllers\Admin\KhauTruKhacController;
+use App\Http\Controllers\Admin\ThongKeLuongController;
 use App\Http\Controllers\Admin\ChungChiNhanVienController;
 use App\Http\Controllers\Admin\DaoTaoController;
 use App\Http\Controllers\Admin\PhuCapController;
@@ -229,6 +231,8 @@ Route::prefix('admin')
             Route::post('/{id}/gui-tat-ca-email', [BangLuongController::class, 'guiTatCaEmail'])->name('gui-tat-ca-email')->middleware('CheckPermission:salary.export');
             Route::post('/luong-nhan-vien/{luongId}/gui-email', [BangLuongController::class, 'guiEmailLuong'])->whereNumber('luongId')->name('gui-email')->middleware('CheckPermission:salary.export');
             Route::get('/{id}/export', [BangLuongController::class, 'export'])->whereNumber('id')->name('export')->middleware('CheckPermission:salary.export');
+            Route::get('/{id}/export-pdf', [BangLuongController::class, 'exportPdf'])->whereNumber('id')->name('export-pdf')->middleware('CheckPermission:salary.export');
+            Route::get('/{id}/nhan-vien/{luongId}/pdf', [BangLuongController::class, 'phieuLuongPdf'])->whereNumber(['id', 'luongId'])->name('phieu-luong-pdf')->middleware('CheckPermission:salary.export');
             Route::put('/{id}/chot', [BangLuongController::class, 'chot'])->whereNumber('id')->name('chot')->middleware('CheckPermission:salary.approve');
             Route::put('/{id}/thanh-toan', [BangLuongController::class, 'thanhToan'])->whereNumber('id')->name('thanh-toan')->middleware('CheckPermission:salary.approve');
             Route::delete('/{id}', [BangLuongController::class, 'destroy'])->whereNumber('id')->name('destroy')->middleware('CheckPermission:salary.index');
@@ -236,6 +240,22 @@ Route::prefix('admin')
 
         // ========== PHỤ CẤP - CHỈ HR VÀ ADMIN ==========
         Route::resource('phu-cap', PhuCapController::class)->middleware(['CheckPermission:salary.allowance']);
+
+        // ========== KHẤU TRỪ KHÁC (tạm ứng, phạt...) - CHỈ HR VÀ ADMIN ==========
+        Route::prefix('khau-tru-khac')->name('khau-tru-khac.')->middleware(['CheckPermission:salary.index'])->group(function () {
+            Route::get('/', [KhauTruKhacController::class, 'index'])->name('index');
+            Route::get('/create', [KhauTruKhacController::class, 'create'])->name('create')->middleware('CheckPermission:salary.create');
+            Route::post('/', [KhauTruKhacController::class, 'store'])->name('store')->middleware('CheckPermission:salary.create');
+            Route::get('/{id}/edit', [KhauTruKhacController::class, 'edit'])->whereNumber('id')->name('edit')->middleware('CheckPermission:salary.create');
+            Route::put('/{id}', [KhauTruKhacController::class, 'update'])->whereNumber('id')->name('update')->middleware('CheckPermission:salary.create');
+            Route::delete('/{id}', [KhauTruKhacController::class, 'destroy'])->whereNumber('id')->name('destroy')->middleware('CheckPermission:salary.create');
+        });
+
+        // ========== THỐNG KÊ QUỸ LƯƠNG THEO PHÒNG BAN - CHỈ HR VÀ ADMIN ==========
+        Route::prefix('thong-ke-luong')->name('thong-ke-luong.')->middleware(['CheckPermission:salary.index'])->group(function () {
+            Route::get('/', [ThongKeLuongController::class, 'index'])->name('index');
+            Route::get('/pdf', [ThongKeLuongController::class, 'exportPdf'])->name('pdf')->middleware('CheckPermission:salary.export');
+        });
 
         // ========== QUẢN LÝ LƯƠNG - CHỈ HR VÀ ADMIN ==========
         Route::prefix('luong')->name('luong.')->middleware(['CheckPermission:salary.index'])->group(function () {

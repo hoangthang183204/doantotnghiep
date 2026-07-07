@@ -2,21 +2,24 @@
 
 namespace App\Console\Commands;
 
+use App\Mail\PhieuLuongMail;
 use App\Models\BangLuong;
 use App\Services\TinhLuongService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Mail;
 
 class ChotLuongThang extends Command
 {
     /**
      * Mặc định chốt lương cho THÁNG TRƯỚC (vì chạy vào ngày 1 hàng tháng).
-     * Có thể chỉ định: php artisan luong:chot --thang=5 --nam=2026 --force
+     * Có thể chỉ định: php artisan luong:chot --thang=5 --nam=2026 --force --gui-email
      */
     protected $signature = 'luong:chot
                             {--thang= : Tháng cần chốt (mặc định: tháng trước)}
                             {--nam= : Năm cần chốt (mặc định: năm của tháng trước)}
-                            {--force : Tính lại dù bảng lương đã tồn tại}';
+                            {--force : Tính lại dù bảng lương đã tồn tại}
+                            {--gui-email : Tự động gửi phiếu lương qua email sau khi chốt}';
 
     protected $description = 'Chốt (khoá) bảng lương theo tháng cho toàn bộ nhân viên đang làm việc';
 
@@ -43,6 +46,38 @@ class ChotLuongThang extends Command
         $this->info("✔ Đã chốt {$bangLuong->ma_bang_luong}: {$soNV} nhân viên, tổng thực nhận "
             . number_format($tongNet) . ' đ.');
 
+        if ($this->option('gui-email')) {
+            $this->guiEmailPhieuLuong($bangLuong);
+        }
+
         return self::SUCCESS;
+    }
+
+    /** Gửi phiếu lương qua email cho toàn bộ nhân viên trong bảng lương */
+    private function guiEmailPhieuLuong(BangLuong $bangLuong): void
+    {
+        $this->line('Đang gửi phiếu lương qua email...');
+
+        $bangLuong->loadMissing('luongNhanViens.nguoiDung');
+        $daGui = 0;
+        $boQua = 0;
+
+        foreach ($bangLuong->luongNhanViens as $luong) {
+            $email = $luong->nguoiDung?->email;
+            if (!$email) {
+                $boQua++;
+                continue;
+            }
+
+            try {
+                Mail::to($email)->send(new PhieuLuongMail($luong));
+                $daGui++;
+            } catch (\Throwable $e) {
+                $boQua++;
+                $this->warn("  ✗ Lỗi gửi cho {$email}: {$e->getMessage()}");
+            }
+        }
+
+        $this->info("✔ Đã gửi {$daGui} phiếu lương qua email" . ($boQua ? " ({$boQua} bị bỏ qua/không có email)." : '.'));
     }
 }
