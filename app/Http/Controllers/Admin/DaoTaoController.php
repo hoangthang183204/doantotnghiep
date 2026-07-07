@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ChungChiNhanVien;
 use App\Models\DaoTaoNhanVien;
 use App\Models\HoSo;
 use Illuminate\Http\Request;
@@ -107,34 +108,76 @@ class DaoTaoController extends Controller
     }
     public function update(Request $request, $id)
     {
-    $request->validate([
-        'ho_so_id' => 'required|exists:ho_so_nguoi_dung,id',
-        'ten_khoa_hoc' => 'required|max:255',
-        'to_chuc' => 'nullable|max:255',
-        'ngay_bat_dau' => 'required|date',
-        'ngay_ket_thuc' => 'nullable|date|after_or_equal:ngay_bat_dau',
-        'ket_qua' => 'nullable|max:255',
-        'chi_phi' => 'nullable|numeric|min:0',
-        'ghi_chu' => 'nullable',
-    ]);
+        $request->validate([
+            'ngay_ket_thuc' => 'nullable|date',
+            'ket_qua'       => 'nullable|string|max:255',
+            'co_chung_chi'  => 'required|boolean',
+            'ghi_chu'       => 'nullable|string',
+        ]);
 
-    $daoTao = DaoTaoNhanVien::findOrFail($id);
+        $daoTao = DaoTaoNhanVien::findOrFail($id);
 
-    $daoTao->update([
-        'ho_so_id' => $request->ho_so_id,
-        'ten_khoa_hoc' => $request->ten_khoa_hoc,
-        'to_chuc' => $request->to_chuc,
-        'ngay_bat_dau' => $request->ngay_bat_dau,
-        'ngay_ket_thuc' => $request->ngay_ket_thuc,
-        'ket_qua' => $request->ket_qua,
-        'co_chung_chi' => $request->has('co_chung_chi'),
-        'chi_phi' => $request->chi_phi,
-        'ghi_chu' => $request->ghi_chu,
-    ]);
+        $daoTao->update([
+            'ngay_ket_thuc' => $request->ngay_ket_thuc,
+            'ket_qua'       => $request->ket_qua,
+            'co_chung_chi'  => $request->co_chung_chi,
+            'ghi_chu'       => $request->ghi_chu,
+        ]);
+        if ($daoTao->co_chung_chi) {
 
-    return redirect()
-        ->route('admin.dao-tao.index')
-        ->with('success', 'Cập nhật khóa đào tạo thành công.');
+    ChungChiNhanVien::updateOrCreate(
+
+        [
+            'ho_so_id' => $daoTao->ho_so_id,
+            'ten_chung_chi' => $daoTao->ten_khoa_hoc,
+        ],
+
+        [
+            'to_chuc_cap' => $daoTao->to_chuc,
+            'nam_cap' => date('Y'),
+            'ngay_het_han' => null,
+            'file_dinh_kem' => null,
+        ]
+
+    );
+
+} else {
+
+    ChungChiNhanVien::where('ho_so_id', $daoTao->ho_so_id)
+        ->where('ten_chung_chi', $daoTao->ten_khoa_hoc)
+        ->delete();
+
+}
+
+        // ===== Đồng bộ sang bảng chứng chỉ =====
+        if ($daoTao->co_chung_chi) {
+
+            ChungChiNhanVien::updateOrCreate(
+
+                [
+                    'ho_so_id' => $daoTao->ho_so_id,
+                    'ten_chung_chi' => $daoTao->ten_khoa_hoc,
+                ],
+
+                [
+                    'to_chuc_cap' => $daoTao->to_chuc,
+                    'nam_cap' => now()->year,
+                    'ngay_het_han' => null,
+                ]
+
+            );
+
+        } else {
+
+            ChungChiNhanVien::where('ho_so_id', $daoTao->ho_so_id)
+                ->where('ten_chung_chi', $daoTao->ten_khoa_hoc)
+                ->delete();
+
+        }
+
+        return redirect()
+            ->route('admin.dao-tao.show', $daoTao->id)
+            ->with('success','Cập nhật kết quả đào tạo thành công.');
     }
     public function destroy($id)
     {

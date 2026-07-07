@@ -6,9 +6,8 @@ namespace App\Notifications;
 use App\Models\DonXinNghi;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
-class LeaveRequestNotification extends Notification implements ShouldQueue
+class LeaveRequestNotification extends Notification
 {
     use Queueable;
 
@@ -28,13 +27,11 @@ class LeaveRequestNotification extends Notification implements ShouldQueue
 
     public function toDatabase($notifiable): array
     {
-        // Lấy tên nhân viên
         $employeeName = 'Nhân viên';
         if ($this->donNghi->nguoiDung && $this->donNghi->nguoiDung->hoSo) {
             $employeeName = $this->donNghi->nguoiDung->hoSo->ho . ' ' . $this->donNghi->nguoiDung->hoSo->ten;
         }
 
-        // Cấu hình theo action
         $config = [
             'created' => [
                 'title' => '📝 Đơn nghỉ phép mới',
@@ -64,15 +61,16 @@ class LeaveRequestNotification extends Notification implements ShouldQueue
 
         $data = $config[$this->action] ?? $config['created'];
 
-        // Xác định user là admin hay nhân viên
+        // ⭐ Xác định user là admin/hay nhân viên dựa trên vai trò
         $isAdmin = false;
-        if ($notifiable && $notifiable->vaiTro) {
-            $isAdmin = in_array($notifiable->vaiTro->name, ['admin', 'Super Admin', 'Admin']);
+        if ($notifiable && method_exists($notifiable, 'vaiTros')) {
+            $roles = $notifiable->vaiTros->pluck('name')->toArray();
+            $isAdmin = array_intersect($roles, ['admin', 'Super Admin']);
         }
 
-        // Tạo URL đúng theo role
+        // ⭐ Tạo URL đúng theo role
         $prefix = $isAdmin ? 'admin' : 'employee';
-        $url = '/' . $prefix . '/don-nghi/' . $this->donNghi->id;
+        $url = url('/' . $prefix . '/don-nghi/' . $this->donNghi->id);
 
         return array_merge($data, [
             'don_nghi_id' => $this->donNghi->id,

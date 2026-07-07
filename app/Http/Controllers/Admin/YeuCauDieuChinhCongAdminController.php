@@ -15,9 +15,17 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Notifications\PheDuyetYeuCauChinhCong;
+use App\Services\NotificationService;
 
 class YeuCauDieuChinhCongAdminController extends Controller
 {
+
+    protected NotificationService $notificationService; 
+
+    public function __construct(NotificationService $notificationService) 
+    {
+        $this->notificationService = $notificationService;
+    }
     /**
      * Hiển thị danh sách tất cả yêu cầu điều chỉnh công
      */
@@ -151,13 +159,27 @@ class YeuCauDieuChinhCongAdminController extends Controller
                     ]);
                 }
 
-                // Cập nhật trạng thái thủ công
-                if ($chamCong->gio_vao && $chamCong->kiemTraDiMuon()) {
-                    $chamCong->trang_thai = 'di_muon';
-                } elseif ($chamCong->gio_ra && $chamCong->kiemTraVeSom()) {
-                    $chamCong->trang_thai = 've_som';
-                } elseif ($chamCong->gio_vao && $chamCong->gio_ra) {
-                    $chamCong->trang_thai = 'dung_gio';
+                // ⭐ SỬA: Cập nhật trạng thái thủ công (không gọi method không tồn tại)
+                if ($chamCong->gio_vao && $chamCong->gio_ra) {
+                    // Kiểm tra đi muộn
+                    $gioChuan = '08:30:00';
+                    $gioVao = Carbon::parse($chamCong->gio_vao);
+                    $gioChuanCarbon = Carbon::parse($gioChuan);
+
+                    if ($gioVao->gt($gioChuanCarbon)) {
+                        $chamCong->trang_thai = 'di_muon';
+                    } else {
+                        // Kiểm tra về sớm
+                        $gioKetThucChuan = '17:30:00';
+                        $gioRa = Carbon::parse($chamCong->gio_ra);
+                        $gioKetThucCarbon = Carbon::parse($gioKetThucChuan);
+
+                        if ($gioRa->lt($gioKetThucCarbon)) {
+                            $chamCong->trang_thai = 've_som';
+                        } else {
+                            $chamCong->trang_thai = 'dung_gio';
+                        }
+                    }
                 } else {
                     $chamCong->trang_thai = 'khong_cham_cong';
                 }
@@ -171,6 +193,7 @@ class YeuCauDieuChinhCongAdminController extends Controller
                 'ghi_chu_duyet' => $request->ghi_chu_duyet
             ]);
 
+            // ⭐ GỬI THÔNG BÁO
             $yeuCau->nguoiDung->notify(new PheDuyetYeuCauChinhCong($yeuCau, $trangThaiMoi));
             DB::commit();
 
@@ -259,7 +282,28 @@ class YeuCauDieuChinhCongAdminController extends Controller
                         ]);
                     }
 
-                    $chamCong->capNhatTrangThai();
+                    // ⭐ SỬA: Cập nhật trạng thái thủ công
+                    if ($chamCong->gio_vao && $chamCong->gio_ra) {
+                        $gioChuan = '08:30:00';
+                        $gioVao = Carbon::parse($chamCong->gio_vao);
+                        $gioChuanCarbon = Carbon::parse($gioChuan);
+
+                        if ($gioVao->gt($gioChuanCarbon)) {
+                            $chamCong->trang_thai = 'di_muon';
+                        } else {
+                            $gioKetThucChuan = '17:30:00';
+                            $gioRa = Carbon::parse($chamCong->gio_ra);
+                            $gioKetThucCarbon = Carbon::parse($gioKetThucChuan);
+
+                            if ($gioRa->lt($gioKetThucCarbon)) {
+                                $chamCong->trang_thai = 've_som';
+                            } else {
+                                $chamCong->trang_thai = 'dung_gio';
+                            }
+                        }
+                    } else {
+                        $chamCong->trang_thai = 'khong_cham_cong';
+                    }
                     $chamCong->save();
                 }
 
@@ -270,8 +314,8 @@ class YeuCauDieuChinhCongAdminController extends Controller
                     'ghi_chu_duyet' => $request->ghi_chu_duyet
                 ]);
 
-                // Gửi thông báo
-                $yeuCau->nguoiDung->notify(new DuyetDonController($yeuCau, $trangThaiMoi));
+                // ⭐ SỬA: Gửi thông báo đúng class
+                $yeuCau->nguoiDung->notify(new PheDuyetYeuCauChinhCong($yeuCau, $trangThaiMoi));
 
                 $soLuongCapNhat++;
             }
