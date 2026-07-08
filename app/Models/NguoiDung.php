@@ -343,4 +343,57 @@ class NguoiDung extends Authenticatable implements JWTSubject
         }
         return true;
     }
+    // Thêm relationship
+    public function lichSuLuong()
+    {
+        return $this->hasMany(LichSuLuong::class, 'nguoi_dung_id');
+    }
+
+    public function lichSuTangLuong()
+    {
+        return $this->hasMany(LichSuLuong::class, 'nguoi_dung_id')
+            ->where('loai', 'tang_luong')
+            ->where('trang_thai', 'da_duyet');
+    }
+
+    // Thêm method
+    public function getLuongTaiNgay($ngay)
+    {
+        $lichSu = $this->lichSuLuong()
+            ->where('trang_thai', 'da_duyet')
+            ->where('ngay_ap_dung', '<=', $ngay)
+            ->orderBy('ngay_ap_dung', 'desc')
+            ->first();
+
+        if ($lichSu) {
+            return $lichSu->luong_moi;
+        }
+
+        $hopDong = $this->hopDongLaoDong()
+            ->where('trang_thai_hop_dong', 'hieu_luc')
+            ->where('ngay_bat_dau', '<=', $ngay)
+            ->orderBy('ngay_bat_dau', 'desc')
+            ->first();
+
+        return $hopDong ? $hopDong->luong_co_ban : 0;
+    }
+
+    public function getLuongHienTaiAttribute()
+    {
+        $hopDong = $this->hopDongLaoDong()
+            ->where('trang_thai_hop_dong', 'hieu_luc')
+            ->first();
+
+        if ($hopDong) {
+            // Kiểm tra lịch sử lương gần nhất
+            $lichSu = $this->lichSuLuong()
+                ->where('trang_thai', 'da_duyet')
+                ->orderBy('ngay_ap_dung', 'desc')
+                ->first();
+
+            return $lichSu ? $lichSu->luong_moi : $hopDong->luong_co_ban;
+        }
+
+        return 0;
+    }
 }

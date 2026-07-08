@@ -31,6 +31,7 @@ use App\Http\Controllers\Admin\QuanLyThoiGianController;
 use App\Http\Controllers\Admin\LuongController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\KhenThuongKyLuatController;
+use App\Http\Controllers\Admin\TangLuongController;
 use App\Http\Controllers\Employee\BangLuongController as EmployeeBangLuongController;
 use App\Http\Controllers\Employee\DashboardEmployeeController;
 use App\Http\Controllers\Employee\ChamCongController as EmployeeChamCongController;
@@ -387,21 +388,21 @@ Route::prefix('admin')
         // ========== CHỨNG CHỈ ==========
         Route::prefix('chung-chi')->name('chung-chi.')->middleware(['CheckPermission:hoso.edit'])->group(function () {
 
-                Route::get('/', [ChungChiNhanVienController::class, 'index'])
-                    ->name('index');
+            Route::get('/', [ChungChiNhanVienController::class, 'index'])
+                ->name('index');
 
-                Route::get('/{id}', [ChungChiNhanVienController::class, 'show'])
-                    ->name('show');
+            Route::get('/{id}', [ChungChiNhanVienController::class, 'show'])
+                ->name('show');
 
-                Route::get('/{id}/edit', [ChungChiNhanVienController::class, 'edit'])
-                    ->name('edit');
+            Route::get('/{id}/edit', [ChungChiNhanVienController::class, 'edit'])
+                ->name('edit');
 
-                Route::put('/{id}', [ChungChiNhanVienController::class, 'update'])
-                    ->name('update');
+            Route::put('/{id}', [ChungChiNhanVienController::class, 'update'])
+                ->name('update');
 
-                Route::delete('/{id}', [ChungChiNhanVienController::class, 'destroy'])
-                    ->name('destroy');
-            });
+            Route::delete('/{id}', [ChungChiNhanVienController::class, 'destroy'])
+                ->name('destroy');
+        });
         // ========== HỢP ĐỒNG - CHỈ HR VÀ ADMIN ==========
         Route::prefix('hop-dong')->name('hop-dong.')->middleware(['CheckPermission:contract.index'])->group(function () {
             Route::get('/', [HopDongLaoDongController::class, 'index'])->name('index');
@@ -419,6 +420,13 @@ Route::prefix('admin')
             Route::post('/{id}/huy', [HopDongLaoDongController::class, 'huy'])->name('huy')->middleware('CheckPermission:contract.edit');
             Route::get('/get-nhan-vien-info/{id}', [HopDongLaoDongController::class, 'getNhanVienInfo'])->name('get-nhan-vien-info');
             Route::post('/tai-ky/{id}', [HopDongLaoDongController::class, 'taiKy'])->name('tai-ky')->middleware('CheckPermission:contract.sign');
+        });
+
+        Route::prefix('tang-luong')->name('tang-luong.')->middleware(['CheckPermission:contract.edit'])->group(function () {
+            Route::get('/hop-dong/{id}/create', [TangLuongController::class, 'create'])->name('create');
+            Route::post('/', [TangLuongController::class, 'store'])->name('store');
+            Route::post('/{id}/duyet', [TangLuongController::class, 'duyet'])->name('duyet');
+            Route::post('/{id}/tu-choi', [TangLuongController::class, 'tuChoi'])->name('tu-choi');
         });
 
         // ========== PHÂN QUYỀN - CHỈ ADMIN ==========
