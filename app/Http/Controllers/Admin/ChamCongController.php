@@ -16,8 +16,8 @@ class ChamCongController extends Controller
     public function index(Request $request)
     {
         $query = ChamCong::with([
-            'nguoi_dung.hoSo',
-            'nguoi_dung.phongBan'
+            'nguoi_dung.hoSo',      // ⭐ Load hồ sơ của nhân viên
+            'nguoi_dung.phongBan'   // ⭐ Load phòng ban
         ]);
 
         $this->applyFilters($query, $request);
@@ -36,14 +36,14 @@ class ChamCongController extends Controller
         $diMuonHomNay = ChamCong::whereDate('ngay_cham_cong', Carbon::today())
             ->where('trang_thai', 'di_muon')
             ->count();
-        
+
         $phongBan = PhongBan::all();
 
         return view('admin.cham-cong.index', compact(
-            'chamCongs', 
-            'tongSoBanGhi', 
-            'tyLeDungGio', 
-            'homNay', 
+            'chamCongs',
+            'tongSoBanGhi',
+            'tyLeDungGio',
+            'homNay',
             'diMuonHomNay',
             'phongBan'
         ));
@@ -100,9 +100,14 @@ class ChamCongController extends Controller
 
             $query->chunk(500, function ($records) use ($file) {
                 foreach ($records as $item) {
+                    // Lấy tên nhân viên từ hồ sơ hoặc tên đăng nhập
                     $hoTen = $item->nguoi_dung->hoSo
-                        ? $item->nguoi_dung->hoSo->ho . ' ' . $item->nguoi_dung->hoSo->ten
-                        : $item->nguoi_dung->ten_dang_nhap;
+                        ? trim(($item->nguoi_dung->hoSo->ho ?? '') . ' ' . ($item->nguoi_dung->hoSo->ten ?? ''))
+                        : ($item->nguoi_dung->ten_dang_nhap ?? 'N/A');
+
+                    if (empty($hoTen)) {
+                        $hoTen = 'NV#' . ($item->nguoi_dung_id ?? '?');
+                    }
 
                     fputcsv($file, [
                         $item->id,
@@ -142,13 +147,6 @@ class ChamCongController extends Controller
                     });
             });
         }
-
-        if ($request->filled('phong_ban_id')) {
-            $query->whereHas('nguoi_dung', function ($q) use ($request) {
-                $q->where('phong_ban_id', $request->phong_ban_id);
-            });
-        }
-
         if ($request->filled('trang_thai')) {
             $query->where('trang_thai', $request->trang_thai);
         }
@@ -173,5 +171,4 @@ class ChamCongController extends Controller
             $query->whereYear('ngay_cham_cong', $request->nam);
         }
     }
-
 }

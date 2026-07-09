@@ -587,4 +587,8 @@ class ChamCong extends Model
         }
         return Carbon::parse($this->ngay_cham_cong)->format('d/m/Y');
     }
+    public function nguoiDung()
+    {
+        return $this->belongsTo(NguoiDung::class, 'nguoi_dung_id');
+    }
 }

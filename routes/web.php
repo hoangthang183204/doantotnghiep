@@ -205,12 +205,22 @@ Route::prefix('admin')
 
         // ========== ĐƠN NGHỈ - AI CŨNG CÓ ==========
         Route::prefix('don-nghi')->name('don_nghi.')->group(function () {
-            Route::get('/', [DonNghiController::class, 'index'])->name('index')->middleware('CheckPermission:leave.history');
-            Route::get('/{id}', [DonNghiController::class, 'show'])->name('show')->middleware('CheckPermission:leave.history');
-            Route::post('/{id}/duyet', [DonNghiController::class, 'capNhatTrangThai'])->name('duyet')->middleware('CheckPermission:leave.approve');
-            Route::post('/bulk-action', [DonNghiController::class, 'bulkAction'])->name('bulk')->middleware('CheckPermission:leave.approve');
-        });
+            // Sửa từ 'leave.history' thành 'leave.index' hoặc 'don_nghi.index'
+            Route::get('/', [DonNghiController::class, 'index'])->name('index')
+                ->middleware('CheckPermission:leave.index'); // ✅ Đổi tên quyền
 
+            Route::get('/{id}', [DonNghiController::class, 'show'])->name('show')
+                ->middleware('CheckPermission:leave.show');
+
+            Route::post('/{id}/duyet', [DonNghiController::class, 'capNhatTrangThai'])->name('duyet')
+                ->middleware('CheckPermission:leave.approve');
+
+            Route::post('/bulk-action', [DonNghiController::class, 'bulkAction'])->name('bulk')
+                ->middleware('CheckPermission:leave.approve');
+
+            Route::delete('/{id}', [DonNghiController::class, 'destroy'])->name('destroy')
+                ->middleware('CheckPermission:leave.delete');
+        });
         // ========== THÔNG BÁO - AI CŨNG CÓ ==========
         Route::prefix('notifications')->name('notifications.')->group(function () {
             Route::get('/', [App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('index');
@@ -454,7 +464,7 @@ Route::prefix('admin')
                 Route::post('/{id}/tuchoi', [DuyetDonController::class, 'tuChoi'])->name('tuchoi');
             });
         });
-       
+
         // ========== TEST ROUTE ==========
         Route::get('/test-mail', function () {
             Mail::raw('Test gửi mail HRFlow', function ($message) {
