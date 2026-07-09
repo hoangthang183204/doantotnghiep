@@ -258,6 +258,12 @@ Route::prefix('admin')
             Route::get('/pdf', [ThongKeLuongController::class, 'exportPdf'])->name('pdf')->middleware('CheckPermission:salary.export');
         });
 
+        // ========== TỔNG LƯƠNG THEO NĂM - CHỈ HR VÀ ADMIN ==========
+        Route::prefix('tong-luong')->name('tong-luong.')->middleware(['CheckPermission:salary.index'])->group(function () {
+            Route::get('/', [ThongKeLuongController::class, 'theoNam'])->name('index');
+            Route::get('/{nam}', [ThongKeLuongController::class, 'chiTietNam'])->whereNumber('nam')->name('chi-tiet');
+        });
+
         // ========== QUẢN LÝ LƯƠNG - CHỈ HR VÀ ADMIN ==========
         Route::prefix('luong')->name('luong.')->middleware(['CheckPermission:salary.index'])->group(function () {
             Route::get('export', [LuongController::class, 'export'])->name('export')->middleware('CheckPermission:salary.export');
@@ -423,6 +429,7 @@ Route::prefix('admin')
         });
 
         Route::prefix('tang-luong')->name('tang-luong.')->middleware(['CheckPermission:contract.edit'])->group(function () {
+            Route::get('/', [TangLuongController::class, 'index'])->name('index');
             Route::get('/hop-dong/{id}/create', [TangLuongController::class, 'create'])->name('create');
             Route::post('/', [TangLuongController::class, 'store'])->name('store');
             Route::post('/{id}/duyet', [TangLuongController::class, 'duyet'])->name('duyet');
