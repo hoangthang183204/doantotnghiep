@@ -46,19 +46,7 @@
                             placeholder="Nhập tên..."
                             class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
                     </div>
-                    <div>
-                        <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">Phòng ban</label>
-                        <select name="phong_ban_id"
-                            class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
-                            <option value="">-- Tất cả phòng ban --</option>
-                            @foreach ($phongBan ?? [] as $pb)
-                                <option value="{{ $pb->id }}"
-                                    {{ request('phong_ban_id') == $pb->id ? 'selected' : '' }}>
-                                    {{ $pb->ten_phong_ban }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                    {{-- ❌ ĐÃ XÓA LỌC THEO PHÒNG BAN --}}
                     <div>
                         <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">Trạng thái</label>
                         <select name="trang_thai"
@@ -154,8 +142,6 @@
             </div>
         @endif
 
-        {{-- ⭐ BỎ BULK ACTIONS (KHÔNG CẦN DUYỆT) --}}
-
         {{-- TABLE --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
@@ -179,16 +165,26 @@
                                 $nguoiDung = $cc->nguoiDung ?? null;
                                 $hoSo = $nguoiDung ? $nguoiDung->hoSo ?? null : null;
 
+                                // ⭐ LẤY TÊN NHÂN VIÊN - ƯU TIÊN HỒ SƠ, NẾU KHÔNG CÓ THÌ LẤY TÊN ĐĂNG NHẬP
                                 $hoTen = '';
-                                if ($hoSo) {
+                                if ($hoSo && ($hoSo->ho || $hoSo->ten)) {
                                     $hoTen = trim(($hoSo->ho ?? '') . ' ' . ($hoSo->ten ?? ''));
                                 }
+                                // ⭐ NẾU KHÔNG CÓ HỒ SƠ, LẤY TÊN ĐĂNG NHẬP
                                 if (empty($hoTen) && $nguoiDung) {
                                     $hoTen = $nguoiDung->ten_dang_nhap ?? 'N/A';
                                 }
+                                // ⭐ NẾU VẪN TRỐNG, HIỂN THỊ NV#ID
                                 if (empty($hoTen)) {
                                     $hoTen = 'NV#' . ($cc->nguoi_dung_id ?? '?');
                                 }
+
+                                // ⭐ LẤY ẢNH ĐẠI DIỆN - KIỂM TRA FILE TỒN TẠI
+                                $hasAvatar =
+                                    $hoSo &&
+                                    $hoSo->anh_dai_dien &&
+                                    file_exists(public_path('storage/' . $hoSo->anh_dai_dien));
+                                $avatar = $hasAvatar ? asset('storage/' . $hoSo->anh_dai_dien) : null;
 
                                 $initial = strtoupper(substr($hoTen, 0, 1));
                                 $maNV = $hoSo ? $hoSo->ma_nhan_vien ?? 'N/A' : 'N/A';
@@ -201,10 +197,16 @@
                                 class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                                 <td class="px-4 py-4">
                                     <div class="flex items-center gap-3">
-                                        <div
-                                            class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold text-lg shadow-md">
-                                            {{ $initial }}
-                                        </div>
+                                        {{-- ⭐ HIỂN THỊ ẢNH ĐẠI DIỆN HOẶC CHỮ CÁI ĐẦU --}}
+                                        @if ($avatar)
+                                            <img src="{{ $avatar }}" alt="{{ $hoTen }}"
+                                                class="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 shadow-sm">
+                                        @else
+                                            <div
+                                                class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold text-lg shadow-md">
+                                                {{ $initial }}
+                                            </div>
+                                        @endif
                                         <div>
                                             <h6 class="font-semibold">{{ $hoTen }}</h6>
                                             <p class="text-xs text-gray-500">Mã: {{ $maNV }}</p>
@@ -241,16 +243,29 @@
                                 <td class="px-4 py-4">
                                     @php
                                         $statusColors = [
-                                            'dung_gio' => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-                                            'di_muon' => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
-                                            've_som' => 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-                                            'vang_mat' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+                                            'dung_gio' =>
+                                                'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+                                            'di_muon' =>
+                                                'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+                                            've_som' =>
+                                                'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+                                            'den_som' =>
+                                                'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+                                            'vang_mat' =>
+                                                'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+                                            'khong_cham_cong' =>
+                                                'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400',
+                                            'nghi_phep' =>
+                                                'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
                                         ];
                                         $statusTexts = [
                                             'dung_gio' => '✅ Đúng giờ',
                                             'di_muon' => '⚠️ Đi muộn',
                                             've_som' => '🔻 Về sớm',
+                                            'den_som' => '📈 Đến sớm',
                                             'vang_mat' => '❌ Vắng mặt',
+                                            'khong_cham_cong' => '⏳ Chưa chấm công',
+                                            'nghi_phep' => '📋 Nghỉ phép',
                                         ];
                                     @endphp
                                     <span

@@ -6,7 +6,7 @@
 <div class="space-y-6">
 
     {{-- HEADER --}}
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
         <div class="flex justify-between items-center">
             <div>
                 <h1 class="text-2xl font-bold text-gray-800 dark:text-white">📋 Chi tiết chấm công</h1>
@@ -15,7 +15,7 @@
             <a href="{{ route('admin.cham-cong.index') }}" 
                class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                 </svg>
                 Quay lại
             </a>
@@ -23,28 +23,42 @@
     </div>
 
     {{-- THÔNG TIN NHÂN VIÊN --}}
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 class="font-semibold text-gray-800 dark:text-white">👤 Thông tin nhân viên</h2>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="px-6 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="font-medium text-gray-700 dark:text-gray-300">👤 Thông tin nhân viên</h2>
         </div>
         <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            @php
+                $nguoiDung = $chamCong->nguoiDung ?? null;
+                $hoSo = $nguoiDung ? $nguoiDung->hoSo ?? null : null;
+                $hoTen = '';
+                if ($hoSo) {
+                    $hoTen = trim(($hoSo->ho ?? '') . ' ' . ($hoSo->ten ?? ''));
+                }
+                if (empty($hoTen) && $nguoiDung) {
+                    $hoTen = $nguoiDung->ten_dang_nhap ?? 'N/A';
+                }
+                if (empty($hoTen)) {
+                    $hoTen = 'NV#' . ($chamCong->nguoi_dung_id ?? '?');
+                }
+                $hasAvatar = $hoSo && $hoSo->anh_dai_dien && file_exists(public_path('storage/' . $hoSo->anh_dai_dien));
+                $avatar = $hasAvatar ? asset('storage/' . $hoSo->anh_dai_dien) : null;
+            @endphp
+            <div class="flex items-center gap-4">
+                @if($avatar)
+                    <img src="{{ $avatar }}" alt="{{ $hoTen }}" class="w-14 h-14 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600">
+                @else
+                    <div class="w-14 h-14 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xl">
+                        {{ strtoupper(substr($hoTen, 0, 1)) }}
+                    </div>
+                @endif
                 <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Họ và tên</p>
-                    <p class="font-semibold text-gray-800 dark:text-white">
-                        {{ $chamCong->nguoi_dung->hoSo->ho ?? '' }} {{ $chamCong->nguoi_dung->hoSo->ten ?? $chamCong->nguoi_dung->ten_dang_nhap ?? 'N/A' }}
-                    </p>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Mã nhân viên</p>
-                    <p class="font-semibold text-gray-800 dark:text-white">
-                        {{ $chamCong->nguoi_dung->hoSo->ma_nhan_vien ?? $chamCong->nguoi_dung->id ?? 'N/A' }}
-                    </p>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Phòng ban</p>
-                    <p class="font-semibold text-gray-800 dark:text-white">
-                        {{ $chamCong->nguoi_dung->phongBan->ten_phong_ban ?? 'Chưa có' }}
+                    <p class="text-lg font-semibold text-gray-800 dark:text-white">{{ $hoTen }}</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                        Mã: {{ $hoSo ? $hoSo->ma_nhan_vien ?? 'N/A' : 'N/A' }}
+                        @if($nguoiDung && $nguoiDung->phongBan)
+                            | Phòng: {{ $nguoiDung->phongBan->ten_phong_ban }}
+                        @endif
                     </p>
                 </div>
             </div>
@@ -52,97 +66,115 @@
     </div>
 
     {{-- THÔNG TIN CHẤM CÔNG --}}
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 class="font-semibold text-gray-800 dark:text-white">⏰ Thông tin chấm công</h2>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="px-6 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="font-medium text-gray-700 dark:text-gray-300">⏰ Thông tin chấm công</h2>
         </div>
         <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Ngày chấm công</p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {{-- Ngày --}}
+                <div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Ngày</p>
                     <p class="font-semibold text-gray-800 dark:text-white">
                         {{ \Carbon\Carbon::parse($chamCong->ngay_cham_cong)->format('d/m/Y') }}
                     </p>
                     <p class="text-xs text-gray-400">{{ \Carbon\Carbon::parse($chamCong->ngay_cham_cong)->locale('vi')->dayName }}</p>
                 </div>
 
-                <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Giờ vào</p>
+                {{-- Giờ vào --}}
+                <div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Giờ vào</p>
                     <p class="font-semibold text-gray-800 dark:text-white text-lg">
-                        {{ $chamCong->gio_vao ? date('H:i', strtotime($chamCong->gio_vao)) : '--:--' }}
+                        {{ $chamCong->gio_vao ? \Carbon\Carbon::parse($chamCong->gio_vao)->format('H:i') : '--:--' }}
                     </p>
                     @if(($chamCong->phut_di_muon ?? 0) > 0)
-                        <p class="text-xs text-yellow-600 dark:text-yellow-400">(+{{ $chamCong->phut_di_muon }} phút)</p>
+                        <p class="text-xs text-yellow-600">+{{ $chamCong->phut_di_muon }}p</p>
                     @endif
                 </div>
 
-                <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Giờ ra</p>
+                {{-- Giờ ra --}}
+                <div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Giờ ra</p>
                     <p class="font-semibold text-gray-800 dark:text-white text-lg">
-                        {{ $chamCong->gio_ra ? date('H:i', strtotime($chamCong->gio_ra)) : '--:--' }}
+                        {{ $chamCong->gio_ra ? \Carbon\Carbon::parse($chamCong->gio_ra)->format('H:i') : '--:--' }}
                     </p>
                     @if(($chamCong->phut_ve_som ?? 0) > 0)
-                        <p class="text-xs text-yellow-600 dark:text-yellow-400">(-{{ $chamCong->phut_ve_som }} phút)</p>
+                        <p class="text-xs text-yellow-600">-{{ $chamCong->phut_ve_som }}p</p>
                     @endif
                 </div>
 
-                <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Số giờ làm</p>
-                    <p class="font-semibold text-gray-800 dark:text-white text-lg">
-                        {{ number_format($chamCong->so_gio_lam ?? 0, 1) }} giờ
+                {{-- Số giờ --}}
+                <div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Số giờ</p>
+                    <p class="font-semibold text-blue-600 dark:text-blue-400 text-lg">
+                        {{ number_format($chamCong->so_gio_lam ?? 0, 1) }}h
                     </p>
                 </div>
 
-                <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Số công</p>
-                    <p class="font-semibold text-gray-800 dark:text-white text-lg">
+                {{-- Số công --}}
+                <div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Số công</p>
+                    <p class="font-semibold text-gray-800 dark:text-white">
                         {{ number_format($chamCong->so_cong ?? 0, 2) }}
                     </p>
                 </div>
 
-                <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Giờ tăng ca</p>
-                    <p class="font-semibold text-gray-800 dark:text-white text-lg">
-                        {{ number_format($chamCong->gio_tang_ca ?? 0, 1) }} giờ
+                {{-- Tăng ca --}}
+                <div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Tăng ca</p>
+                    <p class="font-semibold text-purple-600 dark:text-purple-400">
+                        {{ number_format($chamCong->gio_tang_ca ?? 0, 1) }}h
                     </p>
                 </div>
 
-                <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Trạng thái</p>
+                {{-- Trạng thái --}}
+                <div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Trạng thái</p>
                     @php
-                        $statusConfig = [
-                            'dung_gio' => ['bg-green-100 dark:bg-green-900/30', 'text-green-700 dark:text-green-300', '✅ Đúng giờ'],
-                            'di_muon' => ['bg-yellow-100 dark:bg-yellow-900/30', 'text-yellow-700 dark:text-yellow-300', '⚠️ Đi muộn'],
-                            've_som' => ['bg-orange-100 dark:bg-orange-900/30', 'text-orange-700 dark:text-orange-300', '🔻 Về sớm'],
-                            'vang_mat' => ['bg-red-100 dark:bg-red-900/30', 'text-red-700 dark:text-red-300', '❌ Vắng mặt'],
+                        $statusMap = [
+                            'dung_gio' => ['bg-green-100 text-green-700', '✅ Đúng giờ'],
+                            'di_muon' => ['bg-yellow-100 text-yellow-700', '⚠️ Đi muộn'],
+                            've_som' => ['bg-orange-100 text-orange-700', '🔻 Về sớm'],
+                            'den_som' => ['bg-blue-100 text-blue-700', '📈 Đến sớm'],
+                            'vang_mat' => ['bg-red-100 text-red-700', '❌ Vắng mặt'],
                         ];
-                        $config = $statusConfig[$chamCong->trang_thai] ?? $statusConfig['vang_mat'];
+                        $stt = $statusMap[$chamCong->trang_thai] ?? ['bg-gray-100 text-gray-700', $chamCong->trang_thai];
                     @endphp
-                    <span class="px-3 py-1 rounded-full text-sm font-medium {{ $config[0] }} {{ $config[1] }}">
-                        {{ $config[2] }}
+                    <span class="px-2 py-1 rounded-full text-xs font-medium {{ $stt[0] }}">
+                        {{ $stt[1] }}
                     </span>
                 </div>
 
-                <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Phương thức</p>
+                {{-- Phương thức --}}
+                <div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Phương thức</p>
+                    @php
+                        $methodMap = [
+                            'ip' => '📡 IP',
+                            'wifi' => '📶 WiFi',
+                            'mac' => '💻 MAC',
+                            'manual' => '✍️ Nhập tay',
+                        ];
+                    @endphp
                     <p class="font-semibold text-gray-800 dark:text-white">
-                        {{ $chamCong->phuong_thuc_cham_cong_text ?? 'Chưa xác định' }}
+                        {{ $methodMap[$chamCong->phuong_thuc_cham_cong] ?? 'Chưa xác định' }}
                     </p>
                     @if($chamCong->dia_chi_ip)
-                        <p class="text-xs text-gray-400 mt-1">IP: {{ $chamCong->dia_chi_ip }}</p>
+                        <p class="text-xs text-gray-400">IP: {{ $chamCong->dia_chi_ip }}</p>
                     @endif
                 </div>
             </div>
         </div>
     </div>
 
+    {{-- GHI CHÚ --}}
     @if($chamCong->ghi_chu)
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 class="font-semibold text-gray-800 dark:text-white">📝 Ghi chú</h2>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="px-6 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="font-medium text-gray-700 dark:text-gray-300">📝 Ghi chú</h2>
         </div>
         <div class="p-6">
-            <p class="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg text-sm">
+            <p class="text-gray-700 dark:text-gray-300 bg-yellow-50 dark:bg-yellow-900/10 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800 text-sm">
                 {{ $chamCong->ghi_chu }}
             </p>
         </div>

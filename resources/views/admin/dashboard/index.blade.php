@@ -28,15 +28,9 @@
         </div>
 
         <!-- ============================================================ -->
-        <!-- PHẦN 1: STATS CARDS - Ẩn/hiện theo quyền                      -->
-        <!-- ============================================================ -->
-        {{-- resources/views/admin/dashboard/index.blade.php --}}
-        {{-- Thay thế PHẦN 1: STATS CARDS --}}
-
-        <!-- ============================================================ -->
         <!-- PHẦN 1: STATS CARDS - Hiển thị theo vai trò                   -->
         <!-- ============================================================ -->
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
 
             <!-- Card 1: Tổng nhân viên - Ai cũng thấy -->
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
@@ -157,39 +151,9 @@
                 </div>
             @endif
 
-            <!-- Card 5: Ứng viên mới - Hiển thị cho HR và Admin -->
-            @if (isHR() || isAdmin())
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full">
-                                <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
-                                    </path>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="ml-5 w-0 flex-1">
-                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Ứng viên mới</p>
-                            <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ $tongUngVien ?? 0 }}</p>
-                            <p
-                                class="text-xs {{ ($tyLeUngVienThayDoi ?? 0) >= 0 ? 'text-green-600' : 'text-red-600' }} mt-1">
-                                <i
-                                    class="mdi {{ ($tyLeUngVienThayDoi ?? 0) >= 0 ? 'mdi-trending-up' : 'mdi-trending-down' }}"></i>
-                                <span>{{ number_format($tyLeUngVienThayDoi ?? 0, 1) }}%</span>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            @endif
-        </div>
+            {{-- ❌ ĐÃ XÓA CARD 5: ỨNG VIÊN MỚI --}}
 
-        <!-- ============================================================ -->
-        <!-- PHẦN 2: BIỂU ĐỒ - Chỉ HR, Trưởng phòng, Admin               -->
-        <!-- ============================================================ -->
-        {{-- Thay thế phần PHẦN 2: BIỂU ĐỒ --}}
+        </div>
 
         <!-- ============================================================ -->
         <!-- PHẦN 2: BIỂU ĐỒ - Hiển thị cho HR, Trưởng phòng, Admin      -->
@@ -263,9 +227,6 @@
             </div>
         @endif
 
-        <!-- ============================================================ -->
-        <!-- PHẦN 3: HÀNG THỨ 2 - Phân quyền chi tiết                     -->
-        <!-- ============================================================ -->
         <!-- ============================================================ -->
         <!-- PHẦN 3: HÀNG THỨ 2 - Thành viên mới, Giới tính, Nghỉ phép   -->
         <!-- ============================================================ -->
@@ -348,18 +309,11 @@
                         </div>
                         <select id="monthSelect" onchange="loadLeaveChart(this.value)"
                             class="px-3 py-1 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
-                            <option value="1" {{ date('m') == '01' ? 'selected' : '' }}>Tháng 1</option>
-                            <option value="2" {{ date('m') == '02' ? 'selected' : '' }}>Tháng 2</option>
-                            <option value="3" {{ date('m') == '03' ? 'selected' : '' }}>Tháng 3</option>
-                            <option value="4" {{ date('m') == '04' ? 'selected' : '' }}>Tháng 4</option>
-                            <option value="5" {{ date('m') == '05' ? 'selected' : '' }}>Tháng 5</option>
-                            <option value="6" {{ date('m') == '06' ? 'selected' : '' }}>Tháng 6</option>
-                            <option value="7" {{ date('m') == '07' ? 'selected' : '' }}>Tháng 7</option>
-                            <option value="8" {{ date('m') == '08' ? 'selected' : '' }}>Tháng 8</option>
-                            <option value="9" {{ date('m') == '09' ? 'selected' : '' }}>Tháng 9</option>
-                            <option value="10" {{ date('m') == '10' ? 'selected' : '' }}>Tháng 10</option>
-                            <option value="11" {{ date('m') == '11' ? 'selected' : '' }}>Tháng 11</option>
-                            <option value="12" {{ date('m') == '12' ? 'selected' : '' }}>Tháng 12</option>
+                            @for ($i = 1; $i <= 12; $i++)
+                                <option value="{{ $i }}" {{ date('m') == sprintf('%02d', $i) ? 'selected' : '' }}>
+                                    Tháng {{ $i }}
+                                </option>
+                            @endfor
                         </select>
                     </div>
                     <canvas id="leaveChart" height="200"></canvas>

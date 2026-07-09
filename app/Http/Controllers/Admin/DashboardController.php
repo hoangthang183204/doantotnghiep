@@ -8,7 +8,6 @@ use App\Models\ChamCong;
 use App\Models\DonXinNghi;
 use App\Models\HoSoNguoiDung;
 use App\Models\PhongBan;
-use App\Models\UngVien;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -52,16 +51,7 @@ class DashboardController extends Controller
             ->count();
         $tyLeNghiPhepThayDoi = $homQuaNghi > 0 ? (($nhanVienNghiPhepHomNay - $homQuaNghi) / $homQuaNghi) * 100 : 0;
 
-        // Ứng viên mới trong tháng
-        $tongUngVien = UngVien::whereMonth('created_at', Carbon::now()->month)
-            ->whereYear('created_at', Carbon::now()->year)
-            ->count();
-
-        // Tỷ lệ ứng viên mới so với tháng trước
-        $ungVienThangTruoc = UngVien::whereMonth('created_at', Carbon::now()->subMonth()->month)
-            ->whereYear('created_at', Carbon::now()->subMonth()->year)
-            ->count();
-        $tyLeUngVienThayDoi = $ungVienThangTruoc > 0 ? (($tongUngVien - $ungVienThangTruoc) / $ungVienThangTruoc) * 100 : 0;
+        // ❌ ĐÃ XÓA PHẦN ỨNG VIÊN
 
         // ==================== DỮ LIỆU CHO BIỂU ĐỒ ====================
 
@@ -156,8 +146,6 @@ class DashboardController extends Controller
             'tyLeChamCongThayDoi',
             'nhanVienNghiPhepHomNay',
             'tyLeNghiPhepThayDoi',
-            'tongUngVien',
-            'tyLeUngVienThayDoi',
             'dataAverageAttendanceRate',
             'DesignationName',
             'designationSeries',

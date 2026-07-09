@@ -11,22 +11,33 @@
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Quản lý vai trò và phân quyền truy cập cho người dùng</p>
         </div>
         <div class="flex items-center gap-3">
+            @if(Auth::user()->vaiTros()->where('name', 'Super Admin')->exists())
             <button class="px-4 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 shadow-lg shadow-teal-500/25">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
                 Thêm vai trò mới
             </button>
+            @endif
         </div>
     </div>
 
-    <!-- Success Message -->
+    <!-- Success/Error Message -->
     @if(session('success'))
         <div class="bg-teal-50 dark:bg-teal-900/20 border-l-4 border-teal-500 text-teal-700 dark:text-teal-400 px-4 py-3 rounded-lg flex items-center gap-3">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             <span>{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg flex items-center gap-3">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span>{{ session('error') }}</span>
         </div>
     @endif
 
@@ -58,6 +69,36 @@
                 </div>
             </div>
         </div>
+        <div class="bg-white dark:bg-gray-800/80 rounded-xl shadow-sm p-5 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Quyền hệ thống</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                        {{ \App\Models\Quyen::where('nhom', 'system')->count() }}
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-gradient-to-br from-red-100 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white dark:bg-gray-800/80 rounded-xl shadow-sm p-5 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Vai trò hoạt động</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                        {{ $roles->where('trang_thai', 1)->count() }}
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/30 dark:to-green-900/30 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Table -->
@@ -70,7 +111,7 @@
             </div>
             <div class="flex items-center gap-3">
                 <div class="relative">
-                    <input type="text" placeholder="Tìm kiếm vai trò..." 
+                    <input type="text" id="searchRole" placeholder="Tìm kiếm vai trò..." 
                            class="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
                     <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -88,12 +129,13 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Vai trò</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Mô tả</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Số quyền</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Trạng thái</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Thao tác</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700" id="roleTableBody">
                     @forelse($roles as $role)
-                    <tr class="hover:bg-teal-50/50 dark:hover:bg-teal-900/10 transition-colors">
+                    <tr class="hover:bg-teal-50/50 dark:hover:bg-teal-900/10 transition-colors role-row" data-role="{{ $role->ten_hien_thi }}">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="text-sm font-medium text-gray-900 dark:text-white">#{{ $role->id }}</span>
                         </td>
@@ -116,6 +158,19 @@
                                 {{ $role->quyens->count() }} quyền
                             </span>
                         </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @if($role->trang_thai ?? true)
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
+                                    Hoạt động
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1.5"></span>
+                                    Vô hiệu
+                                </span>
+                            @endif
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right">
                             <div class="flex items-center justify-end gap-2">
                                 <a href="{{ route('admin.phan-quyen.edit', $role->id) }}" 
@@ -125,17 +180,19 @@
                                     </svg>
                                     Phân quyền
                                 </a>
+                                @if($role->name !== 'Super Admin')
                                 <button class="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                     </svg>
                                 </button>
+                                @endif
                             </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-12 text-center">
+                        <td colspan="6" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <div class="w-16 h-16 bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-900/30 dark:to-cyan-900/30 rounded-full flex items-center justify-center mb-3">
                                     <svg class="w-8 h-8 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,7 +212,7 @@
         <!-- Table Footer -->
         <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
             <p class="text-sm text-gray-500 dark:text-gray-400">
-                Hiển thị <span class="font-medium">{{ $roles->count() }}</span> vai trò
+                Hiển thị <span class="font-medium" id="roleCount">{{ $roles->count() }}</span> vai trò
             </p>
             <div class="flex items-center gap-2">
                 <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50" disabled>
@@ -171,4 +228,31 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ============================================
+    // 1. SEARCH ROLE
+    // ============================================
+    const searchInput = document.getElementById('searchRole');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const keyword = this.value.toLowerCase().trim();
+            const rows = document.querySelectorAll('.role-row');
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                const text = row.getAttribute('data-role')?.toLowerCase() || '';
+                const match = keyword === '' || text.includes(keyword);
+                row.style.display = match ? '' : 'none';
+                if (match) visibleCount++;
+            });
+            
+            document.getElementById('roleCount').textContent = visibleCount;
+        });
+    }
+});
+</script>
+@endpush
 @endsection
