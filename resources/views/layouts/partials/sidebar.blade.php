@@ -464,20 +464,97 @@
             @endif
 
             {{-- 🔹 ĐÀO TẠO (ADMIN) --}}
-            @if ($canViewDaoTao)
-                <li>
-                    <a href="{{ route('admin.dao-tao.index') }}"
-                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'admin.dao-tao.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            {{-- ========================================================== --}}
+            {{-- 🔹 ĐÀO TẠO (ADMIN) --}}
+            {{-- ========================================================== --}}
+            @if(auth()->user()->hasPermission('dao-tao.index') || auth()->user()->hasPermission('chung-chi.index'))
+
+            <li x-data="{ open: {{ str_starts_with($currentRoute, 'admin.dao-tao') || str_starts_with($currentRoute, 'admin.chung-chi') ? 'true' : 'false' }} }">
+
+                <button
+                    @click="open = !open"
+                    class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors
+                    {{ str_starts_with($currentRoute,'admin.dao-tao') || str_starts_with($currentRoute,'admin.chung-chi')
+                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+
+                    <div class="flex items-center">
+
+                        <span class="w-5 h-5 mr-3 flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.8"
+                                stroke="currentColor"
+                                class="w-6 h-6">
+                                <path stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M12 14 3 9l9-5 9 5-9 5Zm0 0v6m6-8v4c0 1.5-2.7 3-6 3s-6-1.5-6-3v-4"/>
                             </svg>
                         </span>
-                        <span class="font-medium menu-text">Đào tạo</span>
-                    </a>
-                </li>
+
+                        <span class="font-medium menu-text">
+                            Đào tạo
+                        </span>
+
+                    </div>
+
+                    {{-- Mũi tên --}}
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                        class="w-4 h-4 transition-transform duration-200"
+                        :class="open ? 'rotate-180' : ''"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M19 9l-7 7-7-7"/>
+                    </svg>
+
+                </button>
+
+                {{-- Sub Menu --}}
+                <ul
+                    x-show="open"
+                    x-transition
+                    x-cloak
+                    class="mt-2 ml-8 space-y-1">
+
+                    {{-- Quản lý đào tạo --}}
+                    @if(auth()->user()->hasPermission('dao-tao.index'))
+                    <li>
+                        <a href="{{ route('admin.dao-tao.index') }}"
+                            class="block px-3 py-2 rounded-lg text-sm transition
+                            {{ str_starts_with($currentRoute,'admin.dao-tao')
+                                ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400'
+                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+
+                            Quản lý đào tạo nhân viên
+
+                        </a>
+                    </li>
+                    @endif
+
+                    {{-- Quản lý chứng chỉ --}}
+                    @if(auth()->user()->hasPermission('chung-chi.index'))
+                    <li>
+                        <a href="{{ route('admin.chung-chi.index') }}"
+                            class="block px-3 py-2 rounded-lg text-sm transition
+                            {{ str_starts_with($currentRoute,'admin.chung-chi')
+                                ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400'
+                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+
+                            Quản lý chứng chỉ nhân viên
+
+                        </a>
+                    </li>
+                    @endif
+
+                </ul>
+
+            </li>
+
             @endif
 
             {{-- 🔹 KHEN THƯỞNG / KỶ LUẬT (ADMIN) --}}

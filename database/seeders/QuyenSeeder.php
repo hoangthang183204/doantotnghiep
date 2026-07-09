@@ -165,7 +165,22 @@ class QuyenSeeder extends Seeder
             ['name' => 'contract.personal', 'ten_hien_thi' => 'Xem hợp đồng cá nhân', 'nhom' => 'contract'],
             ['name' => 'contract.personal_update', 'ten_hien_thi' => 'Cập nhật trạng thái ký', 'nhom' => 'contract'],
             ['name' => 'contract.personal_reject', 'ten_hien_thi' => 'Từ chối ký hợp đồng', 'nhom' => 'contract'],
+            // ============================================
+            // QUẢN LÝ ĐÀO TẠO
+            // ============================================
+            ['name' => 'dao-tao.index', 'ten_hien_thi' => 'Xem danh sách đào tạo', 'nhom' => 'training'],
+            ['name' => 'dao-tao.show', 'ten_hien_thi' => 'Xem chi tiết đào tạo', 'nhom' => 'training'],
+            ['name' => 'dao-tao.create', 'ten_hien_thi' => 'Đăng ký đào tạo', 'nhom' => 'training'],
+            ['name' => 'dao-tao.edit', 'ten_hien_thi' => 'Cập nhật kết quả đào tạo', 'nhom' => 'training'],
+            ['name' => 'dao-tao.delete', 'ten_hien_thi' => 'Xóa đào tạo', 'nhom' => 'training'],
 
+            // ============================================
+            // QUẢN LÝ CHỨNG CHỈ
+            // ============================================
+            ['name' => 'chung-chi.index', 'ten_hien_thi' => 'Xem danh sách chứng chỉ', 'nhom' => 'training'],
+            ['name' => 'chung-chi.show', 'ten_hien_thi' => 'Xem chi tiết chứng chỉ', 'nhom' => 'training'],
+            ['name' => 'chung-chi.edit', 'ten_hien_thi' => 'Cập nhật chứng chỉ', 'nhom' => 'training'],
+            ['name' => 'chung-chi.delete', 'ten_hien_thi' => 'Xóa chứng chỉ', 'nhom' => 'training'],
             // ============================================
             // 17. TUYỂN DỤNG - Có route admin.tin-tuyen-dung.*
             // ============================================
