@@ -362,45 +362,45 @@ Route::prefix('admin')
         // ========== ĐÀO TẠO ==========
         Route::prefix('dao-tao')->name('dao-tao.')->middleware(['CheckPermission:hoso.edit'])->group(function () {
 
-            Route::get('/', [DaoTaoController::class, 'index'])->name('index');
+            Route::get('/', [DaoTaoController::class, 'index'])->middleware(['CheckPermission:dao-tao.index'])->name('index');
 
-            Route::get('/create', [DaoTaoController::class, 'create'])->name('create');
+            Route::get('/create', [DaoTaoController::class, 'create'])->middleware(['CheckPermission:dao-tao.create'])->name('create');
 
-            Route::post('/', [DaoTaoController::class, 'store'])->name('store');
+            Route::post('/', [DaoTaoController::class, 'store'])->middleware(['CheckPermission:dao-tao.store'])->name('store');
 
             // Thống kê
-            Route::get('/thong-ke', [DaoTaoController::class, 'thongKe'])->name('thong-ke');
+            Route::get('/thong-ke', [DaoTaoController::class, 'thongKe'])->middleware(['CheckPermission:dao-tao.thong-ke'])->name('thong-ke');
 
             // Xuất Excel
-            Route::get('/export/excel', [DaoTaoController::class, 'export'])->name('export');
+            Route::get('/export/excel', [DaoTaoController::class, 'export'])->middleware(['CheckPermission:dao-tao.export'])->name('export');
 
             // Chi tiết
-            Route::get('/{id}', [DaoTaoController::class, 'show'])->name('show');
+            Route::get('/{id}', [DaoTaoController::class, 'show'])->middleware(['CheckPermission:dao-tao.show'])->name('show');
 
             // Sửa
-            Route::get('/{id}/edit', [DaoTaoController::class, 'edit'])->name('edit');
+            Route::get('/{id}/edit', [DaoTaoController::class, 'edit'])->middleware(['CheckPermission:dao-tao.edit'])->name('edit');
 
-            Route::put('/{id}', [DaoTaoController::class, 'update'])->name('update');
+            Route::put('/{id}', [DaoTaoController::class, 'update'])->middleware(['CheckPermission:dao-tao.update'])->name('update');
 
             // Xóa
-            Route::delete('/{id}', [DaoTaoController::class, 'destroy'])->name('destroy');
+            Route::delete('/{id}', [DaoTaoController::class, 'destroy'])->middleware(['CheckPermission:dao-tao.destroy'])->name('destroy');
         });
         // ========== CHỨNG CHỈ ==========
         Route::prefix('chung-chi')->name('chung-chi.')->middleware(['CheckPermission:hoso.edit'])->group(function () {
 
-            Route::get('/', [ChungChiNhanVienController::class, 'index'])
+            Route::get('/', [ChungChiNhanVienController::class, 'index'])->middleware(['CheckPermission:chung-chi.index'])
                 ->name('index');
 
-            Route::get('/{id}', [ChungChiNhanVienController::class, 'show'])
+            Route::get('/{id}', [ChungChiNhanVienController::class, 'show'])->middleware(['CheckPermission:chung-chi.show'])
                 ->name('show');
 
-            Route::get('/{id}/edit', [ChungChiNhanVienController::class, 'edit'])
+            Route::get('/{id}/edit', [ChungChiNhanVienController::class, 'edit'])->middleware(['CheckPermission:chung-chi.edit'])
                 ->name('edit');
 
-            Route::put('/{id}', [ChungChiNhanVienController::class, 'update'])
+            Route::put('/{id}', [ChungChiNhanVienController::class, 'update'])->middleware(['CheckPermission:chung-chi.update'])
                 ->name('update');
 
-            Route::delete('/{id}', [ChungChiNhanVienController::class, 'destroy'])
+            Route::delete('/{id}', [ChungChiNhanVienController::class, 'destroy'])->middleware(['CheckPermission:chung-chi.destroy'])
                 ->name('destroy');
         });
         // ========== HỢP ĐỒNG - CHỈ HR VÀ ADMIN ==========
