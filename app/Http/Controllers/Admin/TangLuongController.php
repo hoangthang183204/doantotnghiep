@@ -17,6 +17,52 @@ use Carbon\Carbon;
 class TangLuongController extends Controller
 {
     /**
+     * Danh sách lịch sử tăng / giảm / điều chỉnh lương (có lọc).
+     */
+    public function index(Request $request)
+    {
+        $query = LichSuLuong::query()
+            ->with(['nguoiDung.hoSo', 'hopDong', 'nguoiTao.hoSo'])
+            ->orderByDesc('ngay_ap_dung')
+            ->orderByDesc('id');
+
+        // Lọc theo loại: tang_luong | giam_luong | dieu_chinh
+        if ($request->filled('loai')) {
+            $query->where('loai', $request->loai);
+        }
+
+        // Lọc theo trạng thái duyệt
+        if ($request->filled('trang_thai')) {
+            $query->where('trang_thai', $request->trang_thai);
+        }
+
+        // Tìm theo tên / tài khoản nhân viên
+        if ($request->filled('tu_khoa')) {
+            $kw = trim($request->tu_khoa);
+            $query->whereHas('nguoiDung', function ($q) use ($kw) {
+                $q->where('ten_dang_nhap', 'like', "%{$kw}%")
+                    ->orWhere('email', 'like', "%{$kw}%")
+                    ->orWhereHas('hoSo', function ($h) use ($kw) {
+                        $h->where('ho', 'like', "%{$kw}%")
+                            ->orWhere('ten', 'like', "%{$kw}%");
+                    });
+            });
+        }
+
+        $lichSus = $query->paginate(15)->withQueryString();
+
+        // Thống kê nhanh (trên toàn bộ, không phụ thuộc bộ lọc)
+        $thongKe = [
+            'tong'      => LichSuLuong::count(),
+            'tang'      => LichSuLuong::where('loai', 'tang_luong')->count(),
+            'giam'      => LichSuLuong::where('loai', 'giam_luong')->count(),
+            'dieuChinh' => LichSuLuong::where('loai', 'dieu_chinh')->count(),
+        ];
+
+        return view('admin.tang-luong.index', compact('lichSus', 'thongKe'));
+    }
+
+    /**
      * Form tăng lương cho nhân viên
      */
     public function create($id)

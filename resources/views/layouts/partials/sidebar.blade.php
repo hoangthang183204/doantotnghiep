@@ -47,6 +47,7 @@
     $canViewCandidate = $user->hasPermission('recruitment.candidate');
     $canViewPassed = $user->hasPermission('recruitment.passed');
     $canViewContract = $user->hasPermission('contract.index');
+    $canEditContract = $user->hasPermission('contract.edit');
     $canApproveLeave = $user->hasPermission('leave.approve');
     $canViewLeaveType = $user->hasPermission('leave_type.index');
     $canViewRegulation = $user->hasPermission('regulation.view');
@@ -324,6 +325,12 @@
                 }
                 if ($canViewAllowance && Route::has('admin.phu-cap.index')) {
                     $submenuLuong[] = ['title' => 'Phụ cấp', 'route' => 'admin.phu-cap.index'];
+                }
+                if ($canViewSalary && Route::has('admin.tong-luong.index')) {
+                    $submenuLuong[] = ['title' => 'Tổng lương theo năm', 'route' => 'admin.tong-luong.index'];
+                }
+                if ($canEditContract && Route::has('admin.tang-luong.index')) {
+                    $submenuLuong[] = ['title' => 'Lịch sử tăng lương', 'route' => 'admin.tang-luong.index'];
                 }
             @endphp
             @if (!empty($submenuLuong))

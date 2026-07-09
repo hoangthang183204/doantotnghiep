@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\LuongNhanVien;
+use App\Models\KhauTruLuong;
 use App\Models\PhongBan;
 use App\Services\PdfService;
 use Carbon\Carbon;
@@ -91,5 +92,104 @@ class ThongKeLuongController extends Controller
             'soPhongBan'    => $soPhongBan,
             'luongTbNv'     => $luongTbNv,
         ]];
+    }
+
+    // =====================================================================
+    // TỔNG LƯƠNG THEO NĂM
+    // =====================================================================
+
+    /**
+     * Trang tổng hợp lương theo năm: mỗi năm một dòng
+     * (tổng lương, thuế TNCN, bảo hiểm, thực nhận). Bấm vào 1 năm -> chi tiết 12 tháng.
+     */
+    public function theoNam(Request $request)
+    {
+        // Gom nhóm toàn bộ dòng lương theo NĂM
+        $rows = LuongNhanVien::query()
+            ->selectRaw('luong_nam as nam')
+            ->selectRaw('COUNT(*) as so_ky_luong')
+            ->selectRaw('COUNT(DISTINCT nguoi_dung_id) as so_nhan_vien')
+            ->selectRaw('SUM(tong_luong) as tong_luong')
+            ->selectRaw('SUM(thue_thu_nhap_ca_nhan) as tong_thue')
+            ->selectRaw('SUM(tong_khau_tru) as tong_khau_tru')
+            ->selectRaw('SUM(luong_thuc_nhan) as tong_thuc_nhan')
+            ->groupBy('luong_nam')
+            ->orderByDesc('luong_nam')
+            ->get();
+
+        // Bảo hiểm (BHXH + BHYT + BHTN) không lưu trên luong_nhan_vien -> lấy từ bảng khấu trừ chi tiết
+        $baoHiemTheoNam = KhauTruLuong::query()
+            ->join('luong_nhan_vien', 'luong_nhan_vien.id', '=', 'khau_tru_luong.luong_nhan_vien_id')
+            ->whereIn('khau_tru_luong.loai_khau_tru', ['bhxh', 'bhyt', 'bhtn'])
+            ->groupBy('luong_nhan_vien.luong_nam')
+            ->selectRaw('luong_nhan_vien.luong_nam as nam, SUM(khau_tru_luong.so_tien) as tong_bao_hiem')
+            ->pluck('tong_bao_hiem', 'nam');
+
+        $rows->each(function ($r) use ($baoHiemTheoNam) {
+            $r->tong_bao_hiem = (float) ($baoHiemTheoNam[$r->nam] ?? 0);
+        });
+
+        $tongLuong    = (float) $rows->sum('tong_luong');
+        $tongThue     = (float) $rows->sum('tong_thue');
+        $tongKhauTru  = (float) $rows->sum('tong_khau_tru');
+        $tongBaoHiem  = (float) $rows->sum('tong_bao_hiem');
+        $tongThucNhan = (float) $rows->sum('tong_thuc_nhan');
+
+        return view('admin.tong-luong.index', compact(
+            'rows',
+            'tongLuong',
+            'tongThue',
+            'tongKhauTru',
+            'tongBaoHiem',
+            'tongThucNhan'
+        ));
+    }
+
+    /**
+     * Chi tiết lương của 1 năm: mỗi tháng một dòng.
+     */
+    public function chiTietNam(Request $request, $nam)
+    {
+        $nam = (int) $nam;
+
+        $rows = LuongNhanVien::query()
+            ->where('luong_nam', $nam)
+            ->selectRaw('luong_thang as thang')
+            ->selectRaw('COUNT(DISTINCT nguoi_dung_id) as so_nhan_vien')
+            ->selectRaw('SUM(tong_luong) as tong_luong')
+            ->selectRaw('SUM(thue_thu_nhap_ca_nhan) as tong_thue')
+            ->selectRaw('SUM(tong_khau_tru) as tong_khau_tru')
+            ->selectRaw('SUM(luong_thuc_nhan) as tong_thuc_nhan')
+            ->groupBy('luong_thang')
+            ->orderBy('luong_thang')
+            ->get();
+
+        $baoHiemTheoThang = KhauTruLuong::query()
+            ->join('luong_nhan_vien', 'luong_nhan_vien.id', '=', 'khau_tru_luong.luong_nhan_vien_id')
+            ->where('luong_nhan_vien.luong_nam', $nam)
+            ->whereIn('khau_tru_luong.loai_khau_tru', ['bhxh', 'bhyt', 'bhtn'])
+            ->groupBy('luong_nhan_vien.luong_thang')
+            ->selectRaw('luong_nhan_vien.luong_thang as thang, SUM(khau_tru_luong.so_tien) as tong_bao_hiem')
+            ->pluck('tong_bao_hiem', 'thang');
+
+        $rows->each(function ($r) use ($baoHiemTheoThang) {
+            $r->tong_bao_hiem = (float) ($baoHiemTheoThang[$r->thang] ?? 0);
+        });
+
+        $tongLuong    = (float) $rows->sum('tong_luong');
+        $tongThue     = (float) $rows->sum('tong_thue');
+        $tongKhauTru  = (float) $rows->sum('tong_khau_tru');
+        $tongBaoHiem  = (float) $rows->sum('tong_bao_hiem');
+        $tongThucNhan = (float) $rows->sum('tong_thuc_nhan');
+
+        return view('admin.tong-luong.chi-tiet', compact(
+            'nam',
+            'rows',
+            'tongLuong',
+            'tongThue',
+            'tongKhauTru',
+            'tongBaoHiem',
+            'tongThucNhan'
+        ));
     }
 }
