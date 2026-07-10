@@ -32,19 +32,19 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full">
-                <thead class="bg-gray-50 dark:bg-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
                     <tr>
-                        <th class="px-4 py-3 text-left font-semibold">Mã BL</th>
-                        <th class="px-4 py-3 text-left font-semibold">Mã NV</th>
-                        <th class="px-4 py-3 text-left font-semibold">Kỳ lương</th>
-                        <th class="px-4 py-3 text-left font-semibold">Tổng lương</th>
-                        <th class="px-4 py-3 text-left font-semibold">Thực nhận</th>
-                        <th class="px-4 py-3 text-center font-semibold">Thao tác</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-200">Mã BL</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-200">Mã NV</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-200">Kỳ lương</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-200">Tổng lương</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-200">Thực nhận</th>
+                        <th class="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($payrolls as $p)
-                        <tr class="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                        <tr class="border-t border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
                             <td class="px-4 py-3 font-medium text-blue-600">
                                 {{ $p->bangLuong->ma_bang_luong ?? '-' }}
                             </td>
