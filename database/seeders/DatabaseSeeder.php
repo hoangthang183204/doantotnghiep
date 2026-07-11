@@ -50,8 +50,8 @@ class DatabaseSeeder extends Seeder
         $this->call(PhanCongCongViecSeeder::class);
 
         // Tuyển dụng
-        $this->call(TinTuyenDungSeeder::class);
-        $this->call(UngVienSeeder::class);
+        // $this->call(TinTuyenDungSeeder::class);
+        // $this->call(UngVienSeeder::class);
 
         // Lương
         $this->call(LuongSeeder::class);        // module "Quản lý lương" (bảng luong theo hợp đồng)
