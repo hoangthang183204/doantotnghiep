@@ -539,10 +539,21 @@ Route::prefix('employee')
         });
 
         // ========== BẢNG LƯƠNG ==========
-        Route::prefix('bang-luong')->name('bang-luong.')->group(function () {
-            Route::get('/', [EmployeeBangLuongController::class, 'index'])->name('index');
-            Route::get('/{id}', [EmployeeBangLuongController::class, 'show'])->name('show');
-        });
+      // ========== BẢNG LƯƠNG ==========
+Route::prefix('bang-luong')->name('bang-luong.')->group(function () {
+
+    Route::get('/', [EmployeeBangLuongController::class, 'index'])
+        ->name('index');
+
+    // Phải đặt trước route /{id}
+    Route::get('/nam/{year}', [EmployeeBangLuongController::class, 'year'])
+        ->whereNumber('year')
+        ->name('year');
+
+    Route::get('/{id}', [EmployeeBangLuongController::class, 'show'])
+        ->whereNumber('id')
+        ->name('show');
+});
 
         // ========== THÔNG BÁO ==========
         Route::prefix('notifications')->name('notifications.')->group(function () {
