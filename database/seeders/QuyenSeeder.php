@@ -257,6 +257,11 @@ class QuyenSeeder extends Seeder
             ['name' => 'khen_thuong.delete', 'ten_hien_thi' => 'Xóa khen thưởng/kỷ luật', 'nhom' => 'khen_thuong'],
             ['name' => 'khen_thuong.export', 'ten_hien_thi' => 'Xuất Excel khen thưởng/kỷ luật', 'nhom' => 'khen_thuong'],
             ['name' => 'khen_thuong.statistics', 'ten_hien_thi' => 'Xem thống kê khen thưởng/kỷ luật', 'nhom' => 'khen_thuong'],
+            // ============================================
+            // 27. ỨNG LƯƠNG
+            // ============================================
+            ['name' => 'ungluong.index', 'ten_hien_thi' => 'Xem danh sách ứng lương', 'nhom' => 'ungluong'],
+            ['name' => 'ungluong.create', 'ten_hien_thi' => 'Tạo đơn ứng lương', 'nhom' => 'ungluong'],
         ];
 
         foreach ($permissions as $permission) {

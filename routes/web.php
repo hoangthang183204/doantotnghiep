@@ -38,6 +38,7 @@ use App\Http\Controllers\Employee\HoSoController as EmployeeHoSoController;
 use App\Http\Controllers\Employee\TangCaController as EmployeeTangCaController;
 use App\Http\Controllers\Employee\YeuCauChinhCongController;
 use App\Http\Controllers\Employee\HopDongController;
+use App\Http\Controllers\Employee\UngLuongController;
 use App\Http\Controllers\Employee\QuyDinhController as EmployeeQuyDinhController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Models\DonXinNghi;
@@ -553,6 +554,12 @@ Route::prefix('bang-luong')->name('bang-luong.')->group(function () {
     Route::get('/{id}', [EmployeeBangLuongController::class, 'show'])
         ->whereNumber('id')
         ->name('show');
+});
+        Route::prefix('ung-luong')->name('ung-luong.')->group(function () {
+            Route::get('/', [UngLuongController::class, 'index'])->name('index');
+            Route::get('/create', [UngLuongController::class, 'create'])->name('create');
+            Route::post('/', [UngLuongController::class, 'store'])->name('store');
+            Route::post('/{id}/cancel', [UngLuongController::class, 'cancel'])->name('cancel');
 });
 
         // ========== THÔNG BÁO ==========
