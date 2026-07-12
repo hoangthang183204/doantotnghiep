@@ -236,6 +236,7 @@
                         'leave_type' => 'from-lime-500 to-lime-600',
                         'leave' => 'from-orange-600 to-amber-600',
                         'salary' => 'from-rose-600 to-rose-700',
+                        'ungluong' => 'from-green-600 to-emerald-700',
                         'allowance' => 'from-pink-500 to-pink-600',
                         'salary_increase' => 'from-fuchsia-600 to-fuchsia-700',
                         'contract' => 'from-purple-600 to-purple-700',
@@ -264,6 +265,7 @@
                         'allowance' => '🎁 Phụ cấp',
                         'salary_increase' => '📈 Tăng lương',
                         'contract' => '📝 Hợp đồng',
+                        'ungluong' => '💵 Ứng lương',
                         'training' => '🎓 Đào tạo',
                         'certificate' => '📜 Chứng chỉ',
                         'role' => '🔑 Vai trò', // ✅ THÊM VÀO
