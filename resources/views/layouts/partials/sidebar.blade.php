@@ -829,6 +829,15 @@
                     </a>
                 </li>
             @endif
+            @if(auth()->user()->hasPermission('ungluong.index'))
+                <li>
+                    <a href="{{ route('employee.ung-luong.index') }}"
+                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors
+                        {{ str_starts_with($currentRoute,'employee.ung-luong')
+                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+
+                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
 
             {{-- 🔹 HỢP ĐỒNG (ADMIN) --}}
             @if ($canViewContract)

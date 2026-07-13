@@ -108,6 +108,8 @@ class QuyenSeeder extends Seeder
             ['name' => 'salary.gui_tat_ca', 'ten_hien_thi' => 'Gửi email hàng loạt', 'nhom' => 'salary'],
             ['name' => 'salary.chi_tiet_nhan_vien', 'ten_hien_thi' => 'Xem chi tiết lương nhân viên', 'nhom' => 'salary'],
             ['name' => 'salary.allowance', 'ten_hien_thi' => 'Quản lý phụ cấp', 'nhom' => 'salary'],
+            ['name' => 'salary.reject','ten_hien_thi' => 'Từ chối khấu trừ','nhom' => 'salary'],
+            ['name' => 'salary.undo','ten_hien_thi' => 'Hoàn tác khấu trừ','nhom' => 'salary'], 
 
             // ============================================
             // 10. BẢNG LƯƠNG CÁ NHÂN
@@ -257,6 +259,11 @@ class QuyenSeeder extends Seeder
             ['name' => 'khen_thuong.delete', 'ten_hien_thi' => 'Xóa khen thưởng/kỷ luật', 'nhom' => 'khen_thuong'],
             ['name' => 'khen_thuong.export', 'ten_hien_thi' => 'Xuất Excel khen thưởng/kỷ luật', 'nhom' => 'khen_thuong'],
             ['name' => 'khen_thuong.statistics', 'ten_hien_thi' => 'Xem thống kê khen thưởng/kỷ luật', 'nhom' => 'khen_thuong'],
+            // ============================================
+            // 27. ỨNG LƯƠNG
+            // ============================================
+            ['name' => 'ungluong.index', 'ten_hien_thi' => 'Xem danh sách ứng lương', 'nhom' => 'ungluong'],
+            ['name' => 'ungluong.create', 'ten_hien_thi' => 'Tạo đơn ứng lương', 'nhom' => 'ungluong'],
         ];
 
         foreach ($permissions as $permission) {

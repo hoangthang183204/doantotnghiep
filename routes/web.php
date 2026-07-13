@@ -38,6 +38,7 @@ use App\Http\Controllers\Employee\HoSoController as EmployeeHoSoController;
 use App\Http\Controllers\Employee\TangCaController as EmployeeTangCaController;
 use App\Http\Controllers\Employee\YeuCauChinhCongController;
 use App\Http\Controllers\Employee\HopDongController;
+use App\Http\Controllers\Employee\UngLuongController;
 use App\Http\Controllers\Employee\QuyDinhController as EmployeeQuyDinhController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Models\DonXinNghi;
@@ -275,13 +276,18 @@ Route::prefix('admin')
 
         // ========== KHẤU TRỪ KHÁC (tạm ứng, phạt...) - CHỈ HR VÀ ADMIN ==========
         Route::prefix('khau-tru-khac')->name('khau-tru-khac.')->middleware(['CheckPermission:salary.index'])->group(function () {
+
             Route::get('/', [KhauTruKhacController::class, 'index'])->name('index');
-            Route::get('/create', [KhauTruKhacController::class, 'create'])->name('create')->middleware('CheckPermission:salary.create');
-            Route::post('/', [KhauTruKhacController::class, 'store'])->name('store')->middleware('CheckPermission:salary.create');
-            Route::get('/{id}/edit', [KhauTruKhacController::class, 'edit'])->whereNumber('id')->name('edit')->middleware('CheckPermission:salary.create');
-            Route::put('/{id}', [KhauTruKhacController::class, 'update'])->whereNumber('id')->name('update')->middleware('CheckPermission:salary.create');
-            Route::delete('/{id}', [KhauTruKhacController::class, 'destroy'])->whereNumber('id')->name('destroy')->middleware('CheckPermission:salary.create');
-        });
+            Route::get('/{id}', [KhauTruKhacController::class, 'show'])->middleware(['CheckPermission:salary.show'])->name('show');
+            Route::get('/create', [KhauTruKhacController::class, 'create'])->middleware('CheckPermission:salary.create')->name('create');
+            Route::post('/', [KhauTruKhacController::class, 'store'])->middleware('CheckPermission:salary.create')->name('store');
+            Route::get('/{id}/edit', [KhauTruKhacController::class, 'edit'])->middleware('CheckPermission:salary.create')->name('edit');
+            Route::put('/{id}', [KhauTruKhacController::class, 'update'])->middleware('CheckPermission:salary.create')->name('update');
+            Route::delete('/{id}', [KhauTruKhacController::class, 'destroy'])->middleware('CheckPermission:salary.create')->name('destroy');
+            Route::post('/{id}/approve', [KhauTruKhacController::class, 'approve'])->middleware(['CheckPermission:salary.approve'])->name('approve');
+            Route::post('/{id}/reject', [KhauTruKhacController::class, 'reject'])->middleware(['CheckPermission:salary.reject'])->name('reject');
+            Route::post('/{id}/undo', [KhauTruKhacController::class, 'undo'])->middleware(['CheckPermission:salary.undo'])->name('undo');
+});
 
         // ========== THỐNG KÊ QUỸ LƯƠNG THEO PHÒNG BAN - CHỈ HR VÀ ADMIN ==========
         Route::prefix('thong-ke-luong')->name('thong-ke-luong.')->middleware(['CheckPermission:salary.index'])->group(function () {

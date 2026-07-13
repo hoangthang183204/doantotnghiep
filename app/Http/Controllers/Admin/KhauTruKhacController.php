@@ -96,6 +96,46 @@ class KhauTruKhacController extends Controller
             ->route('admin.khau-tru-khac.index', ['thang' => $thang, 'nam' => $nam])
             ->with('success', 'Đã xoá khoản khấu trừ.');
     }
+    
+    public function show($id)
+    {
+        $khauTru = KhauTruKhac::with('nguoiDung.ho_so')->findOrFail($id);
+
+        return view('admin.khau-tru-khac.show', compact('khauTru'));
+    }
+
+    public function approve($id)
+    {
+        $khauTru = KhauTruKhac::findOrFail($id);
+
+        $khauTru->update([
+            'trang_thai' => 'hieu_luc'
+        ]);
+
+        return back()->with('success','Đã duyệt ứng lương.');
+    }
+
+    public function reject($id)
+    {
+        $khauTru = KhauTruKhac::findOrFail($id);
+
+        $khauTru->update([
+            'trang_thai' => 'tu_choi'
+        ]);
+
+        return back()->with('success','Đã từ chối.');
+    }
+
+    public function undo($id)
+    {
+        $khauTru = KhauTruKhac::findOrFail($id);
+
+        $khauTru->update([
+            'trang_thai' => 'huy'
+        ]);
+
+        return back()->with('success','Đã hoàn tác.');
+    }
 
     private function validateData(Request $request): array
     {
