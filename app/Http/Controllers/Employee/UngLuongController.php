@@ -76,7 +76,7 @@ class UngLuongController extends Controller
             'loai'          => 'tam_ung',
             'so_tien'       => $request->so_tien,
             'ly_do'         => $request->ly_do,
-            'trang_thai' => 'cho_duyet',
+            'trang_thai' => 'huy',
             'nguoi_tao_id'  => Auth::id(),
         ]);
 
