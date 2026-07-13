@@ -7,7 +7,7 @@
     <div class="bg-white rounded-xl shadow">
 
         <div class="border-b px-6 py-4">
-            <h2 class="text-xl font-semibold">
+            <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200">
                 Gửi yêu cầu ứng lương
             </h2>
         </div>
@@ -20,15 +20,24 @@
 
             <div class="mb-5">
 
-                <label class="block font-medium mb-2">
+                <label class="block font-medium mb-2 text-gray-700 dark:text-gray-200">
                     Số tiền muốn ứng
                 </label>
+
+                @if(isset($gioiHan) && $gioiHan > 0)
+                    <div class="mb-2 text-sm text-blue-600">
+                        Bạn được ứng tối đa:
+                        <strong>{{ number_format($gioiHan,0,',','.') }} VNĐ</strong>
+                        (100% lương thực nhận)
+                    </div>
+                @endif
 
                 <input
                     type="number"
                     name="so_tien"
                     class="w-full border rounded-lg px-4 py-2"
                     value="{{ old('so_tien') }}"
+                    max="{{ $gioiHan ?? '' }}"
                     required>
 
                 @error('so_tien')
@@ -41,14 +50,14 @@
 
             <div class="mb-5">
 
-                <label class="block font-medium mb-2">
+                <label class="block font-medium mb-2 text-gray-700 dark:text-gray-200">
                     Lý do
                 </label>
 
                 <textarea
                     name="ly_do"
                     rows="5"
-                    class="w-full border rounded-lg px-4 py-2"
+                    class="w-full border rounded-lg px-4 py-2 "
                     required>{{ old('ly_do') }}</textarea>
 
                 @error('ly_do')
@@ -63,16 +72,12 @@
 
                 <button
                     class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700">
-
                     Gửi yêu cầu
-
                 </button>
 
                 <a href="{{ route('employee.ung-luong.index') }}"
                    class="bg-gray-300 px-5 py-2 rounded-lg">
-
                     Quay lại
-
                 </a>
 
             </div>

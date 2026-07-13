@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Models\KhauTruKhac;
+use App\Models\LuongNhanVien;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -24,15 +25,45 @@ class UngLuongController extends Controller
 
     public function create()
     {
-        return view('employee.ung-luong.create');
+        $luong = LuongNhanVien::where('nguoi_dung_id', Auth::id())
+            ->orderByDesc('luong_nam')
+            ->orderByDesc('luong_thang')
+            ->first();
+
+        $gioiHan = $luong ? $luong->luong_thuc_nhan : 0;
+
+        return view('employee.ung-luong.create', compact('gioiHan'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'so_tien' => 'required|numeric|min:100000',
-            'ly_do'   => 'required|max:255',
-        ]);
+        $luong = LuongNhanVien::where('nguoi_dung_id', Auth::id())
+                ->orderByDesc('luong_nam')
+                ->orderByDesc('luong_thang')
+                ->first();
+
+            if (!$luong) {
+                return back()
+                    ->withInput()
+                    ->withErrors([
+                        'so_tien' => 'Bạn chưa có bảng lương nên chưa thể ứng lương.'
+                    ]);
+            }
+
+            // Được ứng tối đa bằng 1 tháng lương thực nhận
+            $gioiHan = $luong->luong_thuc_nhan;
+
+            $request->validate([
+                'so_tien' => [
+                    'required',
+                    'numeric',
+                    'min:100000',
+                    'max:' . $gioiHan,
+                ],
+                'ly_do' => 'required|max:255',
+            ], [
+                'so_tien.max' => 'Bạn chỉ được ứng tối đa ' . number_format($gioiHan, 0, ',', '.') . ' VNĐ (1 tháng lương).',
+            ]);
 
         KhauTruKhac::create([
             'nguoi_dung_id' => Auth::id(),
@@ -41,11 +72,7 @@ class UngLuongController extends Controller
             'loai'          => 'tam_ung',
             'so_tien'       => $request->so_tien,
             'ly_do'         => $request->ly_do,
-
-            // Tạm dùng "huy" để biểu thị CHỜ DUYỆT
-            // Khi admin duyệt sẽ đổi sang "hieu_luc"
             'trang_thai'    => 'huy',
-
             'nguoi_tao_id'  => Auth::id(),
         ]);
 
