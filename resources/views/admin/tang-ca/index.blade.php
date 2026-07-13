@@ -19,19 +19,19 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
                 <p class="text-sm text-gray-500 dark:text-gray-400">Tổng đơn</p>
-                <h3 class="text-3xl font-bold text-gray-800 dark:text-white mt-2">{{ $soLuongDangKyTangCa ?? 0 }}</h3>
+                <h3 class="text-3xl font-bold text-gray-800 dark:text-white mt-2">{{ $thongKe['tong'] ?? 0 }}</h3>
             </div>
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
                 <p class="text-sm text-yellow-600">Chờ duyệt</p>
-                <h3 class="text-3xl font-bold text-yellow-500 mt-2">{{ $trangThaiThongKe['cho_duyet'] ?? 0 }}</h3>
+                <h3 class="text-3xl font-bold text-yellow-500 mt-2">{{ $thongKe['cho_duyet'] ?? 0 }}</h3>
             </div>
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
                 <p class="text-sm text-green-600">Đã duyệt</p>
-                <h3 class="text-3xl font-bold text-green-600 mt-2">{{ $trangThaiThongKe['da_duyet'] ?? 0 }}</h3>
+                <h3 class="text-3xl font-bold text-green-600 mt-2">{{ $thongKe['da_duyet'] ?? 0 }}</h3>
             </div>
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
                 <p class="text-sm text-red-500">Từ chối</p>
-                <h3 class="text-3xl font-bold text-red-500 mt-2">{{ $trangThaiThongKe['tu_choi'] ?? 0 }}</h3>
+                <h3 class="text-3xl font-bold text-red-500 mt-2">{{ $thongKe['tu_choi'] ?? 0 }}</h3>
             </div>
         </div>
 
@@ -57,18 +57,18 @@
         {{-- BỘ LỌC TÌM KIẾM --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
             <form method="GET" action="{{ route('admin.tang-ca.index') }}">
-                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
                     <div>
                         <label class="block mb-2 font-medium text-sm text-gray-700 dark:text-gray-300">Tên nhân viên</label>
                         <input type="text" name="ten_nhan_vien" value="{{ request('ten_nhan_vien') }}"
                             placeholder="Nhập tên..."
-                            class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                         <label class="block mb-2 font-medium text-sm text-gray-700 dark:text-gray-300">Phòng ban</label>
                         <select name="phong_ban_id"
-                            class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                            <option value="">-- Tất cả phòng ban --</option>
+                            class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            <option value="">-- Tất cả --</option>
                             @foreach ($phongBans ?? [] as $pb)
                                 <option value="{{ $pb->id }}"
                                     {{ request('phong_ban_id') == $pb->id ? 'selected' : '' }}>
@@ -80,59 +80,56 @@
                     <div>
                         <label class="block mb-2 font-medium text-sm text-gray-700 dark:text-gray-300">Trạng thái</label>
                         <select name="trang_thai"
-                            class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
                             <option value="">-- Tất cả --</option>
-                            <option value="cho_duyet" {{ request('trang_thai') == 'cho_duyet' ? 'selected' : '' }}>Chờ
+                            <option value="cho_duyet" {{ request('trang_thai') == 'cho_duyet' ? 'selected' : '' }}>⏳ Chờ
                                 duyệt</option>
-                            <option value="da_duyet" {{ request('trang_thai') == 'da_duyet' ? 'selected' : '' }}>Đã duyệt
+                            <option value="da_duyet" {{ request('trang_thai') == 'da_duyet' ? 'selected' : '' }}>✅ Đã duyệt
                             </option>
-                            <option value="tu_choi" {{ request('trang_thai') == 'tu_choi' ? 'selected' : '' }}>Từ chối
+                            <option value="tu_choi" {{ request('trang_thai') == 'tu_choi' ? 'selected' : '' }}>❌ Từ chối
                             </option>
-                            <option value="huy" {{ request('trang_thai') == 'huy' ? 'selected' : '' }}>Đã huỷ</option>
+                            <option value="huy" {{ request('trang_thai') == 'huy' ? 'selected' : '' }}>🗑️ Đã hủy
+                            </option>
                         </select>
-                    </div>
-                    <div>
-                        <label class="block mb-2 font-medium text-sm text-gray-700 dark:text-gray-300">Ngày tăng ca</label>
-                        <input type="date" name="ngay_tang_ca" value="{{ request('ngay_tang_ca') }}"
-                            class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
                     </div>
                     <div>
                         <label class="block mb-2 font-medium text-sm text-gray-700 dark:text-gray-300">Từ ngày</label>
                         <input type="date" name="tu_ngay" value="{{ request('tu_ngay') }}"
-                            class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                            class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                         <label class="block mb-2 font-medium text-sm text-gray-700 dark:text-gray-300">Đến ngày</label>
                         <input type="date" name="den_ngay" value="{{ request('den_ngay') }}"
-                            class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                            class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
-                </div>
-                <div class="mt-4 flex gap-3 flex-wrap">
-                    <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
-                        🔍 Tìm kiếm
-                    </button>
-                    <a href="{{ route('admin.tang-ca.index') }}"
-                        class="px-5 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition">
-                        🔄 Làm mới
-                    </a>
+                    <div class="flex items-end gap-2">
+                        <button type="submit"
+                            class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+                            🔍 Tìm kiếm
+                        </button>
+                        <a href="{{ route('admin.tang-ca.index') }}"
+                            class="px-5 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition">
+                            🔄 Làm mới
+                        </a>
+                    </div>
                 </div>
             </form>
         </div>
 
         {{-- BULK ACTIONS TOOLBAR --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-4 flex-wrap">
                 <input type="checkbox" id="check-all" class="w-4 h-4 rounded border-gray-300 cursor-pointer">
                 <label for="check-all" class="text-sm text-gray-600 dark:text-gray-300 cursor-pointer">Chọn tất cả</label>
                 <span class="text-sm text-gray-500">(<span id="selectedCount">0</span> mục được chọn)</span>
                 <div id="bulkActions" class="flex gap-2 ml-auto" style="display: none;">
                     <button type="button" onclick="bulkApprove()"
                         class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition">
-                        ✓ Duyệt hàng loạt
+                        ✅ Duyệt hàng loạt
                     </button>
                     <button type="button" onclick="bulkReject()"
                         class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition">
-                        ✗ Từ chối hàng loạt
+                        ❌ Từ chối hàng loạt
                     </button>
                 </div>
             </div>
@@ -181,10 +178,11 @@
                                         : 'N/A';
 
                                 $loaiClass = match ($item->loai_tang_ca) {
-                                    'ngay_thuong' => 'bg-blue-100 text-blue-700',
-                                    'ngay_nghi' => 'bg-purple-100 text-purple-700',
-                                    'le_tet' => 'bg-red-100 text-red-700',
-                                    default => 'bg-gray-100 text-gray-700',
+                                    'ngay_thuong' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+                                    'ngay_nghi'
+                                        => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+                                    'le_tet' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+                                    default => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
                                 };
                                 $loaiLabel = match ($item->loai_tang_ca) {
                                     'ngay_thuong' => 'Ngày thường',
@@ -194,25 +192,28 @@
                                 };
 
                                 $ttClass = match ($item->trang_thai) {
-                                    'cho_duyet' => 'bg-yellow-100 text-yellow-700',
-                                    'da_duyet' => 'bg-green-100 text-green-700',
-                                    'tu_choi' => 'bg-red-100 text-red-700',
-                                    'huy' => 'bg-gray-100 text-gray-500',
-                                    default => 'bg-gray-100 text-gray-500',
+                                    'cho_duyet'
+                                        => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+                                    'da_duyet'
+                                        => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+                                    'tu_choi' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+                                    'huy' => 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400',
+                                    default => 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400',
                                 };
                                 $ttLabel = match ($item->trang_thai) {
                                     'cho_duyet' => 'Chờ duyệt',
                                     'da_duyet' => 'Đã duyệt',
                                     'tu_choi' => 'Từ chối',
-                                    'huy' => 'Đã huỷ',
+                                    'huy' => 'Đã hủy',
                                     default => $item->trang_thai,
                                 };
                             @endphp
                             <tr
-                                class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 transition">
+                                class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
                                 <td class="px-4 py-3">
                                     @if ($item->trang_thai === 'cho_duyet')
-                                        <input type="checkbox" class="row-check w-4 h-4 rounded border-gray-300"
+                                        <input type="checkbox"
+                                            class="row-check w-4 h-4 rounded border-gray-300 cursor-pointer"
                                             value="{{ $item->id }}">
                                     @endif
                                 </td>
@@ -238,18 +239,20 @@
                                     </div>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <span class="px-2 py-1 rounded text-xs bg-green-100 text-green-700">
-                                        {{ \Carbon\Carbon::parse($item->gio_bat_dau)->format('H:i') }} giờ
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <span class="px-2 py-1 rounded text-xs bg-green-100 text-green-700">
-                                        {{ \Carbon\Carbon::parse($item->gio_ket_thuc)->format('H:i') }} giờ
+                                    <span
+                                        class="px-2 py-1 rounded text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                        {{ \Carbon\Carbon::parse($item->gio_bat_dau)->format('H:i') }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3">
                                     <span
-                                        class="font-semibold text-blue-600">{{ number_format($item->so_gio_tang_ca, 1) }}h</span>
+                                        class="px-2 py-1 rounded text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                        {{ \Carbon\Carbon::parse($item->gio_ket_thuc)->format('H:i') }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span
+                                        class="font-semibold text-blue-600 dark:text-blue-400">{{ number_format($item->so_gio_tang_ca, 1) }}h</span>
                                 </td>
                                 <td class="px-4 py-3">
                                     <span
@@ -324,7 +327,7 @@
     {{-- MODAL LÝ DO --}}
     <div id="reasonModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6">
-            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">Lý do tăng ca</h3>
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">📝 Lý do tăng ca</h3>
             <p id="reasonText" class="text-gray-600 dark:text-gray-300 mb-4"></p>
             <div class="flex justify-end">
                 <button onclick="closeReasonModal()"
@@ -378,6 +381,9 @@
             const modalReason = document.getElementById('reasonModal');
             const modalConfirm = document.getElementById('confirmModal');
 
+            // ⭐ LẤY BASE URL
+            const baseUrl = window.location.origin;
+
             document.addEventListener('DOMContentLoaded', function() {
                 const selectAllCheckbox = document.getElementById('check-all');
                 if (selectAllCheckbox) {
@@ -411,6 +417,7 @@
                 return Array.from(document.querySelectorAll('.row-check:checked')).map(cb => cb.value);
             }
 
+            // ⭐ BULK ACTION
             function bulkAction(ids, action, successMessage, reason = null) {
                 const formData = new FormData();
                 formData.append('_token', '{{ csrf_token() }}');
@@ -418,17 +425,19 @@
                 formData.append('action', action);
                 if (reason) formData.append('reason', reason);
 
-                fetch('{{ route('admin.tang-ca.duyet-hang-loat') }}', {
+                const url = `${baseUrl}/admin/tang-ca/duyet-hang-loat`;
+
+                fetch(url, {
                         method: 'POST',
                         body: formData
                     })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            alert(successMessage);
+                            alert(data.message || successMessage);
                             location.reload();
                         } else {
-                            alert('Có lỗi xảy ra: ' + (data.message || 'Vui lòng thử lại'));
+                            alert(data.message || 'Có lỗi xảy ra, vui lòng thử lại');
                         }
                     })
                     .catch(error => {
@@ -444,7 +453,7 @@
                     return;
                 }
                 showConfirm(`Xác nhận phê duyệt ${ids.length} đơn tăng ca?`, () => bulkAction(ids, 'da_duyet',
-                    'Phê duyệt hàng loạt thành công!'));
+                    '✅ Phê duyệt hàng loạt thành công!'));
             }
 
             function bulkReject() {
@@ -455,11 +464,15 @@
                 }
                 const reason = prompt('Nhập lý do từ chối:');
                 if (reason === null) return;
+                if (!reason.trim()) {
+                    alert('Vui lòng nhập lý do từ chối!');
+                    return;
+                }
                 showConfirm(`Xác nhận từ chối ${ids.length} đơn tăng ca?`, () => bulkAction(ids, 'tu_choi',
-                    'Từ chối hàng loạt thành công!', reason));
+                    '❌ Từ chối hàng loạt thành công!', reason));
             }
 
-            // ⭐ SỬA HÀM pheDuyet - DÙNG JAVASCRIPT TẠO URL
+            // ⭐ PHÊ DUYỆT ĐƠN
             function pheDuyet(id, trangThai) {
                 currentPheDuyetId = id;
                 const modalTitle = document.getElementById('modalTitle');
@@ -470,26 +483,19 @@
 
                 trangThaiInput.value = trangThai;
 
-                // ⭐ TẠO URL BẰNG JAVASCRIPT
-                const baseUrl = window.location.origin;
-
                 if (trangThai === 'da_duyet') {
                     modalTitle.textContent = '✅ Phê duyệt tăng ca';
                     btnPheDuyet.textContent = 'Xác nhận duyệt';
-                    btnPheDuyet.classList.remove('bg-red-600', 'hover:bg-red-700');
-                    btnPheDuyet.classList.add('bg-green-600', 'hover:bg-green-700');
+                    btnPheDuyet.className = 'px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition';
                     ghiChu.placeholder = 'Nhập ghi chú (nếu có)...';
                     ghiChu.removeAttribute('required');
-                    // ⭐ SET ACTION BẰNG JAVASCRIPT
                     form.action = `${baseUrl}/admin/tang-ca/${id}/duyet`;
                 } else {
                     modalTitle.textContent = '❌ Từ chối tăng ca';
                     btnPheDuyet.textContent = 'Xác nhận từ chối';
-                    btnPheDuyet.classList.remove('bg-green-600', 'hover:bg-green-700');
-                    btnPheDuyet.classList.add('bg-red-600', 'hover:bg-red-700');
+                    btnPheDuyet.className = 'px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition';
                     ghiChu.placeholder = 'Nhập lý do từ chối (bắt buộc)...';
                     ghiChu.setAttribute('required', 'required');
-                    // ⭐ SET ACTION BẰNG JAVASCRIPT
                     form.action = `${baseUrl}/admin/tang-ca/${id}/tu-choi`;
                 }
 
@@ -500,10 +506,9 @@
                 }
             }
 
-            // ⭐ SỬA SUBMIT FORM
+            // ⭐ SUBMIT FORM - SỬA LỖI KHÔNG TỰ RELOAD
             document.getElementById('pheDuyetForm')?.addEventListener('submit', function(e) {
                 e.preventDefault();
-                if (!currentPheDuyetId) return;
 
                 const trangThai = document.getElementById('trangThaiDuyet').value;
                 const lyDo = document.getElementById('ghiChuPheDuyet').value;
@@ -515,11 +520,9 @@
 
                 // Nếu là từ chối, thêm hidden field cho ly_do_tu_choi
                 if (trangThai === 'tu_choi') {
-                    // Xóa input cũ nếu có
                     const oldInput = this.querySelector('input[name="ly_do_tu_choi"]');
                     if (oldInput) oldInput.remove();
 
-                    // Tạo input mới
                     const input = document.createElement('input');
                     input.type = 'hidden';
                     input.name = 'ly_do_tu_choi';
@@ -527,8 +530,40 @@
                     this.appendChild(input);
                 }
 
-                // Submit form
-                this.submit();
+                // ⭐ HIỂN THỊ LOADING
+                const btn = document.getElementById('btnPheDuyet');
+                const originalText = btn.textContent;
+                btn.textContent = '⏳ Đang xử lý...';
+                btn.disabled = true;
+
+                const formData = new FormData(this);
+
+                fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json; charset=utf-8'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message || '✅ Xử lý thành công!');
+                            // ⭐ RELOAD TRANG SAU KHI THÀNH CÔNG
+                            window.location.reload();
+                        } else {
+                            alert(data.message || '❌ Có lỗi xảy ra!');
+                            btn.textContent = originalText;
+                            btn.disabled = false;
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error:', err);
+                        alert('Có lỗi xảy ra: ' + err.message);
+                        btn.textContent = originalText;
+                        btn.disabled = false;
+                    });
             });
 
             function closePheDuyetModal() {
@@ -536,8 +571,11 @@
                     modalPheDuyet.classList.add('hidden');
                     modalPheDuyet.classList.remove('flex');
                 }
-                document.getElementById('pheDuyetForm').reset();
-                document.getElementById('pheDuyetForm').action = '';
+                const form = document.getElementById('pheDuyetForm');
+                if (form) {
+                    form.reset();
+                    form.action = '';
+                }
             }
 
             function showReason(reason) {
@@ -597,6 +635,73 @@
                     if (e.target === this) closeConfirmModal();
                 });
             }
+
+            // ⭐ XỬ LÝ SUBMIT BẰNG ENTER
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closePheDuyetModal();
+                    closeReasonModal();
+                    closeConfirmModal();
+                }
+            });
+
+            // ⭐ HÀM DUYỆT ĐƠN TỪ NÚT TRONG BẢNG
+            function duyetDon(id) {
+                if (!confirm('Bạn có chắc muốn duyệt đơn này?')) return;
+
+                fetch(`${baseUrl}/admin/tang-ca/${id}/duyet`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json; charset=utf-8'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message || 'Đã xử lý thành công');
+                        if (data.success) {
+                            location.reload();
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error:', err);
+                        alert('Có lỗi xảy ra: ' + err.message);
+                    });
+            }
+
+            // ⭐ HÀM TỪ CHỐI ĐƠN TỪ NÚT TRONG BẢNG
+            function tuChoiDon(id) {
+                const lyDo = prompt('Nhập lý do từ chối:');
+                if (lyDo === null) return;
+                if (!lyDo.trim()) {
+                    alert('Vui lòng nhập lý do từ chối');
+                    return;
+                }
+
+                fetch(`${baseUrl}/admin/tang-ca/${id}/tu-choi`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json; charset=utf-8'
+                        },
+                        body: JSON.stringify({
+                            ly_do_tu_choi: lyDo
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message || 'Đã xử lý thành công');
+                        if (data.success) {
+                            location.reload();
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error:', err);
+                        alert('Có lỗi xảy ra: ' + err.message);
+                    });
+            }
         </script>
-        @endpush@endpush
-    @endsection
+    @endpush
+@endsection

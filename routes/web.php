@@ -287,7 +287,7 @@ Route::prefix('admin')
             Route::post('/{id}/approve', [KhauTruKhacController::class, 'approve'])->middleware(['CheckPermission:salary.approve'])->name('approve');
             Route::post('/{id}/reject', [KhauTruKhacController::class, 'reject'])->middleware(['CheckPermission:salary.reject'])->name('reject');
             Route::post('/{id}/undo', [KhauTruKhacController::class, 'undo'])->name('undo');
-});
+        });
 
         // ========== THỐNG KÊ QUỸ LƯƠNG THEO PHÒNG BAN - CHỈ HR VÀ ADMIN ==========
         Route::prefix('thong-ke-luong')->name('thong-ke-luong.')->middleware(['CheckPermission:salary.index'])->group(function () {
@@ -467,12 +467,17 @@ Route::prefix('admin')
         });
 
         // ========== TĂNG CA - CHỈ HR VÀ ADMIN ==========
+        // ========== TĂNG CA - CHỈ HR VÀ ADMIN ==========
         Route::prefix('tang-ca')->name('tang-ca.')->middleware(['CheckPermission:attendance.overtime_approve'])->group(function () {
             Route::get('/', [TangCaController::class, 'index'])->name('index');
             Route::get('/{id}', [TangCaController::class, 'show'])->name('show');
             Route::post('/{id}/duyet', [TangCaController::class, 'duyet'])->name('duyet');
             Route::post('/{id}/tu-choi', [TangCaController::class, 'tuChoi'])->name('tu-choi');
             Route::post('/duyet-hang-loat', [TangCaController::class, 'duyetHangLoat'])->name('duyet-hang-loat');
+
+            // ⭐ Route cho admin xác nhận hoàn thành
+            Route::get('/{id}/approve-thuc-hien', [TangCaController::class, 'showApproveThucHien'])->name('employee.tang-ca.approve-thuc-hien');
+            Route::post('/{id}/approve-thuc-hien', [TangCaController::class, 'approveThucHien'])->name('employee.tang-ca.approve-thuc-hien');
         });
 
         // ========== THỰC HIỆN TĂNG CA - CHỈ HR VÀ ADMIN ==========
@@ -535,7 +540,13 @@ Route::prefix('employee')
             Route::get('/create', [EmployeeTangCaController::class, 'create'])->name('create');
             Route::post('/', [EmployeeTangCaController::class, 'store'])->name('store');
             Route::get('/{id}', [EmployeeTangCaController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [EmployeeTangCaController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [EmployeeTangCaController::class, 'update'])->name('update');
+            Route::delete('/{id}', [EmployeeTangCaController::class, 'destroy'])->name('destroy');
             Route::post('/{id}/huy', [EmployeeTangCaController::class, 'huy'])->name('huy');
+
+            // ✅ ROUTE XÁC NHẬN ĐÃ LÀM TĂNG CA - CHO NHÂN VIÊN
+            Route::post('/{id}/confirm-thuc-hien', [EmployeeTangCaController::class, 'confirmThucHien'])->name('confirm-thuc-hien');
         });
 
         // ========== YÊU CẦU CHỈNH CÔNG ==========
@@ -572,12 +583,13 @@ Route::prefix('employee')
             Route::get('/nam/{year}', [EmployeeBangLuongController::class, 'year'])->whereNumber('year')->name('year');
             Route::get('/{id}', [EmployeeBangLuongController::class, 'show'])->whereNumber('id')->name('show');
         });
+
         // ========== ỨNG LƯƠNG ==========
         Route::prefix('ung-luong')->name('ung-luong.')->group(function () {
-            Route::get('/', [UngLuongController::class, 'index'])->name('index');          // Khớp hàm index()
-            Route::get('/create', [UngLuongController::class, 'create'])->name('create');    // Khớp hàm create()[cite: 2]
-            Route::post('/', [UngLuongController::class, 'store'])->name('store');          // Khớp hàm store()[cite: 2]
-            Route::post('/{id}/huy', [UngLuongController::class, 'cancel'])->name('huy');    // Đổi từ 'huy' thành 'cancel' để khớp[cite: 2]
+            Route::get('/', [UngLuongController::class, 'index'])->name('index');
+            Route::get('/create', [UngLuongController::class, 'create'])->name('create');
+            Route::post('/', [UngLuongController::class, 'store'])->name('store');
+            Route::post('/{id}/huy', [UngLuongController::class, 'cancel'])->name('huy');
         });
 
         // ========== THÔNG BÁO ==========
