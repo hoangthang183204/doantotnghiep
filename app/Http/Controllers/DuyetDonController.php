@@ -47,17 +47,17 @@ class DuyetDonController extends Controller
         if ($user->chucVu && in_array($user->chucVu->ten, ['Trưởng Phòng', 'Trưởng phòng', 'Quản lý', 'Manager'])) {
             return true;
         }
-        
+
         // Kiểm tra từ bảng phong_ban
         if (PhongBan::where('truong_phong_id', $user->id)->exists()) {
             return true;
         }
-        
+
         // Kiểm tra từ vai trò
         if ($user->vaiTros()->whereIn('name', ['truong_phong', 'quan_ly'])->exists()) {
             return true;
         }
-        
+
         return false;
     }
 
@@ -70,13 +70,13 @@ class DuyetDonController extends Controller
         if ($user->phong_ban_id) {
             return $user->phong_ban_id;
         }
-        
+
         // Từ bảng phong_ban
         $phongBan = PhongBan::where('truong_phong_id', $user->id)->first();
         if ($phongBan) {
             return $phongBan->id;
         }
-        
+
         return null;
     }
 
@@ -88,7 +88,7 @@ class DuyetDonController extends Controller
         if (!$phongBanId) {
             return [];
         }
-        
+
         return NguoiDung::where('phong_ban_id', $phongBanId)
             ->where('trang_thai', 1)
             ->pluck('id')
@@ -226,6 +226,11 @@ class DuyetDonController extends Controller
     /**
      * ✅ DUYỆT ĐƠN - DÙNG CHUNG
      */
+   // app/Http/Controllers/DuyetDonController.php
+
+    /**
+     * ✅ DUYỆT ĐƠN - Trả về JSON cho AJAX
+     */
     public function duyet(Request $request, $id)
     {
         $scope = $this->getScope($request);
@@ -236,13 +241,15 @@ class DuyetDonController extends Controller
 
         $query = DonXinNghi::where('trang_thai', 'cho_duyet');
 
-        // ⭐ KIỂM TRA QUYỀN DUYỆT
         if ($isTruongPhong && !$isAdmin) {
             $nhanVienIds = $this->getNhanVienIdsInPhong($phongBanId);
             if (!empty($nhanVienIds)) {
                 $query->whereIn('nguoi_dung_id', $nhanVienIds);
             } else {
-                abort(403, 'Bạn không có quyền duyệt đơn này.');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không có quyền duyệt đơn này.'
+                ], 403);
             }
         }
 
@@ -250,14 +257,12 @@ class DuyetDonController extends Controller
 
         DB::beginTransaction();
         try {
-            // Cập nhật trạng thái đơn
             $donNghi->update([
                 'trang_thai' => 'da_duyet',
                 'nguoi_duyet_id' => $user->id,
                 'thoi_gian_duyet' => now(),
             ]);
 
-            // Trừ số dư phép
             $namDonNghi = \Carbon\Carbon::parse($donNghi->ngay_bat_dau)->year;
             $soDuPhep = \App\Models\SoDuPhep::firstOrCreate(
                 ['nguoi_dung_id' => $donNghi->nguoi_dung_id, 'nam' => $namDonNghi],
@@ -265,20 +270,26 @@ class DuyetDonController extends Controller
             );
             $soDuPhep->increment('phep_da_dung', $donNghi->so_ngay_nghi);
 
-            // Gửi thông báo
             $this->notificationService->notifyLeaveRequest($donNghi, 'approved');
 
             DB::commit();
 
-            return redirect()->back()->with('success', '✅ Đã duyệt đơn nghỉ phép thành công.');
+            // 🔥 SỬA: Trả về JSON thay vì redirect
+            return response()->json([
+                'success' => true,
+                'message' => '✅ Đã duyệt đơn nghỉ phép thành công.'
+            ]);
         } catch (\Exception $e) {
             DB::rollback();
-            return redirect()->back()->with('error', '❌ Có lỗi xảy ra: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => '❌ Có lỗi xảy ra: ' . $e->getMessage()
+            ], 500);
         }
     }
 
     /**
-     * ❌ TỪ CHỐI ĐƠN - DÙNG CHUNG
+     * ❌ TỪ CHỐI ĐƠN - Trả về JSON cho AJAX
      */
     public function tuChoi(Request $request, $id)
     {
@@ -299,7 +310,10 @@ class DuyetDonController extends Controller
             if (!empty($nhanVienIds)) {
                 $query->whereIn('nguoi_dung_id', $nhanVienIds);
             } else {
-                abort(403, 'Bạn không có quyền từ chối đơn này.');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không có quyền từ chối đơn này.'
+                ], 403);
             }
         }
 
@@ -314,7 +328,11 @@ class DuyetDonController extends Controller
 
         $this->notificationService->notifyLeaveRequest($donNghi, 'rejected');
 
-        return redirect()->back()->with('success', '✅ Đã từ chối đơn nghỉ phép.');
+        // 🔥 SỬA: Trả về JSON thay vì redirect
+        return response()->json([
+            'success' => true,
+            'message' => '✅ Đã từ chối đơn nghỉ phép.'
+        ]);
     }
 
     /**

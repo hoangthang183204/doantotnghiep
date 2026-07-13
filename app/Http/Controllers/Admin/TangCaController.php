@@ -254,19 +254,27 @@ class TangCaController extends Controller
 
         $dangKy = $query->findOrFail($id);
 
-        $dangKy->update([
-            'trang_thai' => 'da_duyet',
-            'nguoi_duyet_id' => $user->id,
-            'thoi_gian_duyet' => now(),
-            'ly_do_tu_choi' => null,
-        ]);
+        try {
+            $dangKy->update([
+                'trang_thai' => 'da_duyet',
+                'nguoi_duyet_id' => $user->id,
+                'thoi_gian_duyet' => now(),
+                'ly_do_tu_choi' => null,
+            ]);
 
-        $this->notificationService->notifyOvertime($dangKy, 'approved');
+            $this->notificationService->notifyOvertime($dangKy, 'approved');
 
-        if (request()->ajax()) {
-            return response()->json(['success' => true, 'message' => 'Đã duyệt đơn tăng ca!']);
+            // 🔥 SỬA: Luôn trả về JSON
+            return response()->json([
+                'success' => true,
+                'message' => '✅ Đã duyệt đơn tăng ca thành công.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => '❌ Có lỗi xảy ra: ' . $e->getMessage()
+            ], 500);
         }
-        return redirect()->back()->with('success', '✅ Đã duyệt đơn tăng ca.');
     }
 
     /**
@@ -291,19 +299,27 @@ class TangCaController extends Controller
 
         $dangKy = $query->findOrFail($id);
 
-        $dangKy->update([
-            'trang_thai' => 'tu_choi',
-            'nguoi_duyet_id' => $user->id,
-            'thoi_gian_duyet' => now(),
-            'ly_do_tu_choi' => $request->ly_do_tu_choi,
-        ]);
+        try {
+            $dangKy->update([
+                'trang_thai' => 'tu_choi',
+                'nguoi_duyet_id' => $user->id,
+                'thoi_gian_duyet' => now(),
+                'ly_do_tu_choi' => $request->ly_do_tu_choi,
+            ]);
 
-        $this->notificationService->notifyOvertime($dangKy, 'rejected');
+            $this->notificationService->notifyOvertime($dangKy, 'rejected');
 
-        if (request()->ajax()) {
-            return response()->json(['success' => true, 'message' => 'Đã từ chối đơn tăng ca!']);
+            // 🔥 SỬA: Luôn trả về JSON
+            return response()->json([
+                'success' => true,
+                'message' => '✅ Đã từ chối đơn tăng ca.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => '❌ Có lỗi xảy ra: ' . $e->getMessage()
+            ], 500);
         }
-        return redirect()->back()->with('success', '✅ Đã từ chối đơn tăng ca.');
     }
 
     /**
