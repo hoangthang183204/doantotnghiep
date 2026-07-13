@@ -37,7 +37,6 @@
                     name="so_tien"
                     class="w-full border rounded-lg px-4 py-2"
                     value="{{ old('so_tien') }}"
-                    max="{{ $gioiHan ?? '' }}"
                     required>
 
                 @error('so_tien')

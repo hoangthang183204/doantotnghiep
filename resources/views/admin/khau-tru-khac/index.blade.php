@@ -81,25 +81,79 @@
                         <td class="p-4 text-right font-semibold text-red-600 dark:text-red-400">-{{ number_format($kt->so_tien) }} đ</td>
                         <td class="p-4 text-gray-600 dark:text-slate-300">{{ $kt->ly_do ?: '—' }}</td>
                         <td class="p-4 text-center">
-                            @if($kt->trang_thai === 'hieu_luc')
-                                <span class="px-2.5 py-1 text-xs rounded-full font-medium bg-green-100 text-green-800">Hiệu lực</span>
+                            @if($kt->trang_thai == 'cho_duyet')
+                                <span class="px-2 py-1 rounded bg-yellow-100 text-yellow-700">
+                                    Chờ duyệt
+                                </span>
+
+                            @elseif($kt->trang_thai == 'hieu_luc')
+                                <span class="px-2 py-1 rounded bg-green-100 text-green-700">
+                                    Đã duyệt
+                                </span>
+
                             @else
-                                <span class="px-2.5 py-1 text-xs rounded-full font-medium bg-gray-100 text-gray-600">Đã huỷ</span>
+                                <span class="px-2 py-1 rounded bg-red-100 text-red-700">
+                                    Đã từ chối
+                                </span>
                             @endif
                         </td>
                         <td class="p-4">
-                            <div class="flex justify-end items-center gap-1">
-                                <a href="{{ route('admin.khau-tru-khac.edit', $kt->id) }}"
-                                   class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-700 rounded-lg" title="Sửa">
-                                    <i class="fa-solid fa-pen"></i>
+                            <div class="flex justify-end items-center gap-3">
+
+                                {{-- Chi tiết --}}
+                                <a href="{{ route('admin.khau-tru-khac.show', $kt->id) }}"
+                                class="text-blue-500 hover:text-blue-700"
+                                title="Chi tiết">
+                                    <i class="fa-solid fa-eye"></i>
                                 </a>
-                                <form action="{{ route('admin.khau-tru-khac.destroy', $kt->id) }}" method="POST"
-                                      onsubmit="return confirm('Xoá khoản khấu trừ này?')">
-                                    @csrf @method('DELETE')
-                                    <button class="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-slate-700 rounded-lg" title="Xoá">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-                                </form>
+
+                                @if($kt->trang_thai == 'huy')
+
+                                    {{-- Duyệt --}}
+                                    <form action="{{ route('admin.khau-tru-khac.approve', $kt->id) }}"
+                                        method="POST"
+                                        class="inline">
+                                        @csrf
+
+                                        <button type="submit"
+                                                class="text-green-600 hover:text-green-800"
+                                                title="Duyệt">
+                                            <i class="fa-solid fa-check"></i>
+                                        </button>
+                                    </form>
+
+                                    {{-- Xóa --}}
+                                    <form action="{{ route('admin.khau-tru-khac.destroy', $kt->id) }}"
+                                        method="POST"
+                                        class="inline"
+                                        onsubmit="return confirm('Bạn có chắc muốn xóa yêu cầu này?')">
+
+                                        @csrf
+                                        @method('DELETE')
+
+                                        <button
+                                            class="text-red-600 hover:text-red-800"
+                                            title="Xóa">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                @else
+
+                                    {{-- Hoàn tác --}}
+                                    <form action="{{ route('admin.khau-tru-khac.undo', $kt->id) }}"
+                                        method="POST"
+                                        class="inline">
+                                        @csrf
+
+                                        <button type="submit"
+                                                class="text-yellow-500 hover:text-yellow-700"
+                                                title="Hoàn tác">
+                                            <i class="fa-solid fa-rotate-left"></i>
+                                        </button>
+                                    </form>
+
+                                @endif
+
                             </div>
                         </td>
                     </tr>
