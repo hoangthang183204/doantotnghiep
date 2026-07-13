@@ -150,7 +150,7 @@ class LoginController extends Controller
     }
 
     /**
-     * ⭐ Chuyển hướng dựa trên vai trò (ĐÃ SỬA)
+     * ⭐ Chuyển hướng dựa trên vai trò - TẤT CẢ VÀO CHẤM CÔNG, TRỪ ADMIN
      */
     protected function redirectBasedOnRole()
     {
@@ -167,34 +167,26 @@ class LoginController extends Controller
         \Log::info('User roles:', ['user_id' => $user->id, 'email' => $user->email, 'roles' => $roleNames]);
 
         // ============================================================
-        // ===== PHÂN QUYỀN CHUYỂN HƯỚNG THEO VAI TRÒ =====
+        // ⭐ CHỈ ADMIN, SUPER ADMIN MỚI VÀO ADMIN DASHBOARD
         // ============================================================
         
-        // 1️⃣ ADMIN -> admin dashboard
+        // 1️⃣ ADMIN -> admin dashboard (CHỈ ADMIN MỚI ĐƯỢC VÀO)
         if (array_intersect($roleNames, ['admin', 'Super Admin', 'Admin'])) {
             return redirect()->route('admin.dashboard');
         }
 
-        // 2️⃣ HR -> admin dashboard (có quyền quản trị nhân sự)
-        if (in_array('hr', $roleNames) || in_array('HR', $roleNames)) {
-            return redirect()->route('admin.dashboard');
-        }
-
-        // 3️⃣ TRƯỞNG PHÒNG -> admin dashboard (có quyền xem báo cáo, duyệt đơn)
-        if (in_array('truong_phong', $roleNames)) {
-            return redirect()->route('admin.dashboard');
-        }
-
-        // 4️⃣ KẾ TOÁN -> admin dashboard (có quyền xem lương)
-        if (in_array('ke_toan', $roleNames)) {
-            return redirect()->route('admin.dashboard');
-        }
-
         // ============================================================
-        // ⭐ 5️⃣ NHÂN VIÊN -> CHUYỂN ĐẾN TRANG CHẤM CÔNG
+        // ⭐ TẤT CẢ CÁC VAI TRÒ KHÁC (HR, TRƯỞNG PHÒNG, KẾ TOÁN, NHÂN VIÊN) ĐỀU VÀO CHẤM CÔNG
         // ============================================================
+        
+        // 2️⃣ HR -> vào trang chấm công (không vào admin)
+        // 3️⃣ TRƯỞNG PHÒNG -> vào trang chấm công (không vào admin)
+        // 4️⃣ KẾ TOÁN -> vào trang chấm công (không vào admin)
+        // 5️⃣ NHÂN VIÊN -> vào trang chấm công
+
         // Thêm thông báo chào mừng
-        session()->flash('info', '👋 Chào mừng bạn! Vui lòng chấm công để bắt đầu ngày làm việc.');
+        $hoTen = $user->hoSo ? ($user->hoSo->ho . ' ' . $user->hoSo->ten) : $user->ten_dang_nhap;
+        session()->flash('info', '👋 Chào mừng ' . $hoTen . '! Vui lòng chấm công để bắt đầu ngày làm việc.');
         
         return redirect()->route('employee.cham-cong.index');
     }

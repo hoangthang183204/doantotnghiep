@@ -8,9 +8,9 @@ use App\Http\Middleware\CheckAttendanceLocation;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        api: __DIR__.'/../routes/api.php',
-        commands: __DIR__.'/../routes/console.php',
+        web: __DIR__ . '/../routes/web.php',
+        api: __DIR__ . '/../routes/api.php',
+        commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
@@ -36,13 +36,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
             'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
             'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-            
+
             // Middleware của bạn
             'admin' => \App\Http\Middleware\CheckAdmin::class,
             'employee' => \App\Http\Middleware\CheckEmployee::class,
             'role' => \App\Http\Middleware\CheckRoleAccess::class,
             'attendance.location' => \App\Http\Middleware\CheckAttendanceLocation::class,
             'CheckPermission' => \App\Http\Middleware\CheckPermission::class,
+            'truong_phong' => \App\Http\Middleware\CheckTruongPhong::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

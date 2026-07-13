@@ -10,7 +10,58 @@
     $isSuperAdmin = $user->vaiTros()->whereIn('name', ['admin', 'Super Admin'])->exists();
     $isAdmin = $user->vaiTros()->whereIn('name', ['admin', 'Super Admin'])->exists();
     $isHR = $user->vaiTros()->where('name', 'hr')->exists();
-    $isTruongPhong = $user->vaiTros()->where('name', 'truong_phong')->exists();
+    $isKeToan = $user->vaiTros()->where('name', 'ke_toan')->exists();
+
+    // ============================================================
+    // ⭐ KIỂM TRA TRƯỞNG PHÒNG - CHỈ KHI CÓ VAI TRÒ TRƯỞNG PHÒNG
+    // ============================================================
+    $isTruongPhong = false;
+    $phongBanInfo = null;
+
+    // ✅ CÁCH 1: Kiểm tra từ vai trò (QUAN TRỌNG NHẤT)
+    $isTruongPhong = $user->vaiTros()->whereIn('name', ['truong_phong', 'quan_ly'])->exists();
+    
+    if ($isTruongPhong) {
+        $phongBanInfo = $user->phongBan;
+        if (!$phongBanInfo) {
+            $phongBanInfo = \App\Models\PhongBan::where('truong_phong_id', $user->id)->first();
+        }
+    }
+
+    // ✅ CÁCH 2: Kiểm tra từ bảng phong_ban (nếu chưa có vai trò)
+    if (!$isTruongPhong) {
+        $phongBan = \App\Models\PhongBan::where('truong_phong_id', $user->id)->first();
+        if ($phongBan) {
+            $isTruongPhong = true;
+            $phongBanInfo = $phongBan;
+        }
+    }
+
+    // ✅ CÁCH 3: Kiểm tra từ chức vụ (nếu chưa có)
+    if (!$isTruongPhong && $user->chucVu) {
+        $chucVuTen = $user->chucVu->ten;
+        $keywords = ['Trưởng Phòng', 'Trưởng phòng', 'Quản lý', 'Manager'];
+        
+        foreach ($keywords as $keyword) {
+            if (str_contains($chucVuTen, $keyword)) {
+                $isTruongPhong = true;
+                $phongBanInfo = $user->phongBan;
+                break;
+            }
+        }
+    }
+
+    // ⛔ NẾU LÀ KẾ TOÁN -> KHÔNG HIỂN THỊ MENU QUẢN LÝ PHÒNG
+    if ($isKeToan) {
+        $isTruongPhong = false;
+        $phongBanInfo = null;
+    }
+
+    // ⛔ NẾU KHÔNG CÓ PHÒNG BAN -> KHÔNG HIỂN THỊ
+    if ($isTruongPhong && !$phongBanInfo) {
+        $isTruongPhong = false;
+    }
+
     $isAdminOrHR = $isAdmin || $isHR || $isTruongPhong;
 
     // ============================================================
@@ -177,7 +228,399 @@
             @endif
 
             {{-- ========================================================== --}}
-            {{-- ⭐ 4. CÁC MENU KHÁC --}}
+            {{-- ⭐ 4. QUẢN LÝ PHÒNG BAN (CHỈ TRƯỞNG PHÒNG - KHÔNG BAO GỒM KẾ TOÁN) --}}
+            {{-- ========================================================== --}}
+            @if ($isTruongPhong && !$isKeToan)
+                <li>
+                    <details class="menu-details"
+                        {{ str_starts_with($currentRoute, 'truong-phong.') ||
+                        str_starts_with($currentRoute, 'duyet-don.') ||
+                        str_starts_with($currentRoute, 'duyet-tang-ca.') ||
+                        str_starts_with($currentRoute, 'duyet-chinh-cong.')
+                            ? 'open'
+                            : '' }}>
+                        <summary
+                            class="flex items-center w-full px-3 py-2.5 rounded-lg transition-colors cursor-pointer 
+                            {{ str_starts_with($currentRoute, 'truong-phong.') ||
+                            str_starts_with($currentRoute, 'duyet-don.') ||
+                            str_starts_with($currentRoute, 'duyet-tang-ca.') ||
+                            str_starts_with($currentRoute, 'duyet-chinh-cong.')
+                                ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                            <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            </span>
+                            <span class="flex-1 text-left font-medium menu-text">
+                                Quản lý phòng
+                                @if ($phongBanInfo)
+                                    <span class="text-xs text-blue-500 dark:text-blue-400 block font-normal">
+                                        {{ $phongBanInfo->ten_phong_ban }}
+                                        <span
+                                            class="ml-1 text-xs bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
+                                            {{ \App\Models\NguoiDung::where('phong_ban_id', $phongBanInfo->id)->where('trang_thai', 1)->count() }}
+                                        </span>
+                                    </span>
+                                @endif
+                            </span>
+                            <svg class="w-4 h-4 transition-transform duration-200 arrow-icon flex-shrink-0 
+                                {{ str_starts_with($currentRoute, 'truong-phong.') ||
+                                str_starts_with($currentRoute, 'duyet-don.') ||
+                                str_starts_with($currentRoute, 'duyet-tang-ca.') ||
+                                str_starts_with($currentRoute, 'duyet-chinh-cong.')
+                                    ? 'rotate-180'
+                                    : '' }}"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </summary>
+                        <ul class="pl-10 mt-1 space-y-1">
+
+                            {{-- Dashboard trưởng phòng --}}
+                            @if (Route::has('truong-phong.dashboard'))
+                                <li>
+                                    <a href="{{ route('truong-phong.dashboard') }}"
+                                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors 
+                                        {{ $currentRoute == 'truong-phong.dashboard'
+                                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                        <svg class="w-4 h-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg"
+                                            fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                        </svg>
+                                        <span class="menu-text">Tổng quan phòng ban</span>
+                                    </a>
+                                </li>
+                            @endif
+
+                            {{-- Nhân viên trong phòng --}}
+                            @if (Route::has('truong-phong.nhan-vien.index'))
+                                <li>
+                                    <a href="{{ route('truong-phong.nhan-vien.index') }}"
+                                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors 
+                                        {{ str_starts_with($currentRoute, 'truong-phong.nhan-vien.')
+                                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                        <svg class="w-4 h-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg"
+                                            fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                        </svg>
+                                        <span class="menu-text">Nhân viên</span>
+                                    </a>
+                                </li>
+                            @endif
+
+                            {{-- Đơn nghỉ phép (của nhân viên trong phòng) --}}
+                            @if (Route::has('truong-phong.don-nghi.index'))
+                                <li>
+                                    <a href="{{ route('truong-phong.don-nghi.index') }}"
+                                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors 
+                                        {{ str_starts_with($currentRoute, 'truong-phong.don-nghi.')
+                                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                        <svg class="w-4 h-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg"
+                                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                            stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        <span class="menu-text">Đơn nghỉ phép</span>
+                                        @php
+                                            $donNghiChoDuyet = \App\Models\DonXinNghi::whereIn(
+                                                'nguoi_dung_id',
+                                                function ($q) use ($phongBanInfo) {
+                                                    $q->select('id')
+                                                        ->from('nguoi_dung')
+                                                        ->where('phong_ban_id', $phongBanInfo->id);
+                                                },
+                                            )
+                                                ->where('trang_thai', 'cho_duyet')
+                                                ->count();
+                                        @endphp
+                                        @if ($donNghiChoDuyet > 0)
+                                            <span
+                                                class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                                                {{ $donNghiChoDuyet }}
+                                            </span>
+                                        @endif
+                                    </a>
+                                </li>
+                            @endif
+
+                            {{-- ⭐ DUYỆT ĐƠN NGHỈ PHÉP (dùng chung) --}}
+                            @if (Route::has('duyet-don.index'))
+                                <li>
+                                    <a href="{{ route('duyet-don.index') }}"
+                                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors 
+                                        {{ str_starts_with($currentRoute, 'duyet-don.')
+                                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                        <svg class="w-4 h-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg"
+                                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                            stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span class="menu-text">Duyệt đơn nghỉ phép</span>
+                                        @php
+                                            $donChoDuyetCount = \App\Models\DonXinNghi::whereIn(
+                                                'nguoi_dung_id',
+                                                function ($q) use ($phongBanInfo) {
+                                                    $q->select('id')
+                                                        ->from('nguoi_dung')
+                                                        ->where('phong_ban_id', $phongBanInfo->id);
+                                                },
+                                            )
+                                                ->where('trang_thai', 'cho_duyet')
+                                                ->count();
+                                        @endphp
+                                        @if ($donChoDuyetCount > 0)
+                                            <span
+                                                class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                                                {{ $donChoDuyetCount }}
+                                            </span>
+                                        @endif
+                                    </a>
+                                </li>
+                            @endif
+
+                            {{-- ⭐ DUYỆT TĂNG CA (dùng chung) --}}
+                            @if (Route::has('duyet-tang-ca.index'))
+                                <li>
+                                    <a href="{{ route('duyet-tang-ca.index') }}"
+                                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors 
+                                        {{ str_starts_with($currentRoute, 'duyet-tang-ca.')
+                                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                        <svg class="w-4 h-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg"
+                                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                            stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span class="menu-text">Duyệt tăng ca</span>
+                                        @php
+                                            $tangCaChoDuyet = \App\Models\DangKyTangCa::whereIn(
+                                                'nguoi_dung_id',
+                                                function ($q) use ($phongBanInfo) {
+                                                    $q->select('id')
+                                                        ->from('nguoi_dung')
+                                                        ->where('phong_ban_id', $phongBanInfo->id);
+                                                },
+                                            )
+                                                ->where('trang_thai', 'cho_duyet')
+                                                ->count();
+                                        @endphp
+                                        @if ($tangCaChoDuyet > 0)
+                                            <span
+                                                class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                                                {{ $tangCaChoDuyet }}
+                                            </span>
+                                        @endif
+                                    </a>
+                                </li>
+                            @endif
+
+                            {{-- ⭐ DUYỆT CHỈNH CÔNG (dùng chung) --}}
+                            @if (Route::has('duyet-chinh-cong.index'))
+                                <li>
+                                    <a href="{{ route('duyet-chinh-cong.index') }}"
+                                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors 
+                                        {{ str_starts_with($currentRoute, 'duyet-chinh-cong.')
+                                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                        <svg class="w-4 h-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg"
+                                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                            stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                        <span class="menu-text">Duyệt chỉnh công</span>
+                                        @php
+                                            $chinhCongChoDuyet = \App\Models\YeuCauDieuChinhCong::whereIn(
+                                                'nguoi_dung_id',
+                                                function ($q) use ($phongBanInfo) {
+                                                    $q->select('id')
+                                                        ->from('nguoi_dung')
+                                                        ->where('phong_ban_id', $phongBanInfo->id);
+                                                },
+                                            )
+                                                ->where('trang_thai', 'cho_duyet')
+                                                ->count();
+                                        @endphp
+                                        @if ($chinhCongChoDuyet > 0)
+                                            <span
+                                                class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                                                {{ $chinhCongChoDuyet }}
+                                            </span>
+                                        @endif
+                                    </a>
+                                </li>
+                            @endif
+
+                            {{-- Đơn tăng ca --}}
+                            @if (Route::has('truong-phong.tang-ca.index'))
+                                <li>
+                                    <a href="{{ route('truong-phong.tang-ca.index') }}"
+                                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors 
+                                        {{ str_starts_with($currentRoute, 'truong-phong.tang-ca.')
+                                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                        <svg class="w-4 h-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg"
+                                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                            stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span class="menu-text">Tăng ca</span>
+                                    </a>
+                                </li>
+                            @endif
+
+                            {{-- Yêu cầu chỉnh công --}}
+                            @if (Route::has('truong-phong.yeu-cau-chinh-cong.index'))
+                                <li>
+                                    <a href="{{ route('truong-phong.yeu-cau-chinh-cong.index') }}"
+                                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors 
+                                        {{ str_starts_with($currentRoute, 'truong-phong.yeu-cau-chinh-cong.')
+                                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                        <svg class="w-4 h-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg"
+                                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                            stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                        <span class="menu-text">Chỉnh công</span>
+                                    </a>
+                                </li>
+                            @endif
+
+                            {{-- ⭐⭐⭐ BÁO CÁO ⭐⭐⭐ --}}
+                            <li>
+                                <details class="menu-details"
+                                    {{ str_starts_with($currentRoute, 'truong-phong.bao-cao.') ? 'open' : '' }}>
+                                    <summary
+                                        class="flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer 
+                                        {{ str_starts_with($currentRoute, 'truong-phong.bao-cao.')
+                                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                        <svg class="w-4 h-4 mr-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg"
+                                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                            stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                        </svg>
+                                        <span class="flex-1 text-left font-medium menu-text">Báo cáo</span>
+                                        <svg class="w-4 h-4 transition-transform duration-200 arrow-icon flex-shrink-0 
+                                            {{ str_starts_with($currentRoute, 'truong-phong.bao-cao.') ? 'rotate-180' : '' }}"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </summary>
+                                    <ul class="pl-8 mt-1 space-y-1">
+
+                                        {{-- Báo cáo tổng quan --}}
+                                        @if (Route::has('truong-phong.bao-cao.overview'))
+                                            <li>
+                                                <a href="{{ route('truong-phong.bao-cao.overview') }}"
+                                                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors 
+                                                    {{ $currentRoute == 'truong-phong.bao-cao.overview'
+                                                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                                    <svg class="w-4 h-4 flex-shrink-0"
+                                                        xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                                                    </svg>
+                                                    <span class="menu-text">Tổng quan</span>
+                                                </a>
+                                            </li>
+                                        @endif
+
+                                        {{-- Báo cáo chấm công --}}
+                                        @if (Route::has('truong-phong.bao-cao.attendance'))
+                                            <li>
+                                                <a href="{{ route('truong-phong.bao-cao.attendance') }}"
+                                                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors 
+                                                    {{ $currentRoute == 'truong-phong.bao-cao.attendance'
+                                                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                                    <svg class="w-4 h-4 flex-shrink-0"
+                                                        xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    <span class="menu-text">Chấm công</span>
+                                                </a>
+                                            </li>
+                                        @endif
+
+                                        {{-- Báo cáo nghỉ phép --}}
+                                        @if (Route::has('truong-phong.bao-cao.leave'))
+                                            <li>
+                                                <a href="{{ route('truong-phong.bao-cao.leave') }}"
+                                                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors 
+                                                    {{ $currentRoute == 'truong-phong.bao-cao.leave'
+                                                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                                    <svg class="w-4 h-4 flex-shrink-0"
+                                                        xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                    <span class="menu-text">Nghỉ phép</span>
+                                                </a>
+                                            </li>
+                                        @endif
+
+                                        {{-- Xuất báo cáo --}}
+                                        @if (Route::has('truong-phong.bao-cao.export'))
+                                            <li>
+                                                <a href="{{ route('truong-phong.bao-cao.export') }}"
+                                                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors 
+                                                    {{ $currentRoute == 'truong-phong.bao-cao.export'
+                                                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                                    <svg class="w-4 h-4 flex-shrink-0"
+                                                        xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                                    </svg>
+                                                    <span class="menu-text">Xuất Excel</span>
+                                                </a>
+                                            </li>
+                                        @endif
+
+                                    </ul>
+                                </details>
+                            </li>
+
+                        </ul>
+                    </details>
+                </li>
+            @endif
+
+            {{-- ========================================================== --}}
+            {{-- ⭐ 5. CÁC MENU KHÁC --}}
             {{-- ========================================================== --}}
 
             {{-- 🔹 NHÂN SỰ (ADMIN) --}}
@@ -243,7 +686,10 @@
                     $submenuChamCongAdmin[] = ['title' => 'Phê duyệt tăng ca', 'route' => 'admin.tang-ca.index'];
                 }
                 if ($canApproveAdjustment && Route::has('admin.yeu-cau-dieu-chinh-cong.index')) {
-                    $submenuChamCongAdmin[] = ['title' => 'Yêu cầu chỉnh công', 'route' => 'admin.yeu-cau-dieu-chinh-cong.index'];
+                    $submenuChamCongAdmin[] = [
+                        'title' => 'Yêu cầu chỉnh công',
+                        'route' => 'admin.yeu-cau-dieu-chinh-cong.index',
+                    ];
                 }
             @endphp
             @if (!empty($submenuChamCongAdmin))
@@ -393,44 +839,6 @@
 
                         <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
 
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                stroke-width="1.7">
-
-                                <!-- Ví -->
-                                <path stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M3 8a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
-
-                                <path stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M17 11h4v2h-4a1 1 0 110-2z"/>
-
-                                <!-- Tiền -->
-                                <path stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M8 6v3m2-3v3"/>
-
-                                <!-- Tay lấy tiền -->
-                                <path stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M9 15l2-1.5c.5-.4 1.2-.3 1.6.2l.8 1
-                                    2-.7c.6-.2 1.2.1 1.4.7.2.6-.1 1.2-.7 1.4l-3.8 1.4c-.7.3-1.4.2-2-.2L8 16.5"/>
-
-                            </svg>
-
-                        </span>
-
-                        <span class="font-medium menu-text">
-                            Ứng lương
-                        </span>
-
-                    </a>
-                </li>
-            @endif
-            
             {{-- 🔹 HỢP ĐỒNG (ADMIN) --}}
             @if ($canViewContract)
                 <li>
@@ -517,97 +925,55 @@
             @endif
 
             {{-- 🔹 ĐÀO TẠO (ADMIN) --}}
-            {{-- ========================================================== --}}
-            {{-- 🔹 ĐÀO TẠO (ADMIN) --}}
-            {{-- ========================================================== --}}
-            @if(auth()->user()->hasPermission('dao-tao.index') || auth()->user()->hasPermission('chung-chi.index'))
-
-            <li x-data="{ open: {{ str_starts_with($currentRoute, 'admin.dao-tao') || str_starts_with($currentRoute, 'admin.chung-chi') ? 'true' : 'false' }} }">
-
-                <button
-                    @click="open = !open"
-                    class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors
-                    {{ str_starts_with($currentRoute,'admin.dao-tao') || str_starts_with($currentRoute,'admin.chung-chi')
-                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-
-                    <div class="flex items-center">
-
-                        <span class="w-5 h-5 mr-3 flex-shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.8"
-                                stroke="currentColor"
-                                class="w-6 h-6">
-                                <path stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M12 14 3 9l9-5 9 5-9 5Zm0 0v6m6-8v4c0 1.5-2.7 3-6 3s-6-1.5-6-3v-4"/>
-                            </svg>
-                        </span>
-
-                        <span class="font-medium menu-text">
-                            Đào tạo
-                        </span>
-
-                    </div>
-
-                    {{-- Mũi tên --}}
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                        class="w-4 h-4 transition-transform duration-200"
-                        :class="open ? 'rotate-180' : ''"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M19 9l-7 7-7-7"/>
-                    </svg>
-
-                </button>
-
-                {{-- Sub Menu --}}
-                <ul
-                    x-show="open"
-                    x-transition
-                    x-cloak
-                    class="mt-2 ml-8 space-y-1">
-
-                    {{-- Quản lý đào tạo --}}
-                    @if(auth()->user()->hasPermission('dao-tao.index'))
-                    <li>
-                        <a href="{{ route('admin.dao-tao.index') }}"
-                            class="block px-3 py-2 rounded-lg text-sm transition
-                            {{ str_starts_with($currentRoute,'admin.dao-tao')
-                                ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400'
-                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-
-                            Quản lý đào tạo nhân viên
-
-                        </a>
-                    </li>
-                    @endif
-
-                    {{-- Quản lý chứng chỉ --}}
-                    @if(auth()->user()->hasPermission('chung-chi.index'))
-                    <li>
-                        <a href="{{ route('admin.chung-chi.index') }}"
-                            class="block px-3 py-2 rounded-lg text-sm transition
-                            {{ str_starts_with($currentRoute,'admin.chung-chi')
-                                ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400'
-                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-
-                            Quản lý chứng chỉ nhân viên
-
-                        </a>
-                    </li>
-                    @endif
-
-                </ul>
-
-            </li>
-
+            @if ($canViewDaoTao)
+                <li x-data="{ open: {{ str_starts_with($currentRoute, 'admin.dao-tao') || str_starts_with($currentRoute, 'admin.chung-chi') ? 'true' : 'false' }} }">
+                    <button @click="open = !open"
+                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors
+                        {{ str_starts_with($currentRoute, 'admin.dao-tao') || str_starts_with($currentRoute, 'admin.chung-chi')
+                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <div class="flex items-center">
+                            <span class="w-5 h-5 mr-3 flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M12 14 3 9l9-5 9 5-9 5Zm0 0v6m6-8v4c0 1.5-2.7 3-6 3s-6-1.5-6-3v-4" />
+                                </svg>
+                            </span>
+                            <span class="font-medium menu-text">Đào tạo</span>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 transition-transform duration-200"
+                            :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <ul x-show="open" x-transition x-cloak class="mt-2 ml-8 space-y-1">
+                        @if (auth()->user()->hasPermission('dao-tao.index'))
+                            <li>
+                                <a href="{{ route('admin.dao-tao.index') }}"
+                                    class="block px-3 py-2 rounded-lg text-sm transition
+                                    {{ str_starts_with($currentRoute, 'admin.dao-tao')
+                                        ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400'
+                                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                    Quản lý đào tạo nhân viên
+                                </a>
+                            </li>
+                        @endif
+                        @if (auth()->user()->hasPermission('chung-chi.index'))
+                            <li>
+                                <a href="{{ route('admin.chung-chi.index') }}"
+                                    class="block px-3 py-2 rounded-lg text-sm transition
+                                    {{ str_starts_with($currentRoute, 'admin.chung-chi')
+                                        ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400'
+                                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                    Quản lý chứng chỉ nhân viên
+                                </a>
+                            </li>
+                        @endif
+                    </ul>
+                </li>
             @endif
 
             {{-- 🔹 KHEN THƯỞNG / KỶ LUẬT (ADMIN) --}}
