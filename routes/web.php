@@ -286,7 +286,7 @@ Route::prefix('admin')
             Route::delete('/{id}', [KhauTruKhacController::class, 'destroy'])->middleware('CheckPermission:salary.create')->name('destroy');
             Route::post('/{id}/approve', [KhauTruKhacController::class, 'approve'])->middleware(['CheckPermission:salary.approve'])->name('approve');
             Route::post('/{id}/reject', [KhauTruKhacController::class, 'reject'])->middleware(['CheckPermission:salary.reject'])->name('reject');
-            Route::post('/{id}/undo', [KhauTruKhacController::class, 'undo'])->middleware(['CheckPermission:salary.undo'])->name('undo');
+            Route::post('/{id}/undo', [KhauTruKhacController::class, 'undo'])->name('undo');
 });
 
         // ========== THỐNG KÊ QUỸ LƯƠNG THEO PHÒNG BAN - CHỈ HR VÀ ADMIN ==========
@@ -571,6 +571,13 @@ Route::prefix('employee')
             Route::get('/', [EmployeeBangLuongController::class, 'index'])->name('index');
             Route::get('/nam/{year}', [EmployeeBangLuongController::class, 'year'])->whereNumber('year')->name('year');
             Route::get('/{id}', [EmployeeBangLuongController::class, 'show'])->whereNumber('id')->name('show');
+        });
+        // ========== ỨNG LƯƠNG ==========
+        Route::prefix('ung-luong')->name('ung-luong.')->group(function () {
+            Route::get('/', [UngLuongController::class, 'index'])->name('index');          // Khớp hàm index()
+            Route::get('/create', [UngLuongController::class, 'create'])->name('create');    // Khớp hàm create()[cite: 2]
+            Route::post('/', [UngLuongController::class, 'store'])->name('store');          // Khớp hàm store()[cite: 2]
+            Route::post('/{id}/huy', [UngLuongController::class, 'cancel'])->name('huy');    // Đổi từ 'huy' thành 'cancel' để khớp[cite: 2]
         });
 
         // ========== THÔNG BÁO ==========
