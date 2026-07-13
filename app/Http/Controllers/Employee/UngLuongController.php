@@ -58,11 +58,15 @@ class UngLuongController extends Controller
                     'required',
                     'numeric',
                     'min:100000',
-                    'max:' . $gioiHan,
+                    function ($attribute, $value, $fail) use ($gioiHan) {
+                        if ($value > $gioiHan) {
+                            $fail('Bạn chỉ được ứng tối đa ' .
+                                number_format($gioiHan,0,',','.') .
+                                ' VNĐ (1 tháng lương).');
+                        }
+                    },
                 ],
                 'ly_do' => 'required|max:255',
-            ], [
-                'so_tien.max' => 'Bạn chỉ được ứng tối đa ' . number_format($gioiHan, 0, ',', '.') . ' VNĐ (1 tháng lương).',
             ]);
 
         KhauTruKhac::create([
@@ -72,7 +76,7 @@ class UngLuongController extends Controller
             'loai'          => 'tam_ung',
             'so_tien'       => $request->so_tien,
             'ly_do'         => $request->ly_do,
-            'trang_thai'    => 'huy',
+            'trang_thai' => 'cho_duyet',
             'nguoi_tao_id'  => Auth::id(),
         ]);
 
@@ -89,14 +93,17 @@ class UngLuongController extends Controller
             ->firstOrFail();
 
         // Chỉ được hủy khi còn chờ duyệt
-        if ($ungLuong->trang_thai != 'huy') {
-            return back()->with('error', 'Yêu cầu này đã được duyệt nên không thể hủy.');
-        }
+        if ($ungLuong->trang_thai != 'cho_duyet') {
+            return back()->with('error', 'Chỉ yêu cầu đang chờ duyệt mới được hủy.');
+                }
 
-        $ungLuong->delete();
+                // Không nên xóa luôn
+                $ungLuong->update([
+                    'trang_thai' => 'huy'
+                ]);
 
-        return redirect()
-            ->route('employee.ung-luong.index')
-            ->with('success', 'Đã hủy yêu cầu ứng lương.');
+                return redirect()
+                    ->route('employee.ung-luong.index')
+                    ->with('success', 'Đã hủy yêu cầu ứng lương.');
     }
 }
