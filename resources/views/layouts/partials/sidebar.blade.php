@@ -13,12 +13,12 @@
     $isKeToan = $user->vaiTros()->where('name', 'ke_toan')->exists();
 
     // ============================================================
-    // ⭐ KIỂM TRA TRƯỞNG PHÒNG - CHỈ KHI CÓ VAI TRÒ TRƯỞNG PHÒNG
+    // ⭐ KIỂM TRA TRƯỞNG PHÒNG
     // ============================================================
     $isTruongPhong = false;
     $phongBanInfo = null;
 
-    // ✅ CÁCH 1: Kiểm tra từ vai trò (QUAN TRỌNG NHẤT)
+    // CÁCH 1: Kiểm tra từ vai trò
     $isTruongPhong = $user->vaiTros()->whereIn('name', ['truong_phong', 'quan_ly'])->exists();
     
     if ($isTruongPhong) {
@@ -28,7 +28,7 @@
         }
     }
 
-    // ✅ CÁCH 2: Kiểm tra từ bảng phong_ban (nếu chưa có vai trò)
+    // CÁCH 2: Kiểm tra từ bảng phong_ban
     if (!$isTruongPhong) {
         $phongBan = \App\Models\PhongBan::where('truong_phong_id', $user->id)->first();
         if ($phongBan) {
@@ -37,7 +37,7 @@
         }
     }
 
-    // ✅ CÁCH 3: Kiểm tra từ chức vụ (nếu chưa có)
+    // CÁCH 3: Kiểm tra từ chức vụ
     if (!$isTruongPhong && $user->chucVu) {
         $chucVuTen = $user->chucVu->ten;
         $keywords = ['Trưởng Phòng', 'Trưởng phòng', 'Quản lý', 'Manager'];
@@ -171,7 +171,7 @@
         <ul class="space-y-1">
 
             {{-- ========================================================== --}}
-            {{-- ⭐ 1. CHẤM CÔNG - ĐẶT LÊN ĐẦU TIÊN --}}
+            {{-- ⭐ 1. CHẤM CÔNG --}}
             {{-- ========================================================== --}}
             @if ($canCheckin || $canCheckout || $canViewAttendanceHistory)
                 <li>
@@ -230,7 +230,7 @@
             {{-- ========================================================== --}}
             {{-- ⭐ 4. QUẢN LÝ PHÒNG BAN (CHỈ TRƯỞNG PHÒNG - KHÔNG BAO GỒM KẾ TOÁN) --}}
             {{-- ========================================================== --}}
-            @if ($isTruongPhong && !$isKeToan)
+            @if ($isTruongPhong)
                 <li>
                     <details class="menu-details"
                         {{ str_starts_with($currentRoute, 'truong-phong.') ||
@@ -316,7 +316,7 @@
                                 </li>
                             @endif
 
-                            {{-- Đơn nghỉ phép (của nhân viên trong phòng) --}}
+                            {{-- Đơn nghỉ phép --}}
                             @if (Route::has('truong-phong.don-nghi.index'))
                                 <li>
                                     <a href="{{ route('truong-phong.don-nghi.index') }}"
@@ -353,7 +353,7 @@
                                 </li>
                             @endif
 
-                            {{-- ⭐ DUYỆT ĐƠN NGHỈ PHÉP (dùng chung) --}}
+                            {{-- DUYỆT ĐƠN NGHỈ PHÉP --}}
                             @if (Route::has('duyet-don.index'))
                                 <li>
                                     <a href="{{ route('duyet-don.index') }}"
@@ -390,7 +390,7 @@
                                 </li>
                             @endif
 
-                            {{-- ⭐ DUYỆT TĂNG CA (dùng chung) --}}
+                            {{-- DUYỆT TĂNG CA --}}
                             @if (Route::has('duyet-tang-ca.index'))
                                 <li>
                                     <a href="{{ route('duyet-tang-ca.index') }}"
@@ -427,7 +427,7 @@
                                 </li>
                             @endif
 
-                            {{-- ⭐ DUYỆT CHỈNH CÔNG (dùng chung) --}}
+                            {{-- DUYỆT CHỈNH CÔNG --}}
                             @if (Route::has('duyet-chinh-cong.index'))
                                 <li>
                                     <a href="{{ route('duyet-chinh-cong.index') }}"
@@ -464,7 +464,7 @@
                                 </li>
                             @endif
 
-                            {{-- Đơn tăng ca --}}
+                            {{-- Tăng ca --}}
                             @if (Route::has('truong-phong.tang-ca.index'))
                                 <li>
                                     <a href="{{ route('truong-phong.tang-ca.index') }}"
@@ -502,7 +502,7 @@
                                 </li>
                             @endif
 
-                            {{-- ⭐⭐⭐ BÁO CÁO ⭐⭐⭐ --}}
+                            {{-- BÁO CÁO --}}
                             <li>
                                 <details class="menu-details"
                                     {{ str_starts_with($currentRoute, 'truong-phong.bao-cao.') ? 'open' : '' }}>
@@ -623,7 +623,7 @@
             {{-- ⭐ 5. CÁC MENU KHÁC --}}
             {{-- ========================================================== --}}
 
-            {{-- 🔹 NHÂN SỰ (ADMIN) --}}
+            {{-- NHÂN SỰ --}}
             @php
                 $submenuNhanSu = [];
                 if ($canViewEmployee && Route::has('admin.ho-so.index')) {
@@ -676,7 +676,7 @@
                 </li>
             @endif
 
-            {{-- 🔹 QUẢN LÝ CHẤM CÔNG (ADMIN) --}}
+            {{-- QUẢN LÝ CHẤM CÔNG --}}
             @php
                 $submenuChamCongAdmin = [];
                 if ($canViewAttendance && Route::has('admin.cham-cong.index')) {
@@ -726,7 +726,7 @@
                 </li>
             @endif
 
-            {{-- 🔹 ĐƠN XIN TĂNG CA (EMPLOYEE) --}}
+            {{-- ĐƠN XIN TĂNG CA --}}
             @if ($canCreateOvertime || $canViewOvertime)
                 <li>
                     <a href="{{ route('employee.tang-ca.index') }}"
@@ -743,7 +743,7 @@
                 </li>
             @endif
 
-            {{-- 🔹 YÊU CẦU CHỈNH CÔNG (EMPLOYEE) --}}
+            {{-- YÊU CẦU CHỈNH CÔNG --}}
             @if ($canCreateAdjustment || $canViewAdjustment)
                 <li>
                     <a href="{{ route('employee.yeu-cau-chinh-cong.index') }}"
@@ -760,7 +760,7 @@
                 </li>
             @endif
 
-            {{-- 🔹 LƯƠNG (ADMIN) --}}
+            {{-- LƯƠNG --}}
             @php
                 $submenuLuong = [];
                 if ($canViewSalary && Route::has('admin.bang-luong.index')) {
@@ -813,7 +813,7 @@
                 </li>
             @endif
 
-            {{-- 🔹 BẢNG LƯƠNG CỦA TÔI (EMPLOYEE) --}}
+            {{-- BẢNG LƯƠNG CỦA TÔI --}}
             @if ($canViewPayroll)
                 <li>
                     <a href="{{ route('employee.bang-luong.index') }}"
@@ -829,17 +829,8 @@
                     </a>
                 </li>
             @endif
-            @if(auth()->user()->hasPermission('ungluong.index'))
-                <li>
-                    <a href="{{ route('employee.ung-luong.index') }}"
-                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors
-                        {{ str_starts_with($currentRoute,'employee.ung-luong')
-                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
 
-                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
-
-            {{-- 🔹 HỢP ĐỒNG (ADMIN) --}}
+            {{-- HỢP ĐỒNG --}}
             @if ($canViewContract)
                 <li>
                     <a href="{{ route('admin.hop-dong.index') }}"
@@ -856,7 +847,7 @@
                 </li>
             @endif
 
-            {{-- 🔹 HỢP ĐỒNG CỦA TÔI (EMPLOYEE) --}}
+            {{-- HỢP ĐỒNG CỦA TÔI --}}
             @if ($canViewContractPersonal)
                 <li>
                     <a href="{{ route('employee.hop-dong.index') }}"
@@ -873,7 +864,7 @@
                 </li>
             @endif
 
-            {{-- 🔹 DUYỆT ĐƠN (ADMIN) --}}
+            {{-- DUYỆT ĐƠN NGHỈ PHÉP --}}
             @if ($canApproveLeave)
                 <li>
                     <a href="{{ route('admin.don_nghi.index') }}"
@@ -890,7 +881,7 @@
                 </li>
             @endif
 
-            {{-- 🔹 ĐƠN NGHỈ PHÉP (EMPLOYEE) --}}
+            {{-- ĐƠN NGHỈ PHÉP --}}
             @if ($canViewLeaveHistory || $canRequestLeave)
                 <li>
                     <a href="{{ route('employee.don-nghi.index') }}"
@@ -907,7 +898,7 @@
                 </li>
             @endif
 
-            {{-- 🔹 LOẠI NGHỈ PHÉP (ADMIN) --}}
+            {{-- LOẠI NGHỈ PHÉP --}}
             @if ($canViewLeaveType)
                 <li>
                     <a href="{{ route('admin.loai-nghi-phep.index') }}"
@@ -924,7 +915,7 @@
                 </li>
             @endif
 
-            {{-- 🔹 ĐÀO TẠO (ADMIN) --}}
+            {{-- ĐÀO TẠO --}}
             @if ($canViewDaoTao)
                 <li x-data="{ open: {{ str_starts_with($currentRoute, 'admin.dao-tao') || str_starts_with($currentRoute, 'admin.chung-chi') ? 'true' : 'false' }} }">
                     <button @click="open = !open"
@@ -976,7 +967,7 @@
                 </li>
             @endif
 
-            {{-- 🔹 KHEN THƯỞNG / KỶ LUẬT (ADMIN) --}}
+            {{-- KHEN THƯỞNG / KỶ LUẬT --}}
             @if ($canViewReward)
                 @php
                     $submenuReward = [];
@@ -1024,7 +1015,7 @@
                 @endif
             @endif
 
-            {{-- 🔹 QUY ĐỊNH (ADMIN) --}}
+            {{-- QUY ĐỊNH --}}
             @if ($canViewRegulation && Route::has('admin.quy-dinh.index'))
                 <li>
                     <a href="{{ route('admin.quy-dinh.index') }}"
@@ -1041,7 +1032,7 @@
                 </li>
             @endif
 
-            {{-- 🔹 QUY ĐỊNH (EMPLOYEE) --}}
+            {{-- QUY ĐỊNH (EMPLOYEE) --}}
             @if ($canViewRegulationEmployee)
                 <li>
                     <a href="{{ route('employee.quydinh.index') }}"
@@ -1058,7 +1049,7 @@
                 </li>
             @endif
 
-            {{-- 🔹 CÀI ĐẶT (ADMIN) --}}
+            {{-- CÀI ĐẶT --}}
             @php
                 $submenuCaiDat = [];
                 if ($canManagePermission && Route::has('admin.phan-quyen.index')) {
@@ -1102,7 +1093,7 @@
                 </li>
             @endif
 
-            {{-- 🔹 THÔNG BÁO --}}
+            {{-- THÔNG BÁO --}}
             @if ($canViewNotifications)
                 <li>
                     <a href="{{ route('employee.notifications.index') }}"
