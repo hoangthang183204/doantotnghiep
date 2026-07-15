@@ -55,32 +55,20 @@
         @endif
 
         {{-- BỘ LỌC TÌM KIẾM --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
             <form method="GET" action="{{ route('admin.tang-ca.index') }}">
-                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                    <div>
-                        <label class="block mb-2 font-medium text-sm text-gray-700 dark:text-gray-300">Tên nhân viên</label>
+                <div class="flex flex-wrap items-end gap-3">
+                    <div class="flex-1 min-w-[150px]">
+                        <label class="block mb-1 text-xs font-medium text-gray-700 dark:text-gray-300">Tên nhân viên</label>
                         <input type="text" name="ten_nhan_vien" value="{{ request('ten_nhan_vien') }}"
                             placeholder="Nhập tên..."
-                            class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
-                    <div>
-                        <label class="block mb-2 font-medium text-sm text-gray-700 dark:text-gray-300">Phòng ban</label>
-                        <select name="phong_ban_id"
-                            class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
-                            <option value="">-- Tất cả --</option>
-                            @foreach ($phongBans ?? [] as $pb)
-                                <option value="{{ $pb->id }}"
-                                    {{ request('phong_ban_id') == $pb->id ? 'selected' : '' }}>
-                                    {{ $pb->ten_phong_ban }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block mb-2 font-medium text-sm text-gray-700 dark:text-gray-300">Trạng thái</label>
+
+                    <div class="flex-1 min-w-[130px]">
+                        <label class="block mb-1 text-xs font-medium text-gray-700 dark:text-gray-300">Trạng thái</label>
                         <select name="trang_thai"
-                            class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             <option value="">-- Tất cả --</option>
                             <option value="cho_duyet" {{ request('trang_thai') == 'cho_duyet' ? 'selected' : '' }}>⏳ Chờ
                                 duyệt</option>
@@ -92,25 +80,35 @@
                             </option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block mb-2 font-medium text-sm text-gray-700 dark:text-gray-300">Từ ngày</label>
+
+                    <div class="flex-1 min-w-[130px]">
+                        <label class="block mb-1 text-xs font-medium text-gray-700 dark:text-gray-300">Từ ngày</label>
                         <input type="date" name="tu_ngay" value="{{ request('tu_ngay') }}"
-                            class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
-                    <div>
-                        <label class="block mb-2 font-medium text-sm text-gray-700 dark:text-gray-300">Đến ngày</label>
+
+                    <div class="flex-1 min-w-[130px]">
+                        <label class="block mb-1 text-xs font-medium text-gray-700 dark:text-gray-300">Đến ngày</label>
                         <input type="date" name="den_ngay" value="{{ request('den_ngay') }}"
-                            class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
-                    <div class="flex items-end gap-2">
+
+                    <div class="flex items-center gap-2">
                         <button type="submit"
-                            class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
-                            🔍 Tìm kiếm
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition flex items-center gap-1">
+                            <i class="fas fa-search text-xs"></i>
+                            Tìm kiếm
                         </button>
                         <a href="{{ route('admin.tang-ca.index') }}"
-                            class="px-5 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition">
-                            🔄 Làm mới
+                            class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm rounded-lg transition flex items-center gap-1">
+                            <i class="fas fa-sync-alt text-xs"></i>
+                            Làm mới
                         </a>
+                    </div>
+
+                    <div class="text-sm text-gray-500 dark:text-gray-400 ml-auto whitespace-nowrap">
+                        <i class="fas fa-database mr-1"></i>
+                        {{ $donTangCa->total() ?? 0 }} kết quả
                     </div>
                 </div>
             </form>
@@ -177,17 +175,16 @@
                                         ? $nguoiDung->phongBan->ten_phong_ban ?? 'N/A'
                                         : 'N/A';
 
+                                // ⭐ LOẠI TĂNG CA - BỎ LỄ TẾT
                                 $loaiClass = match ($item->loai_tang_ca) {
                                     'ngay_thuong' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
                                     'ngay_nghi'
                                         => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-                                    'le_tet' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
                                     default => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
                                 };
                                 $loaiLabel = match ($item->loai_tang_ca) {
                                     'ngay_thuong' => 'Ngày thường',
                                     'ngay_nghi' => 'Ngày nghỉ',
-                                    'le_tet' => 'Lễ / Tết',
                                     default => $item->loai_tang_ca,
                                 };
 
@@ -261,6 +258,13 @@
                                 <td class="px-4 py-3">
                                     <span
                                         class="px-2 py-1 rounded-full text-xs font-medium {{ $ttClass }}">{{ $ttLabel }}</span>
+                                    @if ($item->trang_thai == 'da_duyet' && $item->thuc_hien && $item->thuc_hien->trang_thai == 'quan_ly_xac_nhan')
+                                        <br>
+                                        <span
+                                            class="mt-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                            ✅ Hoàn thành
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="px-4 py-3">
                                     @if ($item->ly_do_tang_ca)
@@ -381,7 +385,6 @@
             const modalReason = document.getElementById('reasonModal');
             const modalConfirm = document.getElementById('confirmModal');
 
-            // ⭐ LẤY BASE URL
             const baseUrl = window.location.origin;
 
             document.addEventListener('DOMContentLoaded', function() {
@@ -417,7 +420,6 @@
                 return Array.from(document.querySelectorAll('.row-check:checked')).map(cb => cb.value);
             }
 
-            // ⭐ BULK ACTION
             function bulkAction(ids, action, successMessage, reason = null) {
                 const formData = new FormData();
                 formData.append('_token', '{{ csrf_token() }}');
@@ -472,7 +474,6 @@
                     '❌ Từ chối hàng loạt thành công!', reason));
             }
 
-            // ⭐ PHÊ DUYỆT ĐƠN
             function pheDuyet(id, trangThai) {
                 currentPheDuyetId = id;
                 const modalTitle = document.getElementById('modalTitle');
@@ -506,7 +507,6 @@
                 }
             }
 
-            // ⭐ SUBMIT FORM - SỬA LỖI KHÔNG TỰ RELOAD
             document.getElementById('pheDuyetForm')?.addEventListener('submit', function(e) {
                 e.preventDefault();
 
@@ -518,7 +518,6 @@
                     return;
                 }
 
-                // Nếu là từ chối, thêm hidden field cho ly_do_tu_choi
                 if (trangThai === 'tu_choi') {
                     const oldInput = this.querySelector('input[name="ly_do_tu_choi"]');
                     if (oldInput) oldInput.remove();
@@ -530,7 +529,6 @@
                     this.appendChild(input);
                 }
 
-                // ⭐ HIỂN THỊ LOADING
                 const btn = document.getElementById('btnPheDuyet');
                 const originalText = btn.textContent;
                 btn.textContent = '⏳ Đang xử lý...';
@@ -550,7 +548,6 @@
                     .then(data => {
                         if (data.success) {
                             alert(data.message || '✅ Xử lý thành công!');
-                            // ⭐ RELOAD TRANG SAU KHI THÀNH CÔNG
                             window.location.reload();
                         } else {
                             alert(data.message || '❌ Có lỗi xảy ra!');
@@ -619,7 +616,6 @@
                 confirmCallback = null;
             }
 
-            // Đóng modal khi click ra ngoài
             if (modalPheDuyet) {
                 modalPheDuyet.addEventListener('click', function(e) {
                     if (e.target === this) closePheDuyetModal();
@@ -636,7 +632,6 @@
                 });
             }
 
-            // ⭐ XỬ LÝ SUBMIT BẰNG ENTER
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
                     closePheDuyetModal();
@@ -645,7 +640,6 @@
                 }
             });
 
-            // ⭐ HÀM DUYỆT ĐƠN TỪ NÚT TRONG BẢNG
             function duyetDon(id) {
                 if (!confirm('Bạn có chắc muốn duyệt đơn này?')) return;
 
@@ -670,7 +664,6 @@
                     });
             }
 
-            // ⭐ HÀM TỪ CHỐI ĐƠN TỪ NÚT TRONG BẢNG
             function tuChoiDon(id) {
                 const lyDo = prompt('Nhập lý do từ chối:');
                 if (lyDo === null) return;

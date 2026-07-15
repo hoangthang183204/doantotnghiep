@@ -211,7 +211,7 @@ class TangCaController extends Controller
             'ngay_tang_ca' => 'required|date|after_or_equal:today',
             'gio_bat_dau' => 'required|date_format:H:i',
             'gio_ket_thuc' => 'required|date_format:H:i|after:gio_bat_dau',
-            'loai_tang_ca' => 'required|in:ngay_thuong,ngay_nghi,le_tet',
+            'loai_tang_ca' => 'required|in:ngay_thuong,ngay_nghi',
             'ly_do_tang_ca' => 'required|string|min:10|max:500',
         ]);
 
@@ -387,9 +387,9 @@ class TangCaController extends Controller
 
         $request->validate([
             'ngay_tang_ca' => 'required|date|after_or_equal:today',
-            'gio_bat_dau' => 'required|date_format:H:i',
-            'gio_ket_thuc' => 'required|date_format:H:i|after:gio_bat_dau',
-            'loai_tang_ca' => 'required|in:ngay_thuong,ngay_nghi,le_tet',
+            'gio_bat_dau' => 'required',
+            'gio_ket_thuc' => 'required|after:gio_bat_dau',
+            'loai_tang_ca' => 'required|in:ngay_thuong,ngay_nghi',
             'ly_do_tang_ca' => 'required|string|min:10|max:500',
         ]);
 
@@ -487,67 +487,67 @@ class TangCaController extends Controller
      * Nhân viên xác nhận đã làm tăng ca
      * Tạo/Cập nhật bản ghi thực hiện tăng ca với trạng thái "nhan_vien_xac_nhan"
      */
-   
-public function confirmThucHien($id)
-{
-    $user = Auth::user();
-    
-    // ⭐ SỬA: Dùng relationship đúng tên 'nguoi_dung' thay vì 'nguoiDung'
-    $donTangCa = DangKyTangCa::with('nguoi_dung')->findOrFail($id);
 
-    // Kiểm tra quyền - chỉ user tạo đơn mới được xác nhận
-    if ($donTangCa->nguoi_dung_id !== $user->id) {
-        return back()->with('error', 'Không có quyền xác nhận đơn này');
-    }
+    public function confirmThucHien($id)
+    {
+        $user = Auth::user();
 
-    // Chỉ cho phép xác nhận đơn đã duyệt
-    if ($donTangCa->trang_thai !== 'da_duyet') {
-        return back()->with('error', 'Chỉ có thể xác nhận đơn đã duyệt');
-    }
+        // ⭐ SỬA: Dùng relationship đúng tên 'nguoi_dung' thay vì 'nguoiDung'
+        $donTangCa = DangKyTangCa::with('nguoi_dung')->findOrFail($id);
 
-    // Kiểm tra đã có bản ghi thực hiện chưa
-    if ($donTangCa->thuc_hien) {
-        return back()->with('error', 'Đơn này đã được xác nhận trước đó');
-    }
-
-    // Kiểm tra ngày tăng ca không được là ngày trong tương lai
-    if (Carbon::parse($donTangCa->ngay_tang_ca)->isFuture()) {
-        return back()->with('error', 'Chỉ có thể xác nhận sau ngày tăng ca');
-    }
-
-    DB::beginTransaction();
-    try {
-        // Tạo bản ghi thực hiện tăng ca
-        $thucHien = ThucHienTangCa::create([
-            'dang_ky_tang_ca_id' => $donTangCa->id,
-            'gio_bat_dau_thuc_te' => $donTangCa->gio_bat_dau,
-            'gio_ket_thuc_thuc_te' => $donTangCa->gio_ket_thuc,
-            'so_gio_tang_ca_thuc_te' => $donTangCa->so_gio_tang_ca,
-            'so_cong_tang_ca' => 1,
-            'trang_thai' => 'nhan_vien_xac_nhan',
-        ]);
-
-        Log::info('✅ Employee confirmed overtime: DangKyTangCa ID ' . $donTangCa->id);
-
-        // GỬI THÔNG BÁO CHO ADMIN/QUẢN LÝ
-        try {
-            $this->notificationService->notifyOvertime($donTangCa, 'employee_confirmed');
-            Log::info('📧 Đã gửi thông báo xác nhận làm tăng ca đến Admin/Quản lý');
-        } catch (\Exception $e) {
-            Log::error('⚠️ Failed to send notification: ' . $e->getMessage());
+        // Kiểm tra quyền - chỉ user tạo đơn mới được xác nhận
+        if ($donTangCa->nguoi_dung_id !== $user->id) {
+            return back()->with('error', 'Không có quyền xác nhận đơn này');
         }
 
-        DB::commit();
+        // Chỉ cho phép xác nhận đơn đã duyệt
+        if ($donTangCa->trang_thai !== 'da_duyet') {
+            return back()->with('error', 'Chỉ có thể xác nhận đơn đã duyệt');
+        }
 
-        return redirect()->route('employee.tang-ca.show', $donTangCa->id)
-            ->with('success', '✅ Xác nhận đã làm tăng ca! Chờ quản lý xác nhận hoàn thành.');
-    } catch (\Exception $e) {
-        DB::rollback();
-        Log::error('❌ Confirm thuc hien error: ' . $e->getMessage());
+        // Kiểm tra đã có bản ghi thực hiện chưa
+        if ($donTangCa->thuc_hien) {
+            return back()->with('error', 'Đơn này đã được xác nhận trước đó');
+        }
 
-        return back()->with('error', 'Có lỗi xảy ra khi xác nhận: ' . $e->getMessage());
+        // Kiểm tra ngày tăng ca không được là ngày trong tương lai
+        if (Carbon::parse($donTangCa->ngay_tang_ca)->isFuture()) {
+            return back()->with('error', 'Chỉ có thể xác nhận sau ngày tăng ca');
+        }
+
+        DB::beginTransaction();
+        try {
+            // Tạo bản ghi thực hiện tăng ca
+            $thucHien = ThucHienTangCa::create([
+                'dang_ky_tang_ca_id' => $donTangCa->id,
+                'gio_bat_dau_thuc_te' => $donTangCa->gio_bat_dau,
+                'gio_ket_thuc_thuc_te' => $donTangCa->gio_ket_thuc,
+                'so_gio_tang_ca_thuc_te' => $donTangCa->so_gio_tang_ca,
+                'so_cong_tang_ca' => 1,
+                'trang_thai' => 'nhan_vien_xac_nhan',
+            ]);
+
+            Log::info('✅ Employee confirmed overtime: DangKyTangCa ID ' . $donTangCa->id);
+
+            // GỬI THÔNG BÁO CHO ADMIN/QUẢN LÝ
+            try {
+                $this->notificationService->notifyOvertime($donTangCa, 'employee_confirmed');
+                Log::info('📧 Đã gửi thông báo xác nhận làm tăng ca đến Admin/Quản lý');
+            } catch (\Exception $e) {
+                Log::error('⚠️ Failed to send notification: ' . $e->getMessage());
+            }
+
+            DB::commit();
+
+            return redirect()->route('employee.tang-ca.show', $donTangCa->id)
+                ->with('success', '✅ Xác nhận đã làm tăng ca! Chờ quản lý xác nhận hoàn thành.');
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('❌ Confirm thuc hien error: ' . $e->getMessage());
+
+            return back()->with('error', 'Có lỗi xảy ra khi xác nhận: ' . $e->getMessage());
+        }
     }
-}
     /**
      * Quản lý xác nhận đã hoàn thành tăng ca
      * Cập nhật trạng thái thực hiện thành "quan_ly_xac_nhan"
