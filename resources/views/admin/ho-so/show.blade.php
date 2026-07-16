@@ -761,22 +761,24 @@
                         $bhtn = round($luongDongBhxh * 0.01, 0);
                         $tongBaoHiem = $bhxh + $bhyt + $bhtn;
 
-                        // Thu nhập chịu thuế
-                        $thuNhapChiuThue = max(0, $tongThuNhap - $tongBaoHiem);
-                        $giamTruBanThan = 11000000;
-                        $thuNhapTinhThue = max(0, $thuNhapChiuThue - $giamTruBanThan);
+                        // Giảm trừ gia cảnh 2026: bản thân 15,5tr + 6,2tr/người phụ thuộc (NQ 110/2025)
+                        $soNguoiPhuThuoc = $hoSo->nguoiPhuThuoc?->count() ?? 0;
+                        $giamTruBanThan = 15500000;
+                        $giamTruGiaCanh = $giamTruBanThan + 6200000 * $soNguoiPhuThuoc;
 
-                        // Tính thuế theo biểu lũy tiến
+                        // Thu nhập chịu thuế / tính thuế
+                        $thuNhapChiuThue = max(0, $tongThuNhap - $tongBaoHiem);
+                        $thuNhapTinhThue = max(0, $thuNhapChiuThue - $giamTruGiaCanh);
+
+                        // Tính thuế theo biểu lũy tiến 5 bậc (Luật Thuế TNCN 2025, áp dụng 2026)
                         $thueTncn = 0;
                         $remaining = $thuNhapTinhThue;
                         $bac = [
-                            ['tu' => 0, 'den' => 5000000, 'thue_suat' => 0.05],
-                            ['tu' => 5000000, 'den' => 10000000, 'thue_suat' => 0.1],
-                            ['tu' => 10000000, 'den' => 18000000, 'thue_suat' => 0.15],
-                            ['tu' => 18000000, 'den' => 32000000, 'thue_suat' => 0.2],
-                            ['tu' => 32000000, 'den' => 52000000, 'thue_suat' => 0.25],
-                            ['tu' => 52000000, 'den' => 80000000, 'thue_suat' => 0.3],
-                            ['tu' => 80000000, 'den' => PHP_INT_MAX, 'thue_suat' => 0.35],
+                            ['tu' => 0, 'den' => 10000000, 'thue_suat' => 0.05],
+                            ['tu' => 10000000, 'den' => 30000000, 'thue_suat' => 0.1],
+                            ['tu' => 30000000, 'den' => 60000000, 'thue_suat' => 0.2],
+                            ['tu' => 60000000, 'den' => 100000000, 'thue_suat' => 0.3],
+                            ['tu' => 100000000, 'den' => PHP_INT_MAX, 'thue_suat' => 0.35],
                         ];
                         foreach ($bac as $b) {
                             if ($remaining <= 0) {
@@ -1056,24 +1058,24 @@
             $bhtn = round($luongDongBhxh * 0.01, 0);
             $tongBaoHiem = $bhxh + $bhyt + $bhtn;
 
-            // Thu nhập chịu thuế = Tổng thu nhập - Bảo hiểm
+            // Giảm trừ gia cảnh 2026: bản thân 15,5tr + 6,2tr/người phụ thuộc (NQ 110/2025)
+            $soNguoiPhuThuoc = $hoSo->nguoiPhuThuoc?->count() ?? 0;
+            $giamTruBanThan = 15500000;
+            $giamTruGiaCanh = $giamTruBanThan + 6200000 * $soNguoiPhuThuoc;
+
+            // Thu nhập chịu thuế / tính thuế
             $thuNhapChiuThue = max(0, $tongThuNhap - $tongBaoHiem);
+            $thuNhapTinhThue = max(0, $thuNhapChiuThue - $giamTruGiaCanh);
 
-            // Giảm trừ bản thân 11,000,000
-            $giamTruBanThan = 11000000;
-            $thuNhapTinhThue = max(0, $thuNhapChiuThue - $giamTruBanThan);
-
-            // Tính thuế theo biểu lũy tiến
+            // Tính thuế theo biểu lũy tiến 5 bậc (Luật Thuế TNCN 2025, áp dụng 2026)
             $thueTncn = 0;
             $remaining = $thuNhapTinhThue;
             $bac = [
-                ['tu' => 0, 'den' => 5000000, 'thue_suat' => 0.05],
-                ['tu' => 5000000, 'den' => 10000000, 'thue_suat' => 0.1],
-                ['tu' => 10000000, 'den' => 18000000, 'thue_suat' => 0.15],
-                ['tu' => 18000000, 'den' => 32000000, 'thue_suat' => 0.2],
-                ['tu' => 32000000, 'den' => 52000000, 'thue_suat' => 0.25],
-                ['tu' => 52000000, 'den' => 80000000, 'thue_suat' => 0.3],
-                ['tu' => 80000000, 'den' => PHP_INT_MAX, 'thue_suat' => 0.35],
+                ['tu' => 0, 'den' => 10000000, 'thue_suat' => 0.05],
+                ['tu' => 10000000, 'den' => 30000000, 'thue_suat' => 0.1],
+                ['tu' => 30000000, 'den' => 60000000, 'thue_suat' => 0.2],
+                ['tu' => 60000000, 'den' => 100000000, 'thue_suat' => 0.3],
+                ['tu' => 100000000, 'den' => PHP_INT_MAX, 'thue_suat' => 0.35],
             ];
             foreach ($bac as $b) {
                 if ($remaining <= 0) {

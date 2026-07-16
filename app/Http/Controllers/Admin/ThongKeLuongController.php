@@ -104,8 +104,18 @@ class ThongKeLuongController extends Controller
      */
     public function theoNam(Request $request)
     {
-        // Gom nhóm toàn bộ dòng lương theo NĂM
+        // Bộ lọc theo năm (null = xem tất cả các năm)
+        $namChon = $request->filled('nam') ? (int) $request->input('nam') : null;
+
+        // Danh sách năm có dữ liệu lương (đổ vào dropdown lọc)
+        $namList = LuongNhanVien::query()
+            ->distinct()
+            ->orderByDesc('luong_nam')
+            ->pluck('luong_nam');
+
+        // Gom nhóm toàn bộ dòng lương theo NĂM (lọc theo năm nếu có chọn)
         $rows = LuongNhanVien::query()
+            ->when($namChon, fn($q) => $q->where('luong_nam', $namChon))
             ->selectRaw('luong_nam as nam')
             ->selectRaw('COUNT(*) as so_ky_luong')
             ->selectRaw('COUNT(DISTINCT nguoi_dung_id) as so_nhan_vien')
@@ -120,6 +130,7 @@ class ThongKeLuongController extends Controller
         // Bảo hiểm (BHXH + BHYT + BHTN) không lưu trên luong_nhan_vien -> lấy từ bảng khấu trừ chi tiết
         $baoHiemTheoNam = KhauTruLuong::query()
             ->join('luong_nhan_vien', 'luong_nhan_vien.id', '=', 'khau_tru_luong.luong_nhan_vien_id')
+            ->when($namChon, fn($q) => $q->where('luong_nhan_vien.luong_nam', $namChon))
             ->whereIn('khau_tru_luong.loai_khau_tru', ['bhxh', 'bhyt', 'bhtn'])
             ->groupBy('luong_nhan_vien.luong_nam')
             ->selectRaw('luong_nhan_vien.luong_nam as nam, SUM(khau_tru_luong.so_tien) as tong_bao_hiem')
@@ -137,6 +148,8 @@ class ThongKeLuongController extends Controller
 
         return view('admin.tong-luong.index', compact(
             'rows',
+            'namList',
+            'namChon',
             'tongLuong',
             'tongThue',
             'tongKhauTru',
@@ -185,6 +198,47 @@ class ThongKeLuongController extends Controller
         return view('admin.tong-luong.chi-tiet', compact(
             'nam',
             'rows',
+            'tongLuong',
+            'tongThue',
+            'tongKhauTru',
+            'tongBaoHiem',
+            'tongThucNhan'
+        ));
+    }
+
+    /**
+     * Chi tiết lương của 1 THÁNG: mỗi nhân viên một dòng.
+     * Bấm vào một nhân viên -> xem phiếu lương chi tiết của họ.
+     */
+    public function chiTietThang(Request $request, $nam, $thang)
+    {
+        $nam   = (int) $nam;
+        $thang = (int) $thang;
+
+        $luongs = LuongNhanVien::with(['nguoiDung.hoSo', 'nguoiDung.phongBan', 'khauTrus'])
+            ->where('luong_nam', $nam)
+            ->where('luong_thang', $thang)
+            ->get()
+            ->sortByDesc('luong_thuc_nhan')
+            ->values();
+
+        // Bảo hiểm mỗi dòng lấy từ chi tiết khấu trừ; đồng thời cộng dồn số tổng của tháng
+        $tongLuong = $tongThue = $tongKhauTru = $tongBaoHiem = $tongThucNhan = 0.0;
+        foreach ($luongs as $lnv) {
+            $lnv->bao_hiem = (float) $lnv->khauTrus
+                ->whereIn('loai_khau_tru', ['bhxh', 'bhyt', 'bhtn'])
+                ->sum('so_tien');
+            $tongLuong    += (float) $lnv->tong_luong;
+            $tongThue     += (float) $lnv->thue_thu_nhap_ca_nhan;
+            $tongKhauTru  += (float) $lnv->tong_khau_tru;
+            $tongBaoHiem  += $lnv->bao_hiem;
+            $tongThucNhan += (float) $lnv->luong_thuc_nhan;
+        }
+
+        return view('admin.tong-luong.chi-tiet-thang', compact(
+            'nam',
+            'thang',
+            'luongs',
             'tongLuong',
             'tongThue',
             'tongKhauTru',

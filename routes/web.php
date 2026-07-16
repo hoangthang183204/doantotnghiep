@@ -278,15 +278,16 @@ Route::prefix('admin')
         Route::prefix('khau-tru-khac')->name('khau-tru-khac.')->middleware(['CheckPermission:salary.index'])->group(function () {
 
             Route::get('/', [KhauTruKhacController::class, 'index'])->name('index');
-            Route::get('/{id}', [KhauTruKhacController::class, 'show'])->middleware(['CheckPermission:salary.show'])->name('show');
+            // Route tĩnh phải đặt TRƯỚC route /{id} nếu không "/create" sẽ khớp nhầm vào show() → 404
             Route::get('/create', [KhauTruKhacController::class, 'create'])->middleware('CheckPermission:salary.create')->name('create');
             Route::post('/', [KhauTruKhacController::class, 'store'])->middleware('CheckPermission:salary.create')->name('store');
-            Route::get('/{id}/edit', [KhauTruKhacController::class, 'edit'])->middleware('CheckPermission:salary.create')->name('edit');
-            Route::put('/{id}', [KhauTruKhacController::class, 'update'])->middleware('CheckPermission:salary.create')->name('update');
-            Route::delete('/{id}', [KhauTruKhacController::class, 'destroy'])->middleware('CheckPermission:salary.create')->name('destroy');
-            Route::post('/{id}/approve', [KhauTruKhacController::class, 'approve'])->middleware(['CheckPermission:salary.approve'])->name('approve');
-            Route::post('/{id}/reject', [KhauTruKhacController::class, 'reject'])->middleware(['CheckPermission:salary.reject'])->name('reject');
-            Route::post('/{id}/undo', [KhauTruKhacController::class, 'undo'])->name('undo');
+            Route::get('/{id}', [KhauTruKhacController::class, 'show'])->whereNumber('id')->middleware(['CheckPermission:salary.show'])->name('show');
+            Route::get('/{id}/edit', [KhauTruKhacController::class, 'edit'])->whereNumber('id')->middleware('CheckPermission:salary.create')->name('edit');
+            Route::put('/{id}', [KhauTruKhacController::class, 'update'])->whereNumber('id')->middleware('CheckPermission:salary.create')->name('update');
+            Route::delete('/{id}', [KhauTruKhacController::class, 'destroy'])->whereNumber('id')->middleware('CheckPermission:salary.create')->name('destroy');
+            Route::post('/{id}/approve', [KhauTruKhacController::class, 'approve'])->whereNumber('id')->middleware(['CheckPermission:salary.approve'])->name('approve');
+            Route::post('/{id}/reject', [KhauTruKhacController::class, 'reject'])->whereNumber('id')->middleware(['CheckPermission:salary.reject'])->name('reject');
+            Route::post('/{id}/undo', [KhauTruKhacController::class, 'undo'])->whereNumber('id')->name('undo');
         });
 
         // ========== THỐNG KÊ QUỸ LƯƠNG THEO PHÒNG BAN - CHỈ HR VÀ ADMIN ==========
@@ -299,6 +300,7 @@ Route::prefix('admin')
         Route::prefix('tong-luong')->name('tong-luong.')->middleware(['CheckPermission:salary.index'])->group(function () {
             Route::get('/', [ThongKeLuongController::class, 'theoNam'])->name('index');
             Route::get('/{nam}', [ThongKeLuongController::class, 'chiTietNam'])->whereNumber('nam')->name('chi-tiet');
+            Route::get('/{nam}/{thang}', [ThongKeLuongController::class, 'chiTietThang'])->whereNumber(['nam', 'thang'])->name('chi-tiet-thang');
         });
 
         // ========== QUẢN LÝ LƯƠNG - CHỈ HR VÀ ADMIN ==========
