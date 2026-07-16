@@ -371,54 +371,80 @@ class ChamCongController extends Controller
         }
     }
 
-    /**
-     * Lịch sử chấm công
-     */
     public function history(Request $request)
     {
         $user = auth()->user();
 
+        // Lấy tháng/năm từ request hoặc mặc định là tháng hiện tại
+        $thangLoc = $request->filled('thang') ? (int)$request->thang : Carbon::now('Asia/Ho_Chi_Minh')->month;
+        $namLoc = $request->filled('nam') ? (int)$request->nam : Carbon::now('Asia/Ho_Chi_Minh')->year;
+
+        // Query lịch sử
         $query = ChamCong::where('nguoi_dung_id', $user->id);
 
+        // Áp dụng lọc tháng/năm
         if ($request->filled('thang')) {
             $query->whereMonth('ngay_cham_cong', $request->thang);
         }
-
         if ($request->filled('nam')) {
             $query->whereYear('ngay_cham_cong', $request->nam);
         }
 
-        $lichSu = $query->orderBy('ngay_cham_cong', 'desc')->paginate(20);
+        // Nếu không có lọc, lấy tất cả và sắp xếp mới nhất
+        $lichSu = $query->orderBy('ngay_cham_cong', 'desc')
+            ->orderBy('id', 'desc')
+            ->paginate(20)
+            ->appends($request->query());
 
-        $thangHienTai = Carbon::now('Asia/Ho_Chi_Minh')->month;
-        $namHienTai = Carbon::now('Asia/Ho_Chi_Minh')->year;
-
+        // ===== THỐNG KÊ THEO THÁNG ĐANG LỌC =====
         $thongKe = [
-            'tong_ngay_cong' => ChamCong::where('nguoi_dung_id', $user->id)
-                ->whereMonth('ngay_cham_cong', $thangHienTai)
-                ->whereYear('ngay_cham_cong', $namHienTai)
+            'tong_ngay' => ChamCong::where('nguoi_dung_id', $user->id)
+                ->whereMonth('ngay_cham_cong', $thangLoc)
+                ->whereYear('ngay_cham_cong', $namLoc)
+                ->count(),
+
+            'dung_gio' => ChamCong::where('nguoi_dung_id', $user->id)
+                ->whereMonth('ngay_cham_cong', $thangLoc)
+                ->whereYear('ngay_cham_cong', $namLoc)
                 ->whereIn('trang_thai', ['dung_gio', 'den_som'])
                 ->count(),
-            'tong_di_muon' => ChamCong::where('nguoi_dung_id', $user->id)
-                ->whereMonth('ngay_cham_cong', $thangHienTai)
-                ->whereYear('ngay_cham_cong', $namHienTai)
+
+            'di_muon' => ChamCong::where('nguoi_dung_id', $user->id)
+                ->whereMonth('ngay_cham_cong', $thangLoc)
+                ->whereYear('ngay_cham_cong', $namLoc)
                 ->where('trang_thai', 'di_muon')
                 ->count(),
-            'tong_ve_som' => ChamCong::where('nguoi_dung_id', $user->id)
-                ->whereMonth('ngay_cham_cong', $thangHienTai)
-                ->whereYear('ngay_cham_cong', $namHienTai)
+
+            've_som' => ChamCong::where('nguoi_dung_id', $user->id)
+                ->whereMonth('ngay_cham_cong', $thangLoc)
+                ->whereYear('ngay_cham_cong', $namLoc)
                 ->where('trang_thai', 've_som')
                 ->count(),
+
             'tong_gio_lam' => ChamCong::where('nguoi_dung_id', $user->id)
-                ->whereMonth('ngay_cham_cong', $thangHienTai)
-                ->whereYear('ngay_cham_cong', $namHienTai)
-                ->sum('so_gio_lam'),
+                ->whereMonth('ngay_cham_cong', $thangLoc)
+                ->whereYear('ngay_cham_cong', $namLoc)
+                ->sum('so_gio_lam') ?? 0,
+
             'tong_tang_ca' => ChamCong::where('nguoi_dung_id', $user->id)
-                ->whereMonth('ngay_cham_cong', $thangHienTai)
-                ->whereYear('ngay_cham_cong', $namHienTai)
-                ->sum('gio_tang_ca'),
+                ->whereMonth('ngay_cham_cong', $thangLoc)
+                ->whereYear('ngay_cham_cong', $namLoc)
+                ->sum('gio_tang_ca') ?? 0,
         ];
 
-        return view('employee.cham-cong.history', compact('lichSu', 'thongKe'));
+        // Lấy danh sách tháng/năm có dữ liệu để hiển thị dropdown
+        $thangNamList = ChamCong::where('nguoi_dung_id', $user->id)
+            ->selectRaw('DISTINCT YEAR(ngay_cham_cong) as nam, MONTH(ngay_cham_cong) as thang')
+            ->orderBy('nam', 'desc')
+            ->orderBy('thang', 'desc')
+            ->get();
+
+        return view('employee.cham-cong.history', compact(
+            'lichSu',
+            'thongKe',
+            'thangNamList',
+            'thangLoc',
+            'namLoc'
+        ));
     }
 }
