@@ -93,6 +93,7 @@
                             $loaiLabels = [
                                 'ngay_thuong' => 'Ngày thường',
                                 'ngay_nghi' => 'Ngày nghỉ',
+                                'le_tet' => 'Lễ / Tết',
                             ];
                         @endphp
                         <p class="font-semibold text-gray-900 dark:text-white">
@@ -132,6 +133,7 @@
                             <div>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Trạng thái thực hiện</p>
                                 @php
+                                    // ⭐ CẬP NHẬT ĐẦY ĐỦ CÁC TRẠNG THÁI BẰNG TIẾNG VIỆT
                                     $ttThucHienLabels = [
                                         'chua_lam' => '⏳ Chưa làm',
                                         'dang_lam' => '🔄 Đang làm',
@@ -216,30 +218,14 @@
 
                 {{-- ACTION BUTTONS --}}
                 <div class="pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-3">
-                    {{-- ⭐ Nút xác nhận đã làm tăng ca - KIỂM TRA GIỜ CHI TIẾT --}}
+                    {{-- Nút xác nhận đã làm tăng ca --}}
                     @if ($donTangCa->trang_thai == 'da_duyet' && !$donTangCa->thuc_hien)
-                        @php
-                            $now = Carbon\Carbon::now();
-                            $ngayTangCa = Carbon\Carbon::parse($donTangCa->ngay_tang_ca);
-                            $gioBatDau = Carbon\Carbon::parse($donTangCa->gio_bat_dau);
-                            $thoiGianBatDau = Carbon\Carbon::parse($ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s'));
-                            $thoiGianChoPhepSom = $thoiGianBatDau->copy()->subMinutes(30);
-                            
-                            $coTheXacNhan = $now->gte($thoiGianChoPhepSom);
-                            
-                            if (!$coTheXacNhan) {
-                                $thoiGianConLai = $now->diffInMinutes($thoiGianChoPhepSom);
-                                $gioConLai = floor($thoiGianConLai / 60);
-                                $phutConLai = $thoiGianConLai % 60;
-                                $thongBao = "Còn {$gioConLai} giờ {$phutConLai} phút nữa mới được xác nhận";
-                            }
-                        @endphp
-                        
-                        @if($coTheXacNhan)
-                            <form action="{{ route('employee.tang-ca.confirm-thuc-hien', $donTangCa->id) }}" method="POST">
+                        @if (!Carbon\Carbon::parse($donTangCa->ngay_tang_ca)->isFuture())
+                            <form action="{{ route('employee.tang-ca.confirm-thuc-hien', $donTangCa->id) }}"
+                                method="POST">
                                 @csrf
                                 <button type="submit" onclick="return confirm('Bạn đã hoàn thành giờ tăng ca này?')"
-                                    class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition flex items-center gap-2">
+                                    class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition flex items-center gap-2">
                                     <i class="fas fa-check-circle"></i>
                                     Xác nhận đã làm tăng ca
                                 </button>
@@ -248,7 +234,7 @@
                             <button disabled
                                 class="px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed flex items-center gap-2">
                                 <i class="fas fa-clock"></i>
-                                {{ $thongBao ?? 'Chưa đến giờ tăng ca' }}
+                                Chưa đến ngày tăng ca
                             </button>
                         @endif
                     @endif
@@ -262,15 +248,15 @@
                         </a>
                     @endif
 
-                    {{-- ⭐ Nút hủy - BỎ @method('DELETE') --}}
+                    {{-- Nút hủy --}}
                     @if ($donTangCa->trang_thai == 'cho_duyet')
                         <form action="{{ route('employee.tang-ca.huy', $donTangCa->id) }}" method="POST"
                             onsubmit="return confirm('Bạn có chắc muốn hủy đơn này?')">
                             @csrf
                             {{-- ⭐ BỎ @method('DELETE') VÌ ROUTE CHỈ HỖ TRỢ POST --}}
                             <button type="submit"
-                                class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition flex items-center gap-2">
-                                <i class="fas fa-times"></i>
+                                class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition">
+                                <i class="fas fa-times mr-2"></i>
                                 Hủy đơn
                             </button>
                         </form>

@@ -42,6 +42,7 @@
             <div
                 class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 text-center border border-gray-100 dark:border-gray-700">
                 <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                    {{-- ⭐ SỬA: Dùng filter() trên Collection --}}
                     {{ $donTangCa->filter(function ($item) {
                             return $item->trang_thai == 'da_duyet' &&
                                 $item->thuc_hien &&
@@ -109,6 +110,7 @@
                                         $loaiLabels = [
                                             'ngay_thuong' => 'Ngày thường',
                                             'ngay_nghi' => 'Ngày nghỉ',
+                                            'le_tet' => 'Lễ / Tết',
                                         ];
                                     @endphp
                                     {{ $loaiLabels[$don->loai_tang_ca] ?? $don->loai_tang_ca }}
@@ -158,33 +160,19 @@
                                             <i class="fas fa-eye"></i>
                                         </a>
 
-                                        {{-- ⭐ Nút xác nhận đã làm tăng ca - KIỂM TRA GIỜ CHI TIẾT --}}
+                                        {{-- ⭐ Nút xác nhận đã làm tăng ca --}}
                                         @if ($don->trang_thai == 'da_duyet' && !$thucHien)
-                                            @php
-                                                $now = Carbon\Carbon::now();
-                                                $ngayTangCa = Carbon\Carbon::parse($don->ngay_tang_ca);
-                                                $gioBatDau = Carbon\Carbon::parse($don->gio_bat_dau);
-                                                $thoiGianBatDau = Carbon\Carbon::parse($ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s'));
-                                                $thoiGianChoPhepSom = $thoiGianBatDau->copy()->subMinutes(30);
-                                                
-                                                $coTheXacNhan = $now->gte($thoiGianChoPhepSom);
-                                            @endphp
-                                            
-                                            @if($coTheXacNhan)
+                                            @if (!Carbon\Carbon::parse($don->ngay_tang_ca)->isFuture())
                                                 <form action="{{ route('employee.tang-ca.confirm-thuc-hien', $don->id) }}"
                                                     method="POST"
                                                     onsubmit="return confirm('Bạn đã hoàn thành giờ tăng ca này?')">
                                                     @csrf
                                                     <button type="submit"
-                                                        class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 text-sm"
+                                                        class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
                                                         title="Xác nhận đã làm tăng ca">
                                                         <i class="fas fa-check-circle"></i>
                                                     </button>
                                                 </form>
-                                            @else
-                                                <span class="text-gray-400 text-sm" title="Chưa đến giờ tăng ca">
-                                                    <i class="fas fa-clock"></i>
-                                                </span>
                                             @endif
                                         @endif
 
@@ -197,6 +185,7 @@
                                             </a>
                                         @endif
 
+                                        {{-- Nút hủy (chỉ cho đơn chờ duyệt) --}}
                                         {{-- Nút hủy (chỉ cho đơn chờ duyệt) --}}
                                         @if ($don->trang_thai == 'cho_duyet')
                                             <form action="{{ route('employee.tang-ca.huy', $don->id) }}" method="POST"

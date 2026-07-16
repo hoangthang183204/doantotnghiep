@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\DangKyTangCa;
+use App\Models\ThucHienTangCa;
 use App\Models\NguoiDung;
 use App\Models\PhongBan;
+use App\Helpers\SalaryHelper;
 use App\Services\NotificationService;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;      // ⭐ THÊM DÒNG NÀY
@@ -422,75 +425,77 @@ class TangCaController extends Controller
      */
     public function showApproveThucHien($id)
     {
-        $user = Auth::user();
-        $isAdmin = $user->vaiTros()->whereIn('name', ['admin', 'Super Admin'])->exists();
-        $isTruongPhong = $this->isTruongPhong($user);
-        $nhanVienIds = $this->getNhanVienIdsByScope($user);
+        try {
+            $user = Auth::user();
+            $isAdmin = $user->vaiTros()->whereIn('name', ['admin', 'Super Admin'])->exists();
+            $isTruongPhong = $this->isTruongPhong($user);
+            $nhanVienIds = $this->getNhanVienIdsByScope($user);
 
-        $query = DangKyTangCa::with([
-            'nguoi_dung.hoSo',
-            'nguoi_dung.phongBan',
-            'nguoi_duyet.hoSo',
-            'thuc_hien',
-        ]);
+            $query = DangKyTangCa::with([
+                'nguoi_dung.hoSo',
+                'nguoi_dung.phongBan',
+                'nguoi_duyet.hoSo',
+                'thuc_hien',
+            ]);
 
-        // Kiểm tra quyền xem
-        if (!$isAdmin && $isTruongPhong && !empty($nhanVienIds)) {
-            $query->whereIn('nguoi_dung_id', $nhanVienIds);
+            // Kiểm tra quyền xem
+            if (!$isAdmin && $isTruongPhong && !empty($nhanVienIds)) {
+                $query->whereIn('nguoi_dung_id', $nhanVienIds);
+            }
+
+            $tangCa = $query->findOrFail($id);
+
+            // ⭐ KIỂM TRA VÀ TÍNH LƯƠNG THEO GIỜ NẾU CHƯA CÓ
+            $luongCoBan = null;
+            $luongTheoGio = null;
+
+            if ($tangCa->nguoi_dung) {
+                $luongCoBan = SalaryHelper::getBaseSalary($tangCa->nguoi_dung_id);
+                // Tính lương theo giờ từ lương cơ bản: lương cơ bản / (26 ngày * 8 giờ)
+                $luongTheoGio = $luongCoBan > 0 ? round($luongCoBan / (26 * 8), 0) : 0;
+            }
+
+            // Chỉ cho phép xác nhận đơn đã duyệt và đã có xác nhận của nhân viên
+            if ($tangCa->trang_thai !== 'da_duyet') {
+                return redirect()->route('admin.tang-ca.show', $id)
+                    ->with('error', 'Chỉ có thể xác nhận đơn đã duyệt');
+            }
+
+            if (!$tangCa->thuc_hien || $tangCa->thuc_hien->trang_thai !== 'nhan_vien_xac_nhan') {
+                return redirect()->route('admin.tang-ca.show', $id)
+                    ->with('error', 'Nhân viên chưa xác nhận đã làm tăng ca');
+            }
+
+            return view('admin.tang-ca.approve-thuc-hien', compact('tangCa', 'luongCoBan', 'luongTheoGio'));
+        } catch (\Exception $e) {
+            Log::error('❌ showApproveThucHien error: ' . $e->getMessage());
+            Log::error('❌ Stack trace: ' . $e->getTraceAsString());
+            return redirect()->route('admin.tang-ca.index')
+                ->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
         }
-
-        $tangCa = $query->findOrFail($id);
-
-        // Chỉ cho phép xác nhận đơn đã duyệt và đã có xác nhận của nhân viên
-        if ($tangCa->trang_thai !== 'da_duyet') {
-            return redirect()->route('admin.tang-ca.show', $id)
-                ->with('error', 'Chỉ có thể xác nhận đơn đã duyệt');
-        }
-
-        if (!$tangCa->thuc_hien || $tangCa->thuc_hien->trang_thai !== 'nhan_vien_xac_nhan') {
-            return redirect()->route('admin.tang-ca.show', $id)
-                ->with('error', 'Nhân viên chưa xác nhận đã làm tăng ca');
-        }
-
-        return view('admin.tang-ca.approve-thuc-hien', compact('tangCa'));
     }
 
-    /**
-     * ✅ Quản lý xác nhận hoàn thành tăng ca
-     */
+
+
+
+    // ... trong hàm approveThucHien() ...
+
     public function approveThucHien(Request $request, $id)
     {
-        $user = Auth::user();
-        $isAdmin = $user->vaiTros()->whereIn('name', ['admin', 'Super Admin'])->exists();
-        $isTruongPhong = $this->isTruongPhong($user);
-        $nhanVienIds = $this->getNhanVienIdsByScope($user);
-
-        $query = DangKyTangCa::with(['nguoi_dung', 'thuc_hien']);
-
-        // Kiểm tra quyền
-        if (!$isAdmin && $isTruongPhong && !empty($nhanVienIds)) {
-            $query->whereIn('nguoi_dung_id', $nhanVienIds);
-        }
-
-        $donTangCa = $query->findOrFail($id);
-        $thucHien = $donTangCa->thuc_hien;
-
-        if (!$thucHien) {
-            return back()->with('error', 'Nhân viên chưa xác nhận đã làm tăng ca');
-        }
-
-        if ($thucHien->trang_thai !== 'nhan_vien_xac_nhan') {
-            return back()->with('error', 'Chỉ có thể xác nhận đơn mà nhân viên đã xác nhận');
-        }
-
         $request->validate([
             'so_gio_tang_ca_thuc_te' => 'required|numeric|min:0.5|max:16',
-            'cong_viec_da_thuc_hien' => 'nullable|string|max:500',
-            'ghi_chu' => 'nullable|string|max:500',
+            'cong_viec_da_thuc_hien' => 'nullable|string',
+            'ghi_chu' => 'nullable|string',
         ]);
 
         DB::beginTransaction();
         try {
+            // Lấy đơn tăng ca
+            $tangCa = DangKyTangCa::findOrFail($id);
+
+            // Lấy thực hiện tăng ca
+            $thucHien = ThucHienTangCa::where('dang_ky_tang_ca_id', $tangCa->id)->firstOrFail();
+
             // Cập nhật thực hiện tăng ca
             $thucHien->update([
                 'so_gio_tang_ca_thuc_te' => $request->so_gio_tang_ca_thuc_te,
@@ -499,32 +504,40 @@ class TangCaController extends Controller
                 'trang_thai' => 'quan_ly_xac_nhan',
             ]);
 
-            // Tính lương tăng ca
-            $luongCoBan = $donTangCa->nguoi_dung->luong_co_ban ?? 0;
-            $heSo = DangKyTangCa::$heSoLuong[$donTangCa->loai_tang_ca] ?? 1.5;
-            $luongTangCa = $request->so_gio_tang_ca_thuc_te * $luongCoBan * $heSo;
+            // ⭐ TÍNH LƯƠNG TĂNG CA SỬ DỤNG HELPER
+            $userId = $tangCa->nguoi_dung_id;
+            $hours = $request->so_gio_tang_ca_thuc_te;
+            $type = $tangCa->loai_tang_ca;
+
+            $luongTangCa = SalaryHelper::calculateOvertimeSalary($userId, $hours, $type);
+
+            // Log để debug
+            Log::info('💰 Overtime salary calculation:', [
+                'user_id' => $userId,
+                'hours' => $hours,
+                'type' => $type,
+                'hourly_rate' => SalaryHelper::getHourlyRate($userId),
+                'base_salary' => SalaryHelper::getBaseSalary($userId),
+                'overtime_salary' => $luongTangCa,
+            ]);
 
             // Lưu lương vào đơn tăng ca
-            $donTangCa->luong_tang_ca = $luongTangCa;
-            $donTangCa->da_hoan_thanh = true;
-            $donTangCa->thoi_gian_hoan_thanh = now();
-            $donTangCa->save();
+            $tangCa->luong_tang_ca = $luongTangCa;
+            $tangCa->da_hoan_thanh = true;
+            $tangCa->thoi_gian_hoan_thanh = now();
+            $tangCa->save();
 
-            Log::info('✅ Manager approved overtime: DangKyTangCa ID ' . $donTangCa->id .
-                ', Hours: ' . $request->so_gio_tang_ca_thuc_te .
-                ', Salary: ' . $luongTangCa);
-
-            // Gửi thông báo cho nhân viên và HR
-            $this->notificationService->notifyOvertime($donTangCa, 'manager_approved');
-
+            // Commit transaction
             DB::commit();
 
-            return redirect()->route('admin.tang-ca.show', $donTangCa->id)
-                ->with('success', '✅ Xác nhận hoàn thành! Lương tăng ca: ' . number_format($luongTangCa, 0) . 'đ');
+            return redirect()->route('admin.tang-ca.show', $tangCa->id)
+                ->with('success', '✅ Xác nhận hoàn thành tăng ca thành công. Lương: ' . number_format($luongTangCa) . 'đ');
         } catch (\Exception $e) {
-            DB::rollback();
-            Log::error('❌ Approve thuc hien error: ' . $e->getMessage());
-            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+            DB::rollBack();
+            Log::error('❌ approveThucHien error: ' . $e->getMessage());
+            Log::error('❌ Stack trace: ' . $e->getTraceAsString());
+            return redirect()->route('admin.tang-ca.show', $id)
+                ->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
         }
     }
 }

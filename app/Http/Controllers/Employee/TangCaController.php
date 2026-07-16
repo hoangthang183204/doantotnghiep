@@ -211,7 +211,7 @@ class TangCaController extends Controller
             'ngay_tang_ca' => 'required|date|after_or_equal:today',
             'gio_bat_dau' => 'required|date_format:H:i',
             'gio_ket_thuc' => 'required|date_format:H:i|after:gio_bat_dau',
-            'loai_tang_ca' => 'required|in:ngay_thuong,ngay_nghi,le_tet',
+            'loai_tang_ca' => 'required|in:ngay_thuong,ngay_nghi',
             'ly_do_tang_ca' => 'required|string|min:10|max:500',
         ]);
 
@@ -387,9 +387,9 @@ class TangCaController extends Controller
 
         $request->validate([
             'ngay_tang_ca' => 'required|date|after_or_equal:today',
-            'gio_bat_dau' => 'required|date_format:H:i',
-            'gio_ket_thuc' => 'required|date_format:H:i|after:gio_bat_dau',
-            'loai_tang_ca' => 'required|in:ngay_thuong,ngay_nghi,le_tet',
+            'gio_bat_dau' => 'required',
+            'gio_ket_thuc' => 'required|after:gio_bat_dau',
+            'loai_tang_ca' => 'required|in:ngay_thuong,ngay_nghi',
             'ly_do_tang_ca' => 'required|string|min:10|max:500',
         ]);
 
@@ -487,10 +487,12 @@ class TangCaController extends Controller
      * Nhân viên xác nhận đã làm tăng ca
      * Tạo/Cập nhật bản ghi thực hiện tăng ca với trạng thái "nhan_vien_xac_nhan"
      */
+
     public function confirmThucHien($id)
     {
         $user = Auth::user();
 
+        // ⭐ SỬA: Dùng relationship đúng tên 'nguoi_dung' thay vì 'nguoiDung'
         $donTangCa = DangKyTangCa::with('nguoi_dung')->findOrFail($id);
 
         // Kiểm tra quyền - chỉ user tạo đơn mới được xác nhận
@@ -508,33 +510,9 @@ class TangCaController extends Controller
             return back()->with('error', 'Đơn này đã được xác nhận trước đó');
         }
 
-        // ⭐ KIỂM TRA THỜI GIAN CHI TIẾT
-        $now = Carbon::now();
-        $ngayTangCa = Carbon::parse($donTangCa->ngay_tang_ca);
-        $gioBatDau = Carbon::parse($donTangCa->gio_bat_dau);
-
-        // Tạo datetime đầy đủ: ngày + giờ bắt đầu
-        $thoiGianBatDau = Carbon::parse($ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s'));
-
-        // ⭐ CHO PHÉP XÁC NHẬN TRONG KHOẢNG THỜI GIAN:
-        // - Từ 30 phút trước giờ bắt đầu (cho phép check-in sớm)
-        // - Đến 2 giờ sau giờ kết thúc (cho phép check-out muộn)
-        $thoiGianChoPhepSom = $thoiGianBatDau->copy()->subMinutes(30);
-        $thoiGianKetThuc = Carbon::parse($donTangCa->gio_ket_thuc);
-        $thoiGianChoPhepMuon = Carbon::parse($ngayTangCa->format('Y-m-d') . ' ' . $thoiGianKetThuc->format('H:i:s'))->addHours(2);
-
-        // ⭐ KIỂM TRA
-        if ($now->lt($thoiGianChoPhepSom)) {
-            $thoiGianConLai = $now->diffInMinutes($thoiGianChoPhepSom);
-            $gioConLai = floor($thoiGianConLai / 60);
-            $phutConLai = $thoiGianConLai % 60;
-
-            $thongBao = "Chưa đến giờ tăng ca! Còn {$gioConLai} giờ {$phutConLai} phút nữa mới được xác nhận.";
-            return back()->with('error', $thongBao);
-        }
-
-        if ($now->gt($thoiGianChoPhepMuon)) {
-            return back()->with('error', 'Đã quá thời gian cho phép xác nhận tăng ca!');
+        // Kiểm tra ngày tăng ca không được là ngày trong tương lai
+        if (Carbon::parse($donTangCa->ngay_tang_ca)->isFuture()) {
+            return back()->with('error', 'Chỉ có thể xác nhận sau ngày tăng ca');
         }
 
         DB::beginTransaction();

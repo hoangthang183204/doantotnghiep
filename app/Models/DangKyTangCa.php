@@ -49,15 +49,13 @@ class DangKyTangCa extends Model
     // Nhãn loại tăng ca
     public static array $loaiLabels = [
         'ngay_thuong' => 'Ngày thường',
-        'ngay_nghi' => 'Ngày nghỉ',
-        'le_tet' => 'Lễ / Tết',
+        'ngay_nghi'   => 'Ngày nghỉ',
     ];
 
     // Hệ số lương tăng ca
     public static array $heSoLuong = [
         'ngay_thuong' => 1.5,
-        'ngay_nghi' => 2.0,
-        'le_tet' => 3.0,
+        'ngay_nghi'   => 2.0,
     ];
 
     // ============================================================

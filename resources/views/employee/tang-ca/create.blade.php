@@ -69,9 +69,8 @@
                         Loại tăng ca <span class="text-red-500">*</span>
                     </label>
                     <select name="loai_tang_ca" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500" required>
-                        <option value="ngay_thuong" {{ old('loai_tang_ca') == 'ngay_thuong' ? 'selected' : '' }}>Ngày thường (x1)</option>
-                        <option value="ngay_nghi" {{ old('loai_tang_ca') == 'ngay_nghi' ? 'selected' : '' }}>Ngày nghỉ (x1.5)</option>
-                        <option value="le_tet" {{ old('loai_tang_ca') == 'le_tet' ? 'selected' : '' }}>Lễ Tết (x2)</option>
+                        <option value="ngay_thuong" {{ old('loai_tang_ca') == 'ngay_thuong' ? 'selected' : '' }}>Ngày thường (150%)</option>
+                        <option value="ngay_nghi" {{ old('loai_tang_ca') == 'ngay_nghi' ? 'selected' : '' }}>Ngày nghỉ (200%)</option>
                     </select>
                     @error('loai_tang_ca')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
