@@ -640,30 +640,48 @@
                 }
             });
 
+            // ⭐ HÀM DUYỆT ĐƠN - SỬA LẠI HOÀN TOÀN
             function duyetDon(id) {
                 if (!confirm('Bạn có chắc muốn duyệt đơn này?')) return;
 
-                fetch(`${baseUrl}/admin/tang-ca/${id}/duyet`, {
+                // Hiển thị loading
+                const btn = event.target.closest('button');
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML =
+                    '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...';
+                btn.disabled = true;
+
+                fetch('/admin/tang-ca/' + id + '/duyet', {
                         method: 'POST',
                         headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                             'Content-Type': 'application/json',
-                            'Accept': 'application/json; charset=utf-8'
+                            'Accept': 'application/json'
                         }
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('HTTP ' + response.status);
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         alert(data.message || 'Đã xử lý thành công');
                         if (data.success) {
                             location.reload();
                         }
                     })
-                    .catch(err => {
-                        console.error('Error:', err);
-                        alert('Có lỗi xảy ra: ' + err.message);
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Có lỗi xảy ra, vui lòng thử lại!');
+                    })
+                    .finally(() => {
+                        btn.innerHTML = originalHtml;
+                        btn.disabled = false;
                     });
             }
 
+            // ⭐ HÀM TỪ CHỐI ĐƠN - SỬA LẠI HOÀN TOÀN
             function tuChoiDon(id) {
                 const lyDo = prompt('Nhập lý do từ chối:');
                 if (lyDo === null) return;
@@ -672,27 +690,43 @@
                     return;
                 }
 
-                fetch(`${baseUrl}/admin/tang-ca/${id}/tu-choi`, {
+                // Hiển thị loading
+                const btn = event.target.closest('button');
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML =
+                    '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...';
+                btn.disabled = true;
+
+                fetch('/admin/tang-ca/' + id + '/tu-choi', {
                         method: 'POST',
                         headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                             'Content-Type': 'application/json',
-                            'Accept': 'application/json; charset=utf-8'
+                            'Accept': 'application/json'
                         },
                         body: JSON.stringify({
                             ly_do_tu_choi: lyDo
                         })
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('HTTP ' + response.status);
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         alert(data.message || 'Đã xử lý thành công');
                         if (data.success) {
                             location.reload();
                         }
                     })
-                    .catch(err => {
-                        console.error('Error:', err);
-                        alert('Có lỗi xảy ra: ' + err.message);
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Có lỗi xảy ra, vui lòng thử lại!');
+                    })
+                    .finally(() => {
+                        btn.innerHTML = originalHtml;
+                        btn.disabled = false;
                     });
             }
         </script>

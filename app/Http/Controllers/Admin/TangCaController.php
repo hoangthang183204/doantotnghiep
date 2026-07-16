@@ -264,26 +264,23 @@ class TangCaController extends Controller
         }
     }
 
-    /**
-     * ✅ Phê duyệt đơn tăng ca - DÙNG CHUNG
-     */
+
     public function duyet(Request $request, $id)
     {
-        $user = Auth::user();
-        $isAdmin = $user->vaiTros()->whereIn('name', ['admin', 'Super Admin'])->exists();
-        $isTruongPhong = $this->isTruongPhong($user);
-        $nhanVienIds = $this->getNhanVienIdsByScope($user);
-
-        $query = DangKyTangCa::where('trang_thai', 'cho_duyet');
-
-        // Kiểm tra quyền duyệt
-        if (!$isAdmin && $isTruongPhong && !empty($nhanVienIds)) {
-            $query->whereIn('nguoi_dung_id', $nhanVienIds);
-        }
-
-        $dangKy = $query->findOrFail($id);
-
         try {
+            $user = Auth::user();
+            $isAdmin = $user->vaiTros()->whereIn('name', ['admin', 'Super Admin'])->exists();
+            $isTruongPhong = $this->isTruongPhong($user);
+            $nhanVienIds = $this->getNhanVienIdsByScope($user);
+
+            $query = DangKyTangCa::where('trang_thai', 'cho_duyet');
+
+            if (!$isAdmin && $isTruongPhong && !empty($nhanVienIds)) {
+                $query->whereIn('nguoi_dung_id', $nhanVienIds);
+            }
+
+            $dangKy = $query->findOrFail($id);
+
             $dangKy->update([
                 'trang_thai' => 'da_duyet',
                 'nguoi_duyet_id' => $user->id,
@@ -293,43 +290,44 @@ class TangCaController extends Controller
 
             $this->notificationService->notifyOvertime($dangKy, 'approved');
 
-            // ⭐ SỬA: Trả về message tiếng Việt đúng encoding
+            // ⭐ TRẢ VỀ JSON ĐÚNG CÁCH
             return response()->json([
                 'success' => true,
-                'message' => '✅ Đã duyệt đơn tăng ca thành công.'
-            ])->setEncodingOptions(JSON_UNESCAPED_UNICODE);
+                'message' => 'Đã duyệt đơn tăng ca thành công!'
+            ], 200, [
+                'Content-Type' => 'application/json; charset=utf-8'
+            ]);
         } catch (\Exception $e) {
+            Log::error('❌ Duyet tang ca error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => '❌ Có lỗi xảy ra: ' . $e->getMessage()
-            ], 500)->setEncodingOptions(JSON_UNESCAPED_UNICODE);
+                'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
+            ], 500, [
+                'Content-Type' => 'application/json; charset=utf-8'
+            ]);
         }
     }
 
-    /**
-     * ❌ Từ chối đơn tăng ca - DÙNG CHUNG
-     */
-
     public function tuChoi(Request $request, $id)
     {
-        $request->validate([
-            'ly_do_tu_choi' => 'required|string|max:500',
-        ]);
-
-        $user = Auth::user();
-        $isAdmin = $user->vaiTros()->whereIn('name', ['admin', 'Super Admin'])->exists();
-        $isTruongPhong = $this->isTruongPhong($user);
-        $nhanVienIds = $this->getNhanVienIdsByScope($user);
-
-        $query = DangKyTangCa::where('trang_thai', 'cho_duyet');
-
-        if (!$isAdmin && $isTruongPhong && !empty($nhanVienIds)) {
-            $query->whereIn('nguoi_dung_id', $nhanVienIds);
-        }
-
-        $dangKy = $query->findOrFail($id);
-
         try {
+            $request->validate([
+                'ly_do_tu_choi' => 'required|string|max:500',
+            ]);
+
+            $user = Auth::user();
+            $isAdmin = $user->vaiTros()->whereIn('name', ['admin', 'Super Admin'])->exists();
+            $isTruongPhong = $this->isTruongPhong($user);
+            $nhanVienIds = $this->getNhanVienIdsByScope($user);
+
+            $query = DangKyTangCa::where('trang_thai', 'cho_duyet');
+
+            if (!$isAdmin && $isTruongPhong && !empty($nhanVienIds)) {
+                $query->whereIn('nguoi_dung_id', $nhanVienIds);
+            }
+
+            $dangKy = $query->findOrFail($id);
+
             $dangKy->update([
                 'trang_thai' => 'tu_choi',
                 'nguoi_duyet_id' => $user->id,
@@ -339,23 +337,22 @@ class TangCaController extends Controller
 
             $this->notificationService->notifyOvertime($dangKy, 'rejected');
 
-            // ⭐ TRẢ VỀ RESPONSE JSON ĐÚNG
             return response()->json([
                 'success' => true,
-                'message' => '✅ Đã từ chối đơn tăng ca.'
+                'message' => 'Đã từ chối đơn tăng ca!'
             ], 200, [
                 'Content-Type' => 'application/json; charset=utf-8'
             ]);
         } catch (\Exception $e) {
+            Log::error('❌ Tu choi tang ca error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => '❌ Có lỗi xảy ra: ' . $e->getMessage()
+                'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
             ], 500, [
                 'Content-Type' => 'application/json; charset=utf-8'
             ]);
         }
     }
-
     /**
      * 📊 Duyệt hàng loạt - DÙNG CHUNG
      */
