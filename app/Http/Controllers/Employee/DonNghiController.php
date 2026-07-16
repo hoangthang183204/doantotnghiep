@@ -25,7 +25,6 @@ class DonNghiController extends Controller
     private function getSoDuNghiPhep($userId)
     {
         $namHienTai = Carbon::now()->year;
-        $thangHienTai = Carbon::now()->month;
 
         // Lấy cấu hình phép từ bảng so_du_phep
         $soDuPhep = \App\Models\SoDuPhep::where('nguoi_dung_id', $userId)
@@ -50,14 +49,6 @@ class DonNghiController extends Controller
         // Bật trạng thái cảnh báo nếu số dư còn dưới hoặc bằng 3 ngày
         $canhBaoSapHet = $soDuConLai <= 3.0;
 
-        // ================= TÍNH TOÁN THỰC TẾ CHO THEO THÁNG (MỚI) =================
-        // Tính tổng số ngày nghỉ ĐÃ ĐƯỢC DUYỆT trong tháng hiện tại của người dùng
-        $daNghiTrongThang = \App\Models\DonXinNghi::where('nguoi_dung_id', $userId)
-            ->where('trang_thai', 'da_duyet') // Chỉ tính đơn đã được duyệt thành công
-            ->whereYear('ngay_bat_dau', $namHienTai)
-            ->whereMonth('ngay_bat_dau', $thangHienTai)
-            ->sum('so_ngay_nghi');
-
         return [
             'so_ngay_phep_nam' => $tongPhepDuocHuong,
             'phep_nam_moi' => $soDuPhep->phep_nam_moi,
@@ -65,8 +56,6 @@ class DonNghiController extends Controller
             'so_ngay_da_nghi' => $soNgayDaNghi,
             'so_du_con_lai' => $soDuConLai,
             'canh_bao_sap_het' => $canhBaoSapHet,
-            'da_nghi_trong_thang' => $daNghiTrongThang ?? 0, // Gửi dữ liệu thật sang View (nếu chưa nghỉ thì là 0)
-            'gioi_han_thang' => 3 // Hạn mức nghỉ tối đa mỗi tháng
         ];
     }
 
@@ -127,20 +116,12 @@ class DonNghiController extends Controller
 
         $soDu = $this->getSoDuNghiPhep($user->id);
 
-        // --- 1. KIỂM TRA SỐ DƯ PHÉP NĂM (ĐÃ CÓ SẴN) ---
+        // --- KIỂM TRA SỐ DƯ PHÉP NĂM ---
         if ($request->so_ngay_nghi > $soDu['so_du_con_lai']) {
             return back()->withInput()->withErrors(['so_ngay_nghi' => 'Số ngày nghỉ vượt quá số dư nghỉ phép hiện tại (' . $soDu['so_du_con_lai'] . ' ngày)']);
         }
 
-        // --- 2. CHẶN VƯỢT QUÁ GIỚI HẠN THÁNG (THÊM MỚI) ---
-        $tongNgayNghiDuKien = $request->so_ngay_nghi + $soDu['da_nghi_trong_thang'];
-        if ($tongNgayNghiDuKien > $soDu['gioi_han_thang']) {
-            return back()->withInput()->withErrors([
-                'so_ngay_nghi' => 'Không thể tạo đơn! Tổng số ngày nghỉ trong tháng này của bạn sau khi cộng thêm đơn này sẽ là ' . $tongNgayNghiDuKien . ' ngày, vượt quá hạn mức tối đa cho phép (' . $soDu['gioi_han_thang'] . ' ngày/tháng).'
-            ]);
-        }
-
-        // --- 3. KIỂM TRA ĐƠN TRÙNG LẶP (ĐÃ CÓ SẴN) ---
+        // --- KIỂM TRA ĐƠN TRÙNG LẶP ---
         $exists = DonXinNghi::where('nguoi_dung_id', $user->id)
             ->where('trang_thai', 'cho_duyet')
             ->where(function ($q) use ($request) {
@@ -174,11 +155,10 @@ class DonNghiController extends Controller
 
             Log::info('📝 DonNghi created: ' . $donNghi->id);
 
-            // ⭐⭐ GỬI THÔNG BÁO CHO ADMIN + TRƯỞNG PHÒNG ⭐⭐
+            // GỬI THÔNG BÁO CHO ADMIN + TRƯỞNG PHÒNG
             try {
                 Log::info('📝 Bắt đầu gửi thông báo...');
 
-                // Lấy ADMIN + TRƯỞNG PHÒNG
                 $recipients = \App\Models\NguoiDung::whereHas('vaiTros', function ($q) {
                     $q->whereIn('name', ['admin', 'Super Admin', 'truong_phong']);
                 })->get();
@@ -193,7 +173,6 @@ class DonNghiController extends Controller
                 Log::info('📝 Gửi thông báo thành công!');
             } catch (\Exception $e) {
                 Log::error('❌ Lỗi gửi thông báo: ' . $e->getMessage());
-                // Không throw exception để vẫn tạo được đơn
             }
 
             DB::commit();
