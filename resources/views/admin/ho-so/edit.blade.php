@@ -721,8 +721,8 @@
             <div class="md:col-span-2 border-t border-gray-200 dark:border-gray-700 pt-4 mt-2">
                 <h3 class="text-md font-semibold text-gray-800 dark:text-white mb-3">👨‍👩‍👦 Người phụ thuộc (Giảm trừ
                     thuế TNCN)</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">💡 Mỗi người phụ thuộc được giảm trừ 4.400.000
-                    VNĐ/tháng</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">💡 Mỗi người phụ thuộc được giảm trừ 6.200.000
+                    VNĐ/tháng (NQ 110/2025, áp dụng từ 2026)</p>
             </div>
 
             <div class="md:col-span-2" id="nguoiPhuThuocContainer">
@@ -823,7 +823,7 @@
                     class="mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium border border-blue-300 rounded-lg px-4 py-2 hover:bg-blue-50 transition">
                     ➕ Thêm người phụ thuộc
                 </button>
-                <p class="text-xs text-gray-400 mt-2">💡 Mỗi người phụ thuộc giảm trừ 4.400.000 VNĐ/tháng</p>
+                <p class="text-xs text-gray-400 mt-2">💡 Mỗi người phụ thuộc giảm trừ 6.200.000 VNĐ/tháng (NQ 110/2025, áp dụng từ 2026)</p>
             </div>
 
             {{-- ========== ⭐ ĐÀO TẠO (THÊM MỚI) ========== --}}

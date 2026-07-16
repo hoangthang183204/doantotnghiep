@@ -197,8 +197,10 @@
     </div>
 
     <p class="text-xs text-gray-400">
-        * BHXH 8% + BHYT 1.5% + BHTN 1% tính trên lương cơ bản. Thuế TNCN tính lũy tiến với giảm trừ gia cảnh
-        {{ number_format(\App\Services\TinhLuongService::GIAM_TRU_BAN_THAN) }} đ/tháng.
+        * BHXH 8% + BHYT 1.5% + BHTN 1% tính trên lương cơ bản. Thuế TNCN tính theo biểu lũy tiến 5 bậc
+        (Luật Thuế TNCN 2025, áp dụng từ 2026) với giảm trừ gia cảnh bản thân
+        {{ number_format(\App\Services\TinhLuongService::GIAM_TRU_BAN_THAN) }} đ/tháng
+        và {{ number_format(\App\Services\TinhLuongService::GIAM_TRU_NGUOI_PHU_THUOC) }} đ/tháng cho mỗi người phụ thuộc.
         Trạng thái bảng lương: <span class="font-medium">{{ $bangLuong->trang_thai_text }}</span>.
     </p>
 

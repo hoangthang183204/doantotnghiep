@@ -5,10 +5,12 @@ namespace App\Services;
 use App\Models\BangLuong;
 use App\Models\ChamCong;
 use App\Models\HopDongLaoDong;
+use App\Models\HoSo;
 use App\Models\KhauTruKhac;
 use App\Models\KhauTruLuong;
 use App\Models\LuongNhanVien;
 use App\Models\NguoiDung;
+use App\Models\NguoiPhuThuoc;
 use App\Models\PhuCapLuong;
 use App\Models\PhuCapNhanVien;
 use Carbon\Carbon;
@@ -30,8 +32,17 @@ class TinhLuongService
     /** Hệ số lương tăng ca ngày thường */
     public const HE_SO_TANG_CA = 1.5;
 
-    /** Giảm trừ gia cảnh cho bản thân người nộp thuế (đ/tháng) */
-    public const GIAM_TRU_BAN_THAN = 11_000_000;
+    /**
+     * Giảm trừ gia cảnh cho bản thân người nộp thuế (đ/tháng).
+     * NQ 110/2025/UBTVQH15 + Luật Thuế TNCN 2025: 11tr → 15,5tr, áp dụng từ kỳ tính thuế 2026.
+     */
+    public const GIAM_TRU_BAN_THAN = 15_500_000;
+
+    /**
+     * Giảm trừ gia cảnh cho mỗi người phụ thuộc (đ/tháng).
+     * NQ 110/2025/UBTVQH15: 4,4tr → 6,2tr, áp dụng từ kỳ tính thuế 2026.
+     */
+    public const GIAM_TRU_NGUOI_PHU_THUOC = 6_200_000;
 
     /** Các trạng thái chấm công được tính là "có đi làm" */
     private const TRANG_THAI_CO_MAT = ['dung_gio', 'di_muon', 've_som', 'den_som'];
@@ -88,15 +99,25 @@ class TinhLuongService
         $bhtn = round($luongCoBan * 0.01, 2);
         $tongBaoHiem = round($bhxh + $bhyt + $bhtn, 2);
 
-        $thuNhapChiuThue = $luongTheoCong + $phuCapChiuThue + $tienTangCa
-            - $tongBaoHiem - self::GIAM_TRU_BAN_THAN;
-        $thueTNCN = $this->tinhThueTNCN(max(0, $thuNhapChiuThue));
+        // Giảm trừ gia cảnh = bản thân + (số người phụ thuộc × mức/người)
+        // (NQ 110/2025/UBTVQH15, áp dụng từ kỳ tính thuế 2026)
+        $soNguoiPhuThuoc = $this->demNguoiPhuThuoc($nguoiDungId, $dauThang, $cuoiThang);
+        $giamTruNPT      = round($soNguoiPhuThuoc * self::GIAM_TRU_NGUOI_PHU_THUOC, 2);
+        $giamTruGiaCanh  = round(self::GIAM_TRU_BAN_THAN + $giamTruNPT, 2);
 
+        // Thu nhập chịu thuế = lương theo công + phụ cấp CHỊU THUẾ + tiền tăng ca
+        $thuNhapChiuThue = round($luongTheoCong + $phuCapChiuThue + $tienTangCa, 2);
+        // Thu nhập tính thuế = thu nhập chịu thuế − bảo hiểm bắt buộc − giảm trừ gia cảnh
+        $thuNhapTinhThue = max(0, round($thuNhapChiuThue - $tongBaoHiem - $giamTruGiaCanh, 2));
+        $thueTNCN        = $this->tinhThueTNCN($thuNhapTinhThue);
+
+        $ghiChuThue = 'Thuế TNCN luỹ tiến — giảm trừ gia cảnh ' . number_format($giamTruGiaCanh) . 'đ'
+            . ($soNguoiPhuThuoc > 0 ? " (bản thân + {$soNguoiPhuThuoc} người phụ thuộc)" : '');
         $chiTietKhauTru = [
             ['loai' => 'bhxh',      'so_tien' => $bhxh,     'ghi_chu' => 'BHXH 8% lương cơ bản'],
             ['loai' => 'bhyt',      'so_tien' => $bhyt,     'ghi_chu' => 'BHYT 1.5% lương cơ bản'],
             ['loai' => 'bhtn',      'so_tien' => $bhtn,     'ghi_chu' => 'BHTN 1% lương cơ bản'],
-            ['loai' => 'thue_tncn', 'so_tien' => $thueTNCN, 'ghi_chu' => 'Thuế TNCN luỹ tiến'],
+            ['loai' => 'thue_tncn', 'so_tien' => $thueTNCN, 'ghi_chu' => $ghiChuThue],
         ];
 
         // --- BƯỚC 7b: Khấu trừ khác (tạm ứng, phạt, bồi thường...) do admin nhập ---
@@ -146,7 +167,12 @@ class TinhLuongService
             'bhyt'                 => $bhyt,
             'bhtn'                 => $bhtn,
             'tong_bao_hiem'        => $tongBaoHiem,
-            'thu_nhap_chiu_thue'   => max(0, round($thuNhapChiuThue, 2)),
+            'so_nguoi_phu_thuoc'   => $soNguoiPhuThuoc,
+            'giam_tru_ban_than'    => self::GIAM_TRU_BAN_THAN,
+            'giam_tru_nguoi_phu_thuoc' => $giamTruNPT,
+            'giam_tru_gia_canh'    => $giamTruGiaCanh,
+            'thu_nhap_chiu_thue'   => $thuNhapChiuThue,
+            'thu_nhap_tinh_thue'   => $thuNhapTinhThue,
             'thue_thu_nhap_ca_nhan' => $thueTNCN,
             'tong_khau_tru_khac'   => $tongKhauTruKhac,
             'chi_tiet_khau_tru_khac' => $khauTruKhac['chi_tiet'],
@@ -307,6 +333,32 @@ class TinhLuongService
     }
 
     /**
+     * Đếm số người phụ thuộc còn hiệu lực trong tháng để tính giảm trừ gia cảnh.
+     * Người phụ thuộc gắn với hồ sơ (ho_so_nguoi_dung) qua ho_so_id.
+     * Chỉ tính người có ngày bắt đầu ≤ cuối tháng và (chưa kết thúc HOẶC kết thúc ≥ đầu tháng).
+     */
+    private function demNguoiPhuThuoc(int $nguoiDungId, Carbon $dauThang, Carbon $cuoiThang): int
+    {
+        $hoSoId = HoSo::where('nguoi_dung_id', $nguoiDungId)->value('id');
+        if (!$hoSoId) {
+            return 0;
+        }
+
+        return (int) NguoiPhuThuoc::where('ho_so_id', $hoSoId)
+            // Đã bắt đầu tính giảm trừ trước/trong tháng (NULL = tính từ đầu)
+            ->where(function ($q) use ($cuoiThang) {
+                $q->whereNull('ngay_bat_dau')
+                    ->orWhereDate('ngay_bat_dau', '<=', $cuoiThang->toDateString());
+            })
+            // Chưa kết thúc hoặc kết thúc sau đầu tháng
+            ->where(function ($q) use ($dauThang) {
+                $q->whereNull('ngay_ket_thuc')
+                    ->orWhereDate('ngay_ket_thuc', '>=', $dauThang->toDateString());
+            })
+            ->count();
+    }
+
+    /**
      * Tính phụ cấp của nhân viên trong tháng.
      * Gộp phụ cấp gán riêng (phu_cap_nhan_vien) + phụ cấp gắn ở hợp đồng.
      */
@@ -398,27 +450,29 @@ class TinhLuongService
         return round($giaTri, 2);
     }
 
-    /** Thuế TNCN luỹ tiến từng phần (phương pháp rút gọn) */
-    private function tinhThueTNCN(float $thuNhapChiuThue): float
+    /**
+     * Thuế TNCN luỹ tiến từng phần (phương pháp rút gọn) — biểu 5 BẬC.
+     * Luật Thuế TNCN 2025: rút gọn 7 bậc → 5 bậc, áp dụng từ kỳ tính thuế 2026.
+     * Bậc: đến 10tr (5%), 10–30tr (10%), 30–60tr (20%), 60–100tr (30%), trên 100tr (35%).
+     */
+    private function tinhThueTNCN(float $thuNhapTinhThue): float
     {
-        if ($thuNhapChiuThue <= 0) {
+        if ($thuNhapTinhThue <= 0) {
             return 0;
         }
 
         // [ngưỡng trên, thuế suất, số trừ nhanh]
         $bac = [
-            [5_000_000,     0.05, 0],
-            [10_000_000,    0.10, 250_000],
-            [18_000_000,    0.15, 750_000],
-            [32_000_000,    0.20, 1_650_000],
-            [52_000_000,    0.25, 3_250_000],
-            [80_000_000,    0.30, 5_850_000],
-            [PHP_INT_MAX,   0.35, 9_850_000],
+            [10_000_000,    0.05, 0],
+            [30_000_000,    0.10, 500_000],
+            [60_000_000,    0.20, 3_500_000],
+            [100_000_000,   0.30, 9_500_000],
+            [PHP_INT_MAX,   0.35, 14_500_000],
         ];
 
         foreach ($bac as [$nguong, $tyLe, $truNhanh]) {
-            if ($thuNhapChiuThue <= $nguong) {
-                return round($thuNhapChiuThue * $tyLe - $truNhanh, 2);
+            if ($thuNhapTinhThue <= $nguong) {
+                return round($thuNhapTinhThue * $tyLe - $truNhanh, 2);
             }
         }
 
