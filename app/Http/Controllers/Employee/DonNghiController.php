@@ -43,7 +43,17 @@ class DonNghiController extends Controller
         }
 
         $tongPhepDuocHuong = $soDuPhep->phep_nam_moi + $soDuPhep->phep_cu_chuyen_sang;
-        $soNgayDaNghi = $soDuPhep->phep_da_dung;
+        
+        // SỬA TẠI ĐÂY: Tính tổng số ngày đã nghỉ thực tế từ các đơn ĐÃ DUYỆT thuộc nhóm Phép Năm
+        $soNgayDaNghi = \App\Models\DonXinNghi::where('nguoi_dung_id', $userId)
+            ->where('trang_thai', 'da_duyet')
+            ->whereYear('ngay_bat_dau', $namHienTai)
+            ->whereHas('loaiNghiPhep', function ($q) {
+                // Chỉ tính tổng số ngày của các đơn có loại nghỉ là "phép năm"
+                $q->where('ten', 'like', '%phép năm%');
+            })
+            ->sum('so_ngay_nghi');
+
         $soDuConLai = max(0, $tongPhepDuocHuong - $soNgayDaNghi);
 
         // Bật trạng thái cảnh báo nếu số dư còn dưới hoặc bằng 3 ngày
