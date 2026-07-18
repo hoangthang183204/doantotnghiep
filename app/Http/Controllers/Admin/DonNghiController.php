@@ -269,27 +269,87 @@ class DonNghiController extends Controller
     }
 
     public function reject(Request $request, $id)
-    {
-        $donNghi = DonXinNghi::findOrFail($id);
+{
+    // Bắt đầu transaction để an toàn dữ liệu
+    \Illuminate\Support\Facades\DB::beginTransaction();
+    try {
+        $donNghi = DonXinNghi::with('loaiNghiPhep')->findOrFail($id);
+        
+        if ($donNghi->trang_thai == 'huy_bo') {
+            return redirect()->back()->with('error', '❌ Đơn này đã bị hủy!');
+        }
+
+        $trangThaiCu = $donNghi->trang_thai;
+        
         $donNghi->trang_thai = 'tu_choi';
         $donNghi->ghi_chu = $request->ly_do_tu_choi;
+        $donNghi->nguoi_duyet_id = auth()->id();
+        $donNghi->thoi_gian_duyet = now();
         $donNghi->save();
 
-        // ⭐⭐⭐ GỬI THÔNG BÁO TỪ CHỐI ⭐⭐⭐
+        // HOÀN TÁC PHÉP: Nếu đơn này TRƯỚC ĐÓ ĐÃ ĐƯỢC DUYỆT, nay chuyển sang TỪ CHỐI thì phải cộng lại phép
+        $loaiNghi = $donNghi->loaiNghiPhep;
+        $tenLoaiCheck = mb_strtolower($loaiNghi->ten, 'UTF-8');
+
+        if (!str_contains($tenLoaiCheck, 'thai sản') && !str_contains($tenLoaiCheck, 'không lương')) {
+            if ($trangThaiCu === 'da_duyet') {
+                $namDonNghi = \Carbon\Carbon::parse($donNghi->ngay_bat_dau)->year;
+                $soDuPhep = \App\Models\SoDuPhep::where('nguoi_dung_id', $donNghi->nguoi_dung_id)
+                    ->where('nam', $namDonNghi)
+                    ->first();
+                if ($soDuPhep) {
+                    $soDuPhep->phep_da_dung = max(0, $soDuPhep->phep_da_dung - $donNghi->so_ngay_nghi);
+                    $soDuPhep->save();
+                }
+            }
+        }
+
         $this->notificationService->notifyLeaveRequest($donNghi, 'rejected');
 
+        \Illuminate\Support\Facades\DB::commit();
         return redirect()->back()->with('error', 'Đã từ chối đơn nghỉ phép');
+        
+    } catch (\Exception $e) {
+        \Illuminate\Support\Facades\DB::rollback();
+        return redirect()->back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
     }
+}
 
-    public function cancel($id)
-    {
-        $donNghi = DonXinNghi::findOrFail($id);
+public function cancel($id)
+{
+    \Illuminate\Support\Facades\DB::beginTransaction();
+    try {
+        $donNghi = DonXinNghi::with('loaiNghiPhep')->findOrFail($id);
+        $trangThaiCu = $donNghi->trang_thai;
+
         $donNghi->trang_thai = 'huy_bo';
         $donNghi->save();
 
-        // ⭐⭐⭐ GỬI THÔNG BÁO HỦY ĐƠN ⭐⭐⭐
+        // HOÀN TÁC PHÉP: Nếu đơn này từng ĐƯỢC DUYỆT, nay bị HỦY thì hoàn lại phép
+        $loaiNghi = $donNghi->loaiNghiPhep;
+        $tenLoaiCheck = mb_strtolower($loaiNghi->ten, 'UTF-8');
+
+        if (!str_contains($tenLoaiCheck, 'thai sản') && !str_contains($tenLoaiCheck, 'không lương')) {
+            if ($trangThaiCu === 'da_duyet') {
+                $namDonNghi = \Carbon\Carbon::parse($donNghi->ngay_bat_dau)->year;
+                $soDuPhep = \App\Models\SoDuPhep::where('nguoi_dung_id', $donNghi->nguoi_dung_id)
+                    ->where('nam', $namDonNghi)
+                    ->first();
+                if ($soDuPhep) {
+                    $soDuPhep->phep_da_dung = max(0, $soDuPhep->phep_da_dung - $donNghi->so_ngay_nghi);
+                    $soDuPhep->save();
+                }
+            }
+        }
+
         $this->notificationService->notifyLeaveRequest($donNghi, 'cancelled');
 
+        \Illuminate\Support\Facades\DB::commit();
         return redirect()->back()->with('success', 'Đã hủy đơn nghỉ phép');
+        
+    } catch (\Exception $e) {
+        \Illuminate\Support\Facades\DB::rollback();
+        return redirect()->back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
     }
+}
 }
