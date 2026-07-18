@@ -113,8 +113,9 @@ class DonNghiController extends Controller
 
         return view('admin.don_nghi.show', compact('donNghi'));
     }
+
     /**
-     * Duyệt hàng loạt
+     * Duyệt hàng loạt (Đã cập nhật logic loại trừ trừ phép năm)
      */
     public function bulkAction(Request $request)
     {
@@ -125,7 +126,8 @@ class DonNghiController extends Controller
         ]);
 
         try {
-            $donNghiList = DonXinNghi::whereIn('id', $request->ids)
+            $donNghiList = DonXinNghi::with('loaiNghiPhep')
+                ->whereIn('id', $request->ids)
                 ->where('trang_thai', 'cho_duyet')
                 ->where('trang_thai', '!=', 'huy_bo')
                 ->get();
@@ -138,6 +140,21 @@ class DonNghiController extends Controller
                     'thoi_gian_duyet' => now(),
                     'ghi_chu' => $request->ly_do_tu_choi ?? ($request->action == 'da_duyet' ? 'Duyệt hàng loạt' : 'Từ chối hàng loạt'),
                 ]);
+
+                // ⭐ LOGIC KHẤU TRỪ SỐ DƯ PHÉP KHI DUYỆT HÀNG LOẠT (LOẠI TRỪ THAI SẢN / KHÔNG LƯƠNG)
+                if ($request->action == 'da_duyet') {
+                    $loaiNghi = $donNghi->loaiNghiPhep;
+                    $tenLoaiCheck = mb_strtolower($loaiNghi->ten, 'UTF-8');
+
+                    if (!str_contains($tenLoaiCheck, 'thai sản') && !str_contains($tenLoaiCheck, 'không lương')) {
+                        $namDonNghi = \Carbon\Carbon::parse($donNghi->ngay_bat_dau)->year;
+                        $soDuPhep = \App\Models\SoDuPhep::firstOrCreate(
+                            ['nguoi_dung_id' => $donNghi->nguoi_dung_id, 'nam' => $namDonNghi],
+                            ['phep_nam_moi' => 12.0, 'phep_cu_chuyen_sang' => 0.0, 'phep_da_dung' => 0.0]
+                        );
+                        $soDuPhep->increment('phep_da_dung', $donNghi->so_ngay_nghi);
+                    }
+                }
 
                 // ⭐ GỬI THÔNG BÁO CHO TỪNG NHÂN VIÊN
                 $action = $request->action === 'da_duyet' ? 'approved' : 'rejected';
@@ -159,7 +176,9 @@ class DonNghiController extends Controller
         }
     }
 
-
+    /**
+     * Duyệt đơn lẻ (Đã cập nhật logic loại trừ trừ phép năm)
+     */
     public function capNhatTrangThai(Request $request, $id)
     {
         $request->validate([
@@ -167,11 +186,11 @@ class DonNghiController extends Controller
             'ly_do_tu_choi' => 'nullable|string|max:500',
         ]);
 
-        // Bắt đầu dùng Transaction để đảm bảo tính toàn vẹn dữ liệu (nếu trừ phép lỗi thì hủy duyệt đơn)
+        // Bắt đầu dùng Transaction để đảm bảo tính toàn vẹn dữ liệu
         DB::beginTransaction();
 
         try {
-            $donNghi = DonXinNghi::findOrFail($id);
+            $donNghi = DonXinNghi::with('loaiNghiPhep')->findOrFail($id);
 
             if ($donNghi->trang_thai == 'huy_bo') {
                 return redirect()->back()->with('error', '❌ Đơn này đã bị hủy, không thể thay đổi trạng thái!');
@@ -200,25 +219,31 @@ class DonNghiController extends Controller
 
             $donNghi->save();
 
-            // ⭐⭐⭐ LOGIC KHẤU TRỪ / HOÀN TÁC SỐ DƯ PHÉP ĐỘNG ⭐⭐⭐
-            $namDonNghi = \Carbon\Carbon::parse($donNghi->ngay_bat_dau)->year;
+            // ⭐⭐⭐ LOGIC KHẤU TRỪ / HOÀN TÁC SỐ DƯ PHÉP ĐỘNG (ĐÃ LOẠI TRỪ THAI SẢN / KHÔNG LƯƠNG) ⭐⭐⭐
+            $loaiNghi = $donNghi->loaiNghiPhep;
+            $tenLoaiCheck = mb_strtolower($loaiNghi->ten, 'UTF-8');
 
-            // Tìm hoặc tự khởi tạo bản ghi số dư phép năm đó của nhân viên
-            $soDuPhep = \App\Models\SoDuPhep::firstOrCreate(
-                ['nguoi_dung_id' => $donNghi->nguoi_dung_id, 'nam' => $namDonNghi],
-                ['phep_nam_moi' => 12.0, 'phep_cu_chuyen_sang' => 0.0, 'phep_da_dung' => 0.0]
-            );
+            if (!str_contains($tenLoaiCheck, 'thai sản') && !str_contains($tenLoaiCheck, 'không lương')) {
+                
+                $namDonNghi = \Carbon\Carbon::parse($donNghi->ngay_bat_dau)->year;
 
-            // Trường hợp 1: Chuyển từ trạng thái khác SANG "Đã duyệt" -> Trừ số dư phép (Tăng phep_da_dung)
-            if ($trangThaiMoi === 'da_duyet' && $trangThaiCu !== 'da_duyet') {
-                $soDuPhep->increment('phep_da_dung', $donNghi->so_ngay_nghi);
-            }
+                // Tìm hoặc tự khởi tạo bản ghi số dư phép năm đó của nhân viên
+                $soDuPhep = \App\Models\SoDuPhep::firstOrCreate(
+                    ['nguoi_dung_id' => $donNghi->nguoi_dung_id, 'nam' => $namDonNghi],
+                    ['phep_nam_moi' => 12.0, 'phep_cu_chuyen_sang' => 0.0, 'phep_da_dung' => 0.0]
+                );
 
-            // Trường hợp 2: Hoàn tác từ "Đã duyệt" QUAY VỀ trạng thái khác -> Hoàn lại số dư phép (Giảm phep_da_dung)
-            elseif ($trangThaiCu === 'da_duyet' && $trangThaiMoi !== 'da_duyet') {
-                // Đảm bảo không trừ âm giá trị phep_da_dung
-                $soDuPhep->phep_da_dung = max(0, $soDuPhep->phep_da_dung - $donNghi->so_ngay_nghi);
-                $soDuPhep->save();
+                // Trường hợp 1: Chuyển từ trạng thái khác SANG "Đã duyệt" -> Trừ số dư phép (Tăng phep_da_dung)
+                if ($trangThaiMoi === 'da_duyet' && $trangThaiCu !== 'da_duyet') {
+                    $soDuPhep->increment('phep_da_dung', $donNghi->so_ngay_nghi);
+                }
+
+                // Trường hợp 2: Hoàn tác từ "Đã duyệt" QUAY VỀ trạng thái khác -> Hoàn lại số dư phép (Giảm phep_da_dung)
+                elseif ($trangThaiCu === 'da_duyet' && $trangThaiMoi !== 'da_duyet') {
+                    // Đảm bảo không trừ âm giá trị phep_da_dung
+                    $soDuPhep->phep_da_dung = max(0, $soDuPhep->phep_da_dung - $donNghi->so_ngay_nghi);
+                    $soDuPhep->save();
+                }
             }
 
             // ⭐⭐⭐ GỬI THÔNG BÁO KHI DUYỆT/TỪ CHỐI ⭐⭐⭐
@@ -230,8 +255,8 @@ class DonNghiController extends Controller
             DB::commit(); // Mọi thứ chạy mượt mà, lưu vào DB
 
             $thongBao = match ($trangThaiMoi) {
-                'cho_duyet' => 'Đã hoàn tác đơn về trạng thái Chờ duyệt và hoàn lại số dư phép!',
-                'da_duyet' => 'Đã duyệt đơn nghỉ phép và khấu trừ số dư phép thành công!',
+                'cho_duyet' => 'Đã hoàn tác đơn về trạng thái Chờ duyệt thành công!',
+                'da_duyet' => 'Đã xử lý cập nhật trạng thái đơn nghỉ phép thành công!',
                 'tu_choi' => 'Đã từ chối đơn nghỉ phép!',
                 default => 'Cập nhật thành công!',
             };
