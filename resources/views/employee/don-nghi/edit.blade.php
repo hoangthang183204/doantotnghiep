@@ -236,6 +236,30 @@
                 }
             }
         }
+        function tinhSoNgay() {
+    if (ngayBatDau.value && ngayKetThuc.value) {
+        const start = new Date(ngayBatDau.value);
+        const end = new Date(ngayKetThuc.value);
+        
+        if (start <= end) {
+            let count = 0;
+            // Duyệt qua từng ngày trong khoảng từ Từ ngày -> Đến ngày
+            let current = new Date(start);
+            while (current <= end) {
+                const dayOfWeek = current.getDay();
+                // 0: Chủ Nhật, 6: Thứ Bảy
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                    count++;
+                }
+                current.setDate(current.getDate() + 1);
+            }
+            
+            soNgayNghi.value = count;
+        } else {
+            soNgayNghi.value = '';
+        }
+    }
+}
 
         // Khi ngày bắt đầu thay đổi, cập nhật min cho ngày kết thúc
         ngayBatDau.addEventListener('change', function() {

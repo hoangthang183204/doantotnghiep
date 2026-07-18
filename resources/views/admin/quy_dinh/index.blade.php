@@ -553,7 +553,7 @@
             <div class="stat-card">
                 <i class="far fa-calendar-alt stat-icon text-success"></i>
                 <div class="text-muted small fw-medium mb-1">Ngày Làm Việc</div>
-                <h5 class="text-success fw-bold">T2 - T7</h5>
+                <h5 class="text-success fw-bold">T2 - T6</h5>
             </div>
             <div class="stat-card">
                 <i class="fas fa-coffee stat-icon text-warning"></i>
