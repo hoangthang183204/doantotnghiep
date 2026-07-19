@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\DB;
 class TinhLuongService
 {
     /** Số ngày công chuẩn 1 tháng (quy ước VN phổ biến) */
-    public const NGAY_CONG_CHUAN = 26;
+    public const NGAY_CONG_CHUAN = 22;
 
     /** Hệ số lương tăng ca ngày thường */
     public const HE_SO_TANG_CA = 1.5;
@@ -455,29 +455,50 @@ class TinhLuongService
      * Luật Thuế TNCN 2025: rút gọn 7 bậc → 5 bậc, áp dụng từ kỳ tính thuế 2026.
      * Bậc: đến 10tr (5%), 10–30tr (10%), 30–60tr (20%), 60–100tr (30%), trên 100tr (35%).
      */
-    private function tinhThueTNCN(float $thuNhapTinhThue): float
-    {
-        if ($thuNhapTinhThue <= 0) {
-            return 0;
-        }
-
-        // [ngưỡng trên, thuế suất, số trừ nhanh]
-        $bac = [
-            [10_000_000,    0.05, 0],
-            [30_000_000,    0.10, 500_000],
-            [60_000_000,    0.20, 3_500_000],
-            [100_000_000,   0.30, 9_500_000],
-            [PHP_INT_MAX,   0.35, 14_500_000],
-        ];
-
-        foreach ($bac as [$nguong, $tyLe, $truNhanh]) {
-            if ($thuNhapTinhThue <= $nguong) {
-                return round($thuNhapTinhThue * $tyLe - $truNhanh, 2);
-            }
-        }
-
+private function tinhThueTNCN(float $thuNhapTinhThue): float
+{
+    if ($thuNhapTinhThue <= 0) {
         return 0;
     }
+
+    $thue = 0;
+
+    // Bậc 1
+    if ($thuNhapTinhThue <= 10_000_000) {
+        return round($thuNhapTinhThue * 0.05, 2);
+    }
+
+    $thue += 10_000_000 * 0.05;
+
+    // Bậc 2
+    if ($thuNhapTinhThue <= 30_000_000) {
+        $thue += ($thuNhapTinhThue - 10_000_000) * 0.10;
+        return round($thue, 2);
+    }
+
+    $thue += 20_000_000 * 0.10;
+
+    // Bậc 3
+    if ($thuNhapTinhThue <= 60_000_000) {
+        $thue += ($thuNhapTinhThue - 30_000_000) * 0.20;
+        return round($thue, 2);
+    }
+
+    $thue += 30_000_000 * 0.20;
+
+    // Bậc 4
+    if ($thuNhapTinhThue <= 100_000_000) {
+        $thue += ($thuNhapTinhThue - 60_000_000) * 0.30;
+        return round($thue, 2);
+    }
+
+    $thue += 40_000_000 * 0.30;
+
+    // Bậc 5
+    $thue += ($thuNhapTinhThue - 100_000_000) * 0.35;
+
+    return round($thue, 2);
+}
 
     /** Sinh mã bảng lương duy nhất: BL-YYYY-MM-xxxxx */
     private function taoMaBangLuong(int $thang, int $nam): string
