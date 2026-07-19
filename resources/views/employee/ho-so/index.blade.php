@@ -34,10 +34,10 @@
         {{-- ================= HEADER ================= --}}
         <div
             class="rounded-2xl p-6
-        bg-white dark:bg-slate-800
-        border border-gray-200 dark:border-slate-700
-        shadow-sm
-        text-gray-800 dark:text-white">
+    bg-white dark:bg-slate-800
+    border border-gray-200 dark:border-slate-700
+    shadow-sm
+    text-gray-800 dark:text-white">
 
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
 
@@ -75,6 +75,16 @@
                     </div>
 
                 </div>
+
+                {{-- ⭐⭐⭐ NÚT QUAY LẠI TRANG SHOW ⭐⭐⭐ --}}
+                <a href="{{ route('employee.ho-so.show') }}"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl
+            bg-gray-500 text-white hover:bg-gray-600
+            transition shadow-sm hover:shadow-md
+            border border-gray-400 dark:border-gray-600">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Quay lại
+                </a>
 
             </div>
 

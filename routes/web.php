@@ -512,6 +512,9 @@ Route::prefix('admin')
 // =============================================
 // EMPLOYEE ROUTES
 // =============================================
+// =============================================
+// EMPLOYEE ROUTES
+// =============================================
 Route::prefix('employee')
     ->name('employee.')
     ->middleware(['auth'])
@@ -546,8 +549,6 @@ Route::prefix('employee')
             Route::put('/{id}', [EmployeeTangCaController::class, 'update'])->name('update');
             Route::delete('/{id}', [EmployeeTangCaController::class, 'destroy'])->name('destroy');
             Route::post('/{id}/huy', [EmployeeTangCaController::class, 'huy'])->name('huy');
-
-            // ✅ ROUTE XÁC NHẬN ĐÃ LÀM TĂNG CA - CHO NHÂN VIÊN
             Route::post('/{id}/confirm-thuc-hien', [EmployeeTangCaController::class, 'confirmThucHien'])->name('confirm-thuc-hien');
         });
 
@@ -572,12 +573,15 @@ Route::prefix('employee')
             Route::post('/{id}/huy', [EmployeeDonNghiController::class, 'huy'])->name('huy');
         });
 
-        // ========== HỒ SƠ CÁ NHÂN ==========
-        Route::prefix('ho-so')->name('ho-so.')->group(function () {
-            Route::get('/', [EmployeeHoSoController::class, 'index'])->name('index');
-            Route::put('/', [EmployeeHoSoController::class, 'update'])->name('update');
-            Route::post('/change-password', [EmployeeHoSoController::class, 'changePassword'])->name('change-password');
-        });
+        // ============================================
+        // ⭐⭐⭐ HỒ SƠ CÁ NHÂN - SỬA LẠI ĐÚNG CONTROLLER ⭐⭐⭐
+        // ============================================
+        Route::get('/ho-so', [EmployeeHoSoController::class, 'show'])->name('ho-so.show');
+        Route::get('/ho-so/edit', [EmployeeHoSoController::class, 'index'])->name('ho-so.index');
+        Route::put('/ho-so', [EmployeeHoSoController::class, 'update'])->name('ho-so.update');
+        Route::post('/ho-so/change-password', [EmployeeHoSoController::class, 'changePassword'])->name('ho-so.change-password');
+        Route::get('/ho-so/cv/{id}/view', [EmployeeHoSoController::class, 'viewCv'])->name('ho-so.view-cv');
+        Route::get('/ho-so/contract/{id}/view', [EmployeeHoSoController::class, 'viewContract'])->name('ho-so.view-contract');
 
         // ========== BẢNG LƯƠNG ==========
         Route::prefix('bang-luong')->name('bang-luong.')->group(function () {

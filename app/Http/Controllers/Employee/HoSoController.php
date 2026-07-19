@@ -5,11 +5,16 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use App\Models\ChungChiNhanVien;
 use App\Models\DaoTaoNhanVien;
+use App\Models\HopDongLaoDong;
 use App\Models\HoSo;
 use App\Models\HoSoNguoiDung;
 use App\Models\KyNangNhanVien;
+use App\Models\LuongNhanVien;
 use App\Models\NguoiDung;
 use App\Models\NguoiPhuThuoc;
+use App\Models\PhuCap;
+use App\Models\PhuCapNhanVien;
+use App\Models\TaiLieu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -17,11 +22,165 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\File;
 
 class HoSoController extends Controller
 {
     /**
-     * Hiển thị trang hồ sơ cá nhân
+     * Hiển thị trang xem hồ sơ cá nhân (show)
+     * Không cần tham số vì lấy từ Auth::user()
+     */
+    public function show()
+    {
+        /** @var NguoiDung $user */
+        $user = Auth::user();
+
+        // Load các quan hệ cơ bản
+        $user->load([
+            'hoSo',
+            'phong_ban',
+            'chuc_vu',
+            'vai_tro',
+        ]);
+
+        // LẤY ĐÚNG HO SO (HoSoNguoiDung)
+        $hoSoNguoiDung = $user->hoSo;
+
+        // LẤY HO SO (HoSo) - ĐÂY LÀ BẢNG CHÍNH CHỨA THÔNG TIN
+        $hoSo = $hoSoNguoiDung?->hoSo; // <--- SỬA: dùng ->hoSo thay vì $hoSo
+
+        // Lấy hợp đồng hiệu lực
+        $hopDongHieuLuc = $hoSo?->hop_dong
+            ?->where('trang_thai_hop_dong', 'hieu_luc')
+            ?->first();
+
+        // Load thêm các quan hệ cho HoSo
+        if ($hoSo) {
+            $hoSo->load([
+                'ky_nang',
+                'chung_chi',
+                'dao_tao',
+                'nguoiPhuThuoc',
+                'cv',
+                'hop_dong',
+                'khen_thuong_ky_luat',
+            ]);
+        }
+
+        // Lấy bảng lương gần nhất
+        $luongGanNhat = LuongNhanVien::where('nguoi_dung_id', $user->id)
+            ->orderBy('luong_nam', 'desc')
+            ->orderBy('luong_thang', 'desc')
+            ->first();
+
+        // Tính toán lương
+        $luongCoBanHienTai = $hopDongHieuLuc?->luong_co_ban ?? 0;
+
+        // Tính phụ cấp
+        $tongPhuCap = 0;
+        if ($hopDongHieuLuc) {
+            if (!empty($hopDongHieuLuc->phu_cap)) {
+                $phuCapIds = is_string($hopDongHieuLuc->phu_cap)
+                    ? json_decode($hopDongHieuLuc->phu_cap, true)
+                    : $hopDongHieuLuc->phu_cap;
+
+                if (is_array($phuCapIds) && count($phuCapIds) > 0) {
+                    $tongPhuCap = PhuCap::whereIn('id', $phuCapIds)->sum('so_tien_mac_dinh');
+                }
+            }
+
+            if ($tongPhuCap == 0) {
+                $phuCapNhanVien = PhuCapNhanVien::where('nguoi_dung_id', $user->id)
+                    ->where('trang_thai', 'hieu_luc')
+                    ->where('ngay_hieu_luc', '<=', now())
+                    ->where(function ($q) {
+                        $q->whereNull('ngay_ket_thuc')->orWhere('ngay_ket_thuc', '>=', now());
+                    })
+                    ->sum('so_tien');
+                $tongPhuCap = $phuCapNhanVien > 0 ? $phuCapNhanVien : 0;
+            }
+        }
+
+        // Tăng ca
+        $tienTangCa = $luongGanNhat?->tien_tang_ca ?? 0;
+        $coTangCa = $tienTangCa > 0;
+
+        // Tổng thu nhập
+        $tongThuNhap = $luongCoBanHienTai + $tongPhuCap + $tienTangCa;
+
+        // Bảo hiểm (10.5%)
+        $luongDongBhxh = $hopDongHieuLuc?->luong_co_ban ?? 0;
+        $bhxh = round($luongDongBhxh * 0.08, 0);
+        $bhyt = round($luongDongBhxh * 0.015, 0);
+        $bhtn = round($luongDongBhxh * 0.01, 0);
+        $tongBaoHiem = $bhxh + $bhyt + $bhtn;
+
+        // Giảm trừ gia cảnh
+        $soNguoiPhuThuoc = $hoSo?->nguoiPhuThuoc?->count() ?? 0;
+        $giamTruBanThan = 15500000;
+        $giamTruGiaCanh = $giamTruBanThan + 6200000 * $soNguoiPhuThuoc;
+
+        // Thuế TNCN
+        $thuNhapChiuThue = max(0, $tongThuNhap - $tongBaoHiem);
+        $thuNhapTinhThue = max(0, $thuNhapChiuThue - $giamTruGiaCanh);
+
+        $thueTncn = 0;
+        $remaining = $thuNhapTinhThue;
+        $bac = [
+            ['tu' => 0, 'den' => 10000000, 'thue_suat' => 0.05],
+            ['tu' => 10000000, 'den' => 30000000, 'thue_suat' => 0.1],
+            ['tu' => 30000000, 'den' => 60000000, 'thue_suat' => 0.2],
+            ['tu' => 60000000, 'den' => 100000000, 'thue_suat' => 0.3],
+            ['tu' => 100000000, 'den' => PHP_INT_MAX, 'thue_suat' => 0.35],
+        ];
+        foreach ($bac as $b) {
+            if ($remaining <= 0) break;
+            $khoang = min($remaining, $b['den'] - $b['tu']);
+            $thueTncn += $khoang * $b['thue_suat'];
+            $remaining -= $khoang;
+        }
+        $thueTncn = round($thueTncn, 0);
+
+        $thucNhan = $tongThuNhap - $tongBaoHiem - $thueTncn;
+
+        // Lấy chi tiết phụ cấp
+        $phuCapChiTiets = collect();
+        if ($hopDongHieuLuc && !empty($hopDongHieuLuc->phu_cap)) {
+            $phuCapIds = is_string($hopDongHieuLuc->phu_cap)
+                ? json_decode($hopDongHieuLuc->phu_cap, true)
+                : $hopDongHieuLuc->phu_cap;
+            if (is_array($phuCapIds) && count($phuCapIds) > 0) {
+                $phuCapChiTiets = PhuCap::whereIn('id', $phuCapIds)->get();
+            }
+        }
+
+        return view('employee.ho-so.show', compact(
+            'user',
+            'hoSo',              // <--- $hoSo là HoSo model (bảng chính)
+            'hoSoNguoiDung',     // <--- thêm biến này nếu cần
+            'hopDongHieuLuc',
+            'luongGanNhat',
+            'luongCoBanHienTai',
+            'tongPhuCap',
+            'tienTangCa',
+            'coTangCa',
+            'tongThuNhap',
+            'luongDongBhxh',
+            'bhxh',
+            'bhyt',
+            'bhtn',
+            'tongBaoHiem',
+            'soNguoiPhuThuoc',
+            'thuNhapChiuThue',
+            'thueTncn',
+            'thucNhan',
+            'phuCapChiTiets'
+        ));
+    }
+
+    /**
+     * Hiển thị trang hồ sơ cá nhân (index - form chỉnh sửa)
      */
     public function index()
     {
@@ -465,6 +624,68 @@ class HoSoController extends Controller
                 ->withInput()
                 ->with('error', 'Có lỗi xảy ra khi cập nhật hồ sơ: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Xem CV của nhân viên
+     */
+    public function viewCv($id)
+    {
+        /** @var NguoiDung $user */
+        $user = Auth::user();
+
+        // Tìm tài liệu CV
+        $cv = TaiLieu::where('id', $id)
+            ->where('nguoi_dung_id', $user->id)
+            ->first();
+
+        if (!$cv) {
+            abort(404, 'Không tìm thấy CV');
+        }
+
+        $filePath = storage_path('app/public/' . $cv->duong_dan_file);
+
+        if (!file_exists($filePath)) {
+            abort(404, 'File CV không tồn tại');
+        }
+
+        return response()->file($filePath, [
+            'Content-Disposition' => 'inline; filename="' . $cv->ten_file_goc . '"',
+        ]);
+    }
+
+    /**
+     * Xem hợp đồng của nhân viên
+     */
+    public function viewContract($id)
+    {
+        /** @var NguoiDung $user */
+        $user = Auth::user();
+
+        // Tìm hợp đồng
+        $contract = HopDongLaoDong::where('id', $id)
+            ->where('nguoi_dung_id', $user->id)
+            ->first();
+
+        if (!$contract) {
+            abort(404, 'Không tìm thấy hợp đồng');
+        }
+
+        $filePath = $contract->file_hop_dong_da_ky ?? $contract->duong_dan_file;
+
+        if (!$filePath) {
+            abort(404, 'File hợp đồng không tồn tại');
+        }
+
+        $fullPath = storage_path('app/public/' . $filePath);
+
+        if (!file_exists($fullPath)) {
+            abort(404, 'File hợp đồng không tồn tại');
+        }
+
+        return response()->file($fullPath, [
+            'Content-Disposition' => 'inline; filename="' . basename($filePath) . '"',
+        ]);
     }
 
     /**
