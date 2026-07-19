@@ -27,6 +27,13 @@
                         </svg>
                         Thêm hợp đồng
                     </a>
+                    <a href="{{ route('admin.hop-dong.luu-tru') }}"
+                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gray-600 hover:bg-gray-700 text-white rounded-xl transition shadow-md hover:shadow-lg">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                        </svg>
+                        Lưu trữ
+                    </a>
                 </div>
             </div>
         </div>
@@ -286,7 +293,6 @@
                                         } }}
                                     </span>
                                 </td>
-                                {{-- Trong phần actions của mỗi dòng --}}
                                 <td class="px-4 py-3">
                                     <div class="flex justify-center gap-1.5 flex-wrap">
                                         {{-- Nút Xem --}}
@@ -315,6 +321,19 @@
                                             </a>
                                         @endif
 
+                                        {{-- ⭐ NÚT TĂNG LƯƠNG - CHỈ HIỆN KHI HỢP ĐỒNG CÓ HIỆU LỰC VÀ ĐÃ KÝ --}}
+                                        @if ($hd->trang_thai_hop_dong == 'hieu_luc' && $hd->trang_thai_ky == 'da_ky')
+                                            <a href="{{ route('admin.tang-luong.create', $hd->id) }}"
+                                                class="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition"
+                                                title="💰 Tăng lương">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </a>
+                                        @endif
+
                                         {{-- ✅ NÚT TÁI KÝ - CHỈ HIỆN KHI HỢP ĐỒNG HẾT HẠN --}}
                                         @if ($hd->trang_thai_hop_dong == 'het_han' && $hd->trang_thai_tai_ky != 'da_tai_ky')
                                             <form action="{{ route('admin.hop-dong.tai-ky', $hd->id) }}" method="POST"
@@ -334,20 +353,45 @@
                                             </form>
                                         @endif
 
-                                        {{-- Nút Xóa --}}
-                                        <form action="{{ route('admin.hop-dong.destroy', $hd->id) }}" method="POST"
-                                            onsubmit="return confirm('Xóa hợp đồng này?')" class="inline">
-                                            @csrf @method('DELETE')
-                                            <button type="submit"
-                                                class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
-                                                title="Xóa">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </form>
+                                        {{-- ⭐ NÚT LƯU TRỮ - CHỈ HIỆN KHI HỢP ĐỒNG HẾT HẠN VÀ CHƯA TÁI KÝ --}}
+                                        @if ($hd->trang_thai_hop_dong == 'het_han' && $hd->trang_thai_tai_ky != 'da_tai_ky')
+                                            <form action="{{ route('admin.hop-dong.an-khoi-danh-sach') }}" method="POST"
+                                                class="inline"
+                                                onsubmit="return confirm('📦 Bạn có chắc muốn chuyển hợp đồng {{ $hd->so_hop_dong }} vào lưu trữ?')">
+                                                @csrf
+                                                <input type="hidden" name="hop_dong_id" value="{{ $hd->id }}">
+                                                <button type="submit"
+                                                    class="p-1.5 text-gray-600 hover:bg-gray-50 rounded-lg transition"
+                                                    title="📦 Lưu trữ">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                        {{-- ⭐ NÚT XÓA - CHỈ HIỆN KHI TRẠNG THÁI LÀ: tao_moi, het_han, huy_bo --}}
+                                        @if (in_array($hd->trang_thai_hop_dong, ['tao_moi', 'het_han', 'huy_bo']))
+                                            <form action="{{ route('admin.hop-dong.destroy', $hd->id) }}" method="POST"
+                                                onsubmit="return confirm('🗑️ Bạn có chắc muốn xóa hợp đồng {{ $hd->so_hop_dong }}?')"
+                                                class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                    class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
+                                                    title="Xóa">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        @endif
                                     </div>
                                 </td>
                                 </td>
