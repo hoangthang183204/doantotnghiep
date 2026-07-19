@@ -440,6 +440,7 @@ Route::prefix('admin')
             Route::post('/{id}/huy', [HopDongLaoDongController::class, 'huy'])->name('huy')->middleware('CheckPermission:contract.edit');
             Route::get('/get-nhan-vien-info/{id}', [HopDongLaoDongController::class, 'getNhanVienInfo'])->name('get-nhan-vien-info');
             Route::post('/tai-ky/{id}', [HopDongLaoDongController::class, 'taiKy'])->name('tai-ky')->middleware('CheckPermission:contract.sign');
+            Route::post('/an-khoi-danh-sach', [HopDongLaoDongController::class, 'anKhoiDanhSach'])->name('an-khoi-danh-sach');
         });
 
         Route::prefix('tang-luong')->name('tang-luong.')->middleware(['CheckPermission:contract.edit'])->group(function () {
@@ -537,7 +538,10 @@ Route::prefix('employee')
             Route::post('/check-out', [EmployeeChamCongController::class, 'checkOut'])->name('check-out');
             Route::get('/history', [EmployeeChamCongController::class, 'history'])->name('history');
             Route::post('/save-device-info', [EmployeeChamCongController::class, 'saveDeviceInfo'])->name('save-device-info');
+            Route::get('/trang-thai', [EmployeeChamCongController::class, 'trangThai'])->name('trang-thai');
         });
+
+
 
         // ========== TĂNG CA ==========
         Route::prefix('tang-ca')->name('tang-ca.')->group(function () {

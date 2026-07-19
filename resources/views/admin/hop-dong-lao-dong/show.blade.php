@@ -93,7 +93,7 @@
                             {{ number_format($hopDong->luong_co_ban, 0, ',', '.') }} đ</div>
                     </div>
 
-                    {{-- ===== PHỤ CẤP TỪ BẢNG PHU_CAP_NHAN_VIEN ===== --}}
+                    {{-- Phụ cấp từ bảng PHU_CAP_NHAN_VIEN --}}
                     <div class="flex">
                         <div class="w-32 text-gray-500">Phụ cấp:</div>
                         <div>
@@ -190,7 +190,8 @@
                 </div>
             </div>
         </div>
-        {{-- Khối code hiển thị Bản Scan Hợp Đồng Ký Tay do nhân viên nộp --}}
+
+        {{-- Bản Scan Hợp Đồng Ký Tay do nhân viên nộp --}}
         @if ($hopDong->file_scan_ky)
             <div
                 class="bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
@@ -237,7 +238,7 @@
             </div>
         @endif
 
-        {{-- Thêm vào phần actions (khoảng dòng 200-220) --}}
+        {{-- Nút Tăng lương --}}
         @if ($hopDong->trang_thai_hop_dong == 'hieu_luc' && $hopDong->trang_thai_ky == 'da_ky')
             <a href="{{ route('admin.tang-luong.create', $hopDong->id) }}"
                 class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl transition flex items-center gap-2">
@@ -281,25 +282,104 @@
         @if ($hopDong->duong_dan_file)
             <div
                 class="bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
-                <div class="border-b px-6 py-4 bg-gray-50 dark:bg-gray-700/30">
-                    <h3 class="text-lg font-semibold text-blue-600 dark:text-blue-400">📎 File hợp đồng gốc</h3>
+                <div class="border-b px-6 py-4 bg-blue-50 dark:bg-blue-900/20">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <h3 class="text-lg font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            📎 File hợp đồng gốc
+                        </h3>
+                        @if ($hopDong->created_by)
+                            <div class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                                <span>👤 Người gửi:</span>
+                                <span class="font-medium text-gray-700 dark:text-gray-300">
+                                    @php
+                                        $nguoiGui = \App\Models\NguoiDung::with('hoSo')->find($hopDong->created_by);
+                                    @endphp
+                                    @if ($nguoiGui && $nguoiGui->hoSo)
+                                        {{ $nguoiGui->hoSo->ho ?? '' }}
+                                        {{ $nguoiGui->hoSo->ten ?? $nguoiGui->ten_dang_nhap }}
+                                    @else
+                                        {{ $nguoiGui->ten_dang_nhap ?? 'N/A' }}
+                                    @endif
+                                </span>
+                                @if ($hopDong->created_at)
+                                    <span class="text-gray-400">•</span>
+                                    <span>🕐 {{ $hopDong->created_at->format('d/m/Y H:i') }}</span>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
                 </div>
                 <div class="p-6">
                     <div class="flex flex-wrap gap-2">
                         @foreach (array_filter(explode(';', $hopDong->duong_dan_file)) as $file)
-                            <a href="{{ asset('storage/' . trim($file)) }}" target="_blank"
-                                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition text-blue-700 dark:text-blue-300">
-                                📄 {{ basename(trim($file)) }}
+                            @php
+                                $fileName = basename(trim($file));
+                                $filePath = asset('storage/' . trim($file));
+                                $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+                                $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                            @endphp
+                            <a href="{{ $filePath }}" target="_blank"
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                                @if ($isImage)
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                @else
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                @endif
+                                {{ $fileName }}
+                                @if ($isImage)
+                                    <span class="text-xs text-blue-400">(🖼️ Ảnh)</span>
+                                @endif
                             </a>
                         @endforeach
                     </div>
+                    @if ($hopDong->created_by)
+                        <div
+                            class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap items-center gap-4 text-sm">
+                            <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                <span>Người gửi:</span>
+                                <span class="font-medium text-gray-700 dark:text-gray-300">
+                                    @php
+                                        $nguoiGui = \App\Models\NguoiDung::with('hoSo')->find($hopDong->created_by);
+                                    @endphp
+                                    @if ($nguoiGui && $nguoiGui->hoSo)
+                                        {{ $nguoiGui->hoSo->ho ?? '' }}
+                                        {{ $nguoiGui->hoSo->ten ?? $nguoiGui->ten_dang_nhap }}
+                                    @else
+                                        {{ $nguoiGui->ten_dang_nhap ?? 'N/A' }}
+                                    @endif
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>Thời gian:</span>
+                                <span class="font-medium text-gray-700 dark:text-gray-300">
+                                    {{ $hopDong->created_at ? $hopDong->created_at->format('d/m/Y H:i') : 'N/A' }}
+                                </span>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         @endif
 
-        {{-- ============================================================ --}}
         {{-- NÚT TÁI KÝ HỢP ĐỒNG - CHỈ HIỆN KHI HẾT HẠN --}}
-        {{-- ============================================================ --}}
         @if ($hopDong->trang_thai_hop_dong == 'het_han' && $hopDong->trang_thai_tai_ky != 'da_tai_ky')
             <div
                 class="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
@@ -338,7 +418,6 @@
                         <h4 class="font-semibold text-green-700 dark:text-green-300">Hợp đồng đã được tái ký</h4>
                         <p class="text-sm text-green-600 dark:text-green-400 mt-1">
                             Hợp đồng này đã được tái ký sang hợp đồng mới.
-                            {{-- Nếu có lịch sử tái ký, hiển thị thêm --}}
                             @if (class_exists(\App\Models\LichSuTaiKy::class))
                                 @php
                                     $lichSuTaiKy = \App\Models\LichSuTaiKy::where(
@@ -455,9 +534,9 @@
 
             @if (
                 $user &&
-                    $isAdminOrHr &&
-                    in_array($hopDong->trang_thai_hop_dong, ['hieu_luc', 'chua_hieu_luc', 'het_han']) &&
-                    $hopDong->trang_thai_ky != 'da_ky')
+                $isAdminOrHr &&
+                in_array($hopDong->trang_thai_hop_dong, ['hieu_luc', 'chua_hieu_luc', 'het_han']) &&
+                $hopDong->trang_thai_ky != 'da_ky')
                 <button onclick="showHuyForm()"
                     class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl transition">
                     ❌ Hủy hợp đồng
@@ -471,9 +550,10 @@
                 </a>
             @endif
 
-            @if ($user && $roleName == 'admin')
+            {{-- ⭐ Nút Xóa - CHỈ HIỆN KHI TRẠNG THÁI LÀ: tao_moi, het_han, huy_bo --}}
+            @if ($user && $roleName == 'admin' && in_array($hopDong->trang_thai_hop_dong, ['tao_moi', 'het_han', 'huy_bo']))
                 <form action="{{ route('admin.hop-dong.destroy', $hopDong->id) }}" method="POST"
-                    onsubmit="return confirm('Bạn có chắc muốn xóa hợp đồng này?')">
+                    onsubmit="return confirm('🗑️ Bạn có chắc muốn xóa hợp đồng {{ $hopDong->so_hop_dong }}?')">
                     @csrf
                     @method('DELETE')
                     <button type="submit"
@@ -507,9 +587,7 @@
             </form>
         </div>
 
-        {{-- ============================================================ --}}
         {{-- LỊCH SỬ TÁI KÝ --}}
-        {{-- ============================================================ --}}
         @if (class_exists(\App\Models\LichSuTaiKy::class))
             @php
                 $lichSuTaiKy = \App\Models\LichSuTaiKy::where('hop_dong_cu_id', $hopDong->id)
