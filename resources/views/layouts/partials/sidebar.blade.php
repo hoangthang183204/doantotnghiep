@@ -7,8 +7,14 @@
     // ============================================================
     // ⭐ KIỂM TRA VAI TRÒ
     // ============================================================
-    $isSuperAdmin = $user->vaiTros()->whereIn('name', ['admin', 'Super Admin'])->exists();
-    $isAdmin = $user->vaiTros()->whereIn('name', ['admin', 'Super Admin'])->exists();
+    $isSuperAdmin = $user
+        ->vaiTros()
+        ->whereIn('name', ['admin', 'Super Admin'])
+        ->exists();
+    $isAdmin = $user
+        ->vaiTros()
+        ->whereIn('name', ['admin', 'Super Admin'])
+        ->exists();
     $isHR = $user->vaiTros()->where('name', 'hr')->exists();
     $isKeToan = $user->vaiTros()->where('name', 'ke_toan')->exists();
 
@@ -19,8 +25,11 @@
     $phongBanInfo = null;
 
     // CÁCH 1: Kiểm tra từ vai trò
-    $isTruongPhong = $user->vaiTros()->whereIn('name', ['truong_phong', 'quan_ly'])->exists();
-    
+    $isTruongPhong = $user
+        ->vaiTros()
+        ->whereIn('name', ['truong_phong', 'quan_ly'])
+        ->exists();
+
     if ($isTruongPhong) {
         $phongBanInfo = $user->phongBan;
         if (!$phongBanInfo) {
@@ -41,7 +50,7 @@
     if (!$isTruongPhong && $user->chucVu) {
         $chucVuTen = $user->chucVu->ten;
         $keywords = ['Trưởng Phòng', 'Trưởng phòng', 'Quản lý', 'Manager'];
-        
+
         foreach ($keywords as $keyword) {
             if (str_contains($chucVuTen, $keyword)) {
                 $isTruongPhong = true;
@@ -213,8 +222,8 @@
             {{-- ========================================================== --}}
             @if ($canViewProfile)
                 <li>
-                    <a href="{{ route('employee.ho-so.index') }}"
-                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.ho-so.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                    <a href="{{ route('employee.ho-so.show') }}"
+                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.ho-so.show' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                         <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor" stroke-width="1.5">
