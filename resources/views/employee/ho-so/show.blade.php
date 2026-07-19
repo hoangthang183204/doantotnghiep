@@ -167,43 +167,110 @@
                         </div>
 
                         {{-- Ảnh CCCD --}}
-                        @if ($hoSo?->anh_cccd_truoc || $hoSo?->anh_cccd_sau)
-                            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-slate-700">
-                                <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">🪪 Ảnh CCCD</h4>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        @if ($hoSo->anh_cccd_truoc)
+                        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-slate-700">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                                    <i class="fa-regular fa-id-card text-blue-500"></i>
+                                    Ảnh CCCD
+                                </h4>
+                                <span class="text-xs text-gray-400">Cập nhật trong phần Chỉnh sửa hồ sơ</span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                {{-- Mặt trước --}}
+                                <div class="relative">
+                                    @if ($hoSo?->anh_cccd_truoc)
+                                        <div
+                                            class="relative group rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300">
                                             <img src="{{ asset('storage/' . $hoSo->anh_cccd_truoc) }}" alt="CCCD mặt trước"
-                                                class="w-full rounded-lg border border-gray-200 dark:border-slate-600 shadow-sm cursor-pointer hover:opacity-90 transition"
+                                                class="w-full aspect-[1.586/1] object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
                                                 onclick="openFilePreview('{{ asset('storage/' . $hoSo->anh_cccd_truoc) }}', 'CCCD mặt trước')">
-                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">Mặt trước
-                                            </p>
-                                        @else
                                             <div
-                                                class="w-full h-32 bg-gray-100 dark:bg-slate-700 rounded-lg border-2 border-dashed border-gray-300 dark:border-slate-600 flex items-center justify-center">
-                                                <span class="text-gray-400 text-sm">Chưa có ảnh</span>
+                                                class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                                                <button
+                                                    onclick="openFilePreview('{{ asset('storage/' . $hoSo->anh_cccd_truoc) }}', 'CCCD mặt trước')"
+                                                    class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 dark:bg-slate-800/90 text-gray-700 dark:text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow-lg hover:bg-white dark:hover:bg-slate-700">
+                                                    <i class="fa-regular fa-eye mr-1"></i> Xem
+                                                </button>
                                             </div>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">Mặt trước
-                                            </p>
-                                        @endif
-                                    </div>
-                                    <div>
-                                        @if ($hoSo->anh_cccd_sau)
+                                        </div>
+                                        <div class="flex items-center justify-between mt-2">
+                                            <span
+                                                class="text-xs font-medium text-gray-600 dark:text-gray-300 flex items-center gap-1">
+                                                <i class="fa-regular fa-circle-check text-green-500"></i>
+                                                Mặt trước
+                                            </span>
+                                            <span
+                                                class="text-[10px] text-gray-400 bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">Đã
+                                                tải</span>
+                                        </div>
+                                    @else
+                                        <div
+                                            class="relative rounded-xl overflow-hidden border-2 border-dashed border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 aspect-[1.586/1] flex flex-col items-center justify-center group hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
+                                            <div
+                                                class="text-4xl text-gray-300 dark:text-gray-500 mb-2 group-hover:scale-110 transition-transform">
+                                                <i class="fa-regular fa-image"></i>
+                                            </div>
+                                            <p class="text-sm text-gray-400 dark:text-gray-500 font-medium">Chưa có ảnh</p>
+                                            <p class="text-xs text-gray-300 dark:text-gray-600">Mặt trước</p>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                {{-- Mặt sau --}}
+                                <div class="relative">
+                                    @if ($hoSo?->anh_cccd_sau)
+                                        <div
+                                            class="relative group rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300">
                                             <img src="{{ asset('storage/' . $hoSo->anh_cccd_sau) }}" alt="CCCD mặt sau"
-                                                class="w-full rounded-lg border border-gray-200 dark:border-slate-600 shadow-sm cursor-pointer hover:opacity-90 transition"
+                                                class="w-full aspect-[1.586/1] object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
                                                 onclick="openFilePreview('{{ asset('storage/' . $hoSo->anh_cccd_sau) }}', 'CCCD mặt sau')">
-                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">Mặt sau</p>
-                                        @else
                                             <div
-                                                class="w-full h-32 bg-gray-100 dark:bg-slate-700 rounded-lg border-2 border-dashed border-gray-300 dark:border-slate-600 flex items-center justify-center">
-                                                <span class="text-gray-400 text-sm">Chưa có ảnh</span>
+                                                class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                                                <button
+                                                    onclick="openFilePreview('{{ asset('storage/' . $hoSo->anh_cccd_sau) }}', 'CCCD mặt sau')"
+                                                    class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 dark:bg-slate-800/90 text-gray-700 dark:text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow-lg hover:bg-white dark:hover:bg-slate-700">
+                                                    <i class="fa-regular fa-eye mr-1"></i> Xem
+                                                </button>
                                             </div>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">Mặt sau</p>
-                                        @endif
-                                    </div>
+                                        </div>
+                                        <div class="flex items-center justify-between mt-2">
+                                            <span
+                                                class="text-xs font-medium text-gray-600 dark:text-gray-300 flex items-center gap-1">
+                                                <i class="fa-regular fa-circle-check text-green-500"></i>
+                                                Mặt sau
+                                            </span>
+                                            <span
+                                                class="text-[10px] text-gray-400 bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">Đã
+                                                tải</span>
+                                        </div>
+                                    @else
+                                        <div
+                                            class="relative rounded-xl overflow-hidden border-2 border-dashed border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 aspect-[1.586/1] flex flex-col items-center justify-center group hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
+                                            <div
+                                                class="text-4xl text-gray-300 dark:text-gray-500 mb-2 group-hover:scale-110 transition-transform">
+                                                <i class="fa-regular fa-image"></i>
+                                            </div>
+                                            <p class="text-sm text-gray-400 dark:text-gray-500 font-medium">Chưa có ảnh</p>
+                                            <p class="text-xs text-gray-300 dark:text-gray-600">Mặt sau</p>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
-                        @endif
+
+                            {{-- Hướng dẫn cập nhật --}}
+                            <div
+                                class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+                                <p class="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                                    <i class="fa-regular fa-circle-info"></i>
+                                    Cập nhật ảnh CCCD trong phần
+                                    <a href="{{ route('employee.ho-so.index') }}"
+                                        class="font-medium underline hover:no-underline">
+                                        Chỉnh sửa hồ sơ
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
                 </div>
