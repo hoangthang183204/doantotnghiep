@@ -8,6 +8,7 @@ use App\Models\DangKyTangCa;
 use App\Models\ThucHienTangCa;
 use App\Services\NotificationService;
 use Carbon\Carbon;
+use App\Helpers\OvertimeHelper; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -199,8 +200,7 @@ class TangCaController extends Controller
 
         return ['valid' => true, 'message' => 'Đơn hợp lệ'];
     }
-
-    /**
+    /** 
      * Lưu đơn tăng ca mới
      */
     public function store(Request $request)
@@ -218,10 +218,26 @@ class TangCaController extends Controller
         $user = Auth::user();
         Log::info('📝 User ID: ' . $user->id . ' - ' . $user->email);
 
+        // Tính số giờ tăng ca
+        $gioBatDau = Carbon::parse($request->gio_bat_dau);
+        $gioKetThuc = Carbon::parse($request->gio_ket_thuc);
+        $soGioTangCa = $gioBatDau->diffInHours($gioKetThuc);
+
+        // ⭐ KIỂM TRA GIỚI HẠN GIỜ TĂNG CA
+        $kiemTraGioiHan = OvertimeHelper::kiemTraGioiHan(
+            $user->id,
+            $request->ngay_tang_ca,
+            $soGioTangCa
+        );
+
+        if (!$kiemTraGioiHan['valid']) {
+            Log::warning('⚠️ Overtime limit exceeded: ' . $kiemTraGioiHan['message']);
+            return back()
+                ->withInput()
+                ->withErrors(['gio_bat_dau' => $kiemTraGioiHan['message']]);
+        }
+
         // ⭐ VALIDATE TẤT CẢ ĐIỀU KIỆN
-        // - Kiểm tra xung đột thời gian (chỉ với đơn chờ duyệt và đã duyệt)
-        // - Kiểm tra giới hạn giờ tối đa (8 giờ/ngày)
-        // - Kiểm tra xung đột với giờ làm việc chính thức (nếu có)
         $validation = $this->validateOvertime(
             $user->id,
             $request->ngay_tang_ca,
@@ -231,18 +247,10 @@ class TangCaController extends Controller
 
         if (!$validation['valid']) {
             Log::warning('⚠️ Overtime validation failed: ' . $validation['message']);
-
             return back()
                 ->withInput()
-                ->withErrors([
-                    'gio_bat_dau' => $validation['message']
-                ]);
+                ->withErrors(['gio_bat_dau' => $validation['message']]);
         }
-
-        // Tính số giờ tăng ca
-        $gioBatDau = Carbon::parse($request->gio_bat_dau);
-        $gioKetThuc = Carbon::parse($request->gio_ket_thuc);
-        $soGioTangCa = $gioBatDau->diffInHours($gioKetThuc);
 
         DB::beginTransaction();
         try {

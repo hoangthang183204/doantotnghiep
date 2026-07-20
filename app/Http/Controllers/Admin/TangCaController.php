@@ -10,11 +10,10 @@ use App\Models\NguoiDung;
 use App\Models\PhongBan;
 use App\Helpers\SalaryHelper;
 use App\Services\NotificationService;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;      // ⭐ THÊM DÒNG NÀY
-use Illuminate\Support\Facades\Log;     // ⭐ THÊM DÒNG NÀY
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TangCaController extends Controller
 {
@@ -42,15 +41,12 @@ class TangCaController extends Controller
      */
     private function isTruongPhong($user)
     {
-        // Kiểm tra từ chức vụ
         if ($user->chucVu && in_array($user->chucVu->ten, ['Trưởng Phòng', 'Trưởng phòng', 'Quản lý', 'Manager'])) {
             return true;
         }
-        // Kiểm tra từ bảng phong_ban
         if (PhongBan::where('truong_phong_id', $user->id)->exists()) {
             return true;
         }
-        // Kiểm tra từ vai trò
         if ($user->vaiTros()->whereIn('name', ['truong_phong', 'quan_ly'])->exists()) {
             return true;
         }
@@ -64,12 +60,10 @@ class TangCaController extends Controller
     {
         $isAdmin = $user->vaiTros()->whereIn('name', ['admin', 'Super Admin'])->exists();
 
-        // Admin: xem tất cả
         if ($isAdmin) {
             return null;
         }
 
-        // Trưởng phòng: lấy ID nhân viên trong phòng
         $phongBanId = $this->getPhongBanId($user);
         if (!$phongBanId) {
             return [];
@@ -82,7 +76,7 @@ class TangCaController extends Controller
     }
 
     /**
-     * 📋 Danh sách đăng ký tăng ca - DÙNG CHUNG
+     * 📋 Danh sách đăng ký tăng ca
      */
     public function index(Request $request)
     {
@@ -98,7 +92,6 @@ class TangCaController extends Controller
             'thuc_hien'
         ]);
 
-        // ⭐ LỌC THEO PHÒNG BAN (CHO TRƯỞNG PHÒNG)
         if (!$isAdmin && $isTruongPhong) {
             if (!empty($nhanVienIds)) {
                 $query->whereIn('nguoi_dung_id', $nhanVienIds);
@@ -107,7 +100,6 @@ class TangCaController extends Controller
             }
         }
 
-        // Lọc theo tên nhân viên
         if ($request->filled('ten_nhan_vien')) {
             $keyword = trim($request->ten_nhan_vien);
             $query->whereHas('nguoi_dung', function ($q) use ($keyword) {
@@ -120,24 +112,20 @@ class TangCaController extends Controller
             });
         }
 
-        // Lọc theo phòng ban
         if ($request->filled('phong_ban_id')) {
             $query->whereHas('nguoi_dung', function ($q) use ($request) {
                 $q->where('phong_ban_id', $request->phong_ban_id);
             });
         }
 
-        // Lọc trạng thái
         if ($request->filled('trang_thai')) {
             $query->where('trang_thai', $request->trang_thai);
         }
 
-        // Lọc theo ngày tăng ca
         if ($request->filled('ngay_tang_ca')) {
             $query->whereDate('ngay_tang_ca', $request->ngay_tang_ca);
         }
 
-        // Lọc từ ngày / đến ngày
         if ($request->filled('tu_ngay')) {
             $query->whereDate('ngay_tang_ca', '>=', $request->tu_ngay);
         }
@@ -145,17 +133,14 @@ class TangCaController extends Controller
             $query->whereDate('ngay_tang_ca', '<=', $request->den_ngay);
         }
 
-        // Lấy danh sách
         $donTangCa = $query
             ->orderBy('ngay_tang_ca', 'desc')
             ->orderBy('id', 'desc')
             ->paginate(15)
             ->appends($request->query());
 
-        // ⭐⭐⭐ THỐNG KÊ - CẬP NHẬT ĐÚNG SỐ LƯỢNG ⭐⭐⭐
         $thongKeQuery = DangKyTangCa::query();
 
-        // Áp dụng filter phòng ban cho thống kê
         if (!$isAdmin && $isTruongPhong) {
             if (!empty($nhanVienIds)) {
                 $thongKeQuery->whereIn('nguoi_dung_id', $nhanVienIds);
@@ -164,7 +149,6 @@ class TangCaController extends Controller
             }
         }
 
-        // Áp dụng filter tên nhân viên cho thống kê
         if ($request->filled('ten_nhan_vien')) {
             $keyword = trim($request->ten_nhan_vien);
             $thongKeQuery->whereHas('nguoi_dung', function ($q) use ($keyword) {
@@ -177,14 +161,12 @@ class TangCaController extends Controller
             });
         }
 
-        // Áp dụng filter phòng ban cho thống kê
         if ($request->filled('phong_ban_id')) {
             $thongKeQuery->whereHas('nguoi_dung', function ($q) use ($request) {
                 $q->where('phong_ban_id', $request->phong_ban_id);
             });
         }
 
-        // Áp dụng filter ngày tháng cho thống kê
         if ($request->filled('tu_ngay')) {
             $thongKeQuery->whereDate('ngay_tang_ca', '>=', $request->tu_ngay);
         }
@@ -192,7 +174,6 @@ class TangCaController extends Controller
             $thongKeQuery->whereDate('ngay_tang_ca', '<=', $request->den_ngay);
         }
 
-        // Tính toán thống kê
         $thongKe = [
             'tong' => (clone $thongKeQuery)->count(),
             'cho_duyet' => (clone $thongKeQuery)->where('trang_thai', 'cho_duyet')->count(),
@@ -201,10 +182,8 @@ class TangCaController extends Controller
             'huy' => (clone $thongKeQuery)->where('trang_thai', 'huy')->count(),
         ];
 
-        // Lấy danh sách phòng ban cho bộ lọc
         $phongBans = PhongBan::all();
 
-        // Lấy thông tin phòng ban của trưởng phòng
         $phongBanInfo = null;
         if (!$isAdmin && $isTruongPhong) {
             $phongBanId = $this->getPhongBanId($user);
@@ -213,7 +192,6 @@ class TangCaController extends Controller
             }
         }
 
-        // Xác định view dùng
         if ($isAdmin) {
             return view('admin.tang-ca.index', compact(
                 'donTangCa',
@@ -234,7 +212,7 @@ class TangCaController extends Controller
     }
 
     /**
-     * 👁️ Chi tiết đơn tăng ca - DÙNG CHUNG
+     * 👁️ Chi tiết đơn tăng ca
      */
     public function show($id)
     {
@@ -250,7 +228,6 @@ class TangCaController extends Controller
             'thuc_hien',
         ]);
 
-        // Kiểm tra quyền xem
         if (!$isAdmin && $isTruongPhong && !empty($nhanVienIds)) {
             $query->whereIn('nguoi_dung_id', $nhanVienIds);
         }
@@ -264,7 +241,9 @@ class TangCaController extends Controller
         }
     }
 
-
+    /**
+     * ✅ Phê duyệt đơn tăng ca
+     */
     public function duyet(Request $request, $id)
     {
         try {
@@ -290,24 +269,21 @@ class TangCaController extends Controller
 
             $this->notificationService->notifyOvertime($dangKy, 'approved');
 
-            // ⭐ TRẢ VỀ JSON ĐÚNG CÁCH
-            return response()->json([
-                'success' => true,
-                'message' => 'Đã duyệt đơn tăng ca thành công!'
-            ], 200, [
-                'Content-Type' => 'application/json; charset=utf-8'
-            ]);
+            // ⭐ CHUYỂN VỀ INDEX THAY VÌ SHOW
+            return redirect()
+                ->route('admin.tang-ca.index')
+                ->with('success', '✅ Đã duyệt đơn tăng ca thành công!');
         } catch (\Exception $e) {
             Log::error('❌ Duyet tang ca error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
-            ], 500, [
-                'Content-Type' => 'application/json; charset=utf-8'
-            ]);
+            return redirect()
+                ->route('admin.tang-ca.index')
+                ->with('error', '❌ Có lỗi xảy ra: ' . $e->getMessage());
         }
     }
 
+    /**
+     * ❌ Từ chối đơn tăng ca
+     */
     public function tuChoi(Request $request, $id)
     {
         try {
@@ -337,24 +313,19 @@ class TangCaController extends Controller
 
             $this->notificationService->notifyOvertime($dangKy, 'rejected');
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Đã từ chối đơn tăng ca!'
-            ], 200, [
-                'Content-Type' => 'application/json; charset=utf-8'
-            ]);
+            // ⭐ CHUYỂN VỀ INDEX THAY VÌ SHOW
+            return redirect()
+                ->route('admin.tang-ca.index')
+                ->with('success', '✅ Đã từ chối đơn tăng ca!');
         } catch (\Exception $e) {
             Log::error('❌ Tu choi tang ca error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
-            ], 500, [
-                'Content-Type' => 'application/json; charset=utf-8'
-            ]);
+            return redirect()
+                ->route('admin.tang-ca.index')
+                ->with('error', '❌ Có lỗi xảy ra: ' . $e->getMessage());
         }
     }
     /**
-     * 📊 Duyệt hàng loạt - DÙNG CHUNG
+     * 📊 Duyệt hàng loạt - Trả về JSON cho AJAX
      */
     public function duyetHangLoat(Request $request)
     {
@@ -368,7 +339,7 @@ class TangCaController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Không có ID nào được chọn'
-                ], 400)->setEncodingOptions(JSON_UNESCAPED_UNICODE);
+                ], 400);
             }
 
             $user = Auth::user();
@@ -389,7 +360,7 @@ class TangCaController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Không có đơn nào ở trạng thái chờ duyệt'
-                ])->setEncodingOptions(JSON_UNESCAPED_UNICODE);
+                ], 404);
             }
 
             $soLuong = 0;
@@ -407,16 +378,16 @@ class TangCaController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => "✅ Đã phê duyệt {$soLuong} đơn tăng ca."
-            ])->setEncodingOptions(JSON_UNESCAPED_UNICODE);
+            ]);
         } catch (\Exception $e) {
+            Log::error('❌ Duyet hang loat error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => '❌ Có lỗi xảy ra: ' . $e->getMessage()
-            ], 500)->setEncodingOptions(JSON_UNESCAPED_UNICODE);
+            ], 500);
         }
     }
 
-    // ⭐⭐⭐ THÊM METHOD NÀY ⭐⭐⭐
     /**
      * 👁️ Hiển thị form xác nhận hoàn thành tăng ca
      */
@@ -435,20 +406,18 @@ class TangCaController extends Controller
                 'thuc_hien',
             ]);
 
-            // Kiểm tra quyền xem
             if (!$isAdmin && $isTruongPhong && !empty($nhanVienIds)) {
                 $query->whereIn('nguoi_dung_id', $nhanVienIds);
             }
 
             $tangCa = $query->findOrFail($id);
 
-            // ⭐ KIỂM TRA VÀ TÍNH LƯƠNG THEO GIỜ NẾU CHƯA CÓ
-            $luongCoBan = null;
-            $luongTheoGio = null;
+            // Tính lương
+            $luongCoBan = 0;
+            $luongTheoGio = 0;
 
             if ($tangCa->nguoi_dung) {
                 $luongCoBan = SalaryHelper::getBaseSalary($tangCa->nguoi_dung_id);
-                // Tính lương theo giờ từ lương cơ bản: lương cơ bản / (26 ngày * 8 giờ)
                 $luongTheoGio = $luongCoBan > 0 ? round($luongCoBan / (26 * 8), 0) : 0;
             }
 
@@ -466,32 +435,27 @@ class TangCaController extends Controller
             return view('admin.tang-ca.approve-thuc-hien', compact('tangCa', 'luongCoBan', 'luongTheoGio'));
         } catch (\Exception $e) {
             Log::error('❌ showApproveThucHien error: ' . $e->getMessage());
-            Log::error('❌ Stack trace: ' . $e->getTraceAsString());
             return redirect()->route('admin.tang-ca.index')
                 ->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
         }
     }
 
-
-
-
-    // ... trong hàm approveThucHien() ...
-
+    /**
+     * ✅ Quản lý xác nhận hoàn thành tăng ca
+     */
     public function approveThucHien(Request $request, $id)
     {
-        $request->validate([
-            'so_gio_tang_ca_thuc_te' => 'required|numeric|min:0.5|max:16',
-            'cong_viec_da_thuc_hien' => 'nullable|string',
-            'ghi_chu' => 'nullable|string',
-        ]);
-
-        DB::beginTransaction();
         try {
-            // Lấy đơn tăng ca
-            $tangCa = DangKyTangCa::findOrFail($id);
+            $request->validate([
+                'so_gio_tang_ca_thuc_te' => 'required|numeric|min:0.5|max:16',
+                'cong_viec_da_thuc_hien' => 'nullable|string',
+                'ghi_chu' => 'nullable|string',
+            ]);
 
-            // Lấy thực hiện tăng ca
+            $tangCa = DangKyTangCa::findOrFail($id);
             $thucHien = ThucHienTangCa::where('dang_ky_tang_ca_id', $tangCa->id)->firstOrFail();
+
+            DB::beginTransaction();
 
             // Cập nhật thực hiện tăng ca
             $thucHien->update([
@@ -501,7 +465,7 @@ class TangCaController extends Controller
                 'trang_thai' => 'quan_ly_xac_nhan',
             ]);
 
-            // ⭐ TÍNH LƯƠNG TĂNG CA SỬ DỤNG HELPER
+            // Tính lương tăng ca
             $userId = $tangCa->nguoi_dung_id;
             $hours = $request->so_gio_tang_ca_thuc_te;
             $type = $tangCa->loai_tang_ca;
@@ -513,8 +477,6 @@ class TangCaController extends Controller
                 'user_id' => $userId,
                 'hours' => $hours,
                 'type' => $type,
-                'hourly_rate' => SalaryHelper::getHourlyRate($userId),
-                'base_salary' => SalaryHelper::getBaseSalary($userId),
                 'overtime_salary' => $luongTangCa,
             ]);
 
@@ -524,17 +486,17 @@ class TangCaController extends Controller
             $tangCa->thoi_gian_hoan_thanh = now();
             $tangCa->save();
 
-            // Commit transaction
             DB::commit();
 
-            return redirect()->route('admin.tang-ca.show', $tangCa->id)
+            return redirect()
+                ->route('admin.tang-ca.show', $tangCa->id)
                 ->with('success', '✅ Xác nhận hoàn thành tăng ca thành công. Lương: ' . number_format($luongTangCa) . 'đ');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('❌ approveThucHien error: ' . $e->getMessage());
-            Log::error('❌ Stack trace: ' . $e->getTraceAsString());
-            return redirect()->route('admin.tang-ca.show', $id)
-                ->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+            return redirect()
+                ->route('admin.tang-ca.show', $id)
+                ->with('error', '❌ Có lỗi xảy ra: ' . $e->getMessage());
         }
     }
 }
