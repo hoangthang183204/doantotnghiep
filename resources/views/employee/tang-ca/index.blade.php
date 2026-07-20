@@ -22,25 +22,21 @@
             </a>
         </div>
 
-        {{-- THỐNG KÊ --}}
+        {{-- THỐNG KÊ ĐƠN --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            <div
-                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 text-center border border-gray-100 dark:border-gray-700">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 text-center border border-gray-100 dark:border-gray-700">
                 <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ $thongKe['tong'] ?? 0 }}</p>
                 <p class="text-sm text-gray-500 dark:text-gray-400">Tổng đơn</p>
             </div>
-            <div
-                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 text-center border border-gray-100 dark:border-gray-700">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 text-center border border-gray-100 dark:border-gray-700">
                 <p class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{{ $thongKe['cho_duyet'] ?? 0 }}</p>
                 <p class="text-sm text-gray-500 dark:text-gray-400">⏳ Chờ duyệt</p>
             </div>
-            <div
-                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 text-center border border-gray-100 dark:border-gray-700">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 text-center border border-gray-100 dark:border-gray-700">
                 <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ $thongKe['da_duyet'] ?? 0 }}</p>
                 <p class="text-sm text-gray-500 dark:text-gray-400">✅ Đã duyệt</p>
             </div>
-            <div
-                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 text-center border border-gray-100 dark:border-gray-700">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 text-center border border-gray-100 dark:border-gray-700">
                 <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">
                     {{ $donTangCa->filter(function ($item) {
                             return $item->trang_thai == 'da_duyet' &&
@@ -50,94 +46,93 @@
                 </p>
                 <p class="text-sm text-gray-500 dark:text-gray-400">✅ Hoàn thành</p>
             </div>
-            <div
-                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 text-center border border-gray-100 dark:border-gray-700">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 text-center border border-gray-100 dark:border-gray-700">
                 <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ $thongKe['tu_choi'] ?? 0 }}</p>
                 <p class="text-sm text-gray-500 dark:text-gray-400">❌ Từ chối</p>
             </div>
         </div>
 
-        {{-- THỐNG KÊ GIỚI HẠN GIỜ TĂNG CA --}}
+        {{-- ⭐ THỐNG KÊ GIỚI HẠN GIỜ TĂNG CA - CHỈ 1 HÀNG --}}
         @php
             $thongKeGio = App\Helpers\OvertimeHelper::thongKeGioTangCa(Auth::id());
         @endphp
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
-                <p class="text-xs text-blue-600 dark:text-blue-400">Đã dùng tháng</p>
-                <p class="text-lg font-bold text-blue-700 dark:text-blue-300">
+            <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div class="flex items-center gap-2 mb-1">
+                    <i class="fas fa-calendar-alt text-blue-500 text-xs"></i>
+                    <p class="text-xs font-medium text-blue-600 dark:text-blue-400">Đã dùng tháng</p>
+                </div>
+                <p class="text-xl font-bold text-blue-700 dark:text-blue-300">
                     {{ $thongKeGio['trong_thang_text'] }}
                 </p>
-                <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                    <div class="bg-blue-600 h-1.5 rounded-full"
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
+                    <div class="bg-blue-600 h-2 rounded-full transition-all duration-500"
                         style="width: {{ min(100, ($thongKeGio['trong_thang'] / $thongKeGio['limit_month']) * 100) }}%">
                     </div>
                 </div>
-                <p class="text-[10px] text-gray-500 mt-0.5">Giới hạn: {{ $thongKeGio['limit_month_text'] }}</p>
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1.5">
+                    Giới hạn: <span class="font-medium">{{ $thongKeGio['limit_month_text'] }}</span>
+                </p>
             </div>
 
-            <div class="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
-                <p class="text-xs text-green-600 dark:text-green-400">Đã dùng năm</p>
-                <p class="text-lg font-bold text-green-700 dark:text-green-300">
+            <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                <div class="flex items-center gap-2 mb-1">
+                    <i class="fas fa-calendar-check text-green-500 text-xs"></i>
+                    <p class="text-xs font-medium text-green-600 dark:text-green-400">Đã dùng năm</p>
+                </div>
+                <p class="text-xl font-bold text-green-700 dark:text-green-300">
                     {{ $thongKeGio['trong_nam_text'] }}
                 </p>
-                <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                    <div class="bg-green-600 h-1.5 rounded-full"
-                        style="width: {{ min(100, ($thongKeGio['trong_nam'] / $thongKeGio['limit_year']) * 100) }}%"></div>
-                </div>
-                <p class="text-[10px] text-gray-500 mt-0.5">Giới hạn: {{ $thongKeGio['limit_year_text'] }}</p>
-            </div>
-
-            <div class="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                <p class="text-xs text-yellow-600 dark:text-yellow-400">Chờ duyệt</p>
-                <p class="text-lg font-bold text-yellow-700 dark:text-yellow-300">
-                    {{ App\Helpers\OvertimeHelper::formatHours($thongKeGio['cho_duyet']) }}
-                </p>
-            </div>
-
-            <div class="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg border border-purple-200 dark:border-purple-800">
-                <p class="text-xs text-purple-600 dark:text-purple-400">Hoàn thành</p>
-                <p class="text-lg font-bold text-purple-700 dark:text-purple-300">
-                    {{ App\Helpers\OvertimeHelper::formatHours($thongKeGio['hoan_thanh']) }}
-                </p>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
-                <p class="text-xs text-blue-600 dark:text-blue-400">Đã dùng trong tháng</p>
-                <p class="text-lg font-bold text-blue-700 dark:text-blue-300">
-                    {{ $thongKeGio['trong_thang'] }}/{{ $thongKeGio['limit_month'] }} giờ
-                </p>
-                <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                    <div class="bg-blue-600 h-1.5 rounded-full"
-                        style="width: {{ min(100, ($thongKeGio['trong_thang'] / $thongKeGio['limit_month']) * 100) }}%">
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
+                    <div class="bg-green-600 h-2 rounded-full transition-all duration-500"
+                        style="width: {{ min(100, ($thongKeGio['trong_nam'] / $thongKeGio['limit_year']) * 100) }}%">
                     </div>
                 </div>
-            </div>
-            <div class="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
-                <p class="text-xs text-green-600 dark:text-green-400">Đã dùng trong năm</p>
-                <p class="text-lg font-bold text-green-700 dark:text-green-300">
-                    {{ $thongKeGio['trong_nam'] }}/{{ $thongKeGio['limit_year'] }} giờ
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1.5">
+                    Giới hạn: <span class="font-medium">{{ $thongKeGio['limit_year_text'] }}</span>
                 </p>
-                <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                    <div class="bg-green-600 h-1.5 rounded-full"
-                        style="width: {{ min(100, ($thongKeGio['trong_nam'] / $thongKeGio['limit_year']) * 100) }}%"></div>
+            </div>
+
+            <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <div class="flex items-center gap-2 mb-1">
+                    <i class="fas fa-clock text-yellow-500 text-xs"></i>
+                    <p class="text-xs font-medium text-yellow-600 dark:text-yellow-400">Còn lại tháng</p>
                 </div>
+                <p class="text-xl font-bold text-yellow-700 dark:text-yellow-300">
+                    {{ $thongKeGio['remaining_month_text'] }}
+                </p>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
+                    <div class="bg-yellow-600 h-2 rounded-full transition-all duration-500"
+                        style="width: {{ min(100, ($thongKeGio['remaining_month'] / $thongKeGio['limit_month']) * 100) }}%">
+                    </div>
+                </div>
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1.5">
+                    Còn <span class="font-medium">{{ $thongKeGio['remaining_month_text'] }}</span>
+                </p>
             </div>
-            <div class="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                <p class="text-xs text-yellow-600 dark:text-yellow-400">Chờ duyệt</p>
-                <p class="text-lg font-bold text-yellow-700 dark:text-yellow-300">{{ $thongKeGio['cho_duyet'] }} giờ</p>
-            </div>
-            <div class="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg border border-purple-200 dark:border-purple-800">
-                <p class="text-xs text-purple-600 dark:text-purple-400">Hoàn thành</p>
-                <p class="text-lg font-bold text-purple-700 dark:text-purple-300">{{ $thongKeGio['hoan_thanh'] }} giờ</p>
+
+            <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
+                <div class="flex items-center gap-2 mb-1">
+                    <i class="fas fa-infinity text-purple-500 text-xs"></i>
+                    <p class="text-xs font-medium text-purple-600 dark:text-purple-400">Còn lại năm</p>
+                </div>
+                <p class="text-xl font-bold text-purple-700 dark:text-purple-300">
+                    {{ $thongKeGio['remaining_year_text'] }}
+                </p>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
+                    <div class="bg-purple-600 h-2 rounded-full transition-all duration-500"
+                        style="width: {{ min(100, ($thongKeGio['remaining_year'] / $thongKeGio['limit_year']) * 100) }}%">
+                    </div>
+                </div>
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1.5">
+                    Còn <span class="font-medium">{{ $thongKeGio['remaining_year_text'] }}</span>
+                </p>
             </div>
         </div>
 
         {{-- DANH SÁCH --}}
-        <div
-            class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
                 <h3 class="font-semibold text-gray-900 dark:text-white">📋 Danh sách đơn tăng ca</h3>
             </div>
@@ -145,24 +140,12 @@
                 <table class="w-full">
                     <thead class="bg-gray-50 dark:bg-gray-700/50">
                         <tr>
-                            <th
-                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Ngày</th>
-                            <th
-                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Giờ</th>
-                            <th
-                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Số giờ</th>
-                            <th
-                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Loại</th>
-                            <th
-                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Trạng thái</th>
-                            <th
-                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Thao tác</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ngày</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Giờ</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Số giờ</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Loại</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Trạng thái</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -194,10 +177,8 @@
                                 <td class="px-4 py-3">
                                     @php
                                         $badgeClasses = [
-                                            'cho_duyet' =>
-                                                'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-                                            'da_duyet' =>
-                                                'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+                                            'cho_duyet' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+                                            'da_duyet' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
                                             'tu_choi' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
                                             'huy' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
                                         ];
@@ -208,20 +189,17 @@
                                             'huy' => 'Đã hủy',
                                         ];
                                     @endphp
-                                    <span
-                                        class="px-2 py-1 rounded-full text-xs font-medium {{ $badgeClasses[$don->trang_thai] ?? 'bg-gray-100 text-gray-800' }}">
+                                    <span class="px-2 py-1 rounded-full text-xs font-medium {{ $badgeClasses[$don->trang_thai] ?? 'bg-gray-100 text-gray-800' }}">
                                         {{ $trangThaiLabels[$don->trang_thai] ?? $don->trang_thai }}
                                     </span>
 
                                     @if ($don->trang_thai == 'da_duyet')
                                         @if ($daXacNhan)
-                                            <span
-                                                class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                                            <span class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
                                                 ✅ Hoàn thành
                                             </span>
                                         @elseif($daNhanVienXacNhan)
-                                            <span
-                                                class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                                            <span class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
                                                 ⏳ Chờ xác nhận
                                             </span>
                                         @endif
