@@ -57,6 +57,84 @@
             </div>
         </div>
 
+        {{-- THỐNG KÊ GIỚI HẠN GIỜ TĂNG CA --}}
+        @php
+            $thongKeGio = App\Helpers\OvertimeHelper::thongKeGioTangCa(Auth::id());
+        @endphp
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p class="text-xs text-blue-600 dark:text-blue-400">Đã dùng tháng</p>
+                <p class="text-lg font-bold text-blue-700 dark:text-blue-300">
+                    {{ $thongKeGio['trong_thang_text'] }}
+                </p>
+                <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                    <div class="bg-blue-600 h-1.5 rounded-full"
+                        style="width: {{ min(100, ($thongKeGio['trong_thang'] / $thongKeGio['limit_month']) * 100) }}%">
+                    </div>
+                </div>
+                <p class="text-[10px] text-gray-500 mt-0.5">Giới hạn: {{ $thongKeGio['limit_month_text'] }}</p>
+            </div>
+
+            <div class="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
+                <p class="text-xs text-green-600 dark:text-green-400">Đã dùng năm</p>
+                <p class="text-lg font-bold text-green-700 dark:text-green-300">
+                    {{ $thongKeGio['trong_nam_text'] }}
+                </p>
+                <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                    <div class="bg-green-600 h-1.5 rounded-full"
+                        style="width: {{ min(100, ($thongKeGio['trong_nam'] / $thongKeGio['limit_year']) * 100) }}%"></div>
+                </div>
+                <p class="text-[10px] text-gray-500 mt-0.5">Giới hạn: {{ $thongKeGio['limit_year_text'] }}</p>
+            </div>
+
+            <div class="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <p class="text-xs text-yellow-600 dark:text-yellow-400">Chờ duyệt</p>
+                <p class="text-lg font-bold text-yellow-700 dark:text-yellow-300">
+                    {{ App\Helpers\OvertimeHelper::formatHours($thongKeGio['cho_duyet']) }}
+                </p>
+            </div>
+
+            <div class="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg border border-purple-200 dark:border-purple-800">
+                <p class="text-xs text-purple-600 dark:text-purple-400">Hoàn thành</p>
+                <p class="text-lg font-bold text-purple-700 dark:text-purple-300">
+                    {{ App\Helpers\OvertimeHelper::formatHours($thongKeGio['hoan_thanh']) }}
+                </p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p class="text-xs text-blue-600 dark:text-blue-400">Đã dùng trong tháng</p>
+                <p class="text-lg font-bold text-blue-700 dark:text-blue-300">
+                    {{ $thongKeGio['trong_thang'] }}/{{ $thongKeGio['limit_month'] }} giờ
+                </p>
+                <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                    <div class="bg-blue-600 h-1.5 rounded-full"
+                        style="width: {{ min(100, ($thongKeGio['trong_thang'] / $thongKeGio['limit_month']) * 100) }}%">
+                    </div>
+                </div>
+            </div>
+            <div class="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
+                <p class="text-xs text-green-600 dark:text-green-400">Đã dùng trong năm</p>
+                <p class="text-lg font-bold text-green-700 dark:text-green-300">
+                    {{ $thongKeGio['trong_nam'] }}/{{ $thongKeGio['limit_year'] }} giờ
+                </p>
+                <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                    <div class="bg-green-600 h-1.5 rounded-full"
+                        style="width: {{ min(100, ($thongKeGio['trong_nam'] / $thongKeGio['limit_year']) * 100) }}%"></div>
+                </div>
+            </div>
+            <div class="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <p class="text-xs text-yellow-600 dark:text-yellow-400">Chờ duyệt</p>
+                <p class="text-lg font-bold text-yellow-700 dark:text-yellow-300">{{ $thongKeGio['cho_duyet'] }} giờ</p>
+            </div>
+            <div class="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg border border-purple-200 dark:border-purple-800">
+                <p class="text-xs text-purple-600 dark:text-purple-400">Hoàn thành</p>
+                <p class="text-lg font-bold text-purple-700 dark:text-purple-300">{{ $thongKeGio['hoan_thanh'] }} giờ</p>
+            </div>
+        </div>
+
         {{-- DANH SÁCH --}}
         <div
             class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
@@ -135,7 +213,6 @@
                                         {{ $trangThaiLabels[$don->trang_thai] ?? $don->trang_thai }}
                                     </span>
 
-                                    {{-- Hiển thị trạng thái thực hiện --}}
                                     @if ($don->trang_thai == 'da_duyet')
                                         @if ($daXacNhan)
                                             <span
@@ -158,19 +235,19 @@
                                             <i class="fas fa-eye"></i>
                                         </a>
 
-                                        {{-- ⭐ Nút xác nhận đã làm tăng ca - KIỂM TRA GIỜ CHI TIẾT --}}
                                         @if ($don->trang_thai == 'da_duyet' && !$thucHien)
                                             @php
                                                 $now = Carbon\Carbon::now();
                                                 $ngayTangCa = Carbon\Carbon::parse($don->ngay_tang_ca);
                                                 $gioBatDau = Carbon\Carbon::parse($don->gio_bat_dau);
-                                                $thoiGianBatDau = Carbon\Carbon::parse($ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s'));
+                                                $thoiGianBatDau = Carbon\Carbon::parse(
+                                                    $ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s'),
+                                                );
                                                 $thoiGianChoPhepSom = $thoiGianBatDau->copy()->subMinutes(30);
-                                                
                                                 $coTheXacNhan = $now->gte($thoiGianChoPhepSom);
                                             @endphp
-                                            
-                                            @if($coTheXacNhan)
+
+                                            @if ($coTheXacNhan)
                                                 <form action="{{ route('employee.tang-ca.confirm-thuc-hien', $don->id) }}"
                                                     method="POST"
                                                     onsubmit="return confirm('Bạn đã hoàn thành giờ tăng ca này?')">
@@ -188,7 +265,6 @@
                                             @endif
                                         @endif
 
-                                        {{-- Nút chỉnh sửa (chỉ cho đơn chờ duyệt) --}}
                                         @if ($don->trang_thai == 'cho_duyet')
                                             <a href="{{ route('employee.tang-ca.edit', $don->id) }}"
                                                 class="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300 text-sm"
@@ -197,12 +273,10 @@
                                             </a>
                                         @endif
 
-                                        {{-- Nút hủy (chỉ cho đơn chờ duyệt) --}}
                                         @if ($don->trang_thai == 'cho_duyet')
                                             <form action="{{ route('employee.tang-ca.huy', $don->id) }}" method="POST"
                                                 onsubmit="return confirm('Bạn có chắc muốn hủy đơn này?')">
                                                 @csrf
-                                                {{-- ⭐ BỎ @method('DELETE') VÌ ROUTE CHỈ HỖ TRỢ POST --}}
                                                 <button type="submit"
                                                     class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm"
                                                     title="Hủy đơn">

@@ -20,6 +20,69 @@
         </a>
     </div>
 
+    {{-- THÔNG TIN GIỚI HẠN --}}
+    @php
+        $thongKeGio = App\Helpers\OvertimeHelper::thongKeGioTangCa(Auth::id());
+    @endphp
+    
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div class="flex items-center justify-between">
+                <p class="text-xs text-blue-600 dark:text-blue-400">Đã dùng tháng</p>
+                <span class="text-xs font-bold text-blue-700 dark:text-blue-300">
+                    {{ $thongKeGio['trong_thang_text'] }}
+                </span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                <div class="bg-blue-600 h-1.5 rounded-full" 
+                     style="width: {{ min(100, ($thongKeGio['trong_thang'] / $thongKeGio['limit_month']) * 100) }}%"></div>
+            </div>
+            <p class="text-[10px] text-gray-500 mt-0.5">Giới hạn: {{ $thongKeGio['limit_month_text'] }}</p>
+        </div>
+        
+        <div class="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
+            <div class="flex items-center justify-between">
+                <p class="text-xs text-green-600 dark:text-green-400">Đã dùng năm</p>
+                <span class="text-xs font-bold text-green-700 dark:text-green-300">
+                    {{ $thongKeGio['trong_nam_text'] }}
+                </span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                <div class="bg-green-600 h-1.5 rounded-full" 
+                     style="width: {{ min(100, ($thongKeGio['trong_nam'] / $thongKeGio['limit_year']) * 100) }}%"></div>
+            </div>
+            <p class="text-[10px] text-gray-500 mt-0.5">Giới hạn: {{ $thongKeGio['limit_year_text'] }}</p>
+        </div>
+        
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800">
+            <div class="flex items-center justify-between">
+                <p class="text-xs text-yellow-600 dark:text-yellow-400">Còn lại tháng</p>
+                <span class="text-xs font-bold text-yellow-700 dark:text-yellow-300">
+                    {{ $thongKeGio['remaining_month_text'] }}
+                </span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                <div class="bg-yellow-600 h-1.5 rounded-full" 
+                     style="width: {{ min(100, ($thongKeGio['remaining_month'] / $thongKeGio['limit_month']) * 100) }}%"></div>
+            </div>
+            <p class="text-[10px] text-gray-500 mt-0.5">Còn {{ $thongKeGio['remaining_month_text'] }}</p>
+        </div>
+        
+        <div class="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg border border-purple-200 dark:border-purple-800">
+            <div class="flex items-center justify-between">
+                <p class="text-xs text-purple-600 dark:text-purple-400">Còn lại năm</p>
+                <span class="text-xs font-bold text-purple-700 dark:text-purple-300">
+                    {{ $thongKeGio['remaining_year_text'] }}
+                </span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                <div class="bg-purple-600 h-1.5 rounded-full" 
+                     style="width: {{ min(100, ($thongKeGio['remaining_year'] / $thongKeGio['limit_year']) * 100) }}%"></div>
+            </div>
+            <p class="text-[10px] text-gray-500 mt-0.5">Còn {{ $thongKeGio['remaining_year_text'] }}</p>
+        </div>
+    </div>
+
     {{-- FORM --}}
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
         <form action="{{ route('employee.tang-ca.store') }}" method="POST">
@@ -88,6 +151,15 @@
                     @error('ly_do_tang_ca')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
+                </div>
+
+                {{-- Lưu ý giới hạn --}}
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                    <p class="text-xs text-yellow-700 dark:text-yellow-400">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        <strong>Quy định tăng ca:</strong> Tối đa 4 giờ/ngày, 40 giờ/tháng, 200 giờ/năm. 
+                        Tổng giờ làm việc không quá 12 giờ/ngày.
+                    </p>
                 </div>
 
                 {{-- Nút --}}

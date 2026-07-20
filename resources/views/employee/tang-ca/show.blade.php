@@ -51,8 +51,7 @@
                         <p class="text-sm text-gray-500 dark:text-gray-400">Trạng thái</p>
                         @php
                             $badgeClasses = [
-                                'cho_duyet' =>
-                                    'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+                                'cho_duyet' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
                                 'da_duyet' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
                                 'tu_choi' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
                                 'huy' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
@@ -142,16 +141,11 @@
                                     ];
                                     $ttThucHienClasses = [
                                         'chua_lam' => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
-                                        'dang_lam' =>
-                                            'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-                                        'hoan_thanh' =>
-                                            'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-                                        'khong_hoan_thanh' =>
-                                            'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-                                        'nhan_vien_xac_nhan' =>
-                                            'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-                                        'quan_ly_xac_nhan' =>
-                                            'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+                                        'dang_lam' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+                                        'hoan_thanh' => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+                                        'khong_hoan_thanh' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+                                        'nhan_vien_xac_nhan' => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+                                        'quan_ly_xac_nhan' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
                                     ];
                                 @endphp
                                 <span
@@ -216,7 +210,6 @@
 
                 {{-- ACTION BUTTONS --}}
                 <div class="pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-3">
-                    {{-- ⭐ Nút xác nhận đã làm tăng ca - KIỂM TRA GIỜ CHI TIẾT --}}
                     @if ($donTangCa->trang_thai == 'da_duyet' && !$donTangCa->thuc_hien)
                         @php
                             $now = Carbon\Carbon::now();
@@ -224,7 +217,6 @@
                             $gioBatDau = Carbon\Carbon::parse($donTangCa->gio_bat_dau);
                             $thoiGianBatDau = Carbon\Carbon::parse($ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s'));
                             $thoiGianChoPhepSom = $thoiGianBatDau->copy()->subMinutes(30);
-                            
                             $coTheXacNhan = $now->gte($thoiGianChoPhepSom);
                             
                             if (!$coTheXacNhan) {
@@ -253,7 +245,6 @@
                         @endif
                     @endif
 
-                    {{-- Nút chỉnh sửa --}}
                     @if ($donTangCa->trang_thai == 'cho_duyet')
                         <a href="{{ route('employee.tang-ca.edit', $donTangCa->id) }}"
                             class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition flex items-center gap-2">
@@ -262,12 +253,10 @@
                         </a>
                     @endif
 
-                    {{-- ⭐ Nút hủy - BỎ @method('DELETE') --}}
                     @if ($donTangCa->trang_thai == 'cho_duyet')
                         <form action="{{ route('employee.tang-ca.huy', $donTangCa->id) }}" method="POST"
                             onsubmit="return confirm('Bạn có chắc muốn hủy đơn này?')">
                             @csrf
-                            {{-- ⭐ BỎ @method('DELETE') VÌ ROUTE CHỈ HỖ TRỢ POST --}}
                             <button type="submit"
                                 class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition flex items-center gap-2">
                                 <i class="fas fa-times"></i>
@@ -276,7 +265,6 @@
                         </form>
                     @endif
 
-                    {{-- Nút quay lại --}}
                     <a href="{{ route('employee.tang-ca.index') }}"
                         class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition flex items-center gap-2">
                         <i class="fas fa-arrow-left"></i>
