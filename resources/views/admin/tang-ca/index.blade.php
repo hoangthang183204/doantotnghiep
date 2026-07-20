@@ -420,6 +420,7 @@
                 return Array.from(document.querySelectorAll('.row-check:checked')).map(cb => cb.value);
             }
 
+            // ⭐ BULK ACTION - GIỮ NGUYÊN (dùng AJAX)
             function bulkAction(ids, action, successMessage, reason = null) {
                 const formData = new FormData();
                 formData.append('_token', '{{ csrf_token() }}');
@@ -429,11 +430,27 @@
 
                 const url = `${baseUrl}/admin/tang-ca/duyet-hang-loat`;
 
+                const btn = document.querySelector('#bulkActions button');
+                const originalText = btn ? btn.textContent : 'Đang xử lý...';
+                if (btn) {
+                    btn.textContent = '⏳ Đang xử lý...';
+                    btn.disabled = true;
+                }
+
                 fetch(url, {
                         method: 'POST',
-                        body: formData
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('HTTP ' + response.status);
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         if (data.success) {
                             alert(data.message || successMessage);
@@ -444,7 +461,13 @@
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        alert('Có lỗi xảy ra khi thực hiện thao tác!');
+                        alert('Có lỗi xảy ra: ' + error.message);
+                    })
+                    .finally(() => {
+                        if (btn) {
+                            btn.textContent = originalText;
+                            btn.disabled = false;
+                        }
                     });
             }
 
@@ -474,6 +497,7 @@
                     '❌ Từ chối hàng loạt thành công!', reason));
             }
 
+            // ⭐ PHÊ DUYỆT ĐƠN TỪ MODAL - SET ACTION CHO FORM
             function pheDuyet(id, trangThai) {
                 currentPheDuyetId = id;
                 const modalTitle = document.getElementById('modalTitle');
@@ -484,41 +508,45 @@
 
                 trangThaiInput.value = trangThai;
 
+                // Reset form trước khi set action mới
+                form.reset();
+
                 if (trangThai === 'da_duyet') {
                     modalTitle.textContent = '✅ Phê duyệt tăng ca';
                     btnPheDuyet.textContent = 'Xác nhận duyệt';
                     btnPheDuyet.className = 'px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition';
                     ghiChu.placeholder = 'Nhập ghi chú (nếu có)...';
                     ghiChu.removeAttribute('required');
-                    form.action = `${baseUrl}/admin/tang-ca/${id}/duyet`;
+                    form.action = '/admin/tang-ca/' + id + '/duyet';
                 } else {
                     modalTitle.textContent = '❌ Từ chối tăng ca';
                     btnPheDuyet.textContent = 'Xác nhận từ chối';
                     btnPheDuyet.className = 'px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition';
                     ghiChu.placeholder = 'Nhập lý do từ chối (bắt buộc)...';
                     ghiChu.setAttribute('required', 'required');
-                    form.action = `${baseUrl}/admin/tang-ca/${id}/tu-choi`;
+                    form.action = '/admin/tang-ca/' + id + '/tu-choi';
                 }
 
-                form.reset();
                 if (modalPheDuyet) {
                     modalPheDuyet.classList.remove('hidden');
                     modalPheDuyet.classList.add('flex');
                 }
             }
 
+            // ⭐ SUBMIT FORM MODAL - BỎ FETCH
             document.getElementById('pheDuyetForm')?.addEventListener('submit', function(e) {
-                e.preventDefault();
-
                 const trangThai = document.getElementById('trangThaiDuyet').value;
                 const lyDo = document.getElementById('ghiChuPheDuyet').value;
 
-                if (trangThai === 'tu_choi' && !lyDo.trim()) {
-                    alert('Vui lòng nhập lý do từ chối!');
-                    return;
-                }
-
+                // Kiểm tra nếu là từ chối và chưa nhập lý do
                 if (trangThai === 'tu_choi') {
+                    if (!lyDo.trim()) {
+                        e.preventDefault();
+                        alert('Vui lòng nhập lý do từ chối!');
+                        return false;
+                    }
+
+                    // Thêm hidden field cho ly_do_tu_choi
                     const oldInput = this.querySelector('input[name="ly_do_tu_choi"]');
                     if (oldInput) oldInput.remove();
 
@@ -529,38 +557,15 @@
                     this.appendChild(input);
                 }
 
-                const btn = document.getElementById('btnPheDuyet');
-                const originalText = btn.textContent;
-                btn.textContent = '⏳ Đang xử lý...';
-                btn.disabled = true;
+                // Nếu là duyệt, kiểm tra confirm
+                if (trangThai === 'da_duyet') {
+                    if (!confirm('Xác nhận phê duyệt đơn tăng ca này?')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
 
-                const formData = new FormData(this);
-
-                fetch(this.action, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json; charset=utf-8'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert(data.message || '✅ Xử lý thành công!');
-                            window.location.reload();
-                        } else {
-                            alert(data.message || '❌ Có lỗi xảy ra!');
-                            btn.textContent = originalText;
-                            btn.disabled = false;
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Error:', err);
-                        alert('Có lỗi xảy ra: ' + err.message);
-                        btn.textContent = originalText;
-                        btn.disabled = false;
-                    });
+                // ⭐ KHÔNG GỌI e.preventDefault() - ĐỂ FORM SUBMIT BÌNH THƯỜNG
             });
 
             function closePheDuyetModal() {
@@ -640,48 +645,25 @@
                 }
             });
 
-            // ⭐ HÀM DUYỆT ĐƠN - SỬA LẠI HOÀN TOÀN
+            // ⭐ HÀM DUYỆT ĐƠN TỪ BẢNG - DÙNG SUBMIT FORM
             function duyetDon(id) {
                 if (!confirm('Bạn có chắc muốn duyệt đơn này?')) return;
 
-                // Hiển thị loading
-                const btn = event.target.closest('button');
-                const originalHtml = btn.innerHTML;
-                btn.innerHTML =
-                    '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...';
-                btn.disabled = true;
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/admin/tang-ca/' + id + '/duyet';
 
-                fetch('/admin/tang-ca/' + id + '/duyet', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        }
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('HTTP ' + response.status);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        alert(data.message || 'Đã xử lý thành công');
-                        if (data.success) {
-                            location.reload();
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Có lỗi xảy ra, vui lòng thử lại!');
-                    })
-                    .finally(() => {
-                        btn.innerHTML = originalHtml;
-                        btn.disabled = false;
-                    });
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                form.appendChild(csrfInput);
+
+                document.body.appendChild(form);
+                form.submit();
             }
 
-            // ⭐ HÀM TỪ CHỐI ĐƠN - SỬA LẠI HOÀN TOÀN
+            // ⭐ HÀM TỪ CHỐI ĐƠN TỪ BẢNG - DÙNG SUBMIT FORM
             function tuChoiDon(id) {
                 const lyDo = prompt('Nhập lý do từ chối:');
                 if (lyDo === null) return;
@@ -690,44 +672,24 @@
                     return;
                 }
 
-                // Hiển thị loading
-                const btn = event.target.closest('button');
-                const originalHtml = btn.innerHTML;
-                btn.innerHTML =
-                    '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...';
-                btn.disabled = true;
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/admin/tang-ca/' + id + '/tu-choi';
 
-                fetch('/admin/tang-ca/' + id + '/tu-choi', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            ly_do_tu_choi: lyDo
-                        })
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('HTTP ' + response.status);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        alert(data.message || 'Đã xử lý thành công');
-                        if (data.success) {
-                            location.reload();
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Có lỗi xảy ra, vui lòng thử lại!');
-                    })
-                    .finally(() => {
-                        btn.innerHTML = originalHtml;
-                        btn.disabled = false;
-                    });
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                form.appendChild(csrfInput);
+
+                const lyDoInput = document.createElement('input');
+                lyDoInput.type = 'hidden';
+                lyDoInput.name = 'ly_do_tu_choi';
+                lyDoInput.value = lyDo;
+                form.appendChild(lyDoInput);
+
+                document.body.appendChild(form);
+                form.submit();
             }
         </script>
     @endpush
