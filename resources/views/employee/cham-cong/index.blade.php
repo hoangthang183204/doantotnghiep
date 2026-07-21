@@ -355,26 +355,91 @@
         </div>
     </div>
 
-    <!-- ===== MODAL NHẬP LÝ DO VỀ SỚM ===== -->
-    <div id="modal-ve-som" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <!-- ===== MODAL TẠO ĐƠN XIN VỀ SỚM ===== -->
+    <div id="modal-tao-don-ve-som" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6 mx-4">
-            <h3 class="text-xl font-bold mb-4">⚠️ Bạn đang về sớm</h3>
+            <h3 class="text-xl font-bold mb-4">📝 Đơn xin về sớm</h3>
             <p class="text-gray-600 dark:text-gray-300 mb-2">
-                Bạn đang check-out sớm <span id="phut-ve-som-text" class="font-bold text-yellow-600">0</span> phút.
+                Bạn đang về sớm <span id="phut-ve-som-text-modal" class="font-bold text-yellow-600">0</span> phút.
             </p>
-            <p class="text-gray-600 dark:text-gray-300 mb-4">Vui lòng nhập lý do để hoàn tất check-out.</p>
+            <p class="text-gray-600 dark:text-gray-300 mb-4">Vui lòng tạo đơn xin về sớm để gửi lên HR duyệt.</p>
+            
+            <div class="mb-4">
+                <label class="block font-medium mb-2">Giờ ra dự kiến</label>
+                <input type="time" id="gio-ra-du-kien" 
+                       class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+            </div>
+            
             <div class="mb-4">
                 <label class="block font-medium mb-2">Lý do về sớm</label>
-                <textarea id="ly-do-ve-som" rows="3"
+                <textarea id="ly-do-ve-som-modal" rows="3"
                           class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
                           placeholder="Nhập lý do..."></textarea>
             </div>
+            
             <div class="flex gap-3 justify-end">
-                <button onclick="closeModalVeSom()" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">
+                <button onclick="closeModalTaoDonVeSom()" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">
                     Hủy
                 </button>
-                <button onclick="xacNhanVeSom()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Xác nhận check-out
+                <button onclick="guiDonVeSom()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Gửi đơn
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL ĐÃ GỬI ĐƠN ===== -->
+    <div id="modal-da-gui-don" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6 mx-4">
+            <div class="text-center">
+                <i class="fas fa-paper-plane text-6xl text-yellow-500 mb-4"></i>
+                <h3 class="text-xl font-bold mb-2">✅ Đã gửi đơn xin về sớm!</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-2">
+                    Đơn của bạn đang chờ HR duyệt.
+                </p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    Bạn sẽ nhận được thông báo khi đơn được duyệt.
+                </p>
+                <button onclick="closeModalDaGuiDon()" 
+                        class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL ĐANG CHỜ DUYỆT ===== -->
+    <div id="modal-cho-duyet" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6 mx-4">
+            <div class="text-center">
+                <i class="fas fa-clock text-6xl text-yellow-500 mb-4 animate-pulse"></i>
+                <h3 class="text-xl font-bold mb-2">⏳ Đang chờ HR duyệt</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-2">
+                    Đơn xin về sớm của bạn đang được xử lý.
+                </p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    Vui lòng đợi HR phê duyệt để hoàn tất check-out.
+                </p>
+                <button onclick="closeModalChoDuyet()" 
+                        class="mt-4 px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL BỊ TỪ CHỐI ===== -->
+    <div id="modal-tu-choi" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6 mx-4">
+            <div class="text-center">
+                <i class="fas fa-times-circle text-6xl text-red-500 mb-4"></i>
+                <h3 class="text-xl font-bold mb-2">❌ Đơn xin về sớm bị từ chối</h3>
+                <p id="ly-do-tu-choi-text" class="text-gray-600 dark:text-gray-300 mb-4">
+                    Lý do: ...
+                </p>
+                <button onclick="closeModalTuChoi()" 
+                        class="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                    Đóng
                 </button>
             </div>
         </div>
@@ -389,7 +454,6 @@
     <form id="checkOutForm" action="{{ route('employee.cham-cong.check-out') }}" method="POST" style="display:none;">
         @csrf
         <input type="hidden" name="client_time" id="checkOutClientTime">
-        <input type="hidden" name="ly_do_ve_som" id="checkOutLyDo">
     </form>
 
 @endsection
@@ -492,55 +556,148 @@ function handleCheckIn() {
 function handleCheckOut() {
     const btn = document.getElementById('btnCheckOut');
     if (!btn) return;
-
-    fetch('{{ route("employee.cham-cong.trang-thai") }}')
+    
+    // Kiểm tra trạng thái đơn xin về sớm
+    fetch('{{ route("employee.cham-cong.kiem-tra-don-ve-som") }}')
         .then(res => res.json())
-        .then(status => {
-            const now = new Date();
-            const gio = now.getHours();
-            const phut = now.getMinutes();
-            
-            if (status.ca === 'Sáng') {
-                if (gio < 12 || (gio === 12 && phut <= 0)) {
-                    const phutVeSom = (12 - gio) * 60 - phut;
-                    document.getElementById('phut-ve-som-text').textContent = phutVeSom;
-                    document.getElementById('modal-ve-som').classList.remove('hidden');
-                    document.getElementById('modal-ve-som').classList.add('flex');
-                    return;
+        .then(data => {
+            if (data.has_don) {
+                if (data.trang_thai === 'da_duyet') {
+                    // Đã duyệt -> cho checkout
+                    thucHienCheckOut();
+                } else if (data.trang_thai === 'cho_duyet') {
+                    // Đang chờ duyệt
+                    document.getElementById('modal-cho-duyet').classList.remove('hidden');
+                    document.getElementById('modal-cho-duyet').classList.add('flex');
+                    btn.disabled = false;
+                } else if (data.trang_thai === 'tu_choi') {
+                    // Bị từ chối
+                    document.getElementById('ly-do-tu-choi-text').textContent = 'Lý do: ' + (data.ly_do_tu_choi || 'Không có lý do');
+                    document.getElementById('modal-tu-choi').classList.remove('hidden');
+                    document.getElementById('modal-tu-choi').classList.add('flex');
+                    btn.disabled = false;
                 }
-            } else if (status.ca === 'Chiều') {
-                if (gio < 17 || (gio === 17 && phut <= 30)) {
-                    const phutVeSom = (17 - gio) * 60 + (30 - phut);
-                    document.getElementById('phut-ve-som-text').textContent = phutVeSom;
-                    document.getElementById('modal-ve-som').classList.remove('hidden');
-                    document.getElementById('modal-ve-som').classList.add('flex');
-                    return;
-                }
+                return;
             }
+            
+            // Kiểm tra xem có về sớm không
+            fetch('{{ route("employee.cham-cong.trang-thai") }}')
+                .then(res => res.json())
+                .then(status => {
+                    const now = new Date();
+                    const gio = now.getHours();
+                    const phut = now.getMinutes();
+                    
+                    let isVeSom = false;
+                    if (status.ca === 'Sáng') {
+                        if (gio < 12 || (gio === 12 && phut <= 0)) {
+                            isVeSom = true;
+                            const phutVeSom = (12 - gio) * 60 - phut;
+                            document.getElementById('phut-ve-som-text-modal').textContent = phutVeSom;
+                        }
+                    } else if (status.ca === 'Chiều') {
+                        if (gio < 17 || (gio === 17 && phut <= 30)) {
+                            isVeSom = true;
+                            const phutVeSom = (17 - gio) * 60 + (30 - phut);
+                            document.getElementById('phut-ve-som-text-modal').textContent = phutVeSom;
+                        }
+                    }
 
-            thucHienCheckOut();
+                    if (isVeSom) {
+                        // Hiển thị modal tạo đơn
+                        document.getElementById('modal-tao-don-ve-som').classList.remove('hidden');
+                        document.getElementById('modal-tao-don-ve-som').classList.add('flex');
+                        // Set giờ ra dự kiến mặc định là hiện tại
+                        const nowTime = new Date();
+                        document.getElementById('gio-ra-du-kien').value = nowTime.toTimeString().slice(0, 5);
+                        btn.disabled = false;
+                    } else {
+                        // Không về sớm -> checkout bình thường
+                        thucHienCheckOut();
+                    }
+                })
+                .catch(() => {
+                    thucHienCheckOut();
+                });
         })
         .catch(() => {
             thucHienCheckOut();
         });
 }
 
-function xacNhanVeSom() {
-    const lyDo = document.getElementById('ly-do-ve-som').value.trim();
+// =============================================
+// TẠO ĐƠN XIN VỀ SỚM
+// =============================================
+
+function guiDonVeSom() {
+    const lyDo = document.getElementById('ly-do-ve-som-modal').value.trim();
+    const gioRa = document.getElementById('gio-ra-du-kien').value;
+
     if (!lyDo) {
         showNotification('warning', 'Vui lòng nhập lý do về sớm!');
         return;
     }
 
-    closeModalVeSom();
-    document.getElementById('checkOutLyDo').value = lyDo;
-    thucHienCheckOut();
+    if (!gioRa) {
+        showNotification('warning', 'Vui lòng chọn giờ ra dự kiến!');
+        return;
+    }
+
+    const btn = document.querySelector('#modal-tao-don-ve-som button:last-child');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang gửi...';
+
+    fetch('{{ route("employee.cham-cong.tao-don-ve-som") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            ly_do: lyDo,
+            gio_ra_du_kien: gioRa
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = 'Gửi đơn';
+
+        if (data.success) {
+            closeModalTaoDonVeSom();
+            document.getElementById('modal-da-gui-don').classList.remove('hidden');
+            document.getElementById('modal-da-gui-don').classList.add('flex');
+            showNotification('success', data.message);
+        } else {
+            showNotification('error', data.message || 'Có lỗi xảy ra!');
+        }
+    })
+    .catch(error => {
+        btn.disabled = false;
+        btn.innerHTML = 'Gửi đơn';
+        showNotification('error', 'Lỗi: ' + error.message);
+    });
 }
 
-function closeModalVeSom() {
-    document.getElementById('modal-ve-som').classList.add('hidden');
-    document.getElementById('modal-ve-som').classList.remove('flex');
-    document.getElementById('ly-do-ve-som').value = '';
+function closeModalTaoDonVeSom() {
+    document.getElementById('modal-tao-don-ve-som').classList.add('hidden');
+    document.getElementById('modal-tao-don-ve-som').classList.remove('flex');
+    document.getElementById('ly-do-ve-som-modal').value = '';
+}
+
+function closeModalDaGuiDon() {
+    document.getElementById('modal-da-gui-don').classList.add('hidden');
+    document.getElementById('modal-da-gui-don').classList.remove('flex');
+}
+
+function closeModalChoDuyet() {
+    document.getElementById('modal-cho-duyet').classList.add('hidden');
+    document.getElementById('modal-cho-duyet').classList.remove('flex');
+}
+
+function closeModalTuChoi() {
+    document.getElementById('modal-tu-choi').classList.add('hidden');
+    document.getElementById('modal-tu-choi').classList.remove('flex');
 }
 
 function thucHienCheckOut() {
@@ -569,12 +726,6 @@ function thucHienCheckOut() {
         if (data.success) {
             showNotification('success', data.message);
             setTimeout(() => location.reload(), 1500);
-        } else if (data.yeu_cau_ly_do) {
-            document.getElementById('phut-ve-som-text').textContent = data.phut_ve_som || 0;
-            document.getElementById('modal-ve-som').classList.remove('hidden');
-            document.getElementById('modal-ve-som').classList.add('flex');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-sign-out-alt mr-3 text-xl"></i><span>Check-out</span>';
         } else {
             showNotification('error', data.message || 'Có lỗi xảy ra');
             btn.disabled = false;
@@ -596,12 +747,14 @@ function showNotification(type, message) {
     const colors = {
         success: 'bg-green-50 dark:bg-green-900/30 border-green-200 text-green-800',
         error: 'bg-red-50 dark:bg-red-900/30 border-red-200 text-red-800',
-        warning: 'bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 text-yellow-800'
+        warning: 'bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 text-yellow-800',
+        info: 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 text-blue-800'
     };
     const icons = {
         success: 'fa-check-circle',
         error: 'fa-exclamation-circle',
-        warning: 'fa-exclamation-triangle'
+        warning: 'fa-exclamation-triangle',
+        info: 'fa-info-circle'
     };
 
     const el = document.createElement('div');

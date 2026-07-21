@@ -6,13 +6,35 @@
     <div class="space-y-6">
         {{-- HEADER --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-800 dark:text-white">
-                    Quản lý chấm công
-                </h1>
-                <p class="text-gray-500 dark:text-gray-400 mt-1">
-                    Theo dõi và tra cứu dữ liệu chấm công nhân viên
-                </p>
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800 dark:text-white">
+                        Quản lý chấm công
+                    </h1>
+                    <p class="text-gray-500 dark:text-gray-400 mt-1">
+                        Theo dõi và tra cứu dữ liệu chấm công nhân viên
+                    </p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('admin.cham-cong.don-ve-som') }}" 
+                       class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition flex items-center gap-2 shadow-sm">
+                        <i class="fas fa-file-signature"></i>
+                        Đơn xin về sớm
+                        @if(($donVeSomChoDuyet ?? 0) > 0)
+                            <span class="bg-red-500 text-white text-xs font-bold rounded-full px-2 py-0.5">{{ $donVeSomChoDuyet }}</span>
+                        @endif
+                    </a>
+                    <button type="button" onclick="exportData()"
+                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-2 shadow-sm">
+                        <i class="fas fa-file-excel"></i>
+                        Xuất Excel
+                    </button>
+                    <button type="button" onclick="openReportModal()"
+                        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition flex items-center gap-2 shadow-sm">
+                        <i class="fas fa-chart-bar"></i>
+                        Báo cáo
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -36,6 +58,36 @@
             </div>
         </div>
 
+        {{-- THỐNG KÊ ĐƠN XIN VỀ SỚM --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl shadow-sm p-5 border border-yellow-200 dark:border-yellow-800">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-yellow-600 dark:text-yellow-400">
+                            <i class="fas fa-clock mr-1"></i> Đơn xin về sớm chờ duyệt
+                        </p>
+                        <p class="text-2xl font-bold text-yellow-600 mt-1">{{ $donVeSomChoDuyet ?? 0 }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-yellow-200 dark:bg-yellow-800/50 rounded-full flex items-center justify-center">
+                        <i class="fas fa-file-signature text-yellow-600 dark:text-yellow-400 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-green-50 dark:bg-green-900/20 rounded-xl shadow-sm p-5 border border-green-200 dark:border-green-800">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-green-600 dark:text-green-400">
+                            <i class="fas fa-check-circle mr-1"></i> Đơn xin về sớm đã duyệt
+                        </p>
+                        <p class="text-2xl font-bold text-green-600 mt-1">{{ $donVeSomDaDuyet ?? 0 }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-200 dark:bg-green-800/50 rounded-full flex items-center justify-center">
+                        <i class="fas fa-check-double text-green-600 dark:text-green-400 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- TÌM KIẾM --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
             <form method="GET" action="{{ route('admin.cham-cong.index') }}">
@@ -46,20 +98,15 @@
                             placeholder="Nhập tên..."
                             class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
                     </div>
-                    {{-- ❌ ĐÃ XÓA LỌC THEO PHÒNG BAN --}}
                     <div>
                         <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">Trạng thái</label>
                         <select name="trang_thai"
                             class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
                             <option value="">-- Tất cả trạng thái --</option>
-                            <option value="dung_gio" {{ request('trang_thai') == 'dung_gio' ? 'selected' : '' }}>✅ Đúng giờ
-                            </option>
-                            <option value="di_muon" {{ request('trang_thai') == 'di_muon' ? 'selected' : '' }}>⚠️ Đi muộn
-                            </option>
-                            <option value="ve_som" {{ request('trang_thai') == 've_som' ? 'selected' : '' }}>🔻 Về sớm
-                            </option>
-                            <option value="vang_mat" {{ request('trang_thai') == 'vang_mat' ? 'selected' : '' }}>❌ Vắng mặt
-                            </option>
+                            <option value="dung_gio" {{ request('trang_thai') == 'dung_gio' ? 'selected' : '' }}>✅ Đúng giờ</option>
+                            <option value="di_muon" {{ request('trang_thai') == 'di_muon' ? 'selected' : '' }}>⚠️ Đi muộn</option>
+                            <option value="ve_som" {{ request('trang_thai') == 've_som' ? 'selected' : '' }}>🔻 Về sớm</option>
+                            <option value="vang_mat" {{ request('trang_thai') == 'vang_mat' ? 'selected' : '' }}>❌ Vắng mặt</option>
                         </select>
                     </div>
                     <div>
@@ -83,8 +130,7 @@
                             class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
                             <option value="">-- Chọn tháng --</option>
                             @for ($i = 1; $i <= 12; $i++)
-                                <option value="{{ $i }}" {{ request('thang') == $i ? 'selected' : '' }}>Tháng
-                                    {{ $i }}</option>
+                                <option value="{{ $i }}" {{ request('thang') == $i ? 'selected' : '' }}>Tháng {{ $i }}</option>
                             @endfor
                         </select>
                     </div>
@@ -108,14 +154,6 @@
                         class="px-5 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
                         🔄 Làm mới
                     </a>
-                    <button type="button" onclick="exportData()"
-                        class="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                        📊 Xuất Excel
-                    </button>
-                    <button type="button" onclick="openReportModal()"
-                        class="px-5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
-                        📑 Báo cáo
-                    </button>
                 </div>
             </form>
         </div>
@@ -165,45 +203,32 @@
                                 $nguoiDung = $cc->nguoiDung ?? null;
                                 $hoSo = $nguoiDung ? $nguoiDung->hoSo ?? null : null;
 
-                                // ⭐ LẤY TÊN NHÂN VIÊN - ƯU TIÊN HỒ SƠ, NẾU KHÔNG CÓ THÌ LẤY TÊN ĐĂNG NHẬP
                                 $hoTen = '';
                                 if ($hoSo && ($hoSo->ho || $hoSo->ten)) {
                                     $hoTen = trim(($hoSo->ho ?? '') . ' ' . ($hoSo->ten ?? ''));
                                 }
-                                // ⭐ NẾU KHÔNG CÓ HỒ SƠ, LẤY TÊN ĐĂNG NHẬP
                                 if (empty($hoTen) && $nguoiDung) {
                                     $hoTen = $nguoiDung->ten_dang_nhap ?? 'N/A';
                                 }
-                                // ⭐ NẾU VẪN TRỐNG, HIỂN THỊ NV#ID
                                 if (empty($hoTen)) {
                                     $hoTen = 'NV#' . ($cc->nguoi_dung_id ?? '?');
                                 }
 
-                                // ⭐ LẤY ẢNH ĐẠI DIỆN - KIỂM TRA FILE TỒN TẠI
-                                $hasAvatar =
-                                    $hoSo &&
-                                    $hoSo->anh_dai_dien &&
-                                    file_exists(public_path('storage/' . $hoSo->anh_dai_dien));
+                                $hasAvatar = $hoSo && $hoSo->anh_dai_dien && file_exists(public_path('storage/' . $hoSo->anh_dai_dien));
                                 $avatar = $hasAvatar ? asset('storage/' . $hoSo->anh_dai_dien) : null;
 
                                 $initial = strtoupper(substr($hoTen, 0, 1));
                                 $maNV = $hoSo ? $hoSo->ma_nhan_vien ?? 'N/A' : 'N/A';
-                                $tenPhongBan =
-                                    $nguoiDung && $nguoiDung->phongBan
-                                        ? $nguoiDung->phongBan->ten_phong_ban ?? 'N/A'
-                                        : 'N/A';
+                                $tenPhongBan = $nguoiDung && $nguoiDung->phongBan ? $nguoiDung->phongBan->ten_phong_ban ?? 'N/A' : 'N/A';
                             @endphp
-                            <tr
-                                class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                            <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                                 <td class="px-4 py-4">
                                     <div class="flex items-center gap-3">
-                                        {{-- ⭐ HIỂN THỊ ẢNH ĐẠI DIỆN HOẶC CHỮ CÁI ĐẦU --}}
                                         @if ($avatar)
                                             <img src="{{ $avatar }}" alt="{{ $hoTen }}"
                                                 class="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 shadow-sm">
                                         @else
-                                            <div
-                                                class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold text-lg shadow-md">
+                                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold text-lg shadow-md">
                                                 {{ $initial }}
                                             </div>
                                         @endif
@@ -216,12 +241,10 @@
                                 </td>
                                 <td class="px-4 py-4">
                                     {{ \Carbon\Carbon::parse($cc->ngay_cham_cong)->format('d/m/Y') }}
-                                    <br><small
-                                        class="text-gray-500">{{ \Carbon\Carbon::parse($cc->ngay_cham_cong)->locale('vi')->dayName }}</small>
+                                    <br><small class="text-gray-500">{{ \Carbon\Carbon::parse($cc->ngay_cham_cong)->locale('vi')->dayName }}</small>
                                 </td>
                                 <td class="px-4 py-4">
-                                    <span
-                                        class="px-2 py-1 rounded text-sm {{ ($cc->phut_di_muon ?? 0) > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700' }}">
+                                    <span class="px-2 py-1 rounded text-sm {{ ($cc->phut_di_muon ?? 0) > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700' }}">
                                         {{ $cc->getGioVaoFormatAttribute() }}
                                     </span>
                                     @if (($cc->phut_di_muon ?? 0) > 0)
@@ -229,8 +252,7 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-4">
-                                    <span
-                                        class="px-2 py-1 rounded text-sm {{ ($cc->phut_ve_som ?? 0) > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700' }}">
+                                    <span class="px-2 py-1 rounded text-sm {{ ($cc->phut_ve_som ?? 0) > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700' }}">
                                         {{ $cc->getGioRaFormatAttribute() }}
                                     </span>
                                     @if (($cc->phut_ve_som ?? 0) > 0)
@@ -238,25 +260,17 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-4 font-semibold">{{ number_format($cc->so_gio_lam ?? 0, 1) }}h</td>
-                                <td class="px-4 py-4 font-semibold text-blue-600">
-                                    {{ number_format($cc->so_cong ?? 0, 2) }}</td>
+                                <td class="px-4 py-4 font-semibold text-blue-600">{{ number_format($cc->so_cong ?? 0, 2) }}</td>
                                 <td class="px-4 py-4">
                                     @php
                                         $statusColors = [
-                                            'dung_gio' =>
-                                                'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-                                            'di_muon' =>
-                                                'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
-                                            've_som' =>
-                                                'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-                                            'den_som' =>
-                                                'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-                                            'vang_mat' =>
-                                                'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-                                            'khong_cham_cong' =>
-                                                'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400',
-                                            'nghi_phep' =>
-                                                'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+                                            'dung_gio' => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+                                            'di_muon' => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+                                            've_som' => 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+                                            'den_som' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+                                            'vang_mat' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+                                            'khong_cham_cong' => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400',
+                                            'nghi_phep' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
                                         ];
                                         $statusTexts = [
                                             'dung_gio' => '✅ Đúng giờ',
@@ -268,8 +282,7 @@
                                             'nghi_phep' => '📋 Nghỉ phép',
                                         ];
                                     @endphp
-                                    <span
-                                        class="px-2 py-1 rounded text-xs {{ $statusColors[$cc->trang_thai] ?? 'bg-gray-100 text-gray-700' }}">
+                                    <span class="px-2 py-1 rounded text-xs {{ $statusColors[$cc->trang_thai] ?? 'bg-gray-100 text-gray-700' }}">
                                         {{ $statusTexts[$cc->trang_thai] ?? $cc->trang_thai }}
                                     </span>
                                 </td>
@@ -285,21 +298,17 @@
                                 </td>
                                 <td class="px-4 py-4">
                                     <div class="relative">
-                                        <button onclick="toggleDropdown(this)"
-                                            class="p-1.5 text-gray-500 hover:bg-gray-100 rounded-lg transition">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
+                                        <button onclick="toggleDropdown(this)" class="p-1.5 text-gray-500 hover:bg-gray-100 rounded-lg transition">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z">
                                                 </path>
                                             </svg>
                                         </button>
-                                        <div
-                                            class="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg hidden z-10 dropdown-menu border border-gray-200 dark:border-gray-700">
+                                        <div class="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg hidden z-10 dropdown-menu border border-gray-200 dark:border-gray-700">
                                             <a href="{{ route('admin.cham-cong.show', $cc->id) }}"
                                                 class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
+                                                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                         d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -311,10 +320,8 @@
                                             @if ($cc->ghi_chu)
                                                 <button onclick="showReason('{{ addslashes($cc->ghi_chu) }}')"
                                                     class="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
                                                         </path>
                                                     </svg>
@@ -327,8 +334,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center py-10 text-gray-500">📭 Chưa có dữ liệu chấm công
-                                </td>
+                                <td colspan="9" class="text-center py-10 text-gray-500">📭 Chưa có dữ liệu chấm công</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -374,10 +380,8 @@
                     </select>
                 </div>
                 <div class="flex justify-end gap-3">
-                    <button type="button" onclick="closeReportModal()"
-                        class="px-4 py-2 bg-gray-300 rounded-lg">Đóng</button>
-                    <button type="button" onclick="submitReport()"
-                        class="px-4 py-2 bg-green-600 text-white rounded-lg">Xuất</button>
+                    <button type="button" onclick="closeReportModal()" class="px-4 py-2 bg-gray-300 rounded-lg">Đóng</button>
+                    <button type="button" onclick="submitReport()" class="px-4 py-2 bg-green-600 text-white rounded-lg">Xuất</button>
                 </div>
             </div>
         </div>

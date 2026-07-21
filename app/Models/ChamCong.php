@@ -55,7 +55,7 @@ class ChamCong extends Model
     // =========================================================================
     // CONSTANTS
     // =========================================================================
-    
+
     // Trạng thái duyệt
     const TRANG_THAI_DUYET_CHUA_DUYET = 0;
     const TRANG_THAI_DUYET_DA_DUYET = 1;
@@ -306,6 +306,11 @@ class ChamCong extends Model
             return $query->where('ca_lam_viec_id', $caChieu->id);
         }
         return $query;
+    }
+
+    public function nguoiDung()
+    {
+        return $this->belongsTo(NguoiDung::class, 'nguoi_dung_id');
     }
 
     public function scopeLoai($query, $loai)

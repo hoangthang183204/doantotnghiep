@@ -20,6 +20,11 @@ use Illuminate\Support\Facades\Storage;
 
 use App\Exports\NhanVienExport;
 use App\Imports\NhanVienImport;
+use App\Models\DangKyTangCa;
+use App\Models\DonXinNghi;
+use App\Models\DonXinVeSom;
+use App\Models\LichSuTaiKy;
+use App\Models\SoDuPhep;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -83,7 +88,7 @@ class HoSoController extends Controller
     /**
      * Chi tiết hồ sơ - LẤY DỮ LIỆU THẬT TỪ DATABASE
      */
-    public function show($id)
+    public function show($id, Request $request)
     {
         $hoSo = HoSo::with([
             'nguoi_dung.chuc_vu',
@@ -97,10 +102,12 @@ class HoSoController extends Controller
                     ->orderBy('luong_thang', 'desc')
                     ->limit(10);
             },
-            // ⭐ THÊM 3 QUAN HỆ MỚI
             'ky_nang',
             'chung_chi',
             'du_an',
+            'nguoiPhuThuoc',
+            'dao_tao',
+            'khen_thuong_ky_luat',
         ])->findOrFail($id);
 
         $hopDongHieuLuc = $hoSo->hop_dong->filter(function ($item) {
@@ -109,7 +116,83 @@ class HoSoController extends Controller
 
         $luongGanNhat = $hoSo->lich_su_luong->first();
 
-        return view('admin.ho-so.show', compact('hoSo', 'hopDongHieuLuc', 'luongGanNhat'));
+        // ⭐ LẤY LỊCH SỬ DUYỆT HỢP ĐỒNG
+        $lichSuTaiKyHopDong = collect();
+        if ($hopDongHieuLuc) {
+            $lichSuTaiKyHopDong = LichSuTaiKy::where('hop_dong_cu_id', $hopDongHieuLuc->id)
+                ->orWhere('hop_dong_moi_id', $hopDongHieuLuc->id)
+                ->with(['hopDongCu', 'hopDongMoi', 'nguoiThucHien'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
+
+        // ⭐ LẤY LỊCH SỬ NGHỈ PHÉP (PHÂN TRANG - 5 đơn/trang)
+        $lichSuNghiPhep = DonXinNghi::where('nguoi_dung_id', $hoSo->nguoi_dung_id)
+            ->with(['loaiNghiPhep', 'nguoiDuyet'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(5, ['*'], 'nghi_phep_page')
+            ->appends($request->query());
+
+        // ⭐ LẤY LỊCH SỬ TĂNG CA (PHÂN TRANG - 5 đơn/trang)
+        $lichSuTangCa = DangKyTangCa::where('nguoi_dung_id', $hoSo->nguoi_dung_id)
+            ->with(['nguoiDuyet'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(5, ['*'], 'tang_ca_page')
+            ->appends($request->query());
+
+        // ⭐ LẤY LỊCH SỬ ĐƠN XIN VỀ SỚM (PHÂN TRANG - 5 đơn/trang)
+        $lichSuVeSom = DonXinVeSom::where('nguoi_dung_id', $hoSo->nguoi_dung_id)
+            ->with(['nguoiDuyet'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(5, ['*'], 've_som_page')
+            ->appends($request->query());
+
+        // ⭐ THỐNG KÊ ĐƠN TỪ
+        $thongKeDonTu = [
+            'tong_don_nghi' => DonXinNghi::where('nguoi_dung_id', $hoSo->nguoi_dung_id)->count(),
+            'don_nghi_cho_duyet' => DonXinNghi::where('nguoi_dung_id', $hoSo->nguoi_dung_id)
+                ->where('trang_thai', 'cho_duyet')
+                ->count(),
+            'don_nghi_da_duyet' => DonXinNghi::where('nguoi_dung_id', $hoSo->nguoi_dung_id)
+                ->where('trang_thai', 'da_duyet')
+                ->count(),
+            'don_nghi_tu_choi' => DonXinNghi::where('nguoi_dung_id', $hoSo->nguoi_dung_id)
+                ->where('trang_thai', 'tu_choi')
+                ->count(),
+
+            'tong_tang_ca' => DangKyTangCa::where('nguoi_dung_id', $hoSo->nguoi_dung_id)->count(),
+            'tang_ca_cho_duyet' => DangKyTangCa::where('nguoi_dung_id', $hoSo->nguoi_dung_id)
+                ->where('trang_thai', 'cho_duyet')
+                ->count(),
+            'tang_ca_da_duyet' => DangKyTangCa::where('nguoi_dung_id', $hoSo->nguoi_dung_id)
+                ->where('trang_thai', 'da_duyet')
+                ->count(),
+
+            'tong_ve_som' => DonXinVeSom::where('nguoi_dung_id', $hoSo->nguoi_dung_id)->count(),
+            've_som_cho_duyet' => DonXinVeSom::where('nguoi_dung_id', $hoSo->nguoi_dung_id)
+                ->where('trang_thai', 'cho_duyet')
+                ->count(),
+            've_som_da_duyet' => DonXinVeSom::where('nguoi_dung_id', $hoSo->nguoi_dung_id)
+                ->where('trang_thai', 'da_duyet')
+                ->count(),
+        ];
+
+        // ⭐ LẤY SỐ DƯ PHÉP
+        $soDuPhep = SoDuPhep::where('nguoi_dung_id', $hoSo->nguoi_dung_id)
+            ->where('nam', date('Y'))
+            ->first();
+
+        return view('admin.ho-so.show', compact(
+            'hoSo',
+            'hopDongHieuLuc',
+            'luongGanNhat',
+            'lichSuTaiKyHopDong',
+            'lichSuNghiPhep',
+            'lichSuTangCa',
+            'lichSuVeSom',
+            'thongKeDonTu',
+            'soDuPhep'
+        ));
     }
 
     /**

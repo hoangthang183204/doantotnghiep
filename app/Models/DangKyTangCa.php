@@ -87,6 +87,16 @@ class DangKyTangCa extends Model
         return $this->hasOne(ThucHienTangCa::class, 'dang_ky_tang_ca_id');
     }
 
+    public function nguoiDung()
+    {
+        return $this->belongsTo(NguoiDung::class, 'nguoi_dung_id');
+    }
+
+    public function nguoiDuyet()
+    {
+        return $this->belongsTo(NguoiDung::class, 'nguoi_duyet_id');
+    }
+
     // ============================================================
     // ⭐ SCOPES
     // ============================================================
