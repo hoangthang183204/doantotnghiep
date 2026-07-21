@@ -51,10 +51,10 @@ class BangLuongController extends Controller
     public function show($id)
     {
         $userId = Auth::id();
-
         $payroll = LuongNhanVien::with([
             'bangLuong',
-            'khauTrus'
+            'khauTrus',
+            'yeuCauXemXet'
         ])
             ->where('nguoi_dung_id', $userId)
             ->where('id', $id)

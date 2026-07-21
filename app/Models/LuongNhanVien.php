@@ -106,4 +106,8 @@ class LuongNhanVien extends Model
     {
         return round($this->luong_mot_ngay / 8, 2);
     }
+    public function yeuCauXemXet()
+{
+    return $this->hasMany(YeuCauXemXetLuong::class, 'luong_nhan_vien_id');
+}
 }
