@@ -468,4 +468,8 @@ class NguoiDung extends Authenticatable implements JWTSubject
             'has_hourly_rate' => $this->hasHourlyRate(),
         ];
     }
+    public function yeuCauXemXetLuong()
+{
+    return $this->hasMany(YeuCauXemXetLuong::class, 'nguoi_dung_id');
+}
 }

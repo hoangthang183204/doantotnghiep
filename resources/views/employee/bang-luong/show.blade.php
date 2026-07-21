@@ -15,6 +15,83 @@
             Chi tiết các khoản thu nhập và khấu trừ
         </p>
     </div>
+@php
+    $yeuCau = $payroll->yeuCauXemXet->sortByDesc('created_at')->first();
+@endphp
+
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 flex items-center justify-between">
+
+    <div>
+
+        <h3 class="font-semibold text-lg text-gray-800 dark:text-white">
+            Yêu cầu xem xét lương
+        </h3>
+
+        @if($yeuCau)
+
+            @if($yeuCau->trang_thai == 'cho_duyet')
+
+                <span class="inline-flex mt-2 px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-sm">
+                    Đang chờ xử lý
+                </span>
+
+            @elseif($yeuCau->trang_thai == 'da_duyet')
+
+                <span class="inline-flex mt-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm">
+                    Đã duyệt
+                </span>
+
+            @else
+
+                <span class="inline-flex mt-2 px-3 py-1 rounded-full bg-red-100 text-red-700 text-sm">
+                    Đã từ chối
+                </span>
+
+            @endif
+
+        @else
+
+            <p class="text-sm text-gray-500 mt-2">
+                Nếu phát hiện sai sót trong phiếu lương, bạn có thể gửi yêu cầu xem xét.
+            </p>
+
+        @endif
+
+    </div>
+
+    <div>
+
+        @if(!$yeuCau || $yeuCau->trang_thai != 'cho_duyet')
+
+            <a href="{{ route('employee.yeu-cau-luong.create',$payroll->id) }}"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg">
+
+                <i class="fa-solid fa-circle-exclamation"></i>
+
+                Yêu cầu xem xét
+
+            </a>
+
+        @endif
+
+    </div>
+
+</div>
+@if($yeuCau && $yeuCau->trang_thai == 'tu_choi')
+
+<div class="bg-red-50 border border-red-200 rounded-xl p-5">
+
+    <h4 class="font-semibold text-red-700 mb-2">
+        Phản hồi từ phòng nhân sự
+    </h4>
+
+    <p class="text-gray-700">
+        {{ $yeuCau->phan_hoi }}
+    </p>
+
+</div>
+
+@endif
 
     {{-- THÔNG TIN LƯƠNG --}}
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 space-y-4">

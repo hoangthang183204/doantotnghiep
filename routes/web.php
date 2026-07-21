@@ -46,6 +46,8 @@ use App\Models\NguoiDung;
 use App\Services\NotificationService;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\TruongPhong\DashboardTruongPhongController;
+use App\Http\Controllers\Admin\YeuCauXemXetLuongController;
+
 
 // =============================================
 // ⭐⭐ ROUTE DUYỆT ĐƠN DÙNG CHUNG ⭐⭐
@@ -275,6 +277,33 @@ Route::prefix('admin')
             Route::put('/{id}/thanh-toan', [BangLuongController::class, 'thanhToan'])->whereNumber('id')->name('thanh-toan')->middleware('CheckPermission:salary.approve');
             Route::delete('/{id}', [BangLuongController::class, 'destroy'])->whereNumber('id')->name('destroy')->middleware('CheckPermission:salary.index');
         });
+
+        Route::prefix('yeu-cau-luong')
+    ->name('yeu-cau-luong.')
+    ->middleware(['CheckPermission:salary.index'])
+    ->group(function () {
+
+        // Danh sách yêu cầu
+       Route::get(
+    '/',
+    [\App\Http\Controllers\Admin\YeuCauXemXetLuongController::class, 'index']
+)->name('index');
+
+ Route::get('/', [YeuCauXemXetLuongController::class, 'index'])->name('index');
+
+Route::get('/{id}', [YeuCauXemXetLuongController::class, 'show'])
+    ->whereNumber('id')
+    ->name('show');
+
+Route::put('/{id}/duyet', [YeuCauXemXetLuongController::class, 'duyet'])
+    ->whereNumber('id')
+    ->name('duyet');
+
+Route::put('/{id}/tu-choi', [YeuCauXemXetLuongController::class, 'tuChoi'])
+    ->whereNumber('id')
+    ->name('tu-choi')
+    ->middleware('CheckPermission:salary.approve');
+    });
 
         // ========== PHỤ CẤP - CHỈ HR VÀ ADMIN ==========
         Route::resource('phu-cap', PhuCapController::class)->middleware(['CheckPermission:salary.allowance']);
@@ -611,6 +640,20 @@ Route::prefix('employee')
             Route::post('/{id}/huy', [UngLuongController::class, 'cancel'])->name('huy');
         });
 
+        //========= Yêu Cầu Xem Xét Lương======
+   Route::prefix('yeu-cau-luong')->name('yeu-cau-luong.')->group(function () {
+
+    Route::get('/{luongId}/create', [
+        \App\Http\Controllers\Employee\YeuCauXemXetLuongController::class,
+        'create'
+    ])->name('create');
+
+    Route::post('/{luongId}', [
+        \App\Http\Controllers\Employee\YeuCauXemXetLuongController::class,
+        'store'
+    ])->name('store');
+
+});
         // ========== THÔNG BÁO ==========
         Route::prefix('notifications')->name('notifications.')->group(function () {
             Route::get('/', [NotificationController::class, 'index'])->name('index');

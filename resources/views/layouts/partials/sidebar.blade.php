@@ -787,6 +787,10 @@
                 if ($canEditContract && Route::has('admin.tang-luong.index')) {
                     $submenuLuong[] = ['title' => 'Lịch sử tăng lương', 'route' => 'admin.tang-luong.index'];
                 }
+                if ($canViewSalary && Route::has('admin.yeu-cau-luong.index')) {
+                    $submenuLuong[] = ['title' => 'Yêu cầu xem xét lương','route' => 'admin.yeu-cau-luong.index'
+    ];
+}
             @endphp
             @if (!empty($submenuLuong))
                 <li>
