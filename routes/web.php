@@ -225,6 +225,11 @@ Route::prefix('admin')
 
         // ========== CHẤM CÔNG - AI CŨNG CÓ ==========
         Route::prefix('cham-cong')->name('cham-cong.')->group(function () {
+
+            Route::get('/don-ve-som', [ChamCongController::class, 'danhSachDonVeSom'])->name('don-ve-som')->middleware('CheckPermission:attendance.index');
+            Route::post('/don-ve-som/{id}/duyet', [ChamCongController::class, 'duyetDonVeSom'])->name('duyet-don-ve-som')->middleware('CheckPermission:attendance.index');
+            Route::post('/don-ve-som/{id}/tu-choi', [ChamCongController::class, 'tuChoiDonVeSom'])->name('tu-choi-don-ve-som')->middleware('CheckPermission:attendance.index');
+
             Route::get('/', [ChamCongController::class, 'index'])->name('index')->middleware('CheckPermission:attendance.index');
             Route::get('/{id}', [ChamCongController::class, 'show'])->name('show')->middleware('CheckPermission:attendance.index');
             Route::get('/export', [ChamCongController::class, 'export'])->name('export')->middleware('CheckPermission:attendance.export');
@@ -539,6 +544,10 @@ Route::prefix('employee')
             Route::get('/history', [EmployeeChamCongController::class, 'history'])->name('history');
             Route::post('/save-device-info', [EmployeeChamCongController::class, 'saveDeviceInfo'])->name('save-device-info');
             Route::get('/trang-thai', [EmployeeChamCongController::class, 'trangThai'])->name('trang-thai');
+
+            // ========== ĐƠN XIN VỀ SỚM ==========
+            Route::post('/tao-don-ve-som', [EmployeeChamCongController::class, 'taoDonVeSom'])->name('tao-don-ve-som');
+            Route::get('/kiem-tra-don-ve-som', [EmployeeChamCongController::class, 'kiemTraDonVeSom'])->name('kiem-tra-don-ve-som');
         });
 
 

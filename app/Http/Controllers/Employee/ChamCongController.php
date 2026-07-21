@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ChamCong;
 use App\Models\CaLamViec;
 use App\Models\CauHinhChamCong;
+use App\Models\DonXinVeSom;
 use App\Models\GioLamViec;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -355,7 +356,6 @@ class ChamCongController extends Controller
             $wifiAllowed = CauHinhChamCong::isWiFiAllowed($wifi);
             $macAllowed = CauHinhChamCong::isMACAllowed($mac);
 
-            // ⭐ CHỈ CHO CHECK-OUT KHI IP HOẶC WIFI HỢP LỆ
             if (!$ipAllowed && !$wifiAllowed && !$macAllowed) {
                 return response()->json([
                     'success' => false,
@@ -380,58 +380,109 @@ class ChamCongController extends Controller
             // Lấy ca làm việc từ bản ghi check-in
             $ca = $chamCong->caLamViec;
             if (!$ca) {
-                // Nếu không có ca, xác định lại
                 $ca = ChamCong::xacDinhCaLamViec($chamCong->gio_vao);
+            }
+
+            // Nếu vẫn không có ca, lấy ca mặc định
+            if (!$ca) {
+                $ca = CaLamViec::where('is_default', 1)->first();
+            }
+
+            if (!$ca) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không xác định được ca làm việc!'
+                ], 400);
             }
 
             $gioKetThuc = Carbon::parse($ca->gio_ket_thuc);
 
             // ===== KIỂM TRA VỀ SỚM =====
-            $lyDoVeSom = $request->input('ly_do_ve_som');
             $isVeSom = $now->lt($gioKetThuc);
+            $soPhutVeSom = 0;
+            $lyDoVeSom = null;
+            $daCoDonDuyet = false;
 
-            if ($isVeSom && empty($lyDoVeSom)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => '⚠️ Bạn đang về sớm, vui lòng nhập lý do!',
-                    'yeu_cau_ly_do' => true,
-                    'phut_ve_som' => $now->diffInMinutes($gioKetThuc)
-                ], 400);
+            // ⭐ NẾU VỀ SỚM, KIỂM TRA ĐƠN XIN VỀ SỚM
+            if ($isVeSom) {
+                $soPhutVeSom = $now->diffInMinutes($gioKetThuc);
+                $soPhutChoPhep = $ca->so_phut_cho_phep_ve_som ?? 15;
+
+                // Kiểm tra đơn xin về sớm
+                $donVeSom = DonXinVeSom::where('nguoi_dung_id', $user->id)
+                    ->where('ngay', $today)
+                    ->where('cham_cong_id', $chamCong->id)
+                    ->first();
+
+                // Nếu đã có đơn và được duyệt
+                if ($donVeSom && $donVeSom->trang_thai == 'da_duyet') {
+                    $daCoDonDuyet = true;
+                    $lyDoVeSom = $donVeSom->ly_do;
+                    // ⭐ KHÔNG TRỪ LƯƠNG -> để phutVeSom = 0
+                    $soPhutVeSom = 0;
+                }
+                // Nếu có đơn nhưng chưa duyệt
+                elseif ($donVeSom && $donVeSom->trang_thai == 'cho_duyet') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => '⏳ Đơn xin về sớm đang chờ HR duyệt. Vui lòng đợi!',
+                        'trang_thai_don' => 'cho_duyet'
+                    ], 400);
+                }
+                // Nếu có đơn bị từ chối
+                elseif ($donVeSom && $donVeSom->trang_thai == 'tu_choi') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => '❌ Đơn xin về sớm đã bị từ chối! Lý do: ' . ($donVeSom->ly_do_tu_choi ?? 'Không có lý do'),
+                        'trang_thai_don' => 'tu_choi'
+                    ], 400);
+                }
+                // Nếu chưa có đơn và về sớm quá số phút cho phép
+                elseif ($soPhutVeSom > $soPhutChoPhep) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => '⚠️ Bạn đang về sớm! Vui lòng tạo đơn xin về sớm.',
+                        'yeu_cau_tao_don' => true,
+                        'so_phut_ve_som' => $soPhutVeSom
+                    ], 400);
+                }
+                // Về sớm trong phạm vi cho phép
+                else {
+                    $soPhutVeSom = 0;
+                }
             }
 
             // ===== TÍNH TOÁN =====
-            $phutVeSom = 0;
             $trangThai = $chamCong->trang_thai;
 
-            if ($isVeSom) {
-                $phutVeSom = $now->diffInMinutes($gioKetThuc);
-                $soPhutChoPhep = $ca->so_phut_cho_phep_ve_som ?? 15;
-                if ($phutVeSom > $soPhutChoPhep) {
-                    $trangThai = ChamCong::TRANG_THAI_VE_SOM;
-                    $phutVeSom = $phutVeSom - $soPhutChoPhep;
-                } else {
-                    $phutVeSom = 0;
-                }
-            } else {
-                // Check-out sau giờ kết thúc
-                if ($now->gt($gioKetThuc)) {
-                    $trangThai = ChamCong::TRANG_THAI_TANG_CA;
-                }
-            }
-
-            // Tính số giờ làm
+            // Tính số giờ làm (dựa trên giờ vào và giờ ra thực tế)
             $gioVao = Carbon::parse($chamCong->gio_vao);
             $soPhutLam = $gioVao->diffInMinutes($now);
             $soGioLam = round($soPhutLam / 60, 2);
 
-            // Tính số công (1 công = 8 giờ)
+            // ⭐ TÍNH SỐ CÔNG (KHÔNG TRỪ NẾU CÓ ĐƠN DUYỆT)
             $soCong = round($soGioLam / 8, 2);
             if ($soCong > 1) $soCong = 1;
+
+            // Nếu có đơn về sớm được duyệt, giữ nguyên số công theo giờ làm thực tế
+            // Không cần giảm công vì đã được phép về sớm
 
             // Tính tăng ca
             $gioTangCa = 0;
             if ($now->gt($gioKetThuc)) {
                 $gioTangCa = round($gioKetThuc->diffInHours($now), 1);
+            }
+
+            // Xác định trạng thái
+            if ($isVeSom) {
+                if ($daCoDonDuyet) {
+                    $trangThai = ChamCong::TRANG_THAI_VE_SOM; // Vẫn hiển thị về sớm nhưng không trừ công
+                } else {
+                    // Về sớm trong phạm vi cho phép
+                    $trangThai = ChamCong::TRANG_THAI_VE_SOM;
+                }
+            } elseif ($now->gt($gioKetThuc)) {
+                $trangThai = ChamCong::TRANG_THAI_TANG_CA;
             }
 
             // Giữ trạng thái đi muộn nếu có
@@ -446,7 +497,7 @@ class ChamCongController extends Controller
                 'gio_ra' => $gioRaStr,
                 'so_gio_lam' => $soGioLam,
                 'so_cong' => $soCong,
-                'phut_ve_som' => max(0, $phutVeSom),
+                'phut_ve_som' => $soPhutVeSom,
                 'gio_tang_ca' => $gioTangCa,
                 'trang_thai' => $trangThai,
                 'ly_do_ve_som' => $lyDoVeSom,
@@ -459,15 +510,17 @@ class ChamCongController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => "✅ Check-out thành công lúc {$gioRaStr}" .
-                    ($isVeSom ? " (về sớm {$phutVeSom} phút)" : ""),
+                    ($isVeSom && !$daCoDonDuyet ? " (về sớm {$soPhutVeSom} phút)" : "") .
+                    ($isVeSom && $daCoDonDuyet ? " (đã có đơn về sớm được duyệt)" : ""),
                 'data' => [
                     'gio_ra' => $gioRaStr,
                     'so_gio_lam' => $soGioLam,
                     'so_cong' => $soCong,
-                    'phut_ve_som' => $phutVeSom,
+                    'phut_ve_som' => $soPhutVeSom,
                     'gio_tang_ca' => $gioTangCa,
                     'trang_thai' => $trangThai,
                     'is_ve_som' => $isVeSom,
+                    'da_co_don_duyet' => $daCoDonDuyet,
                 ]
             ]);
         } catch (\Exception $e) {
@@ -478,6 +531,143 @@ class ChamCongController extends Controller
                 'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Tạo đơn xin về sớm
+     */
+    public function taoDonVeSom(Request $request)
+    {
+        try {
+            $user = auth()->user();
+            $today = Carbon::today('Asia/Ho_Chi_Minh');
+
+            $request->validate([
+                'ly_do' => 'required|string|min:5',
+                'gio_ra_du_kien' => 'required',
+            ]);
+
+            // Kiểm tra đã check-in chưa
+            $chamCong = ChamCong::layChamCongHomNay($user->id);
+            if (!$chamCong || !$chamCong->gio_vao) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn chưa check-in hôm nay!'
+                ], 400);
+            }
+
+            // Kiểm tra đã có đơn chưa
+            $donExist = DonXinVeSom::where('nguoi_dung_id', $user->id)
+                ->where('ngay', $today)
+                ->where('cham_cong_id', $chamCong->id)
+                ->whereIn('trang_thai', ['cho_duyet', 'da_duyet'])
+                ->exists();
+
+            if ($donExist) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn đã có đơn xin về sớm đang chờ duyệt hoặc đã được duyệt!'
+                ], 400);
+            }
+
+            // Lấy ca làm việc từ bản ghi chấm công
+            $ca = $chamCong->caLamViec;
+
+            // Nếu không có ca, xác định lại dựa vào giờ check-in
+            if (!$ca) {
+                $gioVao = $chamCong->gio_vao;
+                $ca = ChamCong::xacDinhCaLamViec($gioVao);
+            }
+
+            // Nếu vẫn không có ca, lấy ca mặc định
+            if (!$ca) {
+                $ca = CaLamViec::where('is_default', 1)->first();
+            }
+
+            // Nếu vẫn không có ca, báo lỗi
+            if (!$ca) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không xác định được ca làm việc! Vui lòng liên hệ HR.'
+                ], 400);
+            }
+
+            // Tính số phút về sớm
+            $gioKetThuc = Carbon::parse($ca->gio_ket_thuc);
+            $gioRaDuKien = Carbon::parse($request->gio_ra_du_kien);
+
+            // Kiểm tra giờ ra dự kiến hợp lệ
+            if ($gioRaDuKien->gt($gioKetThuc)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Giờ ra dự kiến phải trước giờ kết thúc ca (' . $gioKetThuc->format('H:i') . ')!'
+                ], 400);
+            }
+
+            $soPhutVeSom = $gioRaDuKien->diffInMinutes($gioKetThuc);
+
+            DB::beginTransaction();
+
+            $don = DonXinVeSom::create([
+                'nguoi_dung_id' => $user->id,
+                'cham_cong_id' => $chamCong->id,
+                'ngay' => $today,
+                'gio_ra_du_kien' => $request->gio_ra_du_kien,
+                'so_phut_ve_som' => $soPhutVeSom,
+                'ly_do' => $request->ly_do,
+                'trang_thai' => 'cho_duyet',
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => '✅ Đã gửi đơn xin về sớm lên HR duyệt!',
+                'data' => [
+                    'don_id' => $don->id,
+                    'so_phut_ve_som' => $soPhutVeSom,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Tao don ve som error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Kiểm tra trạng thái đơn xin về sớm
+     */
+    public function kiemTraDonVeSom(Request $request)
+    {
+        $user = auth()->user();
+        $today = Carbon::today('Asia/Ho_Chi_Minh');
+
+        $don = DonXinVeSom::where('nguoi_dung_id', $user->id)
+            ->where('ngay', $today)
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if (!$don) {
+            return response()->json([
+                'has_don' => false,
+                'message' => 'Chưa có đơn xin về sớm'
+            ]);
+        }
+
+        return response()->json([
+            'has_don' => true,
+            'don_id' => $don->id,
+            'trang_thai' => $don->trang_thai,
+            'trang_thai_text' => $don->trang_thai_text,
+            'so_phut_ve_som' => $don->so_phut_ve_som,
+            'ly_do' => $don->ly_do,
+            'ly_do_tu_choi' => $don->ly_do_tu_choi,
+            'thoi_gian_duyet' => $don->thoi_gian_duyet,
+        ]);
     }
 
     /**
@@ -508,14 +698,14 @@ class ChamCongController extends Controller
 
         // Khung giờ cho phép check-in
         $checkinTimes = [
-            ['start' => '06:00:00', 'end' => '08:30:00'], 
-            ['start' => '12:00:00', 'end' => '13:30:00'], 
+            ['start' => '06:00:00', 'end' => '08:30:00'],
+            ['start' => '12:00:00', 'end' => '13:30:00'],
         ];
 
         // Khung giờ cho phép check-out
         $checkoutTimes = [
-            ['start' => '11:00:00', 'end' => '12:30:00'], 
-            ['start' => '16:30:00', 'end' => '18:30:00'],  
+            ['start' => '11:00:00', 'end' => '12:30:00'],
+            ['start' => '16:30:00', 'end' => '18:30:00'],
         ];
 
         $times = ($type == 'checkout') ? $checkoutTimes : $checkinTimes;
@@ -554,40 +744,50 @@ class ChamCongController extends Controller
             ->paginate(20)
             ->appends($request->query());
 
-        // Thống kê
+        // Lấy tất cả bản ghi trong tháng để thống kê
+        $allRecords = ChamCong::where('nguoi_dung_id', $user->id)
+            ->whereMonth('ngay_cham_cong', $thangLoc)
+            ->whereYear('ngay_cham_cong', $namLoc)
+            ->whereNotNull('gio_vao') // Chỉ tính những ngày có check-in
+            ->get();
+
+        // Thống kê chi tiết
         $thongKe = [
-            'tong_ngay' => ChamCong::where('nguoi_dung_id', $user->id)
-                ->whereMonth('ngay_cham_cong', $thangLoc)
-                ->whereYear('ngay_cham_cong', $namLoc)
-                ->count(),
+            'tong_ngay' => $allRecords->count(),
 
-            'dung_gio' => ChamCong::where('nguoi_dung_id', $user->id)
-                ->whereMonth('ngay_cham_cong', $thangLoc)
-                ->whereYear('ngay_cham_cong', $namLoc)
-                ->whereIn('trang_thai', [ChamCong::TRANG_THAI_DUNG_GIO, ChamCong::TRANG_THAI_DEN_SOM])
-                ->count(),
+            // Đúng giờ (bao gồm đến sớm)
+            'dung_gio' => $allRecords->whereIn('trang_thai', [ChamCong::TRANG_THAI_DUNG_GIO, ChamCong::TRANG_THAI_DEN_SOM])->count(),
 
-            'di_muon' => ChamCong::where('nguoi_dung_id', $user->id)
-                ->whereMonth('ngay_cham_cong', $thangLoc)
-                ->whereYear('ngay_cham_cong', $namLoc)
-                ->where('trang_thai', ChamCong::TRANG_THAI_DI_MUON)
-                ->count(),
+            // Đi muộn
+            'di_muon' => $allRecords->where('trang_thai', ChamCong::TRANG_THAI_DI_MUON)->count(),
 
-            've_som' => ChamCong::where('nguoi_dung_id', $user->id)
-                ->whereMonth('ngay_cham_cong', $thangLoc)
-                ->whereYear('ngay_cham_cong', $namLoc)
-                ->where('trang_thai', ChamCong::TRANG_THAI_VE_SOM)
-                ->count(),
+            // Về sớm
+            've_som' => $allRecords->where('trang_thai', ChamCong::TRANG_THAI_VE_SOM)->count(),
 
-            'tong_gio_lam' => ChamCong::where('nguoi_dung_id', $user->id)
-                ->whereMonth('ngay_cham_cong', $thangLoc)
-                ->whereYear('ngay_cham_cong', $namLoc)
-                ->sum('so_gio_lam') ?? 0,
+            // FULL CÔNG (>= 1 công)
+            'full_cong' => $allRecords->filter(function ($item) {
+                return ($item->so_cong ?? 0) >= 1;
+            })->count(),
 
-            'tong_tang_ca' => ChamCong::where('nguoi_dung_id', $user->id)
-                ->whereMonth('ngay_cham_cong', $thangLoc)
-                ->whereYear('ngay_cham_cong', $namLoc)
-                ->sum('gio_tang_ca') ?? 0,
+            // NỬA CÔNG (0.5 - 0.99)
+            'nua_cong' => $allRecords->filter(function ($item) {
+                $soCong = $item->so_cong ?? 0;
+                return $soCong >= 0.5 && $soCong < 1;
+            })->count(),
+
+            // ÍT CÔNG (0 < công < 0.5)
+            'it_cong' => $allRecords->filter(function ($item) {
+                $soCong = $item->so_cong ?? 0;
+                return $soCong > 0 && $soCong < 0.5;
+            })->count(),
+
+            // 0 CÔNG (đã check-in nhưng không có công)
+            'khong_cong' => $allRecords->filter(function ($item) {
+                return ($item->so_cong ?? 0) == 0;
+            })->count(),
+
+            'tong_gio_lam' => $allRecords->sum('so_gio_lam') ?? 0,
+            'tong_tang_ca' => $allRecords->sum('gio_tang_ca') ?? 0,
         ];
 
         $thangNamList = ChamCong::where('nguoi_dung_id', $user->id)

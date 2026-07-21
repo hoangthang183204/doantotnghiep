@@ -259,19 +259,59 @@
                             <span class="font-bold text-gray-800 dark:text-gray-200 text-sm">👤 Thông tin nhân viên</span>
                         </div>
                         <div class="p-4 text-center">
+                            @php
+                                // Lấy thông tin ảnh đại diện
+                                // Vì $hopDong là stdClass, lấy nguoi_dung_id để query hồ sơ
+                                $nguoiDungId = $hopDong->nguoi_dung_id ?? null;
+                                $hoSo = null;
+                                $anhDaiDien = null;
+                                $hasAvatar = false;
+                                $avatarUrl = null;
+
+                                if ($nguoiDungId) {
+                                    // Lấy hồ sơ từ database
+                                    $hoSo = \App\Models\HoSoNguoiDung::where('nguoi_dung_id', $nguoiDungId)->first();
+                                    if ($hoSo && $hoSo->anh_dai_dien) {
+                                        $anhDaiDien = $hoSo->anh_dai_dien;
+                                        $hasAvatar = file_exists(public_path('storage/' . $anhDaiDien));
+                                        $avatarUrl = $hasAvatar ? asset('storage/' . $anhDaiDien) : null;
+                                    }
+                                }
+
+                                // Lấy tên nhân viên
+                                $tenNhanVien = $hopDong->nhan_vien_ho_ten ?? ($hopDong->ten_dang_nhap ?? 'Nhân viên');
+
+                                // Lấy chữ cái đầu cho avatar fallback
+                                $words = explode(' ', trim($tenNhanVien));
+                                $lastWord = end($words);
+                                $initial = !empty($lastWord)
+                                    ? mb_substr($lastWord, 0, 1)
+                                    : mb_substr($tenNhanVien, 0, 2);
+
+                                // Lấy mã nhân viên
+                                $maNV = $hoSo ? $hoSo->ma_nhan_vien : $hopDong->nhan_vien_ma_nv ?? '---';
+                            @endphp
+
                             <div
-                                class="w-16 h-16 mx-auto bg-gradient-to-tr from-blue-500 to-teal-400 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg ring-2 ring-white dark:ring-gray-800">
-                                @if (!empty($hopDong->nhan_vien_ho_ten))
-                                    {{ mb_substr(strrchr($hopDong->nhan_vien_ho_ten, ' '), 1) ?: mb_substr($hopDong->nhan_vien_ho_ten, 0, 2) }}
+                                class="w-16 h-16 mx-auto rounded-full shadow-lg ring-2 ring-white dark:ring-gray-800 overflow-hidden bg-gradient-to-tr from-blue-500 to-teal-400">
+                                @if ($hasAvatar && $avatarUrl)
+                                    <img src="{{ $avatarUrl }}" alt="{{ $tenNhanVien }}"
+                                        class="w-full h-full object-cover"
+                                        onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(to top right, #3b82f6, #14b8a6)'; this.parentElement.classList.add('flex', 'items-center', 'justify-center'); this.parentElement.innerHTML='<span class=\"text-white text-xl font-bold\">{{ $initial }}</span>';">
                                 @else
-                                    NV
+                                    <div
+                                        class="w-full h-full flex items-center justify-center text-white text-xl font-bold">
+                                        {{ $initial }}
+                                    </div>
                                 @endif
                             </div>
+
                             <h5 class="text-base font-bold text-gray-900 dark:text-white mt-2">
-                                {{ $hopDong->nhan_vien_ho_ten ?? $hopDong->ten_dang_nhap }}</h5>
+                                {{ $tenNhanVien }}
+                            </h5>
                             <span
                                 class="inline-block text-xs font-semibold px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded-full mt-1">
-                                Mã NV: {{ $hopDong->nhan_vien_ma_nv ?? '---' }}
+                                Mã NV: {{ $maNV }}
                             </span>
                             <div class="mt-3 space-y-2 text-sm">
                                 <div

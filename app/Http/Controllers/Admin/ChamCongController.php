@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ChamCong;
 use App\Models\PhongBan;
+use App\Models\DonXinVeSom;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -16,8 +17,8 @@ class ChamCongController extends Controller
     public function index(Request $request)
     {
         $query = ChamCong::with([
-            'nguoi_dung.hoSo',      // ⭐ Load hồ sơ của nhân viên
-            'nguoi_dung.phongBan'   // ⭐ Load phòng ban
+            'nguoi_dung.hoSo',
+            'nguoi_dung.phongBan'
         ]);
 
         $this->applyFilters($query, $request);
@@ -36,6 +37,10 @@ class ChamCongController extends Controller
         $diMuonHomNay = ChamCong::whereDate('ngay_cham_cong', Carbon::today())
             ->where('trang_thai', 'di_muon')
             ->count();
+        
+        // ⭐ THỐNG KÊ ĐƠN XIN VỀ SỚM
+        $donVeSomChoDuyet = DonXinVeSom::where('trang_thai', 'cho_duyet')->count();
+        $donVeSomDaDuyet = DonXinVeSom::where('trang_thai', 'da_duyet')->count();
 
         $phongBan = PhongBan::all();
 
@@ -45,7 +50,9 @@ class ChamCongController extends Controller
             'tyLeDungGio',
             'homNay',
             'diMuonHomNay',
-            'phongBan'
+            'phongBan',
+            'donVeSomChoDuyet',
+            'donVeSomDaDuyet'
         ));
     }
 
@@ -60,6 +67,127 @@ class ChamCongController extends Controller
         ])->findOrFail($id);
 
         return view('admin.cham-cong.show', compact('chamCong'));
+    }
+
+    /**
+     * Danh sách đơn xin về sớm
+     */
+    public function danhSachDonVeSom(Request $request)
+    {
+        $query = DonXinVeSom::with([
+            'nguoiDung.hoSo',
+            'nguoiDung.phongBan',
+            'chamCong'
+        ]);
+
+        // Lọc theo trạng thái
+        if ($request->filled('trang_thai')) {
+            $query->where('trang_thai', $request->trang_thai);
+        }
+
+        // Lọc theo ngày
+        if ($request->filled('tu_ngay')) {
+            $query->whereDate('ngay', '>=', $request->tu_ngay);
+        }
+        if ($request->filled('den_ngay')) {
+            $query->whereDate('ngay', '<=', $request->den_ngay);
+        }
+
+        // Lọc theo nhân viên
+        if ($request->filled('ten_nhan_vien')) {
+            $keyword = trim($request->ten_nhan_vien);
+            $query->whereHas('nguoiDung', function ($q) use ($keyword) {
+                $q->where('ten_dang_nhap', 'like', "%{$keyword}%")
+                    ->orWhereHas('hoSo', function ($hs) use ($keyword) {
+                        $hs->where('ho', 'like', "%{$keyword}%")
+                            ->orWhere('ten', 'like', "%{$keyword}%")
+                            ->orWhereRaw("CONCAT(ho, ' ', ten) LIKE ?", ["%{$keyword}%"]);
+                    });
+            });
+        }
+
+        $donVeSoms = $query->orderBy('created_at', 'desc')->paginate(20);
+
+        // Thống kê
+        $soChoDuyet = DonXinVeSom::where('trang_thai', 'cho_duyet')->count();
+        $soDaDuyet = DonXinVeSom::where('trang_thai', 'da_duyet')->count();
+        $soTuChoi = DonXinVeSom::where('trang_thai', 'tu_choi')->count();
+
+        return view('admin.cham-cong.don-ve-som', compact(
+            'donVeSoms',
+            'soChoDuyet',
+            'soDaDuyet',
+            'soTuChoi'
+        ));
+    }
+
+    /**
+     * Duyệt đơn xin về sớm
+     */
+    public function duyetDonVeSom($id)
+    {
+        try {
+            $don = DonXinVeSom::findOrFail($id);
+            
+            if ($don->trang_thai != 'cho_duyet') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Đơn này đã được xử lý!'
+                ], 400);
+            }
+
+            $don->trang_thai = 'da_duyet';
+            $don->nguoi_duyet_id = auth()->id();
+            $don->thoi_gian_duyet = now();
+            $don->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => '✅ Đã duyệt đơn xin về sớm!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Từ chối đơn xin về sớm
+     */
+    public function tuChoiDonVeSom(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'ly_do_tu_choi' => 'required|string|min:10'
+            ]);
+
+            $don = DonXinVeSom::findOrFail($id);
+            
+            if ($don->trang_thai != 'cho_duyet') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Đơn này đã được xử lý!'
+                ], 400);
+            }
+
+            $don->trang_thai = 'tu_choi';
+            $don->ly_do_tu_choi = $request->ly_do_tu_choi;
+            $don->nguoi_duyet_id = auth()->id();
+            $don->thoi_gian_duyet = now();
+            $don->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => '❌ Đã từ chối đơn xin về sớm!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -100,7 +228,6 @@ class ChamCongController extends Controller
 
             $query->chunk(500, function ($records) use ($file) {
                 foreach ($records as $item) {
-                    // Lấy tên nhân viên từ hồ sơ hoặc tên đăng nhập
                     $hoTen = $item->nguoi_dung->hoSo
                         ? trim(($item->nguoi_dung->hoSo->ho ?? '') . ' ' . ($item->nguoi_dung->hoSo->ten ?? ''))
                         : ($item->nguoi_dung->ten_dang_nhap ?? 'N/A');

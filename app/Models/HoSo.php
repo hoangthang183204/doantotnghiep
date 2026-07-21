@@ -80,6 +80,21 @@ class HoSo extends Model
         return $this->hasMany(ChungChiNhanVien::class, 'ho_so_id');
     }
 
+    public function donNghi()
+    {
+        return $this->hasMany(DonXinNghi::class, 'nguoi_dung_id', 'nguoi_dung_id');
+    }
+
+    public function tangCa()
+    {
+        return $this->hasMany(DangKyTangCa::class, 'nguoi_dung_id', 'nguoi_dung_id');
+    }
+
+    public function donVeSom()
+    {
+        return $this->hasMany(DonXinVeSom::class, 'nguoi_dung_id', 'nguoi_dung_id');
+    }
+
     public function du_an(): HasMany
     {
         return $this->hasMany(DuAnNhanVien::class, 'ho_so_id');

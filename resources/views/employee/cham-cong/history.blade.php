@@ -67,16 +67,19 @@
                 </h3>
                 <div class="flex items-center gap-2 text-[10px]">
                     <span class="flex items-center gap-0.5">
-                        <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span> Đã chấm
+                        <span class="w-2.5 h-2.5 rounded-full bg-green-400"></span> Full công
                     </span>
                     <span class="flex items-center gap-0.5">
-                        <span class="w-2.5 h-2.5 rounded-full bg-red-400"></span> Chưa
+                        <span class="w-2.5 h-2.5 rounded-full bg-teal-400"></span> Nửa công
                     </span>
                     <span class="flex items-center gap-0.5">
-                        <span class="w-2.5 h-2.5 rounded-full bg-yellow-500"></span> Muộn
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-300"></span> Chưa
                     </span>
                     <span class="flex items-center gap-0.5">
-                        <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span> Sớm
+                        <span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span> Muộn
+                    </span>
+                    <span class="flex items-center gap-0.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-orange-400"></span> Sớm
                     </span>
                 </div>
             </div>
@@ -90,7 +93,7 @@
                     $chamCongTrongThang = \App\Models\ChamCong::where('nguoi_dung_id', auth()->id())
                         ->whereMonth('ngay_cham_cong', $thangLoc)
                         ->whereYear('ngay_cham_cong', $namLoc)
-                        ->where('loai_cham_cong', 'check_in')
+                        ->whereNotNull('gio_vao')
                         ->get()
                         ->keyBy(function ($item) {
                             return $item->ngay_cham_cong->format('d');
@@ -114,43 +117,78 @@
                             $isToday = $ngayHienTai && $ngayHienTai->isToday();
                             $daChamCong = $isValid && isset($chamCongTrongThang[$ngay]);
                             $trangThai = $daChamCong ? $chamCongTrongThang[$ngay]->trang_thai : null;
-                            $soCong = $daChamCong ? $chamCongTrongThang[$ngay]->so_cong : 0;
+                            $soCong = $daChamCong ? floatval($chamCongTrongThang[$ngay]->so_cong ?? 0) : 0;
                             
-                            // Xác định màu sắc
+                            // ===== XÁC ĐỊNH MÀU SẮC THEO SỐ CÔNG =====
                             $bgColor = 'bg-gray-100 dark:bg-gray-700';
-                            $textColor = 'text-gray-400 dark:text-gray-500';
+                            $textColor = 'text-gray-500 dark:text-gray-400';
                             $borderColor = 'border-gray-200 dark:border-gray-600';
+                            $badgeText = '';
                             
                             if ($isValid && $daChamCong) {
-                                if ($trangThai == 'di_muon') {
-                                    $bgColor = 'bg-yellow-100 dark:bg-yellow-900/30';
-                                    $textColor = 'text-yellow-700 dark:text-yellow-300';
-                                    $borderColor = 'border-yellow-300 dark:border-yellow-700';
-                                } elseif ($trangThai == 've_som') {
-                                    $bgColor = 'bg-orange-100 dark:bg-orange-900/30';
-                                    $textColor = 'text-orange-700 dark:text-orange-300';
-                                    $borderColor = 'border-orange-300 dark:border-orange-700';
-                                } elseif ($trangThai == 'den_som') {
-                                    $bgColor = 'bg-blue-100 dark:bg-blue-900/30';
-                                    $textColor = 'text-blue-700 dark:text-blue-300';
-                                    $borderColor = 'border-blue-300 dark:border-blue-700';
-                                } elseif ($trangThai == 'tang_ca') {
-                                    $bgColor = 'bg-purple-100 dark:bg-purple-900/30';
-                                    $textColor = 'text-purple-700 dark:text-purple-300';
-                                    $borderColor = 'border-purple-300 dark:border-purple-700';
-                                } else {
-                                    $bgColor = 'bg-green-100 dark:bg-green-900/30';
-                                    $textColor = 'text-green-700 dark:text-green-300';
-                                    $borderColor = 'border-green-300 dark:border-green-700';
+                                // ⭐ FULL CÔNG (>= 1) - Xanh lá nhạt
+                                if ($soCong >= 1) {
+                                    if ($trangThai == 'di_muon') {
+                                        $bgColor = 'bg-yellow-100 dark:bg-yellow-900/20';
+                                        $textColor = 'text-yellow-700 dark:text-yellow-300';
+                                        $borderColor = 'border-yellow-200 dark:border-yellow-700';
+                                    } elseif ($trangThai == 've_som') {
+                                        $bgColor = 'bg-orange-100 dark:bg-orange-900/20';
+                                        $textColor = 'text-orange-700 dark:text-orange-300';
+                                        $borderColor = 'border-orange-200 dark:border-orange-700';
+                                    } elseif ($trangThai == 'den_som') {
+                                        $bgColor = 'bg-blue-100 dark:bg-blue-900/20';
+                                        $textColor = 'text-blue-700 dark:text-blue-300';
+                                        $borderColor = 'border-blue-200 dark:border-blue-700';
+                                    } elseif ($trangThai == 'tang_ca') {
+                                        $bgColor = 'bg-purple-100 dark:bg-purple-900/20';
+                                        $textColor = 'text-purple-700 dark:text-purple-300';
+                                        $borderColor = 'border-purple-200 dark:border-purple-700';
+                                    } else {
+                                        // ⭐ FULL CÔNG - XANH LÁ NHẠT
+                                        $bgColor = 'bg-green-100 dark:bg-green-900/20';
+                                        $textColor = 'text-green-700 dark:text-green-300';
+                                        $borderColor = 'border-green-200 dark:border-green-700';
+                                    }
+                                } 
+                                // ⭐ NỬA CÔNG (0.5 - 0.99) - TEAL NHẠT
+                                elseif ($soCong >= 0.5 && $soCong < 1) {
+                                    if ($trangThai == 'di_muon') {
+                                        $bgColor = 'bg-yellow-100 dark:bg-yellow-900/20';
+                                        $textColor = 'text-yellow-700 dark:text-yellow-300';
+                                        $borderColor = 'border-yellow-200 dark:border-yellow-700';
+                                    } elseif ($trangThai == 've_som') {
+                                        $bgColor = 'bg-orange-100 dark:bg-orange-900/20';
+                                        $textColor = 'text-orange-700 dark:text-orange-300';
+                                        $borderColor = 'border-orange-200 dark:border-orange-700';
+                                    } else {
+                                        // ⭐ NỬA CÔNG - TEAL NHẠT
+                                        $bgColor = 'bg-teal-100 dark:bg-teal-900/20';
+                                        $textColor = 'text-teal-700 dark:text-teal-300';
+                                        $borderColor = 'border-teal-200 dark:border-teal-700';
+                                    }
+                                } 
+                                // ⭐ ÍT CÔNG (0 < công < 0.5) - HỒNG NHẠT
+                                elseif ($soCong > 0 && $soCong < 0.5) {
+                                    $bgColor = 'bg-pink-100 dark:bg-pink-900/20';
+                                    $textColor = 'text-pink-700 dark:text-pink-300';
+                                    $borderColor = 'border-pink-200 dark:border-pink-700';
+                                } 
+                                // ⭐ 0 CÔNG - ĐỎ NHẠT
+                                else {
+                                    $bgColor = 'bg-red-100 dark:bg-red-900/20';
+                                    $textColor = 'text-red-700 dark:text-red-300';
+                                    $borderColor = 'border-red-200 dark:border-red-700';
                                 }
                             } elseif ($isValid && !$daChamCong) {
-                                $bgColor = 'bg-red-50 dark:bg-red-900/10';
-                                $textColor = 'text-red-400 dark:text-red-500';
-                                $borderColor = 'border-red-200 dark:border-red-800';
+                                // ⭐ CHƯA CHẤM CÔNG
+                                $bgColor = 'bg-gray-50 dark:bg-gray-800';
+                                $textColor = 'text-gray-400 dark:text-gray-500';
+                                $borderColor = 'border-gray-100 dark:border-gray-700';
                             }
                             
                             if ($isToday) {
-                                $borderColor = 'border-blue-500 ring-1 ring-blue-500 ring-opacity-50';
+                                $borderColor = 'border-blue-400 ring-2 ring-blue-400 ring-opacity-40';
                             }
                         @endphp
 
@@ -163,21 +201,25 @@
                                         {{ $ngay }}
                                     </span>
                                     @if ($daChamCong && $soCong > 0)
-                                        <span class="text-[8px] {{ $textColor }} opacity-75 leading-none mt-0.5">
+                                        <span class="text-[8px] {{ $textColor }} opacity-80 leading-none mt-0.5 font-medium">
                                             {{ number_format($soCong, 1) }}
                                         </span>
                                     @endif
                                 </div>
                                 @if ($daChamCong)
-                                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-0.5 bg-gray-800 dark:bg-gray-900 text-white text-[9px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
-                                        @if ($trangThai == 'dung_gio') ✅ Đúng giờ
-                                        @elseif ($trangThai == 'di_muon') ⚠️ Đi muộn
-                                        @elseif ($trangThai == 've_som') 🔻 Về sớm
-                                        @elseif ($trangThai == 'den_som') 📈 Đến sớm
-                                        @elseif ($trangThai == 'tang_ca') 🕐 Tăng ca
-                                        @else {{ $trangThai }}
+                                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-800 dark:bg-gray-900 text-white text-[9px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none shadow-lg">
+                                        @if ($soCong >= 1) 
+                                            ✅ Full công ({{ number_format($soCong, 2) }})
+                                        @elseif ($soCong >= 0.5)
+                                            ⚡ Nửa công ({{ number_format($soCong, 2) }})
+                                        @elseif ($soCong > 0)
+                                            📉 Ít công ({{ number_format($soCong, 2) }})
+                                        @else
+                                            ❌ 0 công
                                         @endif
-                                        - {{ number_format($soCong, 2) }} công
+                                        @if ($trangThai)
+                                            - {{ $trangThai == 'dung_gio' ? 'Đúng giờ' : ($trangThai == 'di_muon' ? 'Đi muộn' : ($trangThai == 've_som' ? 'Về sớm' : ($trangThai == 'den_som' ? 'Đến sớm' : ($trangThai == 'tang_ca' ? 'Tăng ca' : $trangThai)))) }}
+                                        @endif
                                     </div>
                                 @endif
                             </div>
@@ -188,14 +230,18 @@
         </div>
 
         <!-- Thống kê -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div class="bg-white dark:bg-gray-800 rounded-xl border p-4 shadow-sm">
                 <p class="text-sm text-gray-500 dark:text-gray-400">Tổng ngày</p>
                 <p class="text-2xl font-bold">{{ $thongKe['tong_ngay'] ?? 0 }}</p>
             </div>
             <div class="bg-white dark:bg-gray-800 rounded-xl border border-green-200 p-4 shadow-sm">
-                <p class="text-sm text-green-600">Đúng giờ</p>
-                <p class="text-2xl font-bold text-green-600">{{ $thongKe['dung_gio'] ?? 0 }}</p>
+                <p class="text-sm text-green-600">Full công</p>
+                <p class="text-2xl font-bold text-green-600">{{ $thongKe['full_cong'] ?? 0 }}</p>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-teal-200 p-4 shadow-sm">
+                <p class="text-sm text-teal-600">Nửa công</p>
+                <p class="text-2xl font-bold text-teal-600">{{ $thongKe['nua_cong'] ?? 0 }}</p>
             </div>
             <div class="bg-white dark:bg-gray-800 rounded-xl border border-yellow-200 p-4 shadow-sm">
                 <p class="text-sm text-yellow-600">Đi muộn</p>
@@ -227,6 +273,7 @@
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Check-in</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Check-out</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Công</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Loại</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tăng ca</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lý do</th>
@@ -234,6 +281,23 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700/50">
                         @forelse($lichSu as $index => $item)
+                            @php
+                                $soCong = floatval($item->so_cong ?? 0);
+                                // Xác định loại công
+                                if ($soCong >= 1) {
+                                    $loaiCong = 'Full công';
+                                    $loaiColor = 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300';
+                                } elseif ($soCong >= 0.5) {
+                                    $loaiCong = 'Nửa công';
+                                    $loaiColor = 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300';
+                                } elseif ($soCong > 0) {
+                                    $loaiCong = 'Ít công';
+                                    $loaiColor = 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300';
+                                } else {
+                                    $loaiCong = '0 công';
+                                    $loaiColor = 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
+                                }
+                            @endphp
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
                                 <td class="px-4 py-3 text-gray-500">{{ $lichSu->firstItem() + $index }}</td>
                                 <td class="px-4 py-3 font-medium">{{ $item->ngay_cham_cong_format }}</td>
@@ -244,7 +308,14 @@
                                 </td>
                                 <td class="px-4 py-3">{{ $item->gio_vao_format }}</td>
                                 <td class="px-4 py-3">{{ $item->gio_ra_format }}</td>
-                                <td class="px-4 py-3 text-center font-medium text-blue-600">{{ number_format($item->so_cong ?? 0, 2) }}</td>
+                                <td class="px-4 py-3 text-center font-bold {{ $soCong >= 1 ? 'text-green-600' : ($soCong >= 0.5 ? 'text-teal-600' : ($soCong > 0 ? 'text-pink-600' : 'text-red-500')) }}">
+                                    {{ number_format($soCong, 2) }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-1 rounded-full text-[10px] font-medium {{ $loaiColor }}">
+                                        {{ $loaiCong }}
+                                    </span>
+                                </td>
                                 <td class="px-4 py-3 text-center font-medium text-purple-600">{{ number_format($item->gio_tang_ca ?? 0, 1) }}h</td>
                                 <td class="px-4 py-3">
                                     @include('employee.cham-cong.partials.status-badge', ['status' => $item->trang_thai])
@@ -255,7 +326,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="px-4 py-12 text-center text-gray-500">
+                                <td colspan="10" class="px-4 py-12 text-center text-gray-500">
                                     <i class="fas fa-calendar-times text-4xl mb-3 text-gray-300"></i>
                                     <p class="font-medium">Không có dữ liệu chấm công</p>
                                 </td>
