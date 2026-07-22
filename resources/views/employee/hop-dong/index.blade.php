@@ -260,8 +260,6 @@
                         </div>
                         <div class="p-4 text-center">
                             @php
-                                // Lấy thông tin ảnh đại diện
-                                // Vì $hopDong là stdClass, lấy nguoi_dung_id để query hồ sơ
                                 $nguoiDungId = $hopDong->nguoi_dung_id ?? null;
                                 $hoSo = null;
                                 $anhDaiDien = null;
@@ -269,7 +267,6 @@
                                 $avatarUrl = null;
 
                                 if ($nguoiDungId) {
-                                    // Lấy hồ sơ từ database
                                     $hoSo = \App\Models\HoSoNguoiDung::where('nguoi_dung_id', $nguoiDungId)->first();
                                     if ($hoSo && $hoSo->anh_dai_dien) {
                                         $anhDaiDien = $hoSo->anh_dai_dien;
@@ -278,17 +275,12 @@
                                     }
                                 }
 
-                                // Lấy tên nhân viên
                                 $tenNhanVien = $hopDong->nhan_vien_ho_ten ?? ($hopDong->ten_dang_nhap ?? 'Nhân viên');
-
-                                // Lấy chữ cái đầu cho avatar fallback
                                 $words = explode(' ', trim($tenNhanVien));
                                 $lastWord = end($words);
                                 $initial = !empty($lastWord)
                                     ? mb_substr($lastWord, 0, 1)
                                     : mb_substr($tenNhanVien, 0, 2);
-
-                                // Lấy mã nhân viên
                                 $maNV = $hoSo ? $hoSo->ma_nhan_vien : $hopDong->nhan_vien_ma_nv ?? '---';
                             @endphp
 
@@ -346,7 +338,8 @@
                                         'hieu_luc',
                                         'het_han',
                                     ]) &&
-                                    ($hopDong->trang_thai_hop_dong ?? '') != 'huy_bo';
+                                    ($hopDong->trang_thai_hop_dong ?? '') != 'huy_bo' &&
+                                    ($hopDong->trang_thai_duyet ?? '') == 'da_duyet';
                             @endphp
 
                             @if (($hopDong->trang_thai_ky ?? '') == 'da_ky')
@@ -364,15 +357,27 @@
                                         </a>
                                     @endif
                                 </div>
+
                             @elseif (($hopDong->trang_thai_hop_dong ?? '') == 'huy_bo' || ($hopDong->trang_thai_ky ?? '') == 'tu_choi_ky')
-                                <div
-                                    class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 text-center">
-                                    <i class="fas fa-times-circle text-2xl text-red-500 dark:text-red-400 block mb-1"></i>
-                                    <p class="text-sm font-semibold text-red-700 dark:text-red-300">❌ Hợp đồng đã bị hủy
-                                        hoặc từ chối</p>
-                                    <p class="text-xs text-red-600 dark:text-red-400">Vui lòng liên hệ HR để được hỗ
-                                        trợ</p>
+                                {{-- 🔥 TỪ CHỐI KÝ HOẶC HỦY BỎ --}}
+                                <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                                    <div class="flex items-start gap-3">
+                                        <i class="fas fa-times-circle text-2xl text-red-500 dark:text-red-400 mt-0.5"></i>
+                                        <div class="text-left">
+                                            <p class="text-sm font-semibold text-red-700 dark:text-red-300">❌ Bạn đã từ chối ký hợp đồng</p>
+                                            @if (!empty($hopDong->ghi_chu))
+                                                <p class="text-sm text-red-600 dark:text-red-400 mt-1">
+                                                    <span class="font-medium">Lý do:</span>
+                                                    {{ str_replace('Từ chối ký: ', '', $hopDong->ghi_chu) }}
+                                                </p>
+                                            @endif
+                                            <p class="text-xs text-red-500 dark:text-red-400 mt-2">
+                                                💡 Vui lòng liên hệ bộ phận Nhân sự để được hỗ trợ.
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
+
                             @elseif ($canSign)
                                 <div class="space-y-3">
                                     <div
@@ -445,7 +450,8 @@
                                         </form>
                                     </div>
                                 </div>
-                            @elseif (($hopDong->trang_thai_hop_dong ?? '') == 'tao_moi')
+
+                            @elseif (($hopDong->trang_thai_hop_dong ?? '') == 'tao_moi' || ($hopDong->trang_thai_duyet ?? '') == 'cho_duyet')
                                 <div
                                     class="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-600 text-center">
                                     <i class="fas fa-clock text-2xl text-gray-400 block mb-1"></i>
@@ -453,6 +459,7 @@
                                         HR gửi</p>
                                     <p class="text-xs text-gray-400">Vui lòng đợi HR gửi hợp đồng để ký</p>
                                 </div>
+
                             @else
                                 <div
                                     class="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 text-center">
@@ -494,14 +501,12 @@
                 return false;
             }
 
-            // Check file size (max 5MB)
             if (file.size > 5 * 1024 * 1024) {
                 e.preventDefault();
                 alert('⚠️ File quá lớn! Vui lòng chọn file dưới 5MB.');
                 return false;
             }
 
-            // Check file type
             const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf', 'application/msword',
                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
             ];

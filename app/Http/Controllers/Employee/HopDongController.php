@@ -3,13 +3,21 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
+use App\Mail\HopDongDaKyHrMail;
+use App\Models\HopDongLaoDong;
+use App\Models\NguoiDung;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class HopDongController extends Controller
 {
+    /**
+     * Lấy hợp đồng của tôi
+     */
     public function getHopDongCuaToi()
     {
         $userId = Auth::id();
@@ -21,8 +29,13 @@ class HopDongController extends Controller
             ->leftJoin('phong_ban', 'chuc_vu.phong_ban_id', '=', 'phong_ban.id')
             ->leftJoin('nguoi_dung as nguoi_ky', 'hop_dong_lao_dong.nguoi_ky_id', '=', 'nguoi_ky.id')
             ->leftJoin('ho_so_nguoi_dung as ho_so_nguoi_ky', 'nguoi_ky.id', '=', 'ho_so_nguoi_ky.nguoi_dung_id')
+            ->leftJoin('nguoi_dung as nguoi_duyet', 'hop_dong_lao_dong.nguoi_duyet_id', '=', 'nguoi_duyet.id')
+            ->leftJoin('ho_so_nguoi_dung as ho_so_nguoi_duyet', 'nguoi_duyet.id', '=', 'ho_so_nguoi_duyet.nguoi_dung_id')
             ->where('hop_dong_lao_dong.nguoi_dung_id', $userId)
-            // ✅ THÊM: Lấy hợp đồng đang chờ ký hoặc hiệu lực
+            // 🔥 QUAN TRỌNG: CHỈ LẤY HỢP ĐỒNG ĐÃ GỬI
+            ->whereNotNull('hop_dong_lao_dong.thoi_gian_gui')  // 🔥 THÊM DÒNG NÀY
+            ->where('hop_dong_lao_dong.trang_thai_duyet', 'da_duyet')
+            ->whereIn('hop_dong_lao_dong.trang_thai_ky', ['cho_ky', 'da_ky'])
             ->whereIn('hop_dong_lao_dong.trang_thai_hop_dong', ['chua_hieu_luc', 'hieu_luc', 'het_han'])
             ->select(
                 'hop_dong_lao_dong.*',
@@ -32,12 +45,14 @@ class HopDongController extends Controller
                 'phong_ban.ten_phong_ban as ten_phong_ban',
                 DB::raw("CONCAT(ho_so_nguoi_dung.ho, ' ', ho_so_nguoi_dung.ten) as nhan_vien_ho_ten"),
                 DB::raw("CONCAT(ho_so_nguoi_ky.ho, ' ', ho_so_nguoi_ky.ten) as nguoi_ky_ho_ten"),
-                'nguoi_ky.ten_dang_nhap as nguoi_ky_username'
+                DB::raw("CONCAT(ho_so_nguoi_duyet.ho, ' ', ho_so_nguoi_duyet.ten) as nguoi_duyet_ho_ten"),
+                'nguoi_ky.ten_dang_nhap as nguoi_ky_username',
+                'nguoi_duyet.ten_dang_nhap as nguoi_duyet_username'
             )
             ->orderBy('hop_dong_lao_dong.created_at', 'desc')
             ->first();
 
-        // Nếu không có hợp đồng nào, lấy tất cả hợp đồng của nhân viên
+        // Nếu không có hợp đồng nào đã gửi
         if (!$hopDong) {
             $hopDong = DB::table('hop_dong_lao_dong')
                 ->join('nguoi_dung', 'hop_dong_lao_dong.nguoi_dung_id', '=', 'nguoi_dung.id')
@@ -46,7 +61,13 @@ class HopDongController extends Controller
                 ->leftJoin('phong_ban', 'chuc_vu.phong_ban_id', '=', 'phong_ban.id')
                 ->leftJoin('nguoi_dung as nguoi_ky', 'hop_dong_lao_dong.nguoi_ky_id', '=', 'nguoi_ky.id')
                 ->leftJoin('ho_so_nguoi_dung as ho_so_nguoi_ky', 'nguoi_ky.id', '=', 'ho_so_nguoi_ky.nguoi_dung_id')
+                ->leftJoin('nguoi_dung as nguoi_duyet', 'hop_dong_lao_dong.nguoi_duyet_id', '=', 'nguoi_duyet.id')
+                ->leftJoin('ho_so_nguoi_dung as ho_so_nguoi_duyet', 'nguoi_duyet.id', '=', 'ho_so_nguoi_duyet.nguoi_dung_id')
                 ->where('hop_dong_lao_dong.nguoi_dung_id', $userId)
+                ->whereNotNull('hop_dong_lao_dong.thoi_gian_gui')
+                ->where('hop_dong_lao_dong.trang_thai_duyet', 'da_duyet')
+                ->whereIn('hop_dong_lao_dong.trang_thai_ky', ['cho_ky', 'da_ky'])
+                ->whereIn('hop_dong_lao_dong.trang_thai_hop_dong', ['chua_hieu_luc', 'hieu_luc', 'het_han'])
                 ->select(
                     'hop_dong_lao_dong.*',
                     'nguoi_dung.ten_dang_nhap',
@@ -55,10 +76,21 @@ class HopDongController extends Controller
                     'phong_ban.ten_phong_ban as ten_phong_ban',
                     DB::raw("CONCAT(ho_so_nguoi_dung.ho, ' ', ho_so_nguoi_dung.ten) as nhan_vien_ho_ten"),
                     DB::raw("CONCAT(ho_so_nguoi_ky.ho, ' ', ho_so_nguoi_ky.ten) as nguoi_ky_ho_ten"),
-                    'nguoi_ky.ten_dang_nhap as nguoi_ky_username'
+                    DB::raw("CONCAT(ho_so_nguoi_duyet.ho, ' ', ho_so_nguoi_duyet.ten) as nguoi_duyet_ho_ten"),
+                    'nguoi_ky.ten_dang_nhap as nguoi_ky_username',
+                    'nguoi_duyet.ten_dang_nhap as nguoi_duyet_username'
                 )
                 ->orderBy('hop_dong_lao_dong.created_at', 'desc')
                 ->first();
+        }
+
+        // Nếu vẫn không có, trả về null
+        if (!$hopDong) {
+            return view('employee.hop-dong.index', [
+                'hopDong' => null,
+                'dsPhuCap' => collect(),
+                'lichSuHopDong' => collect()
+            ]);
         }
 
         // Lấy phụ cấp
@@ -85,9 +117,12 @@ class HopDongController extends Controller
             }
         }
 
-        // ✅ Lấy danh sách hợp đồng của nhân viên (để hiển thị lịch sử)
+        // Lấy danh sách hợp đồng của nhân viên (lịch sử)
         $lichSuHopDong = DB::table('hop_dong_lao_dong')
             ->where('nguoi_dung_id', $userId)
+            ->where('trang_thai_duyet', 'da_duyet')
+            ->whereIn('trang_thai_ky', ['cho_ky', 'da_ky'])
+            ->whereNotNull('thoi_gian_gui')  // 🔥 THÊM DÒNG NÀY
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
@@ -120,14 +155,19 @@ class HopDongController extends Controller
             return redirect()->back()->with('error', '❌ Không tìm thấy thông tin hợp đồng hợp lệ.');
         }
 
-        // ⚠️ Kiểm tra hợp đồng đã ký chưa
+        // Kiểm tra hợp đồng đã ký chưa
         if ($hopDongHienTai->trang_thai_ky == 'da_ky') {
             return redirect()->back()->with('error', '⚠️ Hợp đồng này đã được ký rồi.');
         }
 
-        // ⚠️ Kiểm tra hợp đồng đã bị hủy hoặc từ chối chưa
+        // Kiểm tra hợp đồng đã bị hủy hoặc từ chối chưa
         if ($hopDongHienTai->trang_thai_hop_dong == 'huy_bo' || $hopDongHienTai->trang_thai_ky == 'tu_choi_ky') {
             return redirect()->back()->with('error', '❌ Hợp đồng đã bị hủy hoặc từ chối ký.');
+        }
+
+        // 🔥 KIỂM TRA: Hợp đồng đã được duyệt chưa
+        if ($hopDongHienTai->trang_thai_duyet != 'da_duyet') {
+            return redirect()->back()->with('error', '❌ Hợp đồng chưa được Giám đốc duyệt. Vui lòng đợi HR gửi hợp đồng.');
         }
 
         if ($request->hasFile('file_hop_dong_da_ky')) {
@@ -146,31 +186,52 @@ class HopDongController extends Controller
                     'trang_thai_ky' => 'da_ky',
                     'trang_thai_hop_dong' => 'hieu_luc',
                     'thoi_gian_ky' => now(),
-                    'nguoi_ky_id' => $userId, // ✅ Lưu người ký
+                    'nguoi_ky_id' => $userId,
                     'updated_at' => now()
                 ]);
 
             if ($updated) {
-                // ⭐ Gửi thông báo cho HR/Admin
-                try {
-                    $hrUsers = DB::table('nguoi_dung')
-                        ->join('nguoi_dung_vai_tro', 'nguoi_dung.id', '=', 'nguoi_dung_vai_tro.nguoi_dung_id')
-                        ->join('vai_tro', 'nguoi_dung_vai_tro.vai_tro_id', '=', 'vai_tro.id')
-                        ->whereIn('vai_tro.name', ['admin', 'hr'])
-                        ->select('nguoi_dung.*')
-                        ->get();
+                // 🔥 Lấy thông tin hợp đồng đã cập nhật
+                $hopDongModel = HopDongLaoDong::with(['nguoiDung', 'hoSoNguoiDung'])->find($id);
 
-                    // TODO: Gửi notification cho HR/Admin
-                    // if (class_exists(\App\Notifications\HopDongSignedNotification::class)) {
-                    //     foreach ($hrUsers as $hr) {
-                    //         $user = \App\Models\NguoiDung::find($hr->id);
-                    //         if ($user) {
-                    //             $user->notify(new \App\Notifications\HopDongSignedNotification($hopDongHienTai));
-                    //         }
-                    //     }
-                    // }
+                // 🔥 GỬI EMAIL XÁC NHẬN CHO NHÂN VIÊN
+                if ($hopDongModel && $hopDongModel->nguoiDung && $hopDongModel->nguoiDung->email) {
+                    try {
+                        Mail::to($hopDongModel->nguoiDung->email)->send(new HopDongDaKyHrMail($hopDongModel));
+                        Log::info('Đã gửi email xác nhận ký hợp đồng cho nhân viên: ' . $hopDongModel->nguoiDung->email);
+                    } catch (\Exception $e) {
+                        Log::error('Gửi email xác nhận ký hợp đồng cho nhân viên thất bại: ' . $e->getMessage());
+                    }
+                }
+
+                // 🔥 GỬI EMAIL THÔNG BÁO CHO HR/ADMIN
+                try {
+                    $hrUsers = NguoiDung::whereHas('vaiTros', function ($q) {
+                        $q->whereIn('name', ['admin', 'hr']);
+                    })->get();
+
+                    foreach ($hrUsers as $hr) {
+                        if ($hr->email) {
+                            Mail::to($hr->email)->send(new HopDongDaKyHrMail($hopDongModel));
+                        }
+                    }
+                    Log::info('Đã gửi email thông báo HR về hợp đồng đã ký');
                 } catch (\Exception $e) {
-                    // Bỏ qua lỗi notification
+                    Log::error('Gửi email thông báo HR về hợp đồng đã ký thất bại: ' . $e->getMessage());
+                }
+
+                // 🔥 GỬI THÔNG BÁO TRONG HỆ THỐNG CHO HR/ADMIN
+                try {
+                    if (class_exists('\App\Notifications\HopDongDaKyNotification')) {
+                        $hrUsers = NguoiDung::whereHas('vaiTros', function ($q) {
+                            $q->whereIn('name', ['admin', 'hr']);
+                        })->get();
+                        foreach ($hrUsers as $hr) {
+                            $hr->notify(new \App\Notifications\HopDongDaKyNotification($hopDongModel));
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Gửi thông báo hợp đồng đã ký thất bại: ' . $e->getMessage());
                 }
 
                 return redirect()->back()->with('success', '✅ Gửi file bản scan hợp đồng đã ký thành công! Hợp đồng đã có hiệu lực.');
@@ -181,7 +242,7 @@ class HopDongController extends Controller
     }
 
     /**
-     * ✅ THÊM: Xem chi tiết hợp đồng
+     * Xem chi tiết hợp đồng
      */
     public function chiTietHopDong($id)
     {
@@ -192,6 +253,7 @@ class HopDongController extends Controller
             ->leftJoin('ho_so_nguoi_dung', 'nguoi_dung.id', '=', 'ho_so_nguoi_dung.nguoi_dung_id')
             ->leftJoin('chuc_vu', 'hop_dong_lao_dong.chuc_vu_id', '=', 'chuc_vu.id')
             ->leftJoin('phong_ban', 'chuc_vu.phong_ban_id', '=', 'phong_ban.id')
+            ->leftJoin('nguoi_dung as nguoi_duyet', 'hop_dong_lao_dong.nguoi_duyet_id', '=', 'nguoi_duyet.id')
             ->where('hop_dong_lao_dong.id', $id)
             ->where('hop_dong_lao_dong.nguoi_dung_id', $userId)
             ->select(
@@ -200,12 +262,13 @@ class HopDongController extends Controller
                 'ho_so_nguoi_dung.ma_nhan_vien as nhan_vien_ma_nv',
                 'chuc_vu.ten as ten_chuc_vu',
                 'phong_ban.ten_phong_ban as ten_phong_ban',
-                DB::raw("CONCAT(ho_so_nguoi_dung.ho, ' ', ho_so_nguoi_dung.ten) as nhan_vien_ho_ten")
+                DB::raw("CONCAT(ho_so_nguoi_dung.ho, ' ', ho_so_nguoi_dung.ten) as nhan_vien_ho_ten"),
+                'nguoi_duyet.ten_dang_nhap as nguoi_duyet_username'
             )
             ->first();
 
         if (!$hopDong) {
-            return redirect()->route('employee.hopdong.index')->with('error', 'Không tìm thấy hợp đồng.');
+            return redirect()->route('employee.hop-dong.index')->with('error', 'Không tìm thấy hợp đồng.');
         }
 
         return view('employee.hop-dong.chi-tiet', compact('hopDong'));
@@ -235,14 +298,33 @@ class HopDongController extends Controller
             return redirect()->back()->with('error', 'Hợp đồng này đã được ký rồi.');
         }
 
+        // 🔥 CẬP NHẬT ĐẦY ĐỦ THÔNG TIN
         DB::table('hop_dong_lao_dong')
             ->where('id', $id)
             ->update([
                 'trang_thai_ky' => 'tu_choi_ky',
                 'trang_thai_hop_dong' => 'huy_bo',
                 'ghi_chu' => 'Từ chối ký: ' . $request->ly_do_tu_choi,
+                'nguoi_huy_id' => $userId,        // 🔥 LƯU NGƯỜI HỦY (CHÍNH LÀ NHÂN VIÊN)
+                'thoi_gian_huy' => now(),         // 🔥 LƯU THỜI GIAN HỦY
                 'updated_at' => now()
             ]);
+
+        // Gửi thông báo cho HR/Admin
+        try {
+            if (class_exists('\App\Notifications\HopDongTuChoiKyNotification')) {
+                $hrUsers = NguoiDung::whereHas('vaiTros', function ($q) {
+                    $q->whereIn('name', ['admin', 'hr']);
+                })->get();
+
+                $hopDongModel = HopDongLaoDong::with(['nguoiDung', 'hoSoNguoiDung'])->find($id);
+                foreach ($hrUsers as $hr) {
+                    $hr->notify(new \App\Notifications\HopDongTuChoiKyNotification($hopDongModel));
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Gửi thông báo từ chối ký thất bại: ' . $e->getMessage());
+        }
 
         return redirect()->back()->with('success', '✅ Đã từ chối ký hợp đồng.');
     }

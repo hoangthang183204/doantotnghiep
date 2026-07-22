@@ -17,6 +17,7 @@ class LichSuTaiKy extends Model
         'hop_dong_moi_id',
         'nguoi_thuc_hien_id',
         'ly_do_tai_ky',
+        'loai'
     ];
 
     public function hopDongCu()
