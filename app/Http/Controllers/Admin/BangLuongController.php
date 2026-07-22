@@ -107,6 +107,7 @@ class BangLuongController extends Controller
             'nguoiDung.phong_ban',
             'phuCapLuongs.phuCap',
             'khauTruLuongs',
+            'khauTrus',
         ])->where('bang_luong_id', $id)->findOrFail($luongId);
 
         return view('admin.bang-luong.chi-tiet-nhan-vien', compact('bangLuong', 'luong'));
@@ -250,6 +251,7 @@ public function export($id)
             'nguoiDung.chuc_vu',
             'phuCapLuongs.phuCap',
             'khauTruLuongs',
+            'khauTrus',
         ])->where('bang_luong_id', $id)->findOrFail($luongId);
 
         $hoTen = trim(($luong->nguoiDung->ho_so->ho ?? '') . ' ' . ($luong->nguoiDung->ho_so->ten ?? ''))

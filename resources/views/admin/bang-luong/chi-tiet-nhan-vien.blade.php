@@ -7,6 +7,7 @@
     $hoTen = trim(($nv->ho_so->ho ?? '') . ' ' . ($nv->ho_so->ten ?? '')) ?: $nv->ten_dang_nhap;
     $ngayHuongLuong = (float) $luong->so_ngay_cong + (float) $luong->ngay_nghi_phep;
     $heSoTC = \App\Services\TinhLuongService::HE_SO_TANG_CA;
+    $dienGiai = $luong->dienGiai();
     // hiển thị số gọn (bỏ .00 thừa)
     $fmtNgay = fn($v) => rtrim(rtrim(number_format((float)$v, 2), '0'), '.');
 @endphp
@@ -160,23 +161,28 @@
                 </div>
             </div>
 
-            {{-- B7: Khấu trừ --}}
+            {{-- B7: Khấu trừ (tóm tắt — chi tiết xem khối "Diễn giải các khoản khấu trừ" bên dưới) --}}
             <div class="px-5 py-4">
                 <div class="flex justify-between items-start gap-4">
                     <div class="flex-1">
                         <p class="font-medium text-gray-900 dark:text-white">⑤ Các khoản khấu trừ</p>
-                        @if($luong->khauTruLuongs->isEmpty())
-                            <p class="text-sm text-gray-400 mt-1">Không có khấu trừ</p>
-                        @else
-                            <ul class="mt-2 space-y-1">
-                                @foreach($luong->khauTruLuongs as $kt)
-                                <li class="text-sm text-gray-600 dark:text-slate-300 flex justify-between max-w-md">
-                                    <span>• {{ $kt->ten_loai }}</span>
-                                    <span class="font-medium text-red-500">-{{ number_format($kt->so_tien) }} đ</span>
-                                </li>
-                                @endforeach
-                            </ul>
-                        @endif
+                        <ul class="mt-2 space-y-1">
+                            <li class="text-sm text-gray-600 dark:text-slate-300 flex justify-between max-w-md">
+                                <span>• Bảo hiểm bắt buộc (BHXH 8% + BHYT 1.5% + BHTN 1% trên lương cơ bản)</span>
+                                <span class="font-medium text-red-500 whitespace-nowrap ml-4">-{{ number_format($dienGiai['tong_bao_hiem']) }} đ</span>
+                            </li>
+                            <li class="text-sm text-gray-600 dark:text-slate-300 flex justify-between max-w-md">
+                                <span>• Thuế TNCN (sau giảm trừ gia cảnh {{ number_format($dienGiai['giam_tru_gia_canh']) }} đ)</span>
+                                <span class="font-medium text-red-500 whitespace-nowrap ml-4">-{{ number_format($dienGiai['thue_tncn']) }} đ</span>
+                            </li>
+                            <li class="text-sm text-gray-600 dark:text-slate-300 flex justify-between max-w-md">
+                                <span>• Khấu trừ khác (tạm ứng, phạt, bồi thường...)</span>
+                                <span class="font-medium text-red-500 whitespace-nowrap ml-4">-{{ number_format($dienGiai['tong_khau_tru_khac']) }} đ</span>
+                            </li>
+                        </ul>
+                        <p class="text-xs text-gray-400 mt-2">
+                            <i class="fa-solid fa-arrow-down mr-1"></i>Xem diễn giải đầy đủ "trừ gì – trừ trên căn cứ nào" ở khối bên dưới.
+                        </p>
                     </div>
                     <p class="text-lg font-bold text-red-500 whitespace-nowrap">-{{ number_format($luong->tong_khau_tru) }} đ</p>
                 </div>
@@ -196,11 +202,15 @@
         </div>
     </div>
 
+    {{-- DIỄN GIẢI CHI TIẾT PHẦN KHẤU TRỪ --}}
+    @include('partials.dien-giai-khau-tru', ['luong' => $luong])
+
     <p class="text-xs text-gray-400">
-        * BHXH 8% + BHYT 1.5% + BHTN 1% tính trên lương cơ bản. Thuế TNCN tính theo biểu lũy tiến 5 bậc
-        (Luật Thuế TNCN 2025, áp dụng từ 2026) với giảm trừ gia cảnh bản thân
-        {{ number_format(\App\Services\TinhLuongService::GIAM_TRU_BAN_THAN) }} đ/tháng
-        và {{ number_format(\App\Services\TinhLuongService::GIAM_TRU_NGUOI_PHU_THUOC) }} đ/tháng cho mỗi người phụ thuộc.
+        * Căn cứ pháp lý: bảo hiểm bắt buộc theo Luật BHXH (NLĐ đóng BHXH 8% + BHYT 1.5% + BHTN 1% trên tiền lương
+        làm căn cứ đóng). Thuế TNCN theo biểu luỹ tiến từng phần 5 bậc (Luật Thuế TNCN 2025, áp dụng từ kỳ tính thuế 2026);
+        giảm trừ gia cảnh theo NQ 110/2025/UBTVQH15: bản thân
+        {{ number_format(\App\Services\TinhLuongService::GIAM_TRU_BAN_THAN) }} đ/tháng,
+        mỗi người phụ thuộc {{ number_format(\App\Services\TinhLuongService::GIAM_TRU_NGUOI_PHU_THUOC) }} đ/tháng.
         Trạng thái bảng lương: <span class="font-medium">{{ $bangLuong->trang_thai_text }}</span>.
     </p>
 

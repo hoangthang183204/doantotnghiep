@@ -58,5 +58,6 @@ class DatabaseSeeder extends Seeder
         $this->call(LuongDemoSeeder::class);    // bảng lương tháng - tính bằng engine TinhLuongService
 
         $this->call(QuyenSeeder::class);
+        $this->call( NguoiPhuThuocSeeder::class,);
     }
 }
