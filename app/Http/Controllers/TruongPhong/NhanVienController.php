@@ -8,6 +8,7 @@ use App\Models\NguoiDung;
 use App\Models\PhongBan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\DonXinVeSom;
 
 class NhanVienController extends Controller
 {
@@ -15,18 +16,18 @@ class NhanVienController extends Controller
     {
         $user = Auth::user();
         $phongBanId = $this->getPhongBanId($user);
-        
+
         if (!$phongBanId) {
             return redirect()->back()->with('error', 'Bạn chưa được phân công phòng ban.');
         }
-        
+
         $phongBan = PhongBan::find($phongBanId);
-        
+
         $query = NguoiDung::with(['hoSo', 'chucVu'])
             ->where('phong_ban_id', $phongBanId)
             ->where('trang_thai', 1)
             ->where('id', '!=', $user->id);
-        
+
         if ($request->filled('keyword')) {
             $keyword = $request->keyword;
             $query->where(function ($q) use ($keyword) {
@@ -40,9 +41,9 @@ class NhanVienController extends Controller
                     });
             });
         }
-        
+
         $nhanViens = $query->orderBy('id')->paginate(15);
-        
+
         return view('truong-phong.nhan-vien.index', compact('nhanViens', 'phongBan'));
     }
 
@@ -50,7 +51,7 @@ class NhanVienController extends Controller
     {
         $userCurrent = Auth::user();
         $phongBanId = $this->getPhongBanId($userCurrent);
-        
+
         if (!$phongBanId) {
             return redirect()->back()->with('error', 'Bạn chưa được phân công phòng ban.');
         }
@@ -62,9 +63,9 @@ class NhanVienController extends Controller
             'chuc_vu',
             'vai_tro',
         ])
-        ->where('phong_ban_id', $phongBanId)
-        ->where('id', $id)
-        ->firstOrFail();
+            ->where('phong_ban_id', $phongBanId)
+            ->where('id', $id)
+            ->firstOrFail();
 
         // LẤY HỒ SƠ CHÍNH
         $hoSoNguoiDung = $user->hoSo;
@@ -177,6 +178,7 @@ class NhanVienController extends Controller
             }
         }
 
+
         // ⭐ LẤY LỊCH SỬ NGHỈ PHÉP (5 đơn/trang)
         $lichSuNghiPhep = \App\Models\DonXinNghi::where('nguoi_dung_id', $user->id)
             ->with(['loaiNghiPhep', 'nguoiDuyet.hoSo'])
@@ -191,6 +193,13 @@ class NhanVienController extends Controller
             ->paginate(5, ['*'], 'tang_ca_page')
             ->appends($request->query());
 
+        // ⭐ LẤY LỊCH SỬ ĐƠN XIN VỀ SỚM (5 đơn/trang) - BỔ SUNG ĐỘNG
+        $lichSuVeSom = DonXinVeSom::where('nguoi_dung_id', $user->id)
+            ->with(['nguoiDuyet.hoSo', 'chamCong']) // <-- Thêm 'chamCong' vào đây
+            ->orderBy('created_at', 'desc')
+            ->paginate(5, ['*'], 've_som_page')
+            ->appends($request->query());
+
         // ⭐ THỐNG KÊ ĐƠN TỪ
         $thongKeDonTu = [
             'tong_don_nghi' => \App\Models\DonXinNghi::where('nguoi_dung_id', $user->id)->count(),
@@ -199,7 +208,7 @@ class NhanVienController extends Controller
             'don_nghi_tu_choi' => \App\Models\DonXinNghi::where('nguoi_dung_id', $user->id)->where('trang_thai', 'tu_choi')->count(),
 
             'tong_tang_ca' => \App\Models\DangKyTangCa::where('nguoi_dung_id', $user->id)->count(),
-            'tong_ve_som' => 0, // Fix cứng số lượng về sớm là 0
+            'tong_ve_som' => DonXinVeSom::where('nguoi_dung_id', $user->id)->count(), // Đã sửa từ fix 0 thành động
         ];
 
         // ⭐ LẤY SỐ DƯ PHÉP
@@ -230,6 +239,7 @@ class NhanVienController extends Controller
             'phuCapChiTiets',
             'lichSuNghiPhep',
             'lichSuTangCa',
+            'lichSuVeSom', // <-- Đã bổ sung biến này vào compact
             'thongKeDonTu',
             'soDuPhep'
         ));
