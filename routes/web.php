@@ -446,6 +446,26 @@ Route::prefix('admin')
             Route::get('/get-nhan-vien-info/{id}', [HopDongLaoDongController::class, 'getNhanVienInfo'])->name('get-nhan-vien-info');
             Route::post('/tai-ky/{id}', [HopDongLaoDongController::class, 'taiKy'])->name('tai-ky')->middleware('CheckPermission:contract.sign');
             Route::post('/an-khoi-danh-sach', [HopDongLaoDongController::class, 'anKhoiDanhSach'])->name('an-khoi-danh-sach');
+
+
+            Route::post('/{id}/duyet', [HopDongLaoDongController::class, 'duyet'])->name('duyet')->middleware('CheckPermission:contract.sign');
+            Route::post('/{id}/tu-choi-duyet', [HopDongLaoDongController::class, 'tuChoiDuyet'])->name('tu-choi-duyet')->middleware('CheckPermission:contract.sign');
+
+            // Route gửi cho nhân viên (HR thực hiện) - THAY THẾ pheDuyetHopDong cũ
+            Route::post('/{id}/gui-ky', [HopDongLaoDongController::class, 'guiKy'])->name('gui-ky')->middleware('CheckPermission:contract.sign');
+
+            Route::get('/{id}', [HopDongLaoDongController::class, 'show'])->name('show');
+            Route::get('/{id}/sua', [HopDongLaoDongController::class, 'edit'])->name('edit')->middleware('CheckPermission:contract.edit');
+            Route::put('/{id}', [HopDongLaoDongController::class, 'update'])->name('update')->middleware('CheckPermission:contract.edit');
+            Route::delete('/{id}', [HopDongLaoDongController::class, 'destroy'])->name('destroy')->middleware('CheckPermission:contract.delete');
+
+            Route::post('/{id}/huy', [HopDongLaoDongController::class, 'huy'])->name('huy')->middleware('CheckPermission:contract.edit');
+            Route::get('/get-nhan-vien-info/{id}', [HopDongLaoDongController::class, 'getNhanVienInfo'])->name('get-nhan-vien-info');
+            Route::post('/tai-ky/{id}', [HopDongLaoDongController::class, 'taiKy'])->name('tai-ky')->middleware('CheckPermission:contract.sign');
+            Route::post('/an-khoi-danh-sach', [HopDongLaoDongController::class, 'anKhoiDanhSach'])->name('an-khoi-danh-sach');
+
+
+            Route::post('/tao-lai/{id}', [HopDongLaoDongController::class, 'taoLai'])->name('tao-lai')->middleware('CheckPermission:contract.sign');
         });
 
         Route::prefix('tang-luong')->name('tang-luong.')->middleware(['CheckPermission:contract.edit'])->group(function () {
