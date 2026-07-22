@@ -773,6 +773,20 @@
                                     ✕ Xóa
                                 </button>
                             </div>
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Tính giảm trừ từ</label>
+                                <input type="date" name="npt_ngay_bat_dau[]"
+                                    value="{{ $item->ngay_bat_dau ? $item->ngay_bat_dau->format('Y-m-d') : '' }}"
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                                <p class="text-xs text-gray-400 mt-1">Tháng phát sinh nghĩa vụ nuôi dưỡng</p>
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Kết thúc giảm trừ</label>
+                                <input type="date" name="npt_ngay_ket_thuc[]"
+                                    value="{{ $item->ngay_ket_thuc ? $item->ngay_ket_thuc->format('Y-m-d') : '' }}"
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                                <p class="text-xs text-gray-400 mt-1">Bỏ trống nếu vẫn đang giảm trừ</p>
+                            </div>
                         </div>
                     @endforeach
                 @else
@@ -814,6 +828,18 @@
                                 class="text-red-500 hover:text-red-700 px-3 py-2 text-sm font-medium border border-red-300 rounded-lg hover:bg-red-50 transition">
                                 ✕ Xóa
                             </button>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Tính giảm trừ từ</label>
+                            <input type="date" name="npt_ngay_bat_dau[]"
+                                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                            <p class="text-xs text-gray-400 mt-1">Tháng phát sinh nghĩa vụ nuôi dưỡng</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Kết thúc giảm trừ</label>
+                            <input type="date" name="npt_ngay_ket_thuc[]"
+                                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                            <p class="text-xs text-gray-400 mt-1">Bỏ trống nếu vẫn đang giảm trừ</p>
                         </div>
                     </div>
                 @endif
@@ -1464,10 +1490,22 @@
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <input type="hidden" name="npt_id[]" value="">
-                <button type="button" onclick="this.closest('.nguoi-phu-thuoc-row').remove()" 
+                <button type="button" onclick="this.closest('.nguoi-phu-thuoc-row').remove()"
                     class="text-red-500 hover:text-red-700 px-3 py-2 text-sm font-medium border border-red-300 rounded-lg hover:bg-red-50 transition">
                     ✕ Xóa
                 </button>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Tính giảm trừ từ</label>
+                <input type="date" name="npt_ngay_bat_dau[]"
+                    class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                <p class="text-xs text-gray-400 mt-1">Tháng phát sinh nghĩa vụ nuôi dưỡng</p>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Kết thúc giảm trừ</label>
+                <input type="date" name="npt_ngay_ket_thuc[]"
+                    class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                <p class="text-xs text-gray-400 mt-1">Bỏ trống nếu vẫn đang giảm trừ</p>
             </div>
         </div>
     `;

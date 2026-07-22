@@ -170,9 +170,12 @@
     </div>
 </div>
 
-    {{-- CHI TIẾT KHẤU TRỪ --}}
+    {{-- DIỄN GIẢI KHẤU TRỪ: TRỪ GÌ – TRỪ TRÊN CĂN CỨ NÀO – TRỪ NHƯ THẾ NÀO --}}
+    @include('partials.dien-giai-khau-tru', ['luong' => $payroll])
+
+    {{-- BẢNG KHẤU TRỪ THEO TỪNG DÒNG (đối chiếu) --}}
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-        <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Chi tiết khấu trừ</h3>
+        <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Bảng kê các khoản khấu trừ</h3>
         @if($payroll->khauTrus->isEmpty())
             <p class="text-gray-500 dark:text-gray-400">Không có khấu trừ</p>
         @else

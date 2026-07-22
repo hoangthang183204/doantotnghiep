@@ -462,14 +462,21 @@ class HoSoController extends Controller
 
             foreach ($request->npt_ho_ten as $key => $hoTen) {
                 if (!empty($hoTen)) {
+                    // Ngày bắt đầu tính giảm trừ = tháng phát sinh nghĩa vụ nuôi dưỡng.
+                    // Nếu HR không nhập thì lấy ngày sinh (đúng với trường hợp con),
+                    // cuối cùng mới fallback về hôm nay.
+                    $nptBatDau = $request->npt_ngay_bat_dau[$key]
+                        ?? $request->npt_ngay_sinh[$key]
+                        ?? now()->toDateString();
+
                     NguoiPhuThuoc::create([
                         'ho_so_id' => $hoSo->id,
                         'ho_ten' => $hoTen,
                         'ngay_sinh' => $request->npt_ngay_sinh[$key] ?? null,
                         'quan_he' => $request->npt_quan_he[$key] ?? 'con',
                         'ma_so_thue' => $request->npt_ma_so_thue[$key] ?? null,
-                        'ngay_bat_dau' => $request->npt_ngay_sinh[$key] ?? now(),
-                        'ngay_ket_thuc' => null,
+                        'ngay_bat_dau' => $nptBatDau ?: now()->toDateString(),
+                        'ngay_ket_thuc' => ($request->npt_ngay_ket_thuc[$key] ?? null) ?: null,
                         'ghi_chu' => null,
                     ]);
                 }

@@ -44,6 +44,24 @@ class TinhLuongService
      */
     public const GIAM_TRU_NGUOI_PHU_THUOC = 6_200_000;
 
+    /** Tỷ lệ bảo hiểm bắt buộc người lao động đóng (trên lương cơ bản) */
+    public const TY_LE_BHXH = 0.08;
+    public const TY_LE_BHYT = 0.015;
+    public const TY_LE_BHTN = 0.01;
+
+    /**
+     * Biểu thuế luỹ tiến từng phần — 5 BẬC.
+     * Luật Thuế TNCN 2025: rút gọn 7 bậc → 5 bậc, áp dụng từ kỳ tính thuế 2026.
+     * `den` = trần thu nhập tính thuế/tháng của bậc (null = không giới hạn).
+     */
+    public const BAC_THUE = [
+        ['bac' => 1, 'den' => 10_000_000,  'thue_suat' => 0.05],
+        ['bac' => 2, 'den' => 30_000_000,  'thue_suat' => 0.10],
+        ['bac' => 3, 'den' => 60_000_000,  'thue_suat' => 0.20],
+        ['bac' => 4, 'den' => 100_000_000, 'thue_suat' => 0.30],
+        ['bac' => 5, 'den' => null,        'thue_suat' => 0.35],
+    ];
+
     /** Các trạng thái chấm công được tính là "có đi làm" */
     private const TRANG_THAI_CO_MAT = ['dung_gio', 'di_muon', 've_som', 'den_som'];
 
@@ -94,14 +112,15 @@ class TinhLuongService
         $tongLuong = round($luongTheoCong + $tongPhuCap + $tienTangCa, 2);
 
         // --- BƯỚC 7: Khấu trừ (bảo hiểm bắt buộc + thuế TNCN) ---
-        $bhxh = round($luongCoBan * 0.08, 2);
-        $bhyt = round($luongCoBan * 0.015, 2);
-        $bhtn = round($luongCoBan * 0.01, 2);
+        $bhxh = round($luongCoBan * self::TY_LE_BHXH, 2);
+        $bhyt = round($luongCoBan * self::TY_LE_BHYT, 2);
+        $bhtn = round($luongCoBan * self::TY_LE_BHTN, 2);
         $tongBaoHiem = round($bhxh + $bhyt + $bhtn, 2);
 
         // Giảm trừ gia cảnh = bản thân + (số người phụ thuộc × mức/người)
         // (NQ 110/2025/UBTVQH15, áp dụng từ kỳ tính thuế 2026)
-        $soNguoiPhuThuoc = $this->demNguoiPhuThuoc($nguoiDungId, $dauThang, $cuoiThang);
+        $nguoiPhuThuoc   = $this->layNguoiPhuThuoc($nguoiDungId, $dauThang, $cuoiThang);
+        $soNguoiPhuThuoc = $nguoiPhuThuoc->count();
         $giamTruNPT      = round($soNguoiPhuThuoc * self::GIAM_TRU_NGUOI_PHU_THUOC, 2);
         $giamTruGiaCanh  = round(self::GIAM_TRU_BAN_THAN + $giamTruNPT, 2);
 
@@ -109,14 +128,22 @@ class TinhLuongService
         $thuNhapChiuThue = round($luongTheoCong + $phuCapChiuThue + $tienTangCa, 2);
         // Thu nhập tính thuế = thu nhập chịu thuế − bảo hiểm bắt buộc − giảm trừ gia cảnh
         $thuNhapTinhThue = max(0, round($thuNhapChiuThue - $tongBaoHiem - $giamTruGiaCanh, 2));
+        $chiTietBacThue  = self::chiTietBacThue($thuNhapTinhThue);
         $thueTNCN        = $this->tinhThueTNCN($thuNhapTinhThue);
 
-        $ghiChuThue = 'Thuế TNCN luỹ tiến — giảm trừ gia cảnh ' . number_format($giamTruGiaCanh) . 'đ'
-            . ($soNguoiPhuThuoc > 0 ? " (bản thân + {$soNguoiPhuThuoc} người phụ thuộc)" : '');
+        $ghiChuThue = 'Thuế TNCN luỹ tiến 5 bậc trên thu nhập tính thuế '
+            . number_format($thuNhapTinhThue) . 'đ — đã trừ bảo hiểm bắt buộc '
+            . number_format($tongBaoHiem) . 'đ và giảm trừ gia cảnh '
+            . number_format($giamTruGiaCanh) . 'đ (bản thân '
+            . number_format(self::GIAM_TRU_BAN_THAN) . 'đ'
+            . ($soNguoiPhuThuoc > 0
+                ? " + {$soNguoiPhuThuoc} NPT × " . number_format(self::GIAM_TRU_NGUOI_PHU_THUOC) . 'đ'
+                : '')
+            . ')';
         $chiTietKhauTru = [
-            ['loai' => 'bhxh',      'so_tien' => $bhxh,     'ghi_chu' => 'BHXH 8% lương cơ bản'],
-            ['loai' => 'bhyt',      'so_tien' => $bhyt,     'ghi_chu' => 'BHYT 1.5% lương cơ bản'],
-            ['loai' => 'bhtn',      'so_tien' => $bhtn,     'ghi_chu' => 'BHTN 1% lương cơ bản'],
+            ['loai' => 'bhxh',      'so_tien' => $bhxh,     'ghi_chu' => 'BHXH 8% × lương cơ bản ' . number_format($luongCoBan) . 'đ'],
+            ['loai' => 'bhyt',      'so_tien' => $bhyt,     'ghi_chu' => 'BHYT 1.5% × lương cơ bản ' . number_format($luongCoBan) . 'đ'],
+            ['loai' => 'bhtn',      'so_tien' => $bhtn,     'ghi_chu' => 'BHTN 1% × lương cơ bản ' . number_format($luongCoBan) . 'đ'],
             ['loai' => 'thue_tncn', 'so_tien' => $thueTNCN, 'ghi_chu' => $ghiChuThue],
         ];
 
@@ -168,11 +195,14 @@ class TinhLuongService
             'bhtn'                 => $bhtn,
             'tong_bao_hiem'        => $tongBaoHiem,
             'so_nguoi_phu_thuoc'   => $soNguoiPhuThuoc,
+            'danh_sach_nguoi_phu_thuoc' => $nguoiPhuThuoc,
+            'muc_giam_tru_moi_npt' => self::GIAM_TRU_NGUOI_PHU_THUOC,
             'giam_tru_ban_than'    => self::GIAM_TRU_BAN_THAN,
             'giam_tru_nguoi_phu_thuoc' => $giamTruNPT,
             'giam_tru_gia_canh'    => $giamTruGiaCanh,
             'thu_nhap_chiu_thue'   => $thuNhapChiuThue,
             'thu_nhap_tinh_thue'   => $thuNhapTinhThue,
+            'chi_tiet_bac_thue'    => $chiTietBacThue,
             'thue_thu_nhap_ca_nhan' => $thueTNCN,
             'tong_khau_tru_khac'   => $tongKhauTruKhac,
             'chi_tiet_khau_tru_khac' => $khauTruKhac['chi_tiet'],
@@ -221,6 +251,20 @@ class TinhLuongService
                 'ngay_nghi_khong_phep'  => $kq['ngay_nghi_khong_phep'],
                 'ngay_le'               => 0,
                 'thue_thu_nhap_ca_nhan' => $kq['thue_thu_nhap_ca_nhan'],
+
+                // Snapshot căn cứ khấu trừ để phiếu lương diễn giải lại được
+                'phu_cap_chiu_thue'        => $kq['phu_cap_chiu_thue'],
+                'bhxh'                     => $kq['bhxh'],
+                'bhyt'                     => $kq['bhyt'],
+                'bhtn'                     => $kq['bhtn'],
+                'tong_bao_hiem'            => $kq['tong_bao_hiem'],
+                'so_nguoi_phu_thuoc'       => $kq['so_nguoi_phu_thuoc'],
+                'giam_tru_ban_than'        => $kq['giam_tru_ban_than'],
+                'giam_tru_nguoi_phu_thuoc' => $kq['giam_tru_nguoi_phu_thuoc'],
+                'giam_tru_gia_canh'        => $kq['giam_tru_gia_canh'],
+                'thu_nhap_chiu_thue'       => $kq['thu_nhap_chiu_thue'],
+                'thu_nhap_tinh_thue'       => $kq['thu_nhap_tinh_thue'],
+                'tong_khau_tru_khac'       => $kq['tong_khau_tru_khac'],
             ]);
 
             // Lưu chi tiết phụ cấp
@@ -333,18 +377,20 @@ class TinhLuongService
     }
 
     /**
-     * Đếm số người phụ thuộc còn hiệu lực trong tháng để tính giảm trừ gia cảnh.
+     * Lấy danh sách người phụ thuộc còn hiệu lực trong tháng để tính giảm trừ gia cảnh.
      * Người phụ thuộc gắn với hồ sơ (ho_so_nguoi_dung) qua ho_so_id.
      * Chỉ tính người có ngày bắt đầu ≤ cuối tháng và (chưa kết thúc HOẶC kết thúc ≥ đầu tháng).
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, NguoiPhuThuoc>
      */
-    private function demNguoiPhuThuoc(int $nguoiDungId, Carbon $dauThang, Carbon $cuoiThang): int
+    private function layNguoiPhuThuoc(int $nguoiDungId, Carbon $dauThang, Carbon $cuoiThang)
     {
         $hoSoId = HoSo::where('nguoi_dung_id', $nguoiDungId)->value('id');
         if (!$hoSoId) {
-            return 0;
+            return NguoiPhuThuoc::query()->whereRaw('1 = 0')->get();
         }
 
-        return (int) NguoiPhuThuoc::where('ho_so_id', $hoSoId)
+        return NguoiPhuThuoc::where('ho_so_id', $hoSoId)
             // Đã bắt đầu tính giảm trừ trước/trong tháng (NULL = tính từ đầu)
             ->where(function ($q) use ($cuoiThang) {
                 $q->whereNull('ngay_bat_dau')
@@ -355,7 +401,8 @@ class TinhLuongService
                 $q->whereNull('ngay_ket_thuc')
                     ->orWhereDate('ngay_ket_thuc', '>=', $dauThang->toDateString());
             })
-            ->count();
+            ->orderBy('ngay_bat_dau')
+            ->get();
     }
 
     /**
@@ -451,54 +498,60 @@ class TinhLuongService
     }
 
     /**
-     * Thuế TNCN luỹ tiến từng phần (phương pháp rút gọn) — biểu 5 BẬC.
+     * Bóc tách thu nhập tính thuế ra từng bậc của biểu luỹ tiến từng phần.
+     * Dùng cho phiếu lương: cho thấy rõ từng phần thu nhập rơi vào bậc nào,
+     * thuế suất bao nhiêu và đóng bao nhiêu tiền.
+     *
+     * @return array<int, array{bac:int, tu:float, den:float|null, phan_thu_nhap:float, thue_suat:float, thue:float}>
+     */
+    public static function chiTietBacThue(float $thuNhapTinhThue): array
+    {
+        $chiTiet = [];
+        $tu      = 0.0;
+
+        if ($thuNhapTinhThue <= 0) {
+            return $chiTiet;
+        }
+
+        foreach (self::BAC_THUE as $bac) {
+            $tran = $bac['den'] === null ? $thuNhapTinhThue : (float) $bac['den'];
+            $phan = min($thuNhapTinhThue, $tran) - $tu;
+
+            if ($phan <= 0) {
+                break;
+            }
+
+            $chiTiet[] = [
+                'bac'           => $bac['bac'],
+                'tu'            => $tu,
+                'den'           => $bac['den'] === null ? null : (float) $bac['den'],
+                'phan_thu_nhap' => round($phan, 2),
+                'thue_suat'     => $bac['thue_suat'],
+                'thue'          => round($phan * $bac['thue_suat'], 2),
+            ];
+
+            $tu = $tran;
+
+            if ($thuNhapTinhThue <= $tran) {
+                break;
+            }
+        }
+
+        return $chiTiet;
+    }
+
+    /**
+     * Thuế TNCN luỹ tiến từng phần — biểu 5 BẬC.
      * Luật Thuế TNCN 2025: rút gọn 7 bậc → 5 bậc, áp dụng từ kỳ tính thuế 2026.
      * Bậc: đến 10tr (5%), 10–30tr (10%), 30–60tr (20%), 60–100tr (30%), trên 100tr (35%).
      */
-private function tinhThueTNCN(float $thuNhapTinhThue): float
-{
-    if ($thuNhapTinhThue <= 0) {
-        return 0;
+    private function tinhThueTNCN(float $thuNhapTinhThue): float
+    {
+        return round(
+            array_sum(array_column(self::chiTietBacThue($thuNhapTinhThue), 'thue')),
+            2
+        );
     }
-
-    $thue = 0;
-
-    // Bậc 1
-    if ($thuNhapTinhThue <= 10_000_000) {
-        return round($thuNhapTinhThue * 0.05, 2);
-    }
-
-    $thue += 10_000_000 * 0.05;
-
-    // Bậc 2
-    if ($thuNhapTinhThue <= 30_000_000) {
-        $thue += ($thuNhapTinhThue - 10_000_000) * 0.10;
-        return round($thue, 2);
-    }
-
-    $thue += 20_000_000 * 0.10;
-
-    // Bậc 3
-    if ($thuNhapTinhThue <= 60_000_000) {
-        $thue += ($thuNhapTinhThue - 30_000_000) * 0.20;
-        return round($thue, 2);
-    }
-
-    $thue += 30_000_000 * 0.20;
-
-    // Bậc 4
-    if ($thuNhapTinhThue <= 100_000_000) {
-        $thue += ($thuNhapTinhThue - 60_000_000) * 0.30;
-        return round($thue, 2);
-    }
-
-    $thue += 40_000_000 * 0.30;
-
-    // Bậc 5
-    $thue += ($thuNhapTinhThue - 100_000_000) * 0.35;
-
-    return round($thue, 2);
-}
 
     /** Sinh mã bảng lương duy nhất: BL-YYYY-MM-xxxxx */
     private function taoMaBangLuong(int $thang, int $nam): string
