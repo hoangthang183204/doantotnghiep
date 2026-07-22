@@ -1016,18 +1016,95 @@
                 </div>
 
                 {{-- BẢNG 3: LỊCH SỬ ĐƠN XIN VỀ SỚM --}}
-                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-slate-700">
-                    <div class="flex items-center justify-between border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
-                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-                            <span>🏠</span> Lịch sử đơn xin về sớm
-                        </h3>
-                        <span class="text-xs text-gray-400">Tổng: 0 đơn</span>
-                    </div>
+<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-slate-700">
+    <div class="flex items-center justify-between border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+            <span>🏠</span> Lịch sử đơn xin về sớm
+        </h3>
+        <span class="text-xs text-gray-400">Tổng: {{ isset($lichSuVeSom) ? $lichSuVeSom->total() : 0 }} đơn</span>
+    </div>
 
-                    <div class="text-gray-500 dark:text-gray-400 text-sm py-2 flex items-center gap-2">
-                        <span>🗣️</span> Chưa có lịch sử đơn xin về sớm
-                    </div>
+    @if (isset($lichSuVeSom) && $lichSuVeSom->count() > 0)
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead>
+                    <tr class="border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700/50 text-gray-600 dark:text-gray-300">
+                        <th class="text-left p-2.5 font-semibold text-xs">Ngày tạo</th>
+                        <th class="text-left p-2.5 font-semibold text-xs">Ngày xin về</th>
+                        <th class="text-left p-2.5 font-semibold text-xs">Giờ ra về</th>
+                        <th class="text-left p-2.5 font-semibold text-xs">Lý do</th>
+                        <th class="text-left p-2.5 font-semibold text-xs">Trạng thái</th>
+                        <th class="text-left p-2.5 font-semibold text-xs">Người duyệt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($lichSuVeSom as $item)
+                        @php
+                            $statusColors = [
+                                'cho_duyet' => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+                                'da_duyet'  => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+                                'tu_choi'   => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+                                'huy'       => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400',
+                            ];
+                            $statusTexts = [
+                                'cho_duyet' => '⏳ Chờ duyệt',
+                                'da_duyet'  => '✅ Đã duyệt',
+                                'tu_choi'   => '❌ Từ chối',
+                                'huy'       => '🗑️ Đã hủy',
+                            ];
+                        @endphp
+                        <tr class="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition">
+                            <td class="p-2.5 text-xs">
+                                {{ $item->created_at ? $item->created_at->format('d/m/Y') : '---' }}
+                                <br><span class="text-gray-400 text-[10px]">{{ $item->created_at ? $item->created_at->format('H:i') : '' }}</span>
+                            </td>
+                            <td class="p-2.5 text-xs">
+                                {{ $item->ngay ? \Carbon\Carbon::parse($item->ngay)->format('d/m/Y') : '---' }}
+                            </td>
+                            <td class="p-2.5 text-xs font-medium text-gray-800 dark:text-gray-200">
+                                {{ $item->gio_ra_du_kien ? \Carbon\Carbon::parse($item->gio_ra_du_kien)->format('H:i') : ($item->chamCong->gio_ra ?? '---') }}
+                            </td>
+                            <td class="p-2.5 text-xs max-w-[200px] truncate" title="{{ $item->ly_do }}">
+                                {{ $item->ly_do }}
+                            </td>
+                            <td class="p-2.5 text-xs">
+                                <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$item->trang_thai] ?? 'bg-gray-100 text-gray-700' }}">
+                                    {{ $statusTexts[$item->trang_thai] ?? $item->trang_thai }}
+                                </span>
+                            </td>
+                            <td class="p-2.5 text-xs">
+                                @php
+                                    $nguoiDuyetModel = $item->nguoiDuyet ?? $item->nguoi_duyet;
+                                @endphp
+                                @if ($nguoiDuyetModel)
+                                    {{ $nguoiDuyetModel->hoSo->ho ?? '' }} {{ $nguoiDuyetModel->hoSo->ten ?? '' }}
+                                    <br><span class="text-gray-400 text-[10px]">{{ $item->thoi_gian_duyet ? \Carbon\Carbon::parse($item->thoi_gian_duyet)->format('d/m/Y H:i') : '' }}</span>
+                                @else
+                                    <span class="text-gray-400">---</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        @if (method_exists($lichSuVeSom, 'hasPages') && $lichSuVeSom->hasPages())
+            <div class="mt-4 flex justify-between items-center text-xs">
+                <div class="text-gray-500">
+                    Hiển thị {{ $lichSuVeSom->firstItem() }} - {{ $lichSuVeSom->lastItem() }} / {{ $lichSuVeSom->total() }} đơn
                 </div>
+                <div>
+                    {{ $lichSuVeSom->appends(['ve_som_page' => $lichSuVeSom->currentPage()])->links('pagination::tailwind') }}
+                </div>
+            </div>
+        @endif
+    @else
+        <div class="text-gray-500 dark:text-gray-400 text-sm py-2 flex items-center gap-2">
+            <span>🗣️</span> Chưa có lịch sử đơn xin về sớm
+        </div>
+    @endif
+</div>
 
             </div>
 
