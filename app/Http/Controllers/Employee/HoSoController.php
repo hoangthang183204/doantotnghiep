@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use App\Models\ChungChiNhanVien;
 use App\Models\DaoTaoNhanVien;
+use App\Models\DonXinNghi;
+use App\Models\DangKyTangCa;
+use App\Models\DonXinVeSom;
 use App\Models\HopDongLaoDong;
 use App\Models\HoSo;
 use App\Models\HoSoNguoiDung;
@@ -14,6 +17,7 @@ use App\Models\NguoiDung;
 use App\Models\NguoiPhuThuoc;
 use App\Models\PhuCap;
 use App\Models\PhuCapNhanVien;
+use App\Models\SoDuPhep;
 use App\Models\TaiLieu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,8 +26,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\File;
 
 class HoSoController extends Controller
 {
@@ -31,7 +33,7 @@ class HoSoController extends Controller
      * Hiển thị trang xem hồ sơ cá nhân (show)
      * Không cần tham số vì lấy từ Auth::user()
      */
-    public function show()
+    public function show(Request $request)
     {
         /** @var NguoiDung $user */
         $user = Auth::user();
@@ -48,7 +50,7 @@ class HoSoController extends Controller
         $hoSoNguoiDung = $user->hoSo;
 
         // LẤY HO SO (HoSo) - ĐÂY LÀ BẢNG CHÍNH CHỨA THÔNG TIN
-        $hoSo = $hoSoNguoiDung?->hoSo; // <--- SỬA: dùng ->hoSo thay vì $hoSo
+        $hoSo = $hoSoNguoiDung?->hoSo;
 
         // Lấy hợp đồng hiệu lực
         $hopDongHieuLuc = $hoSo?->hop_dong
@@ -65,6 +67,8 @@ class HoSoController extends Controller
                 'cv',
                 'hop_dong',
                 'khen_thuong_ky_luat',
+                'du_an',
+                'lich_su_luong',
             ]);
         }
 
@@ -155,10 +159,54 @@ class HoSoController extends Controller
             }
         }
 
+        // ==================== LỊCH SỬ ĐƠN TỪ ====================
+
+        // Lấy số dư phép
+        $soDuPhep = SoDuPhep::where('nguoi_dung_id', $user->id)
+            ->where('nam', date('Y'))
+            ->first();
+
+        // Lịch sử nghỉ phép (5 đơn/trang)
+        $lichSuNghiPhep = DonXinNghi::where('nguoi_dung_id', $user->id)
+            ->with(['loaiNghiPhep', 'nguoiDuyet.hoSo'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(5, ['*'], 'nghi_phep_page')
+            ->appends($request->query());
+
+        // Lịch sử tăng ca (5 đơn/trang)
+        $lichSuTangCa = DangKyTangCa::where('nguoi_dung_id', $user->id)
+            ->with(['nguoi_duyet.hoSo'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(5, ['*'], 'tang_ca_page')
+            ->appends($request->query());
+
+        // Lịch sử đơn xin về sớm (5 đơn/trang)
+        $lichSuVeSom = DonXinVeSom::where('nguoi_dung_id', $user->id)
+            ->with(['nguoiDuyet.hoSo', 'chamCong'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(5, ['*'], 've_som_page')
+            ->appends($request->query());
+
+        // Thống kê đơn từ
+        $thongKeDonTu = [
+            'tong_don_nghi' => DonXinNghi::where('nguoi_dung_id', $user->id)->count(),
+            'don_nghi_cho_duyet' => DonXinNghi::where('nguoi_dung_id', $user->id)
+                ->where('trang_thai', 'cho_duyet')
+                ->count(),
+            'don_nghi_da_duyet' => DonXinNghi::where('nguoi_dung_id', $user->id)
+                ->where('trang_thai', 'da_duyet')
+                ->count(),
+            'don_nghi_tu_choi' => DonXinNghi::where('nguoi_dung_id', $user->id)
+                ->where('trang_thai', 'tu_choi')
+                ->count(),
+            'tong_tang_ca' => DangKyTangCa::where('nguoi_dung_id', $user->id)->count(),
+            'tong_ve_som' => DonXinVeSom::where('nguoi_dung_id', $user->id)->count(),
+        ];
+
         return view('employee.ho-so.show', compact(
             'user',
-            'hoSo',              // <--- $hoSo là HoSo model (bảng chính)
-            'hoSoNguoiDung',     // <--- thêm biến này nếu cần
+            'hoSo',
+            'hoSoNguoiDung',
             'hopDongHieuLuc',
             'luongGanNhat',
             'luongCoBanHienTai',
@@ -175,8 +223,59 @@ class HoSoController extends Controller
             'thuNhapChiuThue',
             'thueTncn',
             'thucNhan',
-            'phuCapChiTiets'
+            'phuCapChiTiets',
+            // Dữ liệu lịch sử đơn từ
+            'soDuPhep',
+            'lichSuNghiPhep',
+            'lichSuTangCa',
+            'lichSuVeSom',
+            'thongKeDonTu',
         ));
+    }
+
+    /**
+     * API: Lấy danh sách lịch sử nghỉ phép (AJAX)
+     */
+    public function getLichSuNghiPhep(Request $request)
+    {
+        $user = Auth::user();
+
+        $lichSuNghiPhep = DonXinNghi::where('nguoi_dung_id', $user->id)
+            ->with(['loaiNghiPhep', 'nguoiDuyet.hoSo'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(5, ['*'], 'page');
+
+        return response()->json($lichSuNghiPhep);
+    }
+
+    /**
+     * API: Lấy danh sách lịch sử tăng ca (AJAX)
+     */
+    public function getLichSuTangCa(Request $request)
+    {
+        $user = Auth::user();
+
+        $lichSuTangCa = DangKyTangCa::where('nguoi_dung_id', $user->id)
+            ->with(['nguoi_duyet.hoSo'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(5, ['*'], 'page');
+
+        return response()->json($lichSuTangCa);
+    }
+
+    /**
+     * API: Lấy danh sách lịch sử về sớm (AJAX)
+     */
+    public function getLichSuVeSom(Request $request)
+    {
+        $user = Auth::user();
+
+        $lichSuVeSom = DonXinVeSom::where('nguoi_dung_id', $user->id)
+            ->with(['nguoiDuyet.hoSo', 'chamCong'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(5, ['*'], 'page');
+
+        return response()->json($lichSuVeSom);
     }
 
     /**
