@@ -650,6 +650,62 @@
                                             value="{{ optional($cc->ngay_het_han)->format('Y-m-d') }}">
                                     </div>
                                 </div>
+
+                                {{-- ===== PHẦN UPLOAD FILE CHỨNG CHỈ ===== --}}
+                                <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                                        <div>
+                                            <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
+                                                <i class="fa-solid fa-file-upload mr-1"></i> File đính kèm (PDF, JPG, PNG)
+                                            </label>
+                                            <input type="file"
+                                                class="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/20 dark:file:text-blue-300"
+                                                name="certificates[{{ $cc->id }}][file_dinh_kem]"
+                                                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                                            <p class="text-xs text-gray-400 mt-1">Tối đa 5MB - Hỗ trợ: PDF, JPG, PNG, DOC,
+                                                DOCX</p>
+                                        </div>
+                                        <div class="flex justify-center md:justify-end">
+                                            @if ($cc->file_dinh_kem)
+                                                <div
+                                                    class="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700">
+                                                    @php
+                                                        $extension = pathinfo($cc->file_dinh_kem, PATHINFO_EXTENSION);
+                                                        $iconClass = 'fa-file text-gray-500';
+                                                        $iconColor = 'text-gray-500';
+
+                                                        if (in_array($extension, ['pdf'])) {
+                                                            $iconClass = 'fa-file-pdf';
+                                                            $iconColor = 'text-red-500';
+                                                        } elseif (
+                                                            in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'])
+                                                        ) {
+                                                            $iconClass = 'fa-file-image';
+                                                            $iconColor = 'text-blue-500';
+                                                        } elseif (in_array($extension, ['doc', 'docx'])) {
+                                                            $iconClass = 'fa-file-word';
+                                                            $iconColor = 'text-blue-600';
+                                                        }
+                                                    @endphp
+                                                    <i
+                                                        class="fa-solid {{ $iconClass }} {{ $iconColor }} text-xl"></i>
+                                                    <span
+                                                        class="text-sm text-gray-600 dark:text-gray-300 truncate max-w-[150px]">
+                                                        {{ basename($cc->file_dinh_kem) }}
+                                                    </span>
+                                                    <a href="{{ asset('storage/' . $cc->file_dinh_kem) }}"
+                                                        target="_blank"
+                                                        class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm">
+                                                        <i class="fa-solid fa-eye"></i> Xem
+                                                    </a>
+                                                    <span class="text-xs text-gray-400">(hiện tại)</span>
+                                                </div>
+                                            @else
+                                                <span class="text-sm text-gray-400">Chưa có file</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         @empty
                             <div class="text-gray-500 text-center py-4" id="no-certificates">
@@ -1396,7 +1452,7 @@
             }
 
             // ==========================================
-            // THÊM CHỨNG CHỈ
+            // THÊM CHỨNG CHỈ (có upload file)
             // ==========================================
             function addCertificate() {
                 console.log('➕ Adding certificate');
@@ -1406,6 +1462,59 @@
 
                 const newId = 'new_' + Date.now();
                 const html = `
+    <div class="item certificate-item border rounded-xl p-4 mb-4" data-id="${newId}">
+        <div class="flex justify-between items-center mb-3">
+            <span class="text-sm text-gray-500">Mới</span>
+            <button type="button" onclick="removeItem(this, 'certificates')" class="btn-remove">
+                <i class="fa-solid fa-trash"></i> Xóa
+            </button>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4">
+            <div>
+                <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tên chứng chỉ *</label>
+                <input class="input" name="new_certificates[${newId}][ten_chung_chi]" placeholder="VD: Chứng chỉ PHP, TOEIC">
+            </div>
+            <div>
+                <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tổ chức cấp</label>
+                <input class="input" name="new_certificates[${newId}][to_chuc_cap]" placeholder="VD: Đại học Bách Khoa">
+            </div>
+            <div>
+                <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Năm cấp</label>
+                <input type="number" class="input" name="new_certificates[${newId}][nam_cap]" placeholder="VD: 2023" min="1900" max="${new Date().getFullYear()}">
+            </div>
+            <div>
+                <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ngày hết hạn</label>
+                <input type="date" class="input" name="new_certificates[${newId}][ngay_het_han]">
+            </div>
+        </div>
+        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                <div>
+                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
+                        <i class="fa-solid fa-file-upload mr-1"></i> File đính kèm (PDF, JPG, PNG)
+                    </label>
+                    <input type="file" 
+                           class="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/20 dark:file:text-blue-300"
+                           name="new_certificates[${newId}][file_dinh_kem]"
+                           accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                    <p class="text-xs text-gray-400 mt-1">Tối đa 5MB - Hỗ trợ: PDF, JPG, PNG, DOC, DOCX</p>
+                </div>
+                <div class="flex justify-center md:justify-end">
+                    <span class="text-sm text-gray-400">Chưa có file</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+                container.insertAdjacentHTML('beforeend', html);
+            }
+            console.log('➕ Adding certificate');
+            const container = document.getElementById('certificates-container');
+            const emptyMsg = container.querySelector('[id^="no-"]');
+            if (emptyMsg) emptyMsg.remove();
+
+            const newId = 'new_' + Date.now();
+            const html = `
         <div class="item certificate-item border rounded-xl p-4 mb-4" data-id="${newId}">
             <div class="flex justify-between items-center mb-3">
                 <span class="text-sm text-gray-500">Mới</span>
@@ -1433,7 +1542,7 @@
             </div>
         </div>
     `;
-                container.insertAdjacentHTML('beforeend', html);
+            container.insertAdjacentHTML('beforeend', html);
             }
 
             // ==========================================

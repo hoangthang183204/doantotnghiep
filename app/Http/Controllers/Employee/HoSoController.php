@@ -254,6 +254,8 @@ class HoSoController extends Controller
             'anh_cccd_sau' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
 
             'cv_file' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
+            'certificates.*.file_chung_chi' => 'nullable|file|max:5120|mimes:pdf,jpg,jpeg,png,doc,docx',
+            'new_certificates.*.file_chung_chi' => 'nullable|file|max:5120|mimes:pdf,jpg,jpeg,png,doc,docx',
         ]);
 
         /** @var NguoiDung $user */
@@ -443,34 +445,70 @@ class HoSoController extends Controller
                 ]);
             }
 
-            // ============================================
-            // 10. CẬP NHẬT CHỨNG CHỈ CŨ
-            // ============================================
-            if ($request->filled('certificates')) {
-                foreach ($request->certificates as $id => $cc) {
-                    ChungChiNhanVien::where('id', $id)
-                        ->where('ho_so_id', $hoSo->id)
-                        ->update([
-                            'ten_chung_chi' => $cc['ten_chung_chi'] ?? null,
-                            'to_chuc_cap' => $cc['to_chuc_cap'] ?? null,
-                            'nam_cap' => $cc['nam_cap'] ?? null,
-                            'ngay_het_han' => $cc['ngay_het_han'] ?? null,
+            // Xử lý certificates cũ
+            if ($request->has('certificates')) {
+                foreach ($request->certificates as $id => $data) {
+                    $certificate = ChungChiNhanVien::find($id);
+                    if ($certificate) {
+                        // Xử lý upload file mới
+                        if ($request->hasFile("certificates.{$id}.file_dinh_kem")) {
+                            // Xóa file cũ nếu có
+                            if ($certificate->file_dinh_kem && Storage::disk('public')->exists($certificate->file_dinh_kem)) {
+                                Storage::disk('public')->delete($certificate->file_dinh_kem);
+                            }
+
+                            $file = $request->file("certificates.{$id}.file_dinh_kem");
+                            $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                            $path = $file->storeAs('certificates', $fileName, 'public');
+                            $data['file_dinh_kem'] = $path;
+                        }
+
+                        // Cập nhật các trường khác
+                        $certificate->update([
+                            'ten_chung_chi' => $data['ten_chung_chi'],
+                            'to_chuc_cap' => $data['to_chuc_cap'] ?? null,
+                            'nam_cap' => $data['nam_cap'] ?? null,
+                            'ngay_het_han' => $data['ngay_het_han'] ?? null,
+                            'file_dinh_kem' => $data['file_dinh_kem'] ?? $certificate->file_dinh_kem,
                         ]);
+                    }
                 }
             }
 
-            // ============================================
-            // 11. THÊM MỚI CHỨNG CHỈ
-            // ============================================
-            if ($request->filled('new_certificates')) {
-                foreach ($request->new_certificates as $cc) {
+            // Xử lý certificates mới
+            if ($request->has('new_certificates')) {
+                foreach ($request->new_certificates as $key => $data) {
+                    // Xử lý upload file
+                    $filePath = null;
+                    if ($request->hasFile("new_certificates.{$key}.file_dinh_kem")) {
+                        $file = $request->file("new_certificates.{$key}.file_dinh_kem");
+                        $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                        $filePath = $file->storeAs('certificates', $fileName, 'public');
+                    }
+
                     ChungChiNhanVien::create([
                         'ho_so_id' => $hoSo->id,
-                        'ten_chung_chi' => $cc['ten_chung_chi'] ?? null,
-                        'to_chuc_cap' => $cc['to_chuc_cap'] ?? null,
-                        'nam_cap' => $cc['nam_cap'] ?? null,
-                        'ngay_het_han' => $cc['ngay_het_han'] ?? null,
+                        'ten_chung_chi' => $data['ten_chung_chi'],
+                        'to_chuc_cap' => $data['to_chuc_cap'] ?? null,
+                        'nam_cap' => $data['nam_cap'] ?? null,
+                        'ngay_het_han' => $data['ngay_het_han'] ?? null,
+                        'file_dinh_kem' => $filePath,
                     ]);
+                }
+            }
+
+            // Xử lý xóa certificates
+            if ($request->has('delete_certificates') && !empty($request->delete_certificates)) {
+                $deleteIds = explode(',', $request->delete_certificates);
+                foreach ($deleteIds as $id) {
+                    $certificate = ChungChiNhanVien::find($id);
+                    if ($certificate) {
+                        // Xóa file vật lý
+                        if ($certificate->file_dinh_kem && Storage::disk('public')->exists($certificate->file_dinh_kem)) {
+                            Storage::disk('public')->delete($certificate->file_dinh_kem);
+                        }
+                        $certificate->delete();
+                    }
                 }
             }
 
