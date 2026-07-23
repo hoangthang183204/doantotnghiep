@@ -66,25 +66,35 @@
         </div>
 
         {{-- ================= TAB NAVIGATION ================= --}}
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-2">
-            <nav class="flex flex-wrap gap-1" id="tabNav">
-                <button class="tab-btn active px-5 py-2.5 rounded-lg text-sm font-medium transition" data-tab="tab1">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-2 overflow-x-auto">
+            <nav class="flex flex-nowrap gap-1 min-w-max" id="tabNav">
+                <button class="tab-btn active px-4 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap"
+                    data-tab="tab1">
                     📋 Thông tin
                 </button>
-                <button class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium transition" data-tab="tab2">
+                <button class="tab-btn px-4 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap"
+                    data-tab="tab2">
                     💼 Công việc & HĐ
                 </button>
-                <button class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium transition" data-tab="tab3">
+                <button class="tab-btn px-4 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap"
+                    data-tab="tab3">
                     📄 Năng lực & CV
                 </button>
-                <button class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium transition" data-tab="tab4">
+                <button class="tab-btn px-4 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap"
+                    data-tab="tab4">
                     💰 Lương thưởng
                 </button>
-                <button class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium transition" data-tab="tab5">
+                <button class="tab-btn px-4 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap"
+                    data-tab="tab5">
                     🛡️ Bảo hiểm & Thuế
                 </button>
-                <button class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium transition" data-tab="tab6">
+                <button class="tab-btn px-4 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap"
+                    data-tab="tab6">
                     🏆 Đào tạo & Kỷ luật
+                </button>
+                <button class="tab-btn px-4 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap"
+                    data-tab="tab7">
+                    📜 Lịch sử đơn từ
                 </button>
             </nav>
         </div>
@@ -1159,6 +1169,367 @@
 
             </div>
 
+            {{-- ========================================================== --}}
+            {{-- TAB 7: LỊCH SỬ ĐƠN TỪ --}}
+            {{-- ========================================================== --}}
+            <div id="tab7" class="tab-content hidden">
+
+                {{-- 6 THẺ THỐNG KÊ --}}
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+                    <div
+                        class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800 text-center">
+                        <p class="text-2xl font-bold text-blue-600">{{ $thongKeDonTu['tong_don_nghi'] ?? 0 }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">📋 Tổng đơn nghỉ</p>
+                    </div>
+                    <div
+                        class="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-4 border border-yellow-200 dark:border-yellow-800 text-center">
+                        <p class="text-2xl font-bold text-yellow-600">{{ $thongKeDonTu['don_nghi_cho_duyet'] ?? 0 }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">⏳ Chờ duyệt</p>
+                    </div>
+                    <div
+                        class="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border border-green-200 dark:border-green-800 text-center">
+                        <p class="text-2xl font-bold text-green-600">{{ $thongKeDonTu['don_nghi_da_duyet'] ?? 0 }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">✅ Đã duyệt</p>
+                    </div>
+                    <div
+                        class="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 border border-red-200 dark:border-red-800 text-center">
+                        <p class="text-2xl font-bold text-red-600">{{ $thongKeDonTu['don_nghi_tu_choi'] ?? 0 }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">❌ Từ chối</p>
+                    </div>
+                    <div
+                        class="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 border border-purple-200 dark:border-purple-800 text-center">
+                        <p class="text-2xl font-bold text-purple-600">{{ $thongKeDonTu['tong_tang_ca'] ?? 0 }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">⏰ Tổng tăng ca</p>
+                    </div>
+                    <div
+                        class="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-4 border border-orange-200 dark:border-orange-800 text-center">
+                        <p class="text-2xl font-bold text-orange-600">{{ $lichSuVeSom->total() ?? 0 }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">🏠 Tổng về sớm</p>
+                    </div>
+                </div>
+
+                {{-- BẢNG 1: LỊCH SỬ NGHỈ PHÉP --}}
+                <div
+                    class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-slate-700 mb-6">
+                    <div
+                        class="flex items-center justify-between border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+                            <span>📋</span> Lịch sử nghỉ phép
+                        </h3>
+                        <span class="text-xs text-gray-400">Tổng: {{ $lichSuNghiPhep->total() }} đơn</span>
+                    </div>
+
+                    @if ($lichSuNghiPhep && $lichSuNghiPhep->count() > 0)
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm">
+                                <thead>
+                                    <tr
+                                        class="border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700/50 text-gray-600 dark:text-gray-300">
+                                        <th class="text-left p-2.5 font-semibold text-xs">Ngày tạo</th>
+                                        <th class="text-left p-2.5 font-semibold text-xs">Loại</th>
+                                        <th class="text-left p-2.5 font-semibold text-xs">Từ ngày</th>
+                                        <th class="text-left p-2.5 font-semibold text-xs">Đến ngày</th>
+                                        <th class="text-left p-2.5 font-semibold text-xs text-center">Số ngày</th>
+                                        <th class="text-left p-2.5 font-semibold text-xs">Lý do</th>
+                                        <th class="text-left p-2.5 font-semibold text-xs">Trạng thái</th>
+                                        <th class="text-left p-2.5 font-semibold text-xs">Người duyệt</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @php
+                                        $tongPhepNam = $soDuPhep->phep_nam_moi ?? 12;
+                                        $tongDaDung = 0;
+                                    @endphp
+                                    @foreach ($lichSuNghiPhep as $item)
+                                        @php
+                                            $soNgayDaDung = $item->trang_thai == 'da_duyet' ? $item->so_ngay_nghi : 0;
+                                            $tongDaDung += $soNgayDaDung;
+                                            $conLai = max(0, $tongPhepNam - $tongDaDung);
+
+                                            $statusColors = [
+                                                'cho_duyet' =>
+                                                    'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+                                                'da_duyet' =>
+                                                    'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+                                                'tu_choi' =>
+                                                    'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+                                                'huy_bo' =>
+                                                    'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400',
+                                            ];
+                                            $statusTexts = [
+                                                'cho_duyet' => '⏳ Chờ duyệt',
+                                                'da_duyet' => '✅ Đã duyệt',
+                                                'tu_choi' => '❌ Từ chối',
+                                                'huy_bo' => '🗑️ Đã hủy',
+                                            ];
+                                        @endphp
+                                        <tr
+                                            class="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition">
+                                            <td class="p-2.5 text-xs">
+                                                {{ $item->created_at ? $item->created_at->format('d/m/Y') : '---' }}
+                                                <br><span
+                                                    class="text-gray-400 text-[10px]">{{ $item->created_at ? $item->created_at->format('H:i') : '' }}</span>
+                                            </td>
+                                            <td class="p-2.5 text-xs">
+                                                <span
+                                                    class="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 font-medium">
+                                                    {{ $item->loaiNghiPhep->ten ?? $item->loai_nghi_phep_id }}
+                                                </span>
+                                            </td>
+                                            <td class="p-2.5 text-xs">
+                                                {{ $item->ngay_bat_dau ? $item->ngay_bat_dau->format('d/m/Y') : '---' }}
+                                            </td>
+                                            <td class="p-2.5 text-xs">
+                                                {{ $item->ngay_ket_thuc ? $item->ngay_ket_thuc->format('d/m/Y') : '---' }}
+                                            </td>
+                                            <td class="p-2.5 text-xs text-center font-medium">
+                                                {{ number_format($item->so_ngay_nghi, 1) }}
+                                            </td>
+                                            <td class="p-2.5 text-xs max-w-[150px] truncate"
+                                                title="{{ $item->ly_do }}">
+                                                {{ $item->ly_do }}
+                                            </td>
+                                            <td class="p-2.5 text-xs">
+                                                <span
+                                                    class="px-2 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$item->trang_thai] ?? 'bg-gray-100 text-gray-700' }}">
+                                                    {{ $statusTexts[$item->trang_thai] ?? $item->trang_thai }}
+                                                </span>
+                                            </td>
+                                            <td class="p-2.5 text-xs">
+                                                @if ($item->nguoiDuyet)
+                                                    {{ $item->nguoiDuyet->ho_ten ?? '' }}
+                                                    <br><span
+                                                        class="text-gray-400 text-[10px]">{{ $item->thoi_gian_duyet ? $item->thoi_gian_duyet->format('d/m/Y H:i') : '' }}</span>
+                                                @else
+                                                    <span class="text-gray-400">---</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        @if ($lichSuNghiPhep->hasPages())
+                            <div class="mt-4 flex justify-between items-center text-xs">
+                                <div class="text-gray-500">Hiển thị {{ $lichSuNghiPhep->firstItem() }} -
+                                    {{ $lichSuNghiPhep->lastItem() }} / {{ $lichSuNghiPhep->total() }} đơn</div>
+                                <div>
+                                    {{ $lichSuNghiPhep->appends(['nghi_phep_page' => $lichSuNghiPhep->currentPage()])->links('pagination::tailwind') }}
+                                </div>
+                            </div>
+                        @endif
+                    @else
+                        <p class="text-gray-500 dark:text-gray-400 text-sm py-2">📭 Chưa có lịch sử nghỉ phép</p>
+                    @endif
+                </div>
+
+                {{-- BẢNG 2: LỊCH SỬ TĂNG CA --}}
+                <div
+                    class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-slate-700 mb-6">
+                    <div
+                        class="flex items-center justify-between border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+                            <span>⏰</span> Lịch sử tăng ca
+                        </h3>
+                        <span class="text-xs text-gray-400">Tổng: {{ $lichSuTangCa->total() }} đơn</span>
+                    </div>
+
+                    @if ($lichSuTangCa && $lichSuTangCa->count() > 0)
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm">
+                                <thead>
+                                    <tr
+                                        class="border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700/50 text-gray-600 dark:text-gray-300">
+                                        <th class="text-left p-2.5 font-semibold text-xs">Ngày tạo</th>
+                                        <th class="text-left p-2.5 font-semibold text-xs">Ngày TC</th>
+                                        <th class="text-left p-2.5 font-semibold text-xs">Giờ</th>
+                                        <th class="text-left p-2.5 font-semibold text-xs text-center">Số giờ</th>
+                                        <th class="text-left p-2.5 font-semibold text-xs">Lý do</th>
+                                        <th class="text-left p-2.5 font-semibold text-xs">Trạng thái</th>
+                                        <th class="text-left p-2.5 font-semibold text-xs">Người duyệt</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($lichSuTangCa as $item)
+                                        @php
+                                            $statusColors = [
+                                                'cho_duyet' =>
+                                                    'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+                                                'da_duyet' =>
+                                                    'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+                                                'tu_choi' =>
+                                                    'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+                                                'huy' =>
+                                                    'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400',
+                                            ];
+                                            $statusTexts = [
+                                                'cho_duyet' => '⏳ Chờ duyệt',
+                                                'da_duyet' => '✅ Đã duyệt',
+                                                'tu_choi' => '❌ Từ chối',
+                                                'huy' => '🗑️ Đã hủy',
+                                            ];
+                                        @endphp
+                                        <tr
+                                            class="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition">
+                                            <td class="p-2.5 text-xs">
+                                                {{ $item->created_at ? $item->created_at->format('d/m/Y') : '---' }}
+                                                <br><span
+                                                    class="text-gray-400 text-[10px]">{{ $item->created_at ? $item->created_at->format('H:i') : '' }}</span>
+                                            </td>
+                                            <td class="p-2.5 text-xs">
+                                                {{ $item->ngay_tang_ca ? \Carbon\Carbon::parse($item->ngay_tang_ca)->format('d/m/Y') : '---' }}
+                                            </td>
+                                            <td class="p-2.5 text-xs">{{ $item->gio_bat_dau }} -
+                                                {{ $item->gio_ket_thuc }}</td>
+                                            <td class="p-2.5 text-xs text-center font-medium">
+                                                {{ $item->so_gio_tang_ca }}h</td>
+                                            <td class="p-2.5 text-xs max-w-[150px] truncate"
+                                                title="{{ $item->ly_do_tang_ca }}">
+                                                {{ $item->ly_do_tang_ca }}
+                                            </td>
+                                            <td class="p-2.5 text-xs">
+                                                <span
+                                                    class="px-2 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$item->trang_thai] ?? 'bg-gray-100 text-gray-700' }}">
+                                                    {{ $statusTexts[$item->trang_thai] ?? $item->trang_thai }}
+                                                </span>
+                                            </td>
+                                            <td class="p-2.5 text-xs">
+                                                @if ($item->nguoi_duyet)
+                                                    {{ $item->nguoi_duyet->ho_ten ?? '' }}
+                                                    <br><span
+                                                        class="text-gray-400 text-[10px]">{{ $item->thoi_gian_duyet ? \Carbon\Carbon::parse($item->thoi_gian_duyet)->format('d/m/Y H:i') : '' }}</span>
+                                                @else
+                                                    <span class="text-gray-400">---</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        @if ($lichSuTangCa->hasPages())
+                            <div class="mt-4 flex justify-between items-center text-xs">
+                                <div class="text-gray-500">Hiển thị {{ $lichSuTangCa->firstItem() }} -
+                                    {{ $lichSuTangCa->lastItem() }} / {{ $lichSuTangCa->total() }} đơn</div>
+                                <div>
+                                    {{ $lichSuTangCa->appends(['tang_ca_page' => $lichSuTangCa->currentPage()])->links('pagination::tailwind') }}
+                                </div>
+                            </div>
+                        @endif
+                    @else
+                        <p class="text-gray-500 dark:text-gray-400 text-sm py-2">📭 Chưa có lịch sử tăng ca</p>
+                    @endif
+                </div>
+
+                {{-- BẢNG 3: LỊCH SỬ ĐƠN XIN VỀ SỚM --}}
+                <div
+                    class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-slate-700">
+                    <div
+                        class="flex items-center justify-between border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+                            <span>🏠</span> Lịch sử đơn xin về sớm
+                        </h3>
+                        <span class="text-xs text-gray-400">Tổng: {{ isset($lichSuVeSom) ? $lichSuVeSom->total() : 0 }}
+                            đơn</span>
+                    </div>
+
+                    @if (isset($lichSuVeSom) && $lichSuVeSom->count() > 0)
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm">
+                                <thead>
+                                    <tr
+                                        class="border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700/50 text-gray-600 dark:text-gray-300">
+                                        <th class="text-left p-2.5 font-semibold text-xs">Ngày tạo</th>
+                                        <th class="text-left p-2.5 font-semibold text-xs">Ngày xin về</th>
+                                        <th class="text-left p-2.5 font-semibold text-xs">Giờ ra về</th>
+                                        <th class="text-left p-2.5 font-semibold text-xs">Lý do</th>
+                                        <th class="text-left p-2.5 font-semibold text-xs">Trạng thái</th>
+                                        <th class="text-left p-2.5 font-semibold text-xs">Người duyệt</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($lichSuVeSom as $item)
+                                        @php
+                                            $statusColors = [
+                                                'cho_duyet' =>
+                                                    'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+                                                'da_duyet' =>
+                                                    'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+                                                'tu_choi' =>
+                                                    'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+                                                'huy' =>
+                                                    'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400',
+                                            ];
+                                            $statusTexts = [
+                                                'cho_duyet' => '⏳ Chờ duyệt',
+                                                'da_duyet' => '✅ Đã duyệt',
+                                                'tu_choi' => '❌ Từ chối',
+                                                'huy' => '🗑️ Đã hủy',
+                                            ];
+                                        @endphp
+                                        <tr
+                                            class="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition">
+                                            <td class="p-2.5 text-xs">
+                                                {{ $item->created_at ? $item->created_at->format('d/m/Y') : '---' }}
+                                                <br><span
+                                                    class="text-gray-400 text-[10px]">{{ $item->created_at ? $item->created_at->format('H:i') : '' }}</span>
+                                            </td>
+                                            <td class="p-2.5 text-xs">
+                                                {{ $item->ngay ? \Carbon\Carbon::parse($item->ngay)->format('d/m/Y') : '---' }}
+                                            </td>
+                                            <td class="p-2.5 text-xs font-medium text-gray-800 dark:text-gray-200">
+                                                {{ $item->gio_ra_du_kien ? \Carbon\Carbon::parse($item->gio_ra_du_kien)->format('H:i') : $item->chamCong->gio_ra ?? '---' }}
+                                            </td>
+                                            <td class="p-2.5 text-xs max-w-[200px] truncate"
+                                                title="{{ $item->ly_do }}">
+                                                {{ $item->ly_do }}
+                                            </td>
+                                            <td class="p-2.5 text-xs">
+                                                <span
+                                                    class="px-2 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$item->trang_thai] ?? 'bg-gray-100 text-gray-700' }}">
+                                                    {{ $statusTexts[$item->trang_thai] ?? $item->trang_thai }}
+                                                </span>
+                                            </td>
+                                            <td class="p-2.5 text-xs">
+                                                @php
+                                                    $nguoiDuyetModel = $item->nguoiDuyet ?? $item->nguoi_duyet;
+                                                @endphp
+                                                @if ($nguoiDuyetModel)
+                                                    {{ $nguoiDuyetModel->ho_ten ?? '' }}
+                                                    <br><span
+                                                        class="text-gray-400 text-[10px]">{{ $item->thoi_gian_duyet ? \Carbon\Carbon::parse($item->thoi_gian_duyet)->format('d/m/Y H:i') : '' }}</span>
+                                                @else
+                                                    <span class="text-gray-400">---</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        @if (method_exists($lichSuVeSom, 'hasPages') && $lichSuVeSom->hasPages())
+                            <div class="mt-4 flex justify-between items-center text-xs">
+                                <div class="text-gray-500">
+                                    Hiển thị {{ $lichSuVeSom->firstItem() }} - {{ $lichSuVeSom->lastItem() }} /
+                                    {{ $lichSuVeSom->total() }} đơn
+                                </div>
+                                <div>
+                                    {{ $lichSuVeSom->appends(['ve_som_page' => $lichSuVeSom->currentPage()])->links('pagination::tailwind') }}
+                                </div>
+                            </div>
+                        @endif
+                    @else
+                        <div class="text-gray-500 dark:text-gray-400 text-sm py-2 flex items-center gap-2">
+                            <span>🗣️</span> Chưa có lịch sử đơn xin về sớm
+                        </div>
+                    @endif
+                </div>
+
+            </div>
+
         </div>
 
     </div>
@@ -1404,6 +1775,44 @@
 
         .tab-content.hidden {
             display: none;
+        }
+
+        .tab-btn {
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background-color: #1d4ed8;
+            color: white;
+        }
+
+        .tab-btn:not(.active):hover {
+            background-color: #f3f4f6;
+        }
+
+        .dark .tab-btn:not(.active):hover {
+            background-color: #1f2937;
+        }
+
+        .tab-content {
+            transition: opacity 0.3s ease;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.hidden {
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @keyframes fadeIn {
