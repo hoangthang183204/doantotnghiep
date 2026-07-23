@@ -520,16 +520,19 @@
                                     <div
                                         class="bg-gray-50 dark:bg-slate-700 rounded-lg p-3 border border-gray-200 dark:border-slate-600 hover:shadow-md transition">
                                         <div class="flex justify-between items-start">
-                                            <div>
+                                            <div class="flex-1">
                                                 <p class="font-medium text-gray-800 dark:text-white">
-                                                    {{ $item->ten_chung_chi }}</p>
+                                                    {{ $item->ten_chung_chi }}
+                                                </p>
                                                 <p class="text-sm text-gray-500 dark:text-gray-400">🏛️
                                                     {{ $item->to_chuc_cap }}</p>
                                             </div>
-                                            <span class="text-xs px-2 py-1 {{ $item->mau_trang_thai }} rounded-full">
+                                            <span
+                                                class="text-xs px-2 py-1 {{ $item->mau_trang_thai }} rounded-full whitespace-nowrap ml-2">
                                                 {{ $item->trang_thai_hien_thi }}
                                             </span>
                                         </div>
+
                                         <div class="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
                                             <span>📅 {{ $item->nam_cap }}</span>
                                             @if ($item->ngay_het_han)
@@ -538,11 +541,132 @@
                                                 <span>♾️ Không hết hạn</span>
                                             @endif
                                         </div>
+
+                                        {{-- ===== HIỂN THỊ FILE CHỨNG CHỈ ===== --}}
+                                        @if ($item->file_dinh_kem)
+                                            <div class="mt-3 pt-3 border-t border-gray-200 dark:border-slate-600">
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                                                        @php
+                                                            $extension = pathinfo(
+                                                                $item->file_dinh_kem,
+                                                                PATHINFO_EXTENSION,
+                                                            );
+                                                            $iconClass = 'fa-file';
+                                                            $iconColor = 'text-gray-500';
+                                                            $bgColor = 'bg-gray-100';
+
+                                                            if (in_array($extension, ['pdf'])) {
+                                                                $iconClass = 'fa-file-pdf';
+                                                                $iconColor = 'text-red-500';
+                                                                $bgColor = 'bg-red-50';
+                                                            } elseif (
+                                                                in_array($extension, [
+                                                                    'jpg',
+                                                                    'jpeg',
+                                                                    'png',
+                                                                    'gif',
+                                                                    'webp',
+                                                                ])
+                                                            ) {
+                                                                $iconClass = 'fa-file-image';
+                                                                $iconColor = 'text-blue-500';
+                                                                $bgColor = 'bg-blue-50';
+                                                            } elseif (in_array($extension, ['doc', 'docx'])) {
+                                                                $iconClass = 'fa-file-word';
+                                                                $iconColor = 'text-blue-600';
+                                                                $bgColor = 'bg-blue-50';
+                                                            } elseif (in_array($extension, ['xls', 'xlsx'])) {
+                                                                $iconClass = 'fa-file-excel';
+                                                                $iconColor = 'text-green-600';
+                                                                $bgColor = 'bg-green-50';
+                                                            } elseif (in_array($extension, ['ppt', 'pptx'])) {
+                                                                $iconClass = 'fa-file-powerpoint';
+                                                                $iconColor = 'text-orange-500';
+                                                                $bgColor = 'bg-orange-50';
+                                                            }
+                                                        @endphp
+
+                                                        <div
+                                                            class="w-8 h-8 rounded-lg {{ $bgColor }} flex items-center justify-center flex-shrink-0">
+                                                            <i
+                                                                class="fa-solid {{ $iconClass }} {{ $iconColor }} text-sm"></i>
+                                                        </div>
+
+                                                        <span
+                                                            class="text-sm text-gray-600 dark:text-gray-300 truncate flex-1"
+                                                            title="{{ basename($item->file_dinh_kem) }}">
+                                                            {{ basename($item->file_dinh_kem) }}
+                                                        </span>
+                                                    </div>
+
+                                                    <div class="flex items-center gap-1 flex-shrink-0">
+                                                        <button
+                                                            onclick="openFilePreview('{{ asset('storage/' . $item->file_dinh_kem) }}', 'Chứng chỉ: {{ $item->ten_chung_chi }}')"
+                                                            class="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                                                            title="Xem chứng chỉ">
+                                                            <i class="fa-regular fa-eye text-sm"></i>
+                                                        </button>
+                                                        <a href="{{ asset('storage/' . $item->file_dinh_kem) }}" download
+                                                            class="p-1.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition"
+                                                            title="Tải xuống">
+                                                            <i class="fa-solid fa-download text-sm"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+
+                                                {{-- Hiển thị dung lượng file --}}
+                                                @php
+                                                    $filePath = storage_path('app/public/' . $item->file_dinh_kem);
+                                                    $fileSize = file_exists($filePath) ? filesize($filePath) : 0;
+                                                    $sizeText = '';
+                                                    if ($fileSize > 0) {
+                                                        if ($fileSize < 1024) {
+                                                            $sizeText = $fileSize . ' B';
+                                                        } elseif ($fileSize < 1048576) {
+                                                            $sizeText = round($fileSize / 1024, 1) . ' KB';
+                                                        } else {
+                                                            $sizeText = round($fileSize / 1048576, 1) . ' MB';
+                                                        }
+                                                    }
+                                                @endphp
+                                                @if ($sizeText)
+                                                    <div class="text-[10px] text-gray-400 mt-1">
+                                                        📎 {{ strtoupper($extension) }} • {{ $sizeText }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div class="mt-3 pt-3 border-t border-gray-200 dark:border-slate-600">
+                                                <span class="text-xs text-gray-400 flex items-center gap-1">
+                                                    <i class="fa-regular fa-file"></i>
+                                                    Chưa có file đính kèm
+                                                </span>
+                                            </div>
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>
+
+                            {{-- Thống kê chứng chỉ --}}
+                            <div class="mt-3 flex flex-wrap gap-3 text-xs text-gray-500 dark:text-gray-400">
+                                <span>📊 Tổng: <strong
+                                        class="text-gray-700 dark:text-gray-300">{{ $hoSo->chung_chi->count() }}</strong>
+                                    chứng chỉ</span>
+                                <span>•</span>
+                                <span>📄 Có file: <strong
+                                        class="text-green-600 dark:text-green-400">{{ $hoSo->chung_chi->whereNotNull('file_dinh_kem')->count() }}</strong></span>
+                                <span>•</span>
+                                <span>⏳ Sắp hết hạn: <strong
+                                        class="text-yellow-600 dark:text-yellow-400">{{ $hoSo->chung_chi->filter(function ($cc) {return $cc->ngay_het_han && $cc->ngay_het_han->diffInDays(now()) <= 30;})->count() }}</strong></span>
+                            </div>
                         @else
-                            <p class="text-gray-500 dark:text-gray-400 text-sm">Chưa có chứng chỉ</p>
+                            <div class="text-center py-8 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+                                <div class="text-4xl mb-2">🏅</div>
+                                <p class="text-gray-500 dark:text-gray-400 text-sm">Chưa có chứng chỉ</p>
+                                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Cập nhật trong phần Chỉnh sửa hồ
+                                    sơ</p>
+                            </div>
                         @endif
                     </div>
 
