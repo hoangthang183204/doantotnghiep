@@ -1405,10 +1405,10 @@
 
                     if (!container.querySelector('[id^="no-"]')) {
                         container.innerHTML = `
-                            <div class="text-gray-500 text-center py-4" id="no-${id.split('-')[0]}">
-                                ${msg}
-                            </div>
-                        `;
+                    <div class="text-gray-500 text-center py-4" id="no-${id.split('-')[0]}">
+                        ${msg}
+                    </div>
+                `;
                     }
                 }
             }
@@ -1462,59 +1462,6 @@
 
                 const newId = 'new_' + Date.now();
                 const html = `
-    <div class="item certificate-item border rounded-xl p-4 mb-4" data-id="${newId}">
-        <div class="flex justify-between items-center mb-3">
-            <span class="text-sm text-gray-500">Mới</span>
-            <button type="button" onclick="removeItem(this, 'certificates')" class="btn-remove">
-                <i class="fa-solid fa-trash"></i> Xóa
-            </button>
-        </div>
-        <div class="grid md:grid-cols-2 gap-4">
-            <div>
-                <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tên chứng chỉ *</label>
-                <input class="input" name="new_certificates[${newId}][ten_chung_chi]" placeholder="VD: Chứng chỉ PHP, TOEIC">
-            </div>
-            <div>
-                <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tổ chức cấp</label>
-                <input class="input" name="new_certificates[${newId}][to_chuc_cap]" placeholder="VD: Đại học Bách Khoa">
-            </div>
-            <div>
-                <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Năm cấp</label>
-                <input type="number" class="input" name="new_certificates[${newId}][nam_cap]" placeholder="VD: 2023" min="1900" max="${new Date().getFullYear()}">
-            </div>
-            <div>
-                <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Ngày hết hạn</label>
-                <input type="date" class="input" name="new_certificates[${newId}][ngay_het_han]">
-            </div>
-        </div>
-        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                <div>
-                    <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
-                        <i class="fa-solid fa-file-upload mr-1"></i> File đính kèm (PDF, JPG, PNG)
-                    </label>
-                    <input type="file" 
-                           class="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/20 dark:file:text-blue-300"
-                           name="new_certificates[${newId}][file_dinh_kem]"
-                           accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-                    <p class="text-xs text-gray-400 mt-1">Tối đa 5MB - Hỗ trợ: PDF, JPG, PNG, DOC, DOCX</p>
-                </div>
-                <div class="flex justify-center md:justify-end">
-                    <span class="text-sm text-gray-400">Chưa có file</span>
-                </div>
-            </div>
-        </div>
-    </div>
-    `;
-                container.insertAdjacentHTML('beforeend', html);
-            }
-            console.log('➕ Adding certificate');
-            const container = document.getElementById('certificates-container');
-            const emptyMsg = container.querySelector('[id^="no-"]');
-            if (emptyMsg) emptyMsg.remove();
-
-            const newId = 'new_' + Date.now();
-            const html = `
         <div class="item certificate-item border rounded-xl p-4 mb-4" data-id="${newId}">
             <div class="flex justify-between items-center mb-3">
                 <span class="text-sm text-gray-500">Mới</span>
@@ -1540,9 +1487,26 @@
                     <input type="date" class="input" name="new_certificates[${newId}][ngay_het_han]">
                 </div>
             </div>
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                    <div>
+                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
+                            <i class="fa-solid fa-file-upload mr-1"></i> File đính kèm (PDF, JPG, PNG)
+                        </label>
+                        <input type="file" 
+                               class="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/20 dark:file:text-blue-300"
+                               name="new_certificates[${newId}][file_dinh_kem]"
+                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                        <p class="text-xs text-gray-400 mt-1">Tối đa 5MB - Hỗ trợ: PDF, JPG, PNG, DOC, DOCX</p>
+                    </div>
+                    <div class="flex justify-center md:justify-end">
+                        <span class="text-sm text-gray-400">Chưa có file</span>
+                    </div>
+                </div>
+            </div>
         </div>
     `;
-            container.insertAdjacentHTML('beforeend', html);
+                container.insertAdjacentHTML('beforeend', html);
             }
 
             // ==========================================
