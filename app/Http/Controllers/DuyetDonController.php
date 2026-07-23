@@ -26,8 +26,11 @@ class DuyetDonController extends Controller
      */
     private function getScope(Request $request)
     {
+        /** @var \App\Models\NguoiDung $user */
         $user = Auth::user();
-        $isAdmin = $user->vaiTros()->whereIn('name', ['admin', 'Super Admin'])->exists();
+
+        // Tận dụng hàm isAdmin() có sẵn trong Model NguoiDung
+        $isAdmin = $user ? $user->isAdmin() : false;
         $isTruongPhong = $this->isTruongPhong($user);
 
         return [
@@ -66,12 +69,10 @@ class DuyetDonController extends Controller
      */
     private function getPhongBanId($user)
     {
-        // Từ user
         if ($user->phong_ban_id) {
             return $user->phong_ban_id;
         }
 
-        // Từ bảng phong_ban
         $phongBan = PhongBan::where('truong_phong_id', $user->id)->first();
         if ($phongBan) {
             return $phongBan->id;
@@ -97,8 +98,6 @@ class DuyetDonController extends Controller
 
     /**
      * 📋 DANH SÁCH ĐƠN - DÙNG CHUNG
-     * - Admin: Xem tất cả
-     * - Trưởng phòng: Chỉ xem đơn của nhân viên trong phòng
      */
     public function index(Request $request)
     {
@@ -115,17 +114,15 @@ class DuyetDonController extends Controller
             'nguoiDuyet.hoSo'
         ]);
 
-        // ⭐ LỌC THEO PHÒNG BAN (CHO TRƯỞNG PHÒNG)
         if ($isTruongPhong && !$isAdmin) {
             $nhanVienIds = $this->getNhanVienIdsInPhong($phongBanId);
             if (!empty($nhanVienIds)) {
                 $query->whereIn('nguoi_dung_id', $nhanVienIds);
             } else {
-                $query->whereRaw('1 = 0'); // Không có nhân viên nào
+                $query->whereRaw('1 = 0');
             }
         }
 
-        // BỘ LỌC
         if ($request->filled('trang_thai')) {
             $query->where('trang_thai', $request->trang_thai);
         }
@@ -160,7 +157,6 @@ class DuyetDonController extends Controller
 
         $danhSach = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        // THỐNG KÊ
         $statsQuery = clone $query;
         $thongKe = [
             'tong' => DonXinNghi::count(),
@@ -169,7 +165,6 @@ class DuyetDonController extends Controller
             'tu_choi' => DonXinNghi::where('trang_thai', 'tu_choi')->count(),
         ];
 
-        // Nếu là trưởng phòng, thống kê trong phòng
         if ($isTruongPhong && !$isAdmin && !empty($nhanVienIds)) {
             $thongKe = [
                 'tong' => DonXinNghi::whereIn('nguoi_dung_id', $nhanVienIds)->count(),
@@ -180,15 +175,13 @@ class DuyetDonController extends Controller
         }
 
         $loaiNghiPheps = LoaiNghiPhep::where('trang_thai', 1)->get();
-
-        // Xác định view
         $view = $isAdmin ? 'admin.don-nghi.index' : 'truong-phong.don-nghi.index';
 
         return view($view, compact('danhSach', 'thongKe', 'loaiNghiPheps', 'isAdmin', 'isTruongPhong'));
     }
 
     /**
-     * 👁️ CHI TIẾT ĐƠN - DÙNG CHUNG
+     * 👁️ CHI TIẾT ĐƠN
      */
     public function show($id)
     {
@@ -206,7 +199,6 @@ class DuyetDonController extends Controller
             'nguoiDuyet.hoSo'
         ]);
 
-        // ⭐ KIỂM TRA QUYỀN XEM
         if ($isTruongPhong && !$isAdmin) {
             $nhanVienIds = $this->getNhanVienIdsInPhong($phongBanId);
             if (!empty($nhanVienIds)) {
@@ -217,19 +209,13 @@ class DuyetDonController extends Controller
         }
 
         $donNghi = $query->findOrFail($id);
-
         $view = $isAdmin ? 'admin.don-nghi.show' : 'truong-phong.don-nghi.show';
 
         return view($view, compact('donNghi', 'isAdmin'));
     }
 
     /**
-     * ✅ DUYỆT ĐƠN - DÙNG CHUNG
-     */
-   // app/Http/Controllers/DuyetDonController.php
-
-    /**
-     * ✅ DUYỆT ĐƠN - Trả về JSON cho AJAX
+     * ✅ DUYỆT ĐƠN - Trả về JSON cho AJAX (ĐÃ THÊM CHẶN TỰ DUYỆT)
      */
     public function duyet(Request $request, $id)
     {
@@ -255,6 +241,14 @@ class DuyetDonController extends Controller
 
         $donNghi = $query->findOrFail($id);
 
+        // ⛔ CHẶN KHÔNG CHO TỰ DUYỆT ĐƠN CỦA CHÍNH MÌNH
+        if ((int)$donNghi->nguoi_dung_id === (int)$user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => '❌ Bạn không thể tự duyệt đơn xin nghỉ phép của chính mình!'
+            ], 403);
+        }
+
         DB::beginTransaction();
         try {
             $donNghi->update([
@@ -274,7 +268,6 @@ class DuyetDonController extends Controller
 
             DB::commit();
 
-            // 🔥 SỬA: Trả về JSON thay vì redirect
             return response()->json([
                 'success' => true,
                 'message' => '✅ Đã duyệt đơn nghỉ phép thành công.'
@@ -289,7 +282,7 @@ class DuyetDonController extends Controller
     }
 
     /**
-     * ❌ TỪ CHỐI ĐƠN - Trả về JSON cho AJAX
+     * ❌ TỪ CHỐI ĐƠN - Trả về JSON cho AJAX (ĐÃ THÊM CHẶN TỰ TỪ CHỐI)
      */
     public function tuChoi(Request $request, $id)
     {
@@ -319,6 +312,14 @@ class DuyetDonController extends Controller
 
         $donNghi = $query->findOrFail($id);
 
+        // ⛔ CHẶN KHÔNG CHO TỰ TỪ CHỐI ĐƠN CỦA CHÍNH MÌNH
+        if ((int)$donNghi->nguoi_dung_id === (int)$user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => '❌ Bạn không thể tự thao tác trên đơn xin nghỉ phép của chính mình!'
+            ], 403);
+        }
+
         $donNghi->update([
             'trang_thai' => 'tu_choi',
             'nguoi_duyet_id' => $user->id,
@@ -328,7 +329,6 @@ class DuyetDonController extends Controller
 
         $this->notificationService->notifyLeaveRequest($donNghi, 'rejected');
 
-        // 🔥 SỬA: Trả về JSON thay vì redirect
         return response()->json([
             'success' => true,
             'message' => '✅ Đã từ chối đơn nghỉ phép.'
@@ -336,7 +336,7 @@ class DuyetDonController extends Controller
     }
 
     /**
-     * 📊 DUYỆT HÀNG LOẠT - DÙNG CHUNG
+     * 📊 DUYỆT HÀNG LOẠT (ĐÃ BỎ QUA ĐƠN CỦA CHÍNH MÌNH)
      */
     public function duyetHangLoat(Request $request)
     {
@@ -374,6 +374,12 @@ class DuyetDonController extends Controller
         try {
             $count = 0;
             foreach ($donNghiList as $donNghi) {
+
+                // ⛔ Bỏ qua đơn của chính mình khi duyệt hàng loạt
+                if ((int)$donNghi->nguoi_dung_id === (int)$user->id) {
+                    continue;
+                }
+
                 $donNghi->update([
                     'trang_thai' => $request->action,
                     'nguoi_duyet_id' => $user->id,
