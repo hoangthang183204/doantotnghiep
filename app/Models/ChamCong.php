@@ -487,12 +487,14 @@ class ChamCong extends Model
         return $phutSom > $phutChoPhep;
     }
 
+    // Trong hàm tinhSoCong() của model ChamCong
     public function tinhSoCong(): float
     {
         if (!$this->so_gio_lam) {
             return 0;
         }
-        return round($this->so_gio_lam / 8, 2);
+        // Tối đa 1 công/ngày
+        return min(round($this->so_gio_lam / 8, 2), 1);
     }
 
     public function tinhLuongNgay(float $luongCoBan, float $tyLeTangCa = 1.5): array

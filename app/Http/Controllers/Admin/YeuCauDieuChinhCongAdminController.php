@@ -26,6 +26,7 @@ class YeuCauDieuChinhCongAdminController extends Controller
     {
         $this->notificationService = $notificationService;
     }
+
     /**
      * Hiển thị danh sách tất cả yêu cầu điều chỉnh công
      */
@@ -117,17 +118,13 @@ class YeuCauDieuChinhCongAdminController extends Controller
             return redirect()->back()->withErrors(['error' => 'Không tìm thấy bản ghi hoặc yêu cầu đã được duyệt.']);
         }
 
-        $chamCong = ChamCong::where('nguoi_dung_id', $yeuCau->nguoi_dung_id)
-            ->whereDate('ngay_cham_cong', $yeuCau->ngay)
-            ->first();
-
         DB::beginTransaction();
 
         try {
             $trangThaiMoi = $request->hanh_dong === 'duyet' ? 'da_duyet' : 'tu_choi';
 
             if ($trangThaiMoi === 'da_duyet') {
-                // Kiểm tra đã chốt lương chưa
+                // Kiểm tra đã chốt lương
                 $thang = Carbon::parse($yeuCau->ngay)->month;
                 $nam = Carbon::parse($yeuCau->ngay)->year;
 
@@ -141,49 +138,69 @@ class YeuCauDieuChinhCongAdminController extends Controller
                         ->withErrors(['error' => "Nhân viên đã được chốt lương tháng {$thang}/{$nam}, không thể phê duyệt."]);
                 }
 
+                // ⭐ Lấy bản ghi chấm công
+                $chamCong = ChamCong::where('nguoi_dung_id', $yeuCau->nguoi_dung_id)
+                    ->whereDate('ngay_cham_cong', $yeuCau->ngay)
+                    ->first();
+
+                // ⭐ Lấy giờ mới từ yêu cầu
+                $gioVaoMoi = $yeuCau->gio_vao ? Carbon::parse($yeuCau->gio_vao)->format('H:i:s') : null;
+                $gioRaMoi = $yeuCau->gio_ra ? Carbon::parse($yeuCau->gio_ra)->format('H:i:s') : null;
+
                 if ($chamCong) {
-                    $chamCong->update([
-                        'gio_vao' => $yeuCau->gio_vao,
-                        'gio_ra' => $yeuCau->gio_ra,
-                        'ghi_chu' => $yeuCau->ly_do,
-                        'trang_thai_duyet' => 1
-                    ]);
+                    // ⭐ Cập nhật giờ mới (KHÔNG gán phuong_thuc_cham_cong)
+                    $chamCong->gio_vao = $gioVaoMoi;
+                    $chamCong->gio_ra = $gioRaMoi;
+                    $chamCong->ghi_chu = $yeuCau->ly_do;
+                    $chamCong->trang_thai_duyet = ChamCong::TRANG_THAI_DUYET_DA_DUYET;
+                    
+                    // ⭐ TÍNH LẠI SỐ GIỜ LÀM VÀ SỐ CÔNG
+                    if ($gioVaoMoi && $gioRaMoi) {
+                        $chamCong->so_gio_lam = ChamCong::tinhSoGioLam($gioVaoMoi, $gioRaMoi);
+                        $chamCong->so_cong = $chamCong->tinhSoCong();
+                        // Giới hạn số công tối đa là 1
+                        if ($chamCong->so_cong > 1) {
+                            $chamCong->so_cong = 1;
+                        }
+                    }
+                    
+                    $chamCong->save();
                 } else {
+                    // Tạo mới bản ghi chấm công (KHÔNG gán phuong_thuc_cham_cong)
                     $chamCong = ChamCong::create([
                         'nguoi_dung_id' => $yeuCau->nguoi_dung_id,
                         'ngay_cham_cong' => $yeuCau->ngay,
-                        'gio_vao' => $yeuCau->gio_vao,
-                        'gio_ra' => $yeuCau->gio_ra,
+                        'gio_vao' => $gioVaoMoi,
+                        'gio_ra' => $gioRaMoi,
                         'ghi_chu' => $yeuCau->ly_do,
-                        'trang_thai_duyet' => 1
+                        'trang_thai_duyet' => ChamCong::TRANG_THAI_DUYET_DA_DUYET,
                     ]);
-                }
 
-                // ⭐ SỬA: Cập nhật trạng thái thủ công (không gọi method không tồn tại)
-                if ($chamCong->gio_vao && $chamCong->gio_ra) {
-                    // Kiểm tra đi muộn
-                    $gioChuan = '08:30:00';
-                    $gioVao = Carbon::parse($chamCong->gio_vao);
-                    $gioChuanCarbon = Carbon::parse($gioChuan);
-
-                    if ($gioVao->gt($gioChuanCarbon)) {
-                        $chamCong->trang_thai = 'di_muon';
-                    } else {
-                        // Kiểm tra về sớm
-                        $gioKetThucChuan = '17:30:00';
-                        $gioRa = Carbon::parse($chamCong->gio_ra);
-                        $gioKetThucCarbon = Carbon::parse($gioKetThucChuan);
-
-                        if ($gioRa->lt($gioKetThucCarbon)) {
-                            $chamCong->trang_thai = 've_som';
-                        } else {
-                            $chamCong->trang_thai = 'dung_gio';
+                    if ($gioVaoMoi && $gioRaMoi) {
+                        $chamCong->so_gio_lam = ChamCong::tinhSoGioLam($gioVaoMoi, $gioRaMoi);
+                        $chamCong->so_cong = $chamCong->tinhSoCong();
+                        if ($chamCong->so_cong > 1) {
+                            $chamCong->so_cong = 1;
                         }
+                        $chamCong->save();
                     }
-                } else {
-                    $chamCong->trang_thai = 'khong_cham_cong';
                 }
+
+                // ⭐ TÍNH LẠI TRẠNG THÁI DỰA TRÊN GIỜ MỚI
+                $this->tinhLaiTrangThaiChamCong($chamCong);
                 $chamCong->save();
+
+                // ⭐ LOG ĐỂ KIỂM TRA
+                \Log::info('Đã cập nhật chấm công sau khi duyệt chỉnh công', [
+                    'yeu_cau_id' => $yeuCau->id,
+                    'nguoi_dung_id' => $yeuCau->nguoi_dung_id,
+                    'ngay' => $yeuCau->ngay,
+                    'gio_vao_moi' => $chamCong->gio_vao,
+                    'gio_ra_moi' => $chamCong->gio_ra,
+                    'trang_thai_moi' => $chamCong->trang_thai,
+                    'phut_di_muon' => $chamCong->phut_di_muon ?? 0,
+                    'phut_ve_som' => $chamCong->phut_ve_som ?? 0,
+                ]);
             }
 
             $yeuCau->update([
@@ -193,7 +210,6 @@ class YeuCauDieuChinhCongAdminController extends Controller
                 'ghi_chu_duyet' => $request->ghi_chu_duyet
             ]);
 
-            // ⭐ GỬI THÔNG BÁO
             $yeuCau->nguoiDung->notify(new PheDuyetYeuCauChinhCong($yeuCau, $trangThaiMoi));
             DB::commit();
 
@@ -257,53 +273,53 @@ class YeuCauDieuChinhCongAdminController extends Controller
                         ->exists();
 
                     if ($daChotLuong) {
-                        continue; // Bỏ qua yêu cầu này
+                        continue;
                     }
 
                     $chamCong = ChamCong::where('nguoi_dung_id', $yeuCau->nguoi_dung_id)
                         ->whereDate('ngay_cham_cong', $yeuCau->ngay)
                         ->first();
 
+                    $gioVaoMoi = $yeuCau->gio_vao ? Carbon::parse($yeuCau->gio_vao)->format('H:i:s') : null;
+                    $gioRaMoi = $yeuCau->gio_ra ? Carbon::parse($yeuCau->gio_ra)->format('H:i:s') : null;
+
                     if ($chamCong) {
-                        $chamCong->update([
-                            'gio_vao' => $yeuCau->gio_vao,
-                            'gio_ra' => $yeuCau->gio_ra,
-                            'ghi_chu' => $yeuCau->ly_do,
-                            'trang_thai_duyet' => 1
-                        ]);
+                        $chamCong->gio_vao = $gioVaoMoi;
+                        $chamCong->gio_ra = $gioRaMoi;
+                        $chamCong->ghi_chu = $yeuCau->ly_do;
+                        $chamCong->trang_thai_duyet = ChamCong::TRANG_THAI_DUYET_DA_DUYET;
+
+                        if ($gioVaoMoi && $gioRaMoi) {
+                            $chamCong->so_gio_lam = ChamCong::tinhSoGioLam($gioVaoMoi, $gioRaMoi);
+                            $chamCong->so_cong = $chamCong->tinhSoCong();
+                            if ($chamCong->so_cong > 1) {
+                                $chamCong->so_cong = 1;
+                            }
+                        }
+
+                        $chamCong->save();
                     } else {
                         $chamCong = ChamCong::create([
                             'nguoi_dung_id' => $yeuCau->nguoi_dung_id,
                             'ngay_cham_cong' => $yeuCau->ngay,
-                            'gio_vao' => $yeuCau->gio_vao,
-                            'gio_ra' => $yeuCau->gio_ra,
+                            'gio_vao' => $gioVaoMoi,
+                            'gio_ra' => $gioRaMoi,
                             'ghi_chu' => $yeuCau->ly_do,
-                            'trang_thai_duyet' => 1
+                            'trang_thai_duyet' => ChamCong::TRANG_THAI_DUYET_DA_DUYET,
                         ]);
-                    }
 
-                    // ⭐ SỬA: Cập nhật trạng thái thủ công
-                    if ($chamCong->gio_vao && $chamCong->gio_ra) {
-                        $gioChuan = '08:30:00';
-                        $gioVao = Carbon::parse($chamCong->gio_vao);
-                        $gioChuanCarbon = Carbon::parse($gioChuan);
-
-                        if ($gioVao->gt($gioChuanCarbon)) {
-                            $chamCong->trang_thai = 'di_muon';
-                        } else {
-                            $gioKetThucChuan = '17:30:00';
-                            $gioRa = Carbon::parse($chamCong->gio_ra);
-                            $gioKetThucCarbon = Carbon::parse($gioKetThucChuan);
-
-                            if ($gioRa->lt($gioKetThucCarbon)) {
-                                $chamCong->trang_thai = 've_som';
-                            } else {
-                                $chamCong->trang_thai = 'dung_gio';
+                        if ($gioVaoMoi && $gioRaMoi) {
+                            $chamCong->so_gio_lam = ChamCong::tinhSoGioLam($gioVaoMoi, $gioRaMoi);
+                            $chamCong->so_cong = $chamCong->tinhSoCong();
+                            if ($chamCong->so_cong > 1) {
+                                $chamCong->so_cong = 1;
                             }
+                            $chamCong->save();
                         }
-                    } else {
-                        $chamCong->trang_thai = 'khong_cham_cong';
                     }
+
+                    // ⭐ TÍNH LẠI TRẠNG THÁI
+                    $this->tinhLaiTrangThaiChamCong($chamCong);
                     $chamCong->save();
                 }
 
@@ -314,7 +330,6 @@ class YeuCauDieuChinhCongAdminController extends Controller
                     'ghi_chu_duyet' => $request->ghi_chu_duyet
                 ]);
 
-                // ⭐ SỬA: Gửi thông báo đúng class
                 $yeuCau->nguoiDung->notify(new PheDuyetYeuCauChinhCong($yeuCau, $trangThaiMoi));
 
                 $soLuongCapNhat++;
@@ -338,6 +353,67 @@ class YeuCauDieuChinhCongAdminController extends Controller
                 'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * ⭐ HÀM TÍNH LẠI TRẠNG THÁI CHẤM CÔNG
+     */
+    private function tinhLaiTrangThaiChamCong(ChamCong $chamCong): ChamCong
+    {
+        // Reset các giá trị cũ
+        $chamCong->phut_di_muon = 0;
+        $chamCong->phut_ve_som = 0;
+        
+        $gioVao = $chamCong->gio_vao;
+        $gioRa = $chamCong->gio_ra;
+
+        // Nếu không có giờ vào và ra → không chấm công
+        if (!$gioVao && !$gioRa) {
+            $chamCong->trang_thai = ChamCong::TRANG_THAI_KHONG_CHAM_CONG;
+            return $chamCong;
+        }
+
+        // Lấy thông tin ca làm việc
+        $caLamViec = $chamCong->caLamViec;
+        
+        // Nếu có ca làm việc, lấy giờ chuẩn từ ca
+        if ($caLamViec) {
+            $gioChuanVao = Carbon::parse($caLamViec->gio_bat_dau)->format('H:i');
+            $gioChuanRa = Carbon::parse($caLamViec->gio_ket_thuc)->format('H:i');
+        } else {
+            // Mặc định: 08:30 vào, 17:30 ra
+            $gioChuanVao = '08:30';
+            $gioChuanRa = '17:30';
+        }
+
+        // ⭐ TÍNH PHÚT ĐI MUỘN (nếu có giờ vào)
+        if ($gioVao) {
+            $chamCong->phut_di_muon = ChamCong::tinhPhutDiMuon($gioVao, $gioChuanVao);
+        }
+
+        // ⭐ TÍNH PHÚT VỀ SỚM (nếu có giờ ra)
+        if ($gioRa) {
+            $chamCong->phut_ve_som = ChamCong::tinhPhutVeSom($gioRa, $gioChuanRa);
+        }
+
+        // ⭐ XÁC ĐỊNH TRẠNG THÁI
+        $chamCong->trang_thai = ChamCong::xacDinhTrangThai(
+            $gioVao,
+            $gioRa,
+            $chamCong->phut_di_muon,
+            $chamCong->phut_ve_som
+        );
+
+        // ⭐ Nếu có giờ vào và phút đi muộn = 0, vào trước giờ chuẩn → đến sớm
+        if ($gioVao && $chamCong->phut_di_muon == 0) {
+            $gioVaoCarbon = Carbon::parse($gioVao);
+            $gioChuanVaoCarbon = Carbon::parse($gioChuanVao);
+            if ($gioVaoCarbon->lt($gioChuanVaoCarbon)) {
+                $chamCong->trang_thai = ChamCong::TRANG_THAI_DEN_SOM;
+            }
+        }
+
+        return $chamCong;
     }
 
     /**
@@ -459,5 +535,14 @@ class YeuCauDieuChinhCongAdminController extends Controller
             'tuNgay' => $tuNgay,
             'denNgay' => $denNgay
         ]);
+    }
+
+    /**
+     * Export báo cáo Excel
+     */
+    public function exportBaoCao(Request $request)
+    {
+        // TODO: Implement Excel export
+        return redirect()->back()->with('success', 'Chức năng đang phát triển!');
     }
 }
