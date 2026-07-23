@@ -23,51 +23,50 @@ class DonNghiController extends Controller
     }
 
     private function getSoDuNghiPhep($userId)
-    {
-        $namHienTai = Carbon::now()->year;
+{
+    $namHienTai = Carbon::now()->year;
 
-        // Lấy cấu hình phép từ bảng so_du_phep
-        $soDuPhep = \App\Models\SoDuPhep::where('nguoi_dung_id', $userId)
-            ->where('nam', $namHienTai)
-            ->first();
+    // Lấy cấu hình phép từ bảng so_du_phep
+    $soDuPhep = \App\Models\SoDuPhep::where('nguoi_dung_id', $userId)
+        ->where('nam', $namHienTai)
+        ->first();
 
-        // Nếu dữ liệu năm nay chưa được khởi tạo, tự động tạo nhanh bản ghi mẫu để tránh crash giao diện
-        if (!$soDuPhep) {
-            $soDuPhep = \App\Models\SoDuPhep::create([
-                'nguoi_dung_id' => $userId,
-                'nam' => $namHienTai,
-                'phep_nam_moi' => 12.0,
-                'phep_cu_chuyen_sang' => 0.0,
-                'phep_da_dung' => 0.0
-            ]);
-        }
-
-        $tongPhepDuocHuong = $soDuPhep->phep_nam_moi + $soDuPhep->phep_cu_chuyen_sang;
-        
-        // SỬA TẠI ĐÂY: Tính tổng số ngày đã nghỉ thực tế từ các đơn ĐÃ DUYỆT thuộc nhóm Phép Năm
-        $soNgayDaNghi = \App\Models\DonXinNghi::where('nguoi_dung_id', $userId)
-            ->where('trang_thai', 'da_duyet')
-            ->whereYear('ngay_bat_dau', $namHienTai)
-            ->whereHas('loaiNghiPhep', function ($q) {
-                // Chỉ tính tổng số ngày của các đơn có loại nghỉ là "phép năm"
-                $q->where('ten', 'like', '%phép năm%');
-            })
-            ->sum('so_ngay_nghi');
-
-        $soDuConLai = max(0, $tongPhepDuocHuong - $soNgayDaNghi);
-
-        // Bật trạng thái cảnh báo nếu số dư còn dưới hoặc bằng 3 ngày
-        $canhBaoSapHet = $soDuConLai <= 3.0;
-
-        return [
-            'so_ngay_phep_nam' => $tongPhepDuocHuong,
-            'phep_nam_moi' => $soDuPhep->phep_nam_moi,
-            'phep_cu_chuyen_sang' => $soDuPhep->phep_cu_chuyen_sang,
-            'so_ngay_da_nghi' => $soNgayDaNghi,
-            'so_du_con_lai' => $soDuConLai,
-            'canh_bao_sap_het' => $canhBaoSapHet,
-        ];
+    if (!$soDuPhep) {
+        $soDuPhep = \App\Models\SoDuPhep::create([
+            'nguoi_dung_id' => $userId,
+            'nam' => $namHienTai,
+            'phep_nam_moi' => 12.0,
+            'phep_cu_chuyen_sang' => 0.0,
+            'phep_da_dung' => 0.0
+        ]);
     }
+
+    $tongPhepDuocHuong = $soDuPhep->phep_nam_moi + $soDuPhep->phep_cu_chuyen_sang;
+    
+    // ✅ SỬA LẠI: Tính tổng số ngày của các đơn ĐÃ DUYỆT (Trừ loại Thai sản và Không lương)
+    $soNgayDaNghi = \App\Models\DonXinNghi::where('nguoi_dung_id', $userId)
+        ->where('trang_thai', 'da_duyet')
+        ->whereYear('ngay_bat_dau', $namHienTai)
+        ->whereHas('loaiNghiPhep', function ($q) {
+            $q->where('ten', 'not like', '%thai sản%')
+              ->where('ten', 'not like', '%không lương%');
+        })
+        ->sum('so_ngay_nghi');
+
+    $soDuConLai = max(0, $tongPhepDuocHuong - $soNgayDaNghi);
+
+    // Bật trạng thái cảnh báo nếu số dư còn dưới hoặc bằng 3 ngày
+    $canhBaoSapHet = $soDuConLai <= 3.0;
+
+    return [
+        'so_ngay_phep_nam' => $tongPhepDuocHuong,
+        'phep_nam_moi' => $soDuPhep->phep_nam_moi,
+        'phep_cu_chuyen_sang' => $soDuPhep->phep_cu_chuyen_sang,
+        'so_ngay_da_nghi' => $soNgayDaNghi,
+        'so_du_con_lai' => $soDuConLai,
+        'canh_bao_sap_het' => $canhBaoSapHet,
+    ];
+}
 
     public function index(Request $request)
     {
