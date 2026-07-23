@@ -455,6 +455,16 @@ class NguoiDung extends Authenticatable implements JWTSubject
         return $this->getLuongTheoGio() > 0;
     }
 
+    public function faceData()
+    {
+        return $this->hasOne(FaceData::class, 'nguoi_dung_id');
+    }
+
+    public function chamCongFaces()
+    {
+        return $this->hasMany(ChamCongFace::class, 'nguoi_dung_id');
+    }
+
     /**
      * Lấy thông tin lương đầy đủ
      */
@@ -469,7 +479,7 @@ class NguoiDung extends Authenticatable implements JWTSubject
         ];
     }
     public function yeuCauXemXetLuong()
-{
-    return $this->hasMany(YeuCauXemXetLuong::class, 'nguoi_dung_id');
-}
+    {
+        return $this->hasMany(YeuCauXemXetLuong::class, 'nguoi_dung_id');
+    }
 }

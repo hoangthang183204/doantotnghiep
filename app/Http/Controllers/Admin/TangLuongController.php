@@ -7,8 +7,8 @@ use App\Models\LichSuLuong;
 use App\Models\LichSuTaiKy;
 use App\Models\HopDongLaoDong;
 use App\Models\NguoiDung;
-use App\Models\PhuCapNhanVien; 
-use App\Models\PhuCap;          
+use App\Models\PhuCapNhanVien;
+use App\Models\PhuCap;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -88,6 +88,9 @@ class TangLuongController extends Controller
     /**
      * Xử lý tăng lương
      */
+    /**
+     * Xử lý tăng lương
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -118,6 +121,31 @@ class TangLuongController extends Controller
         $luongCu = $hopDong->luong_co_ban;
         $luongMoi = $request->luong_moi;
 
+        // ⭐ XỬ LÝ PHỤ CẤP - ĐẢM BẢO LÀ SỐ HOẶC NULL
+        $phuCapCu = $hopDong->phu_cap ?? 0;
+        $phuCapMoi = $hopDong->phu_cap ?? 0;
+
+        // Nếu phụ cấp là JSON string, chuyển thành số (tính tổng)
+        if (is_string($phuCapCu) && !empty($phuCapCu)) {
+            $decoded = json_decode($phuCapCu, true);
+            if (is_array($decoded)) {
+                $phuCapCu = array_sum($decoded);
+            } else {
+                $phuCapCu = (float) $phuCapCu;
+            }
+        }
+        $phuCapCu = (float) $phuCapCu;
+
+        if (is_string($phuCapMoi) && !empty($phuCapMoi)) {
+            $decoded = json_decode($phuCapMoi, true);
+            if (is_array($decoded)) {
+                $phuCapMoi = array_sum($decoded);
+            } else {
+                $phuCapMoi = (float) $phuCapMoi;
+            }
+        }
+        $phuCapMoi = (float) $phuCapMoi;
+
         DB::beginTransaction();
 
         try {
@@ -127,8 +155,8 @@ class TangLuongController extends Controller
                 'hop_dong_id' => $hopDong->id,
                 'luong_cu' => $luongCu,
                 'luong_moi' => $luongMoi,
-                'phu_cap_cu' => $hopDong->phu_cap ?? 0,
-                'phu_cap_moi' => $hopDong->phu_cap ?? 0,
+                'phu_cap_cu' => $phuCapCu,      // ✅ Đã là số
+                'phu_cap_moi' => $phuCapMoi,    // ✅ Đã là số
                 'ngay_ap_dung' => $request->ngay_ap_dung,
                 'loai' => $request->loai,
                 'ly_do' => $request->ly_do,
@@ -150,10 +178,10 @@ class TangLuongController extends Controller
 
                 // ⭐ THÊM PHỤ CẤP CHO HỢP ĐỒNG MỚI (nếu có)
                 if ($hopDong->phu_cap) {
-                    $phuCapIds = is_string($hopDong->phu_cap) 
-                        ? json_decode($hopDong->phu_cap, true) 
+                    $phuCapIds = is_string($hopDong->phu_cap)
+                        ? json_decode($hopDong->phu_cap, true)
                         : $hopDong->phu_cap;
-                        
+
                     if (is_array($phuCapIds) && count($phuCapIds) > 0) {
                         foreach ($phuCapIds as $phuCapId) {
                             $phuCap = PhuCap::find($phuCapId);
@@ -177,8 +205,8 @@ class TangLuongController extends Controller
                     'trang_thai_hop_dong' => 'het_han',
                     'trang_thai_tai_ky' => 'da_tai_ky',
                     'ngay_ket_thuc' => now(),
-                    'ghi_chu' => ($hopDong->ghi_chu ? $hopDong->ghi_chu . ' | ' : '') 
-                        . 'Đã tái ký sang hợp đồng ' . $hopDongMoi->so_hop_dong 
+                    'ghi_chu' => ($hopDong->ghi_chu ? $hopDong->ghi_chu . ' | ' : '')
+                        . 'Đã tái ký sang hợp đồng ' . $hopDongMoi->so_hop_dong
                         . ' (ngày ' . now()->format('d/m/Y') . ')'
                 ]);
 
@@ -219,13 +247,11 @@ class TangLuongController extends Controller
             return redirect()
                 ->route('admin.hop-dong.show', $hopDong->id)
                 ->with('success', '✅ Đã ' . ($request->loai == 'tang_luong' ? 'tăng' : 'giảm') . ' lương thành công!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
         }
     }
-
     /**
      * Tạo hợp đồng mới từ hợp đồng cũ
      */

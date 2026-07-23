@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ChucVuController;
 use App\Http\Controllers\Admin\ChamCongController;
 use App\Http\Controllers\Admin\DonNghiController;
 use App\Http\Controllers\Admin\BangLuongController;
+use App\Http\Controllers\Admin\ChamCongFaceController;
 use App\Http\Controllers\Admin\KhauTruKhacController;
 use App\Http\Controllers\Admin\ThongKeLuongController;
 use App\Http\Controllers\Admin\ChungChiNhanVienController;
@@ -103,6 +104,15 @@ Route::prefix('admin')
     ->name('admin.')
     ->middleware(['auth'])
     ->group(function () {
+
+
+        Route::prefix('cham-cong-face')->name('cham-cong-face.')->group(function () {
+            Route::get('/', [ChamCongFaceController::class, 'index'])->name('index');
+            Route::get('/create', [ChamCongFaceController::class, 'create'])->name('create');
+            Route::post('/', [ChamCongFaceController::class, 'store'])->name('store');
+            Route::delete('/{id}', [ChamCongFaceController::class, 'destroy'])->name('destroy');
+            Route::get('/thong-ke', [ChamCongFaceController::class, 'thongKe'])->name('thong-ke');
+        });
 
         // ========== API NOTIFICATIONS (KHÔNG CẦN PHÂN QUYỀN) ==========
         Route::get('/api/notifications', function () {
@@ -279,31 +289,31 @@ Route::prefix('admin')
         });
 
         Route::prefix('yeu-cau-luong')
-    ->name('yeu-cau-luong.')
-    ->middleware(['CheckPermission:salary.index'])
-    ->group(function () {
+            ->name('yeu-cau-luong.')
+            ->middleware(['CheckPermission:salary.index'])
+            ->group(function () {
 
-        // Danh sách yêu cầu
-       Route::get(
-    '/',
-    [\App\Http\Controllers\Admin\YeuCauXemXetLuongController::class, 'index']
-)->name('index');
+                // Danh sách yêu cầu
+                Route::get(
+                    '/',
+                    [\App\Http\Controllers\Admin\YeuCauXemXetLuongController::class, 'index']
+                )->name('index');
 
- Route::get('/', [YeuCauXemXetLuongController::class, 'index'])->name('index');
+                Route::get('/', [YeuCauXemXetLuongController::class, 'index'])->name('index');
 
-Route::get('/{id}', [YeuCauXemXetLuongController::class, 'show'])
-    ->whereNumber('id')
-    ->name('show');
+                Route::get('/{id}', [YeuCauXemXetLuongController::class, 'show'])
+                    ->whereNumber('id')
+                    ->name('show');
 
-Route::put('/{id}/duyet', [YeuCauXemXetLuongController::class, 'duyet'])
-    ->whereNumber('id')
-    ->name('duyet');
+                Route::put('/{id}/duyet', [YeuCauXemXetLuongController::class, 'duyet'])
+                    ->whereNumber('id')
+                    ->name('duyet');
 
-Route::put('/{id}/tu-choi', [YeuCauXemXetLuongController::class, 'tuChoi'])
-    ->whereNumber('id')
-    ->name('tu-choi')
-    ->middleware('CheckPermission:salary.approve');
-    });
+                Route::put('/{id}/tu-choi', [YeuCauXemXetLuongController::class, 'tuChoi'])
+                    ->whereNumber('id')
+                    ->name('tu-choi')
+                    ->middleware('CheckPermission:salary.approve');
+            });
 
         // ========== PHỤ CẤP - CHỈ HR VÀ ADMIN ==========
         Route::resource('phu-cap', PhuCapController::class)->middleware(['CheckPermission:salary.allowance']);
@@ -575,6 +585,28 @@ Route::prefix('employee')
     ->middleware(['auth'])
     ->group(function () {
 
+
+        Route::get('/employee/cham-cong-face/logs', function () {
+            $user = auth()->user();
+            $logs = App\Models\ChamCongFace::where('nguoi_dung_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->limit(20)
+                ->get()
+                ->map(fn($log) => [
+                    'time' => $log->created_at->format('H:i:s'),
+                    'message' => ($log->loai == 'check_in' ? '✅ Check-in' : '🚪 Check-out') .
+                        ' - ' . ($log->trang_thai == 'thanh_cong' ? 'Thành công' : 'Thất bại') .
+                        ' (' . round($log->confidence * 100) . '%)'
+                ]);
+            return response()->json(['logs' => $logs]);
+        })->name('employee.cham-cong-face.logs');
+
+        Route::prefix('cham-cong-face')->name('cham-cong-face.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'index'])->name('index');
+            Route::post('/authenticate', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'authenticate'])->name('authenticate');
+            Route::get('/status', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'status'])->name('status');
+        });
+
         // ========== DASHBOARD ==========
         Route::get('/dashboard', [DashboardEmployeeController::class, 'index'])->name('dashboard');
 
@@ -661,19 +693,18 @@ Route::prefix('employee')
         });
 
         //========= Yêu Cầu Xem Xét Lương======
-   Route::prefix('yeu-cau-luong')->name('yeu-cau-luong.')->group(function () {
+        Route::prefix('yeu-cau-luong')->name('yeu-cau-luong.')->group(function () {
 
-    Route::get('/{luongId}/create', [
-        \App\Http\Controllers\Employee\YeuCauXemXetLuongController::class,
-        'create'
-    ])->name('create');
+            Route::get('/{luongId}/create', [
+                \App\Http\Controllers\Employee\YeuCauXemXetLuongController::class,
+                'create'
+            ])->name('create');
 
-    Route::post('/{luongId}', [
-        \App\Http\Controllers\Employee\YeuCauXemXetLuongController::class,
-        'store'
-    ])->name('store');
-
-});
+            Route::post('/{luongId}', [
+                \App\Http\Controllers\Employee\YeuCauXemXetLuongController::class,
+                'store'
+            ])->name('store');
+        });
         // ========== THÔNG BÁO ==========
         Route::prefix('notifications')->name('notifications.')->group(function () {
             Route::get('/', [NotificationController::class, 'index'])->name('index');
