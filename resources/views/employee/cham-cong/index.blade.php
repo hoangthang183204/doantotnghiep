@@ -14,9 +14,17 @@
                 </h1>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Check-in / Check-out tự động xác định ca làm việc</p>
             </div>
-            <span class="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-lg">
-                <i class="far fa-calendar-alt mr-1.5"></i> {{ Carbon\Carbon::now()->format('d/m/Y') }}
-            </span>
+            <div class="flex items-center gap-3">
+                <!-- ===== NÚT CHUYỂN SANG CHẤM CÔNG KHUÔN MẶT ===== -->
+                <a href="{{ route('employee.cham-cong-face.index') }}" 
+                   class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-sm font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-600/30 hover:shadow-purple-600/50">
+                    <i class="fas fa-face-smile mr-2 text-lg"></i>
+                    Chấm công khuôn mặt
+                </a>
+                <span class="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-lg">
+                    <i class="far fa-calendar-alt mr-1.5"></i> {{ Carbon\Carbon::now()->format('d/m/Y') }}
+                </span>
+            </div>
         </div>
 
         <!-- ===== THÔNG BÁO VỊ TRÍ ===== -->
@@ -197,6 +205,20 @@
                             </div>
                         </div>
                     @endif
+                </div>
+
+                <!-- ===== NÚT CHUYỂN SANG CHẤM CÔNG KHUÔN MẶT (DƯỚI CÙNG) ===== -->
+                <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 text-center">
+                    <a href="{{ route('employee.cham-cong-face.index') }}" 
+                       class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-medium rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/30 hover:shadow-purple-600/50">
+                        <i class="fas fa-face-smile mr-3 text-xl"></i>
+                        <span>Chuyển sang chấm công bằng khuôn mặt</span>
+                        <i class="fas fa-arrow-right ml-3"></i>
+                    </a>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Sử dụng camera để chấm công nhanh chóng và bảo mật hơn
+                    </p>
                 </div>
             </div>
         </div>

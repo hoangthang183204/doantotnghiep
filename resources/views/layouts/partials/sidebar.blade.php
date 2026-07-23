@@ -691,6 +691,9 @@
                 if ($canViewAttendance && Route::has('admin.cham-cong.index')) {
                     $submenuChamCongAdmin[] = ['title' => 'Danh sách chấm công', 'route' => 'admin.cham-cong.index'];
                 }
+                if ($canViewAttendance && Route::has('admin.cham-cong-face.index')) {
+                    $submenuChamCongAdmin[] = ['title' => 'Quản lý khuôn mặt', 'route' => 'admin.cham-cong-face.index'];
+                }
                 if ($canManageOvertime && Route::has('admin.tang-ca.index')) {
                     $submenuChamCongAdmin[] = ['title' => 'Phê duyệt tăng ca', 'route' => 'admin.tang-ca.index'];
                 }

@@ -31,8 +31,8 @@ class LichSuLuong extends Model
         'thoi_gian_duyet' => 'datetime',
         'luong_cu' => 'decimal:2',
         'luong_moi' => 'decimal:2',
-        'phu_cap_cu' => 'decimal:2',
-        'phu_cap_moi' => 'decimal:2',
+        'phu_cap_cu' => 'array',
+        'phu_cap_moi' => 'array',
     ];
 
     protected $attributes = [
