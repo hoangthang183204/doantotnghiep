@@ -67,6 +67,7 @@
                     <option value="cho_duyet" {{ request('trang_thai') == 'cho_duyet' ? 'selected' : '' }}>Chờ duyệt</option>
                     <option value="da_duyet" {{ request('trang_thai') == 'da_duyet' ? 'selected' : '' }}>Đã duyệt</option>
                     <option value="tu_choi" {{ request('trang_thai') == 'tu_choi' ? 'selected' : '' }}>Từ chối</option>
+                    <option value="huy_bo" {{ request('trang_thai') == 'huy_bo' ? 'selected' : '' }}>Đã hủy</option>
                 </select>
             </div>
             <div>
@@ -145,6 +146,11 @@
                                     <span class="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5"></span>
                                     Từ chối
                                 </span>
+                            @elseif($don->trang_thai == 'huy_bo')
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
+                                    <i class="fas fa-ban mr-1.5 text-red-500"></i>
+                                    Đã hủy
+                                </span>
                             @else
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
                                     {{ $don->trang_thai }}
@@ -153,11 +159,11 @@
                         </td>
                         <td class="px-4 py-3 text-center">
                             <div class="flex items-center justify-center gap-2">
-                                {{-- Nút xem chi tiết --}}
+                                {{-- Nút xem chi tiết (chỉ để lại Icon) --}}
                                 <a href="{{ route('duyet-don.show', $don->id) }}" 
-                                    class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition" 
+                                    class="inline-flex items-center justify-center p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition" 
                                     title="Xem chi tiết">
-                                    <i class="fas fa-eye mr-1"></i> Xem
+                                    <i class="fas fa-eye"></i>
                                 </a>
                                 
                                 {{-- Nút duyệt - CHỈ HIỂN THỊ KHI ĐƠN Ở TRẠNG THÁI CHỜ DUYỆT --}}
