@@ -48,6 +48,7 @@ use App\Services\NotificationService;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\TruongPhong\DashboardTruongPhongController;
 use App\Http\Controllers\Admin\YeuCauXemXetLuongController;
+use App\Http\Controllers\Admin\LichSuXuLyYeuCauLuongController;
 
 
 // =============================================
@@ -313,8 +314,17 @@ Route::prefix('admin')
                     ->whereNumber('id')
                     ->name('tu-choi')
                     ->middleware('CheckPermission:salary.approve');
-            });
+             Route::get('/{id}/edit', [YeuCauXemXetLuongController::class, 'edit'])
+    ->whereNumber('id')
+    ->name('edit');
 
+Route::put('/{id}/update-luong', [YeuCauXemXetLuongController::class, 'updateLuong'])
+    ->whereNumber('id')
+    ->name('update');
+            });
+Route::get('/lich-su-xu-ly-yeu-cau-luong',
+    [LichSuXuLyYeuCauLuongController::class,'index']
+)->name('lich-su-xu-ly-yeu-cau-luong.index');
         // ========== PHỤ CẤP - CHỈ HR VÀ ADMIN ==========
         Route::resource('phu-cap', PhuCapController::class)->middleware(['CheckPermission:salary.allowance']);
 
@@ -704,6 +714,7 @@ Route::prefix('employee')
                 \App\Http\Controllers\Employee\YeuCauXemXetLuongController::class,
                 'store'
             ])->name('store');
+            Route::get('/lich-su-xu-ly-yeu-cau-luong',[\App\Http\Controllers\Employee\LichSuXuLyYeuCauLuongController::class,'index'])->name('lich-su-xu-ly-yeu-cau-luong.index');
         });
         // ========== THÔNG BÁO ==========
         Route::prefix('notifications')->name('notifications.')->group(function () {

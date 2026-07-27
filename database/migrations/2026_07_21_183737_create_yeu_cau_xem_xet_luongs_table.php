@@ -29,10 +29,12 @@ return new class extends Migration
 
             // Trạng thái
             $table->enum('trang_thai', [
-                'cho_duyet',
-                'da_duyet',
-                'tu_choi'
-            ])->default('cho_duyet');
+    'cho_duyet',
+    'da_duyet',
+    'dang_sua',
+    'da_cap_nhat',
+    'tu_choi'
+])->default('cho_duyet');
 
             // Phản hồi của HR
             $table->text('phan_hoi')->nullable();

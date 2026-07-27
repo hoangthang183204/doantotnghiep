@@ -11,11 +11,17 @@ class YeuCauXemXetLuong extends Model
     protected $fillable = [
         'luong_nhan_vien_id',
         'nguoi_dung_id',
+        'loai_sai_sot',
         'ly_do',
         'trang_thai',
         'phan_hoi',
         'nguoi_duyet_id',
         'thoi_gian_duyet',
+    ];
+
+    protected $casts = [
+        'loai_sai_sot' => 'string',
+        'thoi_gian_duyet' => 'datetime',
     ];
 
     public function nguoiDung()
@@ -32,4 +38,11 @@ class YeuCauXemXetLuong extends Model
     {
         return $this->belongsTo(NguoiDung::class, 'nguoi_duyet_id');
     }
+    public function lichSuXuLy()
+{
+    return $this->hasMany(
+        LichSuXuLyYeuCauLuong::class,
+        'yeu_cau_xem_xet_luong_id'
+    )->orderByDesc('thoi_gian');
+}
 }

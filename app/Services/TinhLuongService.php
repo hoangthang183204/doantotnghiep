@@ -558,4 +558,157 @@ class TinhLuongService
     {
         return sprintf('BL-%04d-%02d-%s', $nam, $thang, strtoupper(substr(uniqid(), -5)));
     }
+  public function tinhLaiLuong(LuongNhanVien $luong, array $input): array
+{
+    // ==========================
+    // Dữ liệu sau khi admin sửa
+    // ==========================
+
+    $soNgayCong = $input['so_ngay_cong'] ?? $luong->so_ngay_cong;
+    $gioTangCa  = $input['gio_tang_ca'] ?? $luong->gio_tang_ca;
+    $tongPhuCap = $input['tong_phu_cap'] ?? $luong->tong_phu_cap;
+
+    // ==========================
+    // Đơn giá ngày / giờ
+    // ==========================
+
+    $ngayCongChuan = $luong->so_ngay_cong_chuan ?: self::NGAY_CONG_CHUAN;
+
+    $luongNgay = $ngayCongChuan > 0
+        ? $luong->luong_co_ban / $ngayCongChuan
+        : 0;
+
+    $luongGio = $luongNgay / 8;
+
+    // ==========================
+    // Lương theo công
+    // ==========================
+
+    $luongTheoCong = round(
+    $luongNgay *
+    ($soNgayCong + $luong->ngay_nghi_phep),
+    2
+);;
+
+    // ==========================
+    // Tăng ca
+    // ==========================
+
+    $tienTangCa = round(
+        $gioTangCa * $luongGio * self::HE_SO_TANG_CA,
+        2
+    );
+
+    $congTangCa = round(
+        $gioTangCa / 8,
+        2
+    );
+
+    // ==========================
+    // Tổng lương
+    // ==========================
+
+    $tongLuong = round(
+        $luongTheoCong
+        + $tongPhuCap
+        + $tienTangCa,
+        2
+    );
+
+    // ==========================
+    // Bảo hiểm
+    // Giữ nguyên vì lương cơ bản
+    // không thay đổi
+    // ==========================
+
+    $bhxh          = $luong->bhxh;
+    $bhyt          = $luong->bhyt;
+    $bhtn          = $luong->bhtn;
+    $tongBaoHiem   = $luong->tong_bao_hiem;
+
+    // ==========================
+    // Thu nhập chịu thuế
+    // ==========================
+
+    $phuCapChiuThue = $luong->phu_cap_chiu_thue;
+
+    $thuNhapChiuThue = round(
+        $luongTheoCong
+        + $phuCapChiuThue
+        + $tienTangCa,
+        2
+    );
+
+    // ==========================
+    // Thu nhập tính thuế
+    // ==========================
+
+    $thuNhapTinhThue = max(
+        0,
+        round(
+            $thuNhapChiuThue
+            - $tongBaoHiem
+            - $luong->giam_tru_gia_canh,
+            2
+        )
+    );
+
+    // ==========================
+    // Thuế TNCN
+    // ==========================
+
+    $thue = $this->tinhThueTNCN($thuNhapTinhThue);
+
+    // ==========================
+    // Tổng khấu trừ
+    // ==========================
+
+    $tongKhauTru = round(
+        $tongBaoHiem
+        + $thue
+        + $luong->tong_khau_tru_khac,
+        2
+    );
+
+    // ==========================
+    // Lương thực nhận
+    // ==========================
+
+    $luongThucNhan = round(
+        $tongLuong - $tongKhauTru,
+        2
+    );
+
+    return [
+
+        'so_ngay_cong'          => $soNgayCong,
+
+        'gio_tang_ca'           => $gioTangCa,
+
+        'cong_tang_ca'          => $congTangCa,
+
+        'luong_theo_cong'       => $luongTheoCong,
+
+        'tien_tang_ca'          => $tienTangCa,
+
+        'tong_phu_cap'          => $tongPhuCap,
+
+        'tong_luong'            => $tongLuong,
+
+        'bhxh'                  => $bhxh,
+        'bhyt'                  => $bhyt,
+        'bhtn'                  => $bhtn,
+        'tong_bao_hiem'         => $tongBaoHiem,
+
+        'thu_nhap_chiu_thue'    => $thuNhapChiuThue,
+
+        'thu_nhap_tinh_thue'    => $thuNhapTinhThue,
+
+        'thue_thu_nhap_ca_nhan' => $thue,
+
+        'tong_khau_tru'         => $tongKhauTru,
+
+        'luong_thuc_nhan'       => $luongThucNhan,
+    ];
+}
 }
