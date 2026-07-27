@@ -791,7 +791,12 @@
                     $submenuLuong[] = ['title' => 'Lịch sử tăng lương', 'route' => 'admin.tang-luong.index'];
                 }
                 if ($canViewSalary && Route::has('admin.yeu-cau-luong.index')) {
-                    $submenuLuong[] = ['title' => 'Yêu cầu xem xét lương','route' => 'admin.yeu-cau-luong.index'
+                    $submenuLuong[] = ['title' => 'Yêu cầu xem xét lương','route' => 'admin.yeu-cau-luong.index'];
+                    }
+if (Route::has('employee.yeu-cau-luong.lich-su-xu-ly-yeu-cau-luong.index')) {
+    $submenuLuong[] = [
+        'title' => 'Lịch sử xử lý yêu cầu lương',
+        'route' => 'employee.yeu-cau-luong.lich-su-xu-ly-yeu-cau-luong.index'
     ];
 }
             @endphp

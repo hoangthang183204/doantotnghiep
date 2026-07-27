@@ -23,39 +23,45 @@
 
     <div>
 
-        <h3 class="font-semibold text-lg text-gray-800 dark:text-white">
-            Yêu cầu xem xét lương
-        </h3>
+     <h3 class="font-semibold text-lg text-gray-800 dark:text-white">
+    Yêu cầu xem xét lương
+</h3>
 
-        @if($yeuCau)
+@if($yeuCau)
 
-            @if($yeuCau->trang_thai == 'cho_duyet')
+    @if($yeuCau->trang_thai == 'cho_duyet')
 
-                <span class="inline-flex mt-2 px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-sm">
-                    Đang chờ xử lý
-                </span>
+        <span class="inline-flex mt-2 px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-sm">
+            Đang chờ xử lý
+        </span>
 
-            @elseif($yeuCau->trang_thai == 'da_duyet')
+    @elseif($yeuCau->trang_thai == 'da_cap_nhat')
 
-                <span class="inline-flex mt-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm">
-                    Đã duyệt
-                </span>
+        <span class="inline-flex mt-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm">
+            Phiếu lương đã được cập nhật
+        </span>
 
-            @else
+    @elseif($yeuCau->trang_thai == 'da_duyet')
 
-                <span class="inline-flex mt-2 px-3 py-1 rounded-full bg-red-100 text-red-700 text-sm">
-                    Đã từ chối
-                </span>
+        <span class="inline-flex mt-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm">
+            Đã duyệt
+        </span>
 
-            @endif
+    @elseif($yeuCau->trang_thai == 'tu_choi')
 
-        @else
+        <span class="inline-flex mt-2 px-3 py-1 rounded-full bg-red-100 text-red-700 text-sm">
+            Đã từ chối
+        </span>
 
-            <p class="text-sm text-gray-500 mt-2">
-                Nếu phát hiện sai sót trong phiếu lương, bạn có thể gửi yêu cầu xem xét.
-            </p>
+    @endif
 
-        @endif
+@else
+
+    <p class="text-sm text-gray-500 mt-2">
+        Nếu phát hiện sai sót trong phiếu lương, bạn có thể gửi yêu cầu xem xét.
+    </p>
+
+@endif
 
     </div>
 
