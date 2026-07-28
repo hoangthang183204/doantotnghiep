@@ -25,12 +25,48 @@
                 </p>
             </div>
 
-            <a href="{{ route('employee.bang-luong.index') }}"
-               class="px-4 py-2 border border-gray-300 dark:border-gray-600
-                      rounded-lg text-gray-700 dark:text-gray-200
-                      hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                ← Quay lại
-            </a>
+            <div class="flex items-center gap-3">
+
+    <a href="{{ route('employee.yeu-cau-luong.lich-su-xu-ly-yeu-cau-luong.index') }}"
+   class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700
+          text-white rounded-lg shadow-sm transition">
+
+    <svg xmlns="http://www.w3.org/2000/svg"
+         class="w-5 h-5 mr-2"
+         fill="none"
+         viewBox="0 0 24 24"
+         stroke="currentColor">
+        <path stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 8v4l3 3M12 3a9 9 0 100 18 9 9 0 000-18z"/>
+    </svg>
+
+    Lịch sử xử lý
+</a>
+
+    <a href="{{ route('employee.bang-luong.index') }}"
+       class="inline-flex items-center px-4 py-2 border border-gray-300
+              dark:border-gray-600 rounded-lg text-gray-700
+              dark:text-gray-200 hover:bg-gray-100
+              dark:hover:bg-gray-700 transition">
+
+        <svg xmlns="http://www.w3.org/2000/svg"
+             class="w-5 h-5 mr-2"
+             fill="none"
+             viewBox="0 0 24 24"
+             stroke="currentColor">
+
+            <path stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 19l-7-7 7-7"/>
+        </svg>
+
+        Quay lại
+    </a>
+
+</div>
 
         </div>
     </div>
