@@ -248,6 +248,7 @@ Route::prefix('admin')
             Route::get('/export', [ChamCongController::class, 'export'])->name('export')->middleware('CheckPermission:attendance.export');
             Route::post('/bulk-action', [ChamCongController::class, 'bulkAction'])->name('bulk-action')->middleware('CheckPermission:attendance.index');
             Route::post('/{id}/phe-duyet', [ChamCongController::class, 'pheDuyetDonLe'])->name('phe-duyet')->middleware('CheckPermission:attendance.index');
+            Route::get('/don-ve-som/{id}/detail', [ChamCongController::class, 'chiTietDonVeSom'])->name('admin.cham-cong.chi-tiet-don-ve-som');
         });
 
         // ========== ĐƠN NGHỈ - AI CŨNG CÓ ==========
@@ -615,6 +616,10 @@ Route::prefix('employee')
             Route::get('/', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'index'])->name('index');
             Route::post('/authenticate', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'authenticate'])->name('authenticate');
             Route::get('/status', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'status'])->name('status');
+
+            Route::post('/tao-don-ve-som', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'taoDonVeSom'])->name('tao-don-ve-som');
+            Route::get('/kiem-tra-don-ve-som', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'kiemTraDonVeSom'])->name('kiem-tra-don-ve-som');
+            Route::get('/kiem-tra-ve-som', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'kiemTraVeSom'])->name('kiem-tra-ve-som');
         });
 
         // ========== DASHBOARD ==========

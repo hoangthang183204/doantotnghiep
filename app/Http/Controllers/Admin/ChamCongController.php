@@ -37,7 +37,7 @@ class ChamCongController extends Controller
         $diMuonHomNay = ChamCong::whereDate('ngay_cham_cong', Carbon::today())
             ->where('trang_thai', 'di_muon')
             ->count();
-        
+
         // ⭐ THỐNG KÊ ĐƠN XIN VỀ SỚM
         $donVeSomChoDuyet = DonXinVeSom::where('trang_thai', 'cho_duyet')->count();
         $donVeSomDaDuyet = DonXinVeSom::where('trang_thai', 'da_duyet')->count();
@@ -128,7 +128,7 @@ class ChamCongController extends Controller
     {
         try {
             $don = DonXinVeSom::findOrFail($id);
-            
+
             if ($don->trang_thai != 'cho_duyet') {
                 return response()->json([
                     'success' => false,
@@ -164,7 +164,7 @@ class ChamCongController extends Controller
             ]);
 
             $don = DonXinVeSom::findOrFail($id);
-            
+
             if ($don->trang_thai != 'cho_duyet') {
                 return response()->json([
                     'success' => false,
@@ -297,5 +297,57 @@ class ChamCongController extends Controller
         if ($request->filled('nam')) {
             $query->whereYear('ngay_cham_cong', $request->nam);
         }
+    }
+
+    public function chiTietDonVeSom($id)
+    {
+        $don = DonXinVeSom::with(['nguoiDung.hoSo', 'nguoiDung.phongBan', 'nguoiDuyet.hoSo'])
+            ->findOrFail($id);
+
+        $nguoiDung = $don->nguoiDung;
+        $hoSo = $nguoiDung ? $nguoiDung->hoSo : null;
+
+        $hoTen = '';
+        if ($hoSo && ($hoSo->ho || $hoSo->ten)) {
+            $hoTen = trim(($hoSo->ho ?? '') . ' ' . ($hoSo->ten ?? ''));
+        }
+        if (empty($hoTen) && $nguoiDung) {
+            $hoTen = $nguoiDung->ten_dang_nhap ?? 'N/A';
+        }
+
+        $avatar = null;
+        if ($hoSo && $hoSo->anh_dai_dien && file_exists(public_path('storage/' . $hoSo->anh_dai_dien))) {
+            $avatar = asset('storage/' . $hoSo->anh_dai_dien);
+        }
+
+        $nguoiDuyet = null;
+        if ($don->nguoi_duyet_id) {
+            $duyetUser = $don->nguoiDuyet;
+            $duyetHoSo = $duyetUser ? $duyetUser->hoSo : null;
+            if ($duyetHoSo && ($duyetHoSo->ho || $duyetHoSo->ten)) {
+                $nguoiDuyet = trim(($duyetHoSo->ho ?? '') . ' ' . ($duyetHoSo->ten ?? ''));
+            } else {
+                $nguoiDuyet = $duyetUser->ten_dang_nhap ?? 'N/A';
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'ho_ten' => $hoTen,
+                'ma_nhan_vien' => $hoSo ? $hoSo->ma_nhan_vien : null,
+                'phong_ban' => $nguoiDung && $nguoiDung->phongBan ? $nguoiDung->phongBan->ten_phong_ban : null,
+                'avatar' => $avatar,
+                'initial' => strtoupper(substr($hoTen, 0, 1)),
+                'ngay' => \Carbon\Carbon::parse($don->ngay)->format('d/m/Y'),
+                'gio_ra_du_kien' => \Carbon\Carbon::parse($don->gio_ra_du_kien)->format('H:i'),
+                'so_phut_ve_som' => $don->so_phut_ve_som,
+                'ly_do' => $don->ly_do,
+                'trang_thai' => $don->trang_thai,
+                'ly_do_tu_choi' => $don->ly_do_tu_choi,
+                'nguoi_duyet' => $nguoiDuyet,
+                'thoi_gian_duyet' => $don->thoi_gian_duyet ? \Carbon\Carbon::parse($don->thoi_gian_duyet)->format('d/m/Y H:i') : null,
+            ]
+        ]);
     }
 }
