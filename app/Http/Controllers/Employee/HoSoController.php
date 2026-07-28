@@ -98,6 +98,7 @@ class HoSoController extends Controller
 
         // ⭐⭐ LẤY LỊCH SỬ LƯƠNG ĐẦY ĐỦ (GIỐNG BÊN ADMIN)
         $lichSuLuong = LuongNhanVien::where('nguoi_dung_id', $user->id)
+            ->with('bangLuong') // ⭐ THÊM DÒNG NÀY ĐỂ LOAD QUAN HỆ
             ->join('bang_luong', 'luong_nhan_vien.bang_luong_id', '=', 'bang_luong.id')
             ->where('bang_luong.trang_thai', 'da_chot')
             ->orderBy('bang_luong.nam', 'desc')
