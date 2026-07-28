@@ -17,13 +17,14 @@ use App\Models\PhongBan;
 use App\Models\TaiLieu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-
 use App\Exports\NhanVienExport;
 use App\Imports\NhanVienImport;
+use App\Models\BangLuong;
 use App\Models\DangKyTangCa;
 use App\Models\DonXinNghi;
 use App\Models\DonXinVeSom;
 use App\Models\LichSuTaiKy;
+use App\Models\LuongNhanVien;
 use App\Models\SoDuPhep;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
@@ -114,7 +115,37 @@ class HoSoController extends Controller
             return $item->trang_thai_hop_dong == 'hieu_luc';
         })->first();
 
-        $luongGanNhat = $hoSo->lich_su_luong->first();
+        // ⭐ LẤY BẢNG LƯƠNG ĐÃ CHỐT GẦN NHẤT CỦA NHÂN VIÊN NÀY
+        $bangLuongGanNhat = BangLuong::from('bang_luong as bl')
+            ->join('luong_nhan_vien as lnv', 'bl.id', '=', 'lnv.bang_luong_id')
+            ->where('bl.trang_thai', 'da_chot')
+            ->where('lnv.nguoi_dung_id', $hoSo->nguoi_dung_id)
+            ->orderBy('bl.nam', 'desc')
+            ->orderBy('bl.thang', 'desc')
+            ->select('bl.*')
+            ->first();
+
+        $luongGanNhat = null;
+        if ($bangLuongGanNhat) {
+            $luongGanNhat = LuongNhanVien::where('bang_luong_id', $bangLuongGanNhat->id)
+                ->where('nguoi_dung_id', $hoSo->nguoi_dung_id)
+                ->first();
+        }
+
+        // Nếu chưa có bảng lương nào, lấy từ lịch sử lương (fallback)
+        if (!$luongGanNhat) {
+            $luongGanNhat = $hoSo->lich_su_luong->first();
+        }
+
+        // ⭐⭐ LẤY LỊCH SỬ LƯƠNG ĐẦY ĐỦ CỦA NHÂN VIÊN NÀY
+        $lichSuLuong = LuongNhanVien::where('nguoi_dung_id', $hoSo->nguoi_dung_id)
+            ->join('bang_luong', 'luong_nhan_vien.bang_luong_id', '=', 'bang_luong.id')
+            ->where('bang_luong.trang_thai', 'da_chot')
+            ->orderBy('bang_luong.nam', 'desc')
+            ->orderBy('bang_luong.thang', 'desc')
+            ->limit(12)
+            ->select('luong_nhan_vien.*')
+            ->get();
 
         // ⭐ LẤY LỊCH SỬ DUYỆT HỢP ĐỒNG
         $lichSuTaiKyHopDong = collect();
@@ -185,7 +216,9 @@ class HoSoController extends Controller
         return view('admin.ho-so.show', compact(
             'hoSo',
             'hopDongHieuLuc',
+            'bangLuongGanNhat',
             'luongGanNhat',
+            'lichSuLuong', // ⭐ Thêm biến này
             'lichSuTaiKyHopDong',
             'lichSuNghiPhep',
             'lichSuTangCa',
@@ -417,18 +450,63 @@ class HoSoController extends Controller
 
         // ========== XỬ LÝ CHỨNG CHỈ ==========
         if ($request->has('chung_chi_ten')) {
-            // Xóa chứng chỉ cũ
-            $hoSo->chung_chi()->delete();
+            // Lấy danh sách ID chứng chỉ cũ để xóa file
+            $oldChungChiIds = $hoSo->chung_chi->pluck('id')->toArray();
+
+            // Xóa chứng chỉ cũ (nếu không có trong request)
+            $newIds = $request->chung_chi_id ?? [];
+            $idsToDelete = array_diff($oldChungChiIds, $newIds);
+
+            foreach ($idsToDelete as $id) {
+                $chungChi = ChungChiNhanVien::find($id);
+                if ($chungChi) {
+                    // Xóa file cũ
+                    if ($chungChi->file_dinh_kem && Storage::disk('public')->exists($chungChi->file_dinh_kem)) {
+                        Storage::disk('public')->delete($chungChi->file_dinh_kem);
+                    }
+                    $chungChi->delete();
+                }
+            }
 
             foreach ($request->chung_chi_ten as $key => $ten) {
                 if (!empty($ten)) {
-                    ChungChiNhanVien::create([
+                    $chungChiData = [
                         'ho_so_id' => $hoSo->id,
                         'ten_chung_chi' => $ten,
                         'to_chuc_cap' => $request->chung_chi_to_chuc[$key] ?? '',
                         'nam_cap' => $request->chung_chi_nam[$key] ?? date('Y'),
                         'ngay_het_han' => !empty($request->chung_chi_het_han[$key]) ? $request->chung_chi_het_han[$key] : null,
-                    ]);
+                    ];
+
+                    $chungChiId = $request->chung_chi_id[$key] ?? null;
+
+                    if ($chungChiId) {
+                        // Cập nhật chứng chỉ cũ
+                        $chungChi = ChungChiNhanVien::find($chungChiId);
+                        if ($chungChi) {
+                            // Xóa file cũ nếu có file mới
+                            if ($request->hasFile('chung_chi_file.' . $key)) {
+                                if ($chungChi->file_dinh_kem && Storage::disk('public')->exists($chungChi->file_dinh_kem)) {
+                                    Storage::disk('public')->delete($chungChi->file_dinh_kem);
+                                }
+                                $file = $request->file('chung_chi_file.' . $key);
+                                $path = $file->store('chung_chi', 'public');
+                                $chungChiData['file_dinh_kem'] = $path;
+                            } else {
+                                // Giữ file cũ
+                                $chungChiData['file_dinh_kem'] = $chungChi->file_dinh_kem;
+                            }
+                            $chungChi->update($chungChiData);
+                        }
+                    } else {
+                        // Tạo mới chứng chỉ
+                        if ($request->hasFile('chung_chi_file.' . $key)) {
+                            $file = $request->file('chung_chi_file.' . $key);
+                            $path = $file->store('chung_chi', 'public');
+                            $chungChiData['file_dinh_kem'] = $path;
+                        }
+                        ChungChiNhanVien::create($chungChiData);
+                    }
                 }
             }
         }

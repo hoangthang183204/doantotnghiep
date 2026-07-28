@@ -485,6 +485,8 @@
 
             {{-- ========== ⭐ CHỨNG CHỈ (THÊM MỚI) ========== --}}
 
+            {{-- ========== ⭐ CHỨNG CHỈ (THÊM MỚI) ========== --}}
+
             <div class="md:col-span-2 border-t border-gray-200 dark:border-gray-700 pt-4 mt-2">
                 <h3 class="text-md font-semibold text-gray-800 dark:text-white mb-3">🏅 Chứng chỉ</h3>
             </div>
@@ -493,7 +495,8 @@
                 {{-- Chứng chỉ hiện tại --}}
                 @if ($hoSo->chung_chi && $hoSo->chung_chi->count() > 0)
                     @foreach ($hoSo->chung_chi as $index => $item)
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3 chung-chi-row">
+                        <div
+                            class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-3 chung-chi-row bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
                             <div>
                                 <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Tên chứng
                                     chỉ</label>
@@ -515,25 +518,46 @@
                                     placeholder="2025"
                                     class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
                             </div>
-                            <div class="flex gap-2 items-end">
-                                <div class="flex-1">
-                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Ngày hết
-                                        hạn</label>
-                                    <input type="date" name="chung_chi_het_han[]"
-                                        value="{{ $item->ngay_het_han ? $item->ngay_het_han->format('Y-m-d') : '' }}"
-                                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Ngày hết
+                                    hạn</label>
+                                <input type="date" name="chung_chi_het_han[]"
+                                    value="{{ $item->ngay_het_han ? $item->ngay_het_han->format('Y-m-d') : '' }}"
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">File đính
+                                    kèm</label>
+                                <div class="flex gap-2 items-end">
+                                    <div class="flex-1">
+                                        {{-- Hiển thị file hiện tại --}}
+                                        @if ($item->file_dinh_kem)
+                                            <div class="mb-1">
+                                                <span class="text-xs text-gray-500 dark:text-gray-400">📎 hiện tại:</span>
+                                                <span class="text-xs text-blue-600 dark:text-blue-400 truncate block">
+                                                    {{ basename($item->file_dinh_kem) }}
+                                                </span>
+                                            </div>
+                                        @endif
+                                        <input type="file" name="chung_chi_file[]"
+                                            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                            class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                                        <p class="text-xs text-gray-400 mt-1">PDF, JPG, PNG, DOC (tối đa 5MB)</p>
+                                    </div>
+                                    <input type="hidden" name="chung_chi_id[]" value="{{ $item->id }}">
+                                    <input type="hidden" name="chung_chi_file_cu[]" value="{{ $item->file_dinh_kem }}">
+                                    <button type="button" onclick="this.closest('.chung-chi-row').remove()"
+                                        class="text-red-500 hover:text-red-700 px-3 py-2 text-sm font-medium border border-red-300 rounded-lg hover:bg-red-50 transition">
+                                        ✕ Xóa
+                                    </button>
                                 </div>
-                                <input type="hidden" name="chung_chi_id[]" value="{{ $item->id }}">
-                                <button type="button" onclick="this.closest('.chung-chi-row').remove()"
-                                    class="text-red-500 hover:text-red-700 px-3 py-2 text-sm font-medium border border-red-300 rounded-lg hover:bg-red-50 transition">
-                                    ✕ Xóa
-                                </button>
                             </div>
                         </div>
                     @endforeach
                 @else
                     {{-- Mặc định 1 dòng trống --}}
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3 chung-chi-row">
+                    <div
+                        class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-3 chung-chi-row bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
                         <div>
                             <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Tên chứng
                                 chỉ</label>
@@ -551,18 +575,29 @@
                             <input type="number" name="chung_chi_nam[]" placeholder="2025"
                                 class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
                         </div>
-                        <div class="flex gap-2 items-end">
-                            <div class="flex-1">
-                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Ngày hết
-                                    hạn</label>
-                                <input type="date" name="chung_chi_het_han[]"
-                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Ngày hết
+                                hạn</label>
+                            <input type="date" name="chung_chi_het_han[]"
+                                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">File đính
+                                kèm</label>
+                            <div class="flex gap-2 items-end">
+                                <div class="flex-1">
+                                    <input type="file" name="chung_chi_file[]"
+                                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <p class="text-xs text-gray-400 mt-1">PDF, JPG, PNG, DOC (tối đa 5MB)</p>
+                                </div>
+                                <input type="hidden" name="chung_chi_id[]" value="">
+                                <input type="hidden" name="chung_chi_file_cu[]" value="">
+                                <button type="button" onclick="this.closest('.chung-chi-row').remove()"
+                                    class="text-red-500 hover:text-red-700 px-3 py-2 text-sm font-medium border border-red-300 rounded-lg hover:bg-red-50 transition">
+                                    ✕ Xóa
+                                </button>
                             </div>
-                            <input type="hidden" name="chung_chi_id[]" value="">
-                            <button type="button" onclick="this.closest('.chung-chi-row').remove()"
-                                class="text-red-500 hover:text-red-700 px-3 py-2 text-sm font-medium border border-red-300 rounded-lg hover:bg-red-50 transition">
-                                ✕ Xóa
-                            </button>
                         </div>
                     </div>
                 @endif
@@ -774,14 +809,16 @@
                                 </button>
                             </div>
                             <div>
-                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Tính giảm trừ từ</label>
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Tính giảm
+                                    trừ từ</label>
                                 <input type="date" name="npt_ngay_bat_dau[]"
                                     value="{{ $item->ngay_bat_dau ? $item->ngay_bat_dau->format('Y-m-d') : '' }}"
                                     class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
                                 <p class="text-xs text-gray-400 mt-1">Tháng phát sinh nghĩa vụ nuôi dưỡng</p>
                             </div>
                             <div>
-                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Kết thúc giảm trừ</label>
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Kết thúc
+                                    giảm trừ</label>
                                 <input type="date" name="npt_ngay_ket_thuc[]"
                                     value="{{ $item->ngay_ket_thuc ? $item->ngay_ket_thuc->format('Y-m-d') : '' }}"
                                     class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
@@ -830,13 +867,15 @@
                             </button>
                         </div>
                         <div>
-                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Tính giảm trừ từ</label>
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Tính giảm trừ
+                                từ</label>
                             <input type="date" name="npt_ngay_bat_dau[]"
                                 class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
                             <p class="text-xs text-gray-400 mt-1">Tháng phát sinh nghĩa vụ nuôi dưỡng</p>
                         </div>
                         <div>
-                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Kết thúc giảm trừ</label>
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Kết thúc giảm
+                                trừ</label>
                             <input type="date" name="npt_ngay_ket_thuc[]"
                                 class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
                             <p class="text-xs text-gray-400 mt-1">Bỏ trống nếu vẫn đang giảm trừ</p>
@@ -849,7 +888,8 @@
                     class="mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium border border-blue-300 rounded-lg px-4 py-2 hover:bg-blue-50 transition">
                     ➕ Thêm người phụ thuộc
                 </button>
-                <p class="text-xs text-gray-400 mt-2">💡 Mỗi người phụ thuộc giảm trừ 6.200.000 VNĐ/tháng (NQ 110/2025, áp dụng từ 2026)</p>
+                <p class="text-xs text-gray-400 mt-2">💡 Mỗi người phụ thuộc giảm trừ 6.200.000 VNĐ/tháng (NQ 110/2025, áp
+                    dụng từ 2026)</p>
             </div>
 
             {{-- ========== ⭐ ĐÀO TẠO (THÊM MỚI) ========== --}}
@@ -1363,37 +1403,47 @@
     }
 
     // ========== THÊM CHỨNG CHỈ ==========
+    // ========== THÊM CHỨNG CHỈ ==========
     function addChungChi() {
         const html = `
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3 chung-chi-row">
-            <div>
-                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Tên chứng chỉ</label>
-                <input type="text" name="chung_chi_ten[]" placeholder="VD: AWS Certified Developer" 
-                    class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <div>
-                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Tổ chức cấp</label>
-                <input type="text" name="chung_chi_to_chuc[]" placeholder="VD: Amazon" 
-                    class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <div>
-                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Năm cấp</label>
-                <input type="number" name="chung_chi_nam[]" placeholder="2025" 
-                    class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-3 chung-chi-row bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+        <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Tên chứng chỉ</label>
+            <input type="text" name="chung_chi_ten[]" placeholder="VD: AWS Certified Developer" 
+                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Tổ chức cấp</label>
+            <input type="text" name="chung_chi_to_chuc[]" placeholder="VD: Amazon" 
+                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Năm cấp</label>
+            <input type="number" name="chung_chi_nam[]" placeholder="2025" 
+                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Ngày hết hạn</label>
+            <input type="date" name="chung_chi_het_han[]" 
+                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">File đính kèm</label>
             <div class="flex gap-2 items-end">
                 <div class="flex-1">
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Ngày hết hạn</label>
-                    <input type="date" name="chung_chi_het_han[]" 
-                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="file" name="chung_chi_file[]" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                    <p class="text-xs text-gray-400 mt-1">PDF, JPG, PNG, DOC (tối đa 5MB)</p>
                 </div>
                 <input type="hidden" name="chung_chi_id[]" value="">
+                <input type="hidden" name="chung_chi_file_cu[]" value="">
                 <button type="button" onclick="this.closest('.chung-chi-row').remove()" 
                     class="text-red-500 hover:text-red-700 px-3 py-2 text-sm font-medium border border-red-300 rounded-lg hover:bg-red-50 transition">
                     ✕ Xóa
                 </button>
             </div>
         </div>
+    </div>
     `;
         document.getElementById('chungChiContainer').insertBefore(
             document.createRange().createContextualFragment(html),
