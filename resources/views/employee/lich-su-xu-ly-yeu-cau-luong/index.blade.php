@@ -8,61 +8,36 @@
 
 
 {{-- HEADER --}}
-<div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-lg p-6 text-white">
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
 
     <div class="flex justify-between items-center">
 
-        <div>
+    <div>
 
-            <div class="flex items-center gap-3">
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+            Bảng lương của tôi / Lịch sử xử lý
+        </p>
 
-                <div class="bg-white/20 p-3 rounded-xl">
+        <h1 class="text-2xl font-bold text-gray-800 dark:text-white">
+            Lịch sử xử lý yêu cầu lương
+        </h1>
 
-                    <svg class="w-7 h-7"
-                         fill="none"
-                         stroke="currentColor"
-                         viewBox="0 0 24 24">
-
-                        <path stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5l5 5v11a2 2 0 01-2 2z"/>
-
-                    </svg>
-
-                </div>
-
-
-                <h1 class="text-2xl font-bold">
-
-                    Lịch sử xử lý yêu cầu lương
-
-                </h1>
-
-
-            </div>
-
-
-            <p class="mt-3 text-blue-100">
-
-                Theo dõi toàn bộ quá trình tiếp nhận và xử lý yêu cầu điều chỉnh lương
-
-            </p>
-
-
-        </div>
-
-
-
-        <a href="{{ route('employee.bang-luong.index') }}"
-           class="bg-white text-blue-600 px-5 py-2.5 rounded-xl font-semibold hover:bg-blue-50 transition shadow">
-
-            ← Bảng lương
-
-        </a>
-
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Theo dõi toàn bộ quá trình xử lý các yêu cầu xem xét lương
+        </p>
 
     </div>
+
+    <a href="{{ route('employee.bang-luong.index') }}"
+       class="px-4 py-2 border border-gray-300 dark:border-gray-600
+              rounded-lg text-gray-700 dark:text-gray-200
+              hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+
+        ← Quay lại
+
+    </a>
+
+</div>
 
 
 </div>
