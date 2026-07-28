@@ -341,7 +341,7 @@
                             </div>
                             <div class="flex justify-between py-1">
                                 <span class="text-gray-500 dark:text-gray-400">Thâm niên</span>
-                                <span class="font-medium text-green-600">{{ $user->hoSo?->tham_nien ?? '---' }}</span>
+                                <span class="font-medium text-green-600">{{ $hoSo?->tham_nien ?? '---' }}</span>
                             </div>
                         </div>
 
@@ -369,9 +369,28 @@
 
                         <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-3">📄 Lịch sử hợp đồng lao động</h4>
 
-                        @if ($hoSo?->hop_dong && $hoSo->hop_dong->count() > 0)
+                        @php
+                            // ⭐ PHÂN TRANG LỊCH SỬ HỢP ĐỒNG
+                            $hopDongCollection = $hoSo?->hop_dong ?? collect();
+                            $hopDongPerPage = 3;
+                            $hopDongPage = request()->get('hop_dong_page', 1);
+
+                            $hopDongPaginator = new \Illuminate\Pagination\LengthAwarePaginator(
+                                $hopDongCollection->forPage($hopDongPage, $hopDongPerPage),
+                                $hopDongCollection->count(),
+                                $hopDongPerPage,
+                                $hopDongPage,
+                                ['path' => request()->url(), 'query' => request()->query()],
+                            );
+
+                            $hopDongItems = $hopDongPaginator->items();
+                            $totalHopDong = $hopDongPaginator->total();
+                            $totalHopDongPages = $hopDongPaginator->lastPage();
+                        @endphp
+
+                        @if ($hopDongItems && count($hopDongItems) > 0)
                             <div class="space-y-3">
-                                @foreach ($hoSo->hop_dong as $item)
+                                @foreach ($hopDongItems as $item)
                                     <div
                                         class="bg-gray-50 dark:bg-slate-700 rounded-lg p-4 border-l-4
                                         {{ $item->trang_thai_hop_dong == 'hieu_luc'
@@ -404,7 +423,7 @@
                                                 @if ($item->file_hop_dong_da_ky && $fileExists)
                                                     <div class="mt-3 flex flex-wrap gap-2">
                                                         <button
-                                                            onclick="openFilePreview{{ route('employee.ho-so.view-contract', $item->id) }}', 'Hợp đồng {{ $item->so_hop_dong }}')"
+                                                            onclick="openFilePreview('{{ asset('storage/' . $item->file_hop_dong_da_ky) }}', 'Hợp đồng {{ $item->so_hop_dong }}')"
                                                             class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition flex items-center gap-1">
                                                             <i class="fa-regular fa-eye"></i> Xem
                                                         </button>
@@ -442,6 +461,63 @@
                                     </div>
                                 @endforeach
                             </div>
+
+                            {{-- ⭐ PHÂN TRANG HỢP ĐỒNG --}}
+                            @if ($totalHopDongPages > 1)
+                                <div
+                                    class="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-slate-700">
+                                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                                        Hiển thị {{ $hopDongPaginator->firstItem() }} -
+                                        {{ $hopDongPaginator->lastItem() }} / {{ $totalHopDong }} hợp đồng
+                                    </span>
+                                    <div class="flex gap-1">
+                                        @if ($hopDongPaginator->onFirstPage())
+                                            <button disabled
+                                                class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-lg cursor-not-allowed">←</button>
+                                        @else
+                                            <button onclick="changePage('hop_dong_page', {{ $hopDongPage - 1 }})"
+                                                class="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition">←</button>
+                                        @endif
+
+                                        @php
+                                            $start = max(1, $hopDongPage - 2);
+                                            $end = min($totalHopDongPages, $hopDongPage + 2);
+                                        @endphp
+
+                                        @if ($start > 1)
+                                            <button onclick="changePage('hop_dong_page', 1)"
+                                                class="px-3 py-1.5 text-sm rounded-lg transition bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">1</button>
+                                            @if ($start > 2)
+                                                <span class="px-2 py-1.5 text-sm text-gray-400">...</span>
+                                            @endif
+                                        @endif
+
+                                        @for ($i = $start; $i <= $end; $i++)
+                                            <button onclick="changePage('hop_dong_page', {{ $i }})"
+                                                class="px-3 py-1.5 text-sm rounded-lg transition
+                                                {{ $i == $hopDongPage ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600' }}">
+                                                {{ $i }}
+                                            </button>
+                                        @endfor
+
+                                        @if ($end < $totalHopDongPages)
+                                            @if ($end < $totalHopDongPages - 1)
+                                                <span class="px-2 py-1.5 text-sm text-gray-400">...</span>
+                                            @endif
+                                            <button onclick="changePage('hop_dong_page', {{ $totalHopDongPages }})"
+                                                class="px-3 py-1.5 text-sm rounded-lg transition bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">{{ $totalHopDongPages }}</button>
+                                        @endif
+
+                                        @if ($hopDongPaginator->hasMorePages())
+                                            <button onclick="changePage('hop_dong_page', {{ $hopDongPage + 1 }})"
+                                                class="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition">→</button>
+                                        @else
+                                            <button disabled
+                                                class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-lg cursor-not-allowed">→</button>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
                         @else
                             <p class="text-gray-500 dark:text-gray-400 text-sm">Chưa có hợp đồng lao động</p>
                         @endif
@@ -524,9 +600,28 @@
                     <div class="mb-6">
                         <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-3">🏅 Chứng chỉ</h4>
 
-                        @if ($hoSo?->chung_chi && $hoSo->chung_chi->count() > 0)
+                        @php
+                            // ⭐ PHÂN TRANG CHỨNG CHỈ
+                            $chungChiCollection = $hoSo?->chung_chi ?? collect();
+                            $chungChiPerPage = 4;
+                            $chungChiPage = request()->get('chung_chi_page', 1);
+
+                            $chungChiPaginator = new \Illuminate\Pagination\LengthAwarePaginator(
+                                $chungChiCollection->forPage($chungChiPage, $chungChiPerPage),
+                                $chungChiCollection->count(),
+                                $chungChiPerPage,
+                                $chungChiPage,
+                                ['path' => request()->url(), 'query' => request()->query()],
+                            );
+
+                            $chungChiItems = $chungChiPaginator->items();
+                            $totalChungChi = $chungChiPaginator->total();
+                            $totalChungChiPages = $chungChiPaginator->lastPage();
+                        @endphp
+
+                        @if ($chungChiItems && count($chungChiItems) > 0)
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                @foreach ($hoSo->chung_chi as $item)
+                                @foreach ($chungChiItems as $item)
                                     <div
                                         class="bg-gray-50 dark:bg-slate-700 rounded-lg p-3 border border-gray-200 dark:border-slate-600 hover:shadow-md transition">
                                         <div class="flex justify-between items-start">
@@ -658,17 +753,74 @@
                                 @endforeach
                             </div>
 
+                            {{-- ⭐ PHÂN TRANG CHỨNG CHỈ --}}
+                            @if ($totalChungChiPages > 1)
+                                <div
+                                    class="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-slate-700">
+                                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                                        Hiển thị {{ $chungChiPaginator->firstItem() }} -
+                                        {{ $chungChiPaginator->lastItem() }} / {{ $totalChungChi }} chứng chỉ
+                                    </span>
+                                    <div class="flex gap-1">
+                                        @if ($chungChiPaginator->onFirstPage())
+                                            <button disabled
+                                                class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-lg cursor-not-allowed">←</button>
+                                        @else
+                                            <button onclick="changePage('chung_chi_page', {{ $chungChiPage - 1 }})"
+                                                class="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition">←</button>
+                                        @endif
+
+                                        @php
+                                            $start = max(1, $chungChiPage - 2);
+                                            $end = min($totalChungChiPages, $chungChiPage + 2);
+                                        @endphp
+
+                                        @if ($start > 1)
+                                            <button onclick="changePage('chung_chi_page', 1)"
+                                                class="px-3 py-1.5 text-sm rounded-lg transition bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">1</button>
+                                            @if ($start > 2)
+                                                <span class="px-2 py-1.5 text-sm text-gray-400">...</span>
+                                            @endif
+                                        @endif
+
+                                        @for ($i = $start; $i <= $end; $i++)
+                                            <button onclick="changePage('chung_chi_page', {{ $i }})"
+                                                class="px-3 py-1.5 text-sm rounded-lg transition
+                                                {{ $i == $chungChiPage ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600' }}">
+                                                {{ $i }}
+                                            </button>
+                                        @endfor
+
+                                        @if ($end < $totalChungChiPages)
+                                            @if ($end < $totalChungChiPages - 1)
+                                                <span class="px-2 py-1.5 text-sm text-gray-400">...</span>
+                                            @endif
+                                            <button onclick="changePage('chung_chi_page', {{ $totalChungChiPages }})"
+                                                class="px-3 py-1.5 text-sm rounded-lg transition bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">{{ $totalChungChiPages }}</button>
+                                        @endif
+
+                                        @if ($chungChiPaginator->hasMorePages())
+                                            <button onclick="changePage('chung_chi_page', {{ $chungChiPage + 1 }})"
+                                                class="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition">→</button>
+                                        @else
+                                            <button disabled
+                                                class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-lg cursor-not-allowed">→</button>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
+
                             {{-- Thống kê chứng chỉ --}}
                             <div class="mt-3 flex flex-wrap gap-3 text-xs text-gray-500 dark:text-gray-400">
                                 <span>📊 Tổng: <strong
-                                        class="text-gray-700 dark:text-gray-300">{{ $hoSo->chung_chi->count() }}</strong>
-                                    chứng chỉ</span>
+                                        class="text-gray-700 dark:text-gray-300">{{ $totalChungChi }}</strong> chứng
+                                    chỉ</span>
                                 <span>•</span>
                                 <span>📄 Có file: <strong
-                                        class="text-green-600 dark:text-green-400">{{ $hoSo->chung_chi->whereNotNull('file_dinh_kem')->count() }}</strong></span>
+                                        class="text-green-600 dark:text-green-400">{{ $chungChiCollection->whereNotNull('file_dinh_kem')->count() }}</strong></span>
                                 <span>•</span>
                                 <span>⏳ Sắp hết hạn: <strong
-                                        class="text-yellow-600 dark:text-yellow-400">{{ $hoSo->chung_chi->filter(function ($cc) {return $cc->ngay_het_han && $cc->ngay_het_han->diffInDays(now()) <= 30;})->count() }}</strong></span>
+                                        class="text-yellow-600 dark:text-yellow-400">{{ $chungChiCollection->filter(function ($cc) {return $cc->ngay_het_han && $cc->ngay_het_han->diffInDays(now()) <= 30;})->count() }}</strong></span>
                             </div>
                         @else
                             <div class="text-center py-8 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
@@ -685,9 +837,28 @@
 
                         <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-3">🚀 Dự án đã tham gia</h4>
 
-                        @if ($hoSo?->du_an && $hoSo->du_an->count() > 0)
+                        @php
+                            // ⭐ PHÂN TRANG DỰ ÁN
+                            $duAnCollection = $hoSo?->du_an ?? collect();
+                            $duAnPerPage = 3;
+                            $duAnPage = request()->get('du_an_page', 1);
+
+                            $duAnPaginator = new \Illuminate\Pagination\LengthAwarePaginator(
+                                $duAnCollection->sortByDesc('ngay_bat_dau')->forPage($duAnPage, $duAnPerPage),
+                                $duAnCollection->count(),
+                                $duAnPerPage,
+                                $duAnPage,
+                                ['path' => request()->url(), 'query' => request()->query()],
+                            );
+
+                            $duAnItems = $duAnPaginator->items();
+                            $totalDuAn = $duAnPaginator->total();
+                            $totalDuAnPages = $duAnPaginator->lastPage();
+                        @endphp
+
+                        @if ($duAnItems && count($duAnItems) > 0)
                             <div class="space-y-3">
-                                @foreach ($hoSo->du_an as $item)
+                                @foreach ($duAnItems as $item)
                                     <div
                                         class="bg-gray-50 dark:bg-slate-700 rounded-lg p-4 border-l-4 {{ $item->mau_border }} hover:shadow-md transition">
                                         <div class="flex justify-between items-start">
@@ -708,6 +879,65 @@
                                     </div>
                                 @endforeach
                             </div>
+
+                            {{-- ⭐ PHÂN TRANG DỰ ÁN --}}
+                            @if ($totalDuAnPages > 1)
+                                <div
+                                    class="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-slate-700">
+                                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                                        Hiển thị {{ $duAnPaginator->firstItem() }} - {{ $duAnPaginator->lastItem() }} /
+                                        {{ $totalDuAn }} dự án
+                                    </span>
+                                    <div class="flex gap-1">
+                                        @if ($duAnPaginator->onFirstPage())
+                                            <button disabled
+                                                class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-lg cursor-not-allowed">←</button>
+                                        @else
+                                            <button onclick="changePage('du_an_page', {{ $duAnPage - 1 }})"
+                                                class="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition">←</button>
+                                        @endif
+
+                                        @php
+                                            $start = max(1, $duAnPage - 2);
+                                            $end = min($totalDuAnPages, $duAnPage + 2);
+                                        @endphp
+
+                                        @if ($start > 1)
+                                            <button onclick="changePage('du_an_page', 1)"
+                                                class="px-3 py-1.5 text-sm rounded-lg transition bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">1</button>
+                                            @if ($start > 2)
+                                                <span class="px-2 py-1.5 text-sm text-gray-400">...</span>
+                                            @endif
+                                        @endif
+
+                                        @for ($i = $start; $i <= $end; $i++)
+                                            <button onclick="changePage('du_an_page', {{ $i }})"
+                                                class="px-3 py-1.5 text-sm rounded-lg transition
+                                                {{ $i == $duAnPage ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600' }}">
+                                                {{ $i }}
+                                            </button>
+                                        @endfor
+
+                                        @if ($end < $totalDuAnPages)
+                                            @if ($end < $totalDuAnPages - 1)
+                                                <span class="px-2 py-1.5 text-sm text-gray-400">...</span>
+                                            @endif
+                                            <button onclick="changePage('du_an_page', {{ $totalDuAnPages }})"
+                                                class="px-3 py-1.5 text-sm rounded-lg transition bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">{{ $totalDuAnPages }}</button>
+                                        @endif
+
+                                        @if ($duAnPaginator->hasMorePages())
+                                            <button onclick="changePage('du_an_page', {{ $duAnPage + 1 }})"
+                                                class="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition">→</button>
+                                        @else
+                                            <button disabled
+                                                class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-lg cursor-not-allowed">→</button>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
+
+                            <div class="mt-2 text-xs text-gray-400">📌 Tổng: {{ $totalDuAn }} dự án đã tham gia</div>
                         @else
                             <p class="text-gray-500 dark:text-gray-400 text-sm">Chưa có dự án</p>
                         @endif
@@ -722,6 +952,27 @@
             {{-- TAB 4: LƯƠNG THƯỞNG --}}
             {{-- ========================================================== --}}
             <div id="tab4" class="tab-content hidden">
+
+                {{-- ⭐ TÍNH TOÁN LƯƠNG TỪ BIẾN ĐÃ TRUYỀN TỪ CONTROLLER --}}
+                @php
+                    // Sử dụng dữ liệu đã được truyền từ Controller
+                    $luongCoBanHienTai = $luongGanNhat->luong_co_ban ?? ($hopDongHieuLuc->luong_co_ban ?? 0);
+                    $tongPhuCap = $luongGanNhat->tong_phu_cap ?? 0;
+                    $tienTangCa = $luongGanNhat->tien_tang_ca ?? 0;
+                    $tongBaoHiem = $luongGanNhat->tong_bao_hiem ?? 0;
+                    $thueTncn = $luongGanNhat->thue_thu_nhap_ca_nhan ?? 0;
+                    $tongThuNhap = $luongGanNhat->tong_luong ?? $luongCoBanHienTai + $tongPhuCap;
+                    $thucNhan = $luongGanNhat->luong_thuc_nhan ?? $tongThuNhap;
+                    $soNgayCong = $luongGanNhat->so_ngay_cong ?? 0;
+                    $soNgayCongChuan = $luongGanNhat->so_ngay_cong_chuan ?? 26;
+                    $bhxh = $luongGanNhat->bhxh ?? 0;
+                    $bhyt = $luongGanNhat->bhyt ?? 0;
+                    $bhtn = $luongGanNhat->bhtn ?? 0;
+                    $soNguoiPhuThuoc = $hoSo?->nguoiPhuThuoc?->count() ?? 0;
+
+                    $coPhuCap = $tongPhuCap > 0;
+                    $coTangCa = $tienTangCa > 0;
+                @endphp
 
                 <div
                     class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-slate-700">
@@ -784,6 +1035,10 @@
                             @if ($hopDongHieuLuc)
                                 <p class="text-xs text-gray-400">📄 {{ $hopDongHieuLuc->so_hop_dong }}</p>
                             @endif
+                            @if ($soNgayCong > 0)
+                                <p class="text-xs text-gray-400">📅 Công: {{ $soNgayCong }}/{{ $soNgayCongChuan }}
+                                </p>
+                            @endif
                         </div>
                         <div
                             class="bg-gray-50 dark:bg-slate-700 rounded-lg p-4 text-center border border-gray-200 dark:border-slate-600">
@@ -792,13 +1047,7 @@
                                 {{ number_format($tongThuNhap, 0, ',', '.') }} ₫
                             </p>
                             <p class="text-xs text-gray-400">
-                                = {{ number_format($luongCoBanHienTai, 0, ',', '.') }}
-                                @if ($tongPhuCap > 0)
-                                    + {{ number_format($tongPhuCap, 0, ',', '.') }}
-                                @endif
-                                @if ($coTangCa)
-                                    + {{ number_format($tienTangCa, 0, ',', '.') }}
-                                @endif
+                                {{ $kyLuu }}
                             </p>
                         </div>
                         <div
@@ -827,6 +1076,14 @@
                                         <strong>{{ number_format($pc->so_tien_mac_dinh, 0, ',', '.') }} ₫</strong>
                                     </span>
                                 @endforeach
+                                @if ($tongPhuCap > 0)
+                                    <span
+                                        class="px-3 py-1.5 bg-green-50 dark:bg-green-900/20 rounded-full text-sm border border-green-200 dark:border-green-800">
+                                        <strong>Tổng phụ cấp:</strong>
+                                        <strong class="text-green-600">{{ number_format($tongPhuCap, 0, ',', '.') }}
+                                            ₫</strong>
+                                    </span>
+                                @endif
                             </div>
                         </div>
                     @else
@@ -849,10 +1106,48 @@
                         </div>
                     @endif
 
+                    {{-- Khấu trừ --}}
+                    @if ($tongBaoHiem > 0 || $thueTncn > 0)
+                        <div class="mb-4">
+                            <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">📌 Khấu trừ</h4>
+                            <div class="flex flex-wrap gap-2">
+                                @if ($bhxh > 0)
+                                    <span
+                                        class="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 rounded-full text-sm border border-red-200 dark:border-red-800">
+                                        BHXH: <strong class="text-red-600">-{{ number_format($bhxh, 0, ',', '.') }}
+                                            ₫</strong>
+                                    </span>
+                                @endif
+                                @if ($bhyt > 0)
+                                    <span
+                                        class="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 rounded-full text-sm border border-red-200 dark:border-red-800">
+                                        BHYT: <strong class="text-red-600">-{{ number_format($bhyt, 0, ',', '.') }}
+                                            ₫</strong>
+                                    </span>
+                                @endif
+                                @if ($bhtn > 0)
+                                    <span
+                                        class="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 rounded-full text-sm border border-red-200 dark:border-red-800">
+                                        BHTN: <strong class="text-red-600">-{{ number_format($bhtn, 0, ',', '.') }}
+                                            ₫</strong>
+                                    </span>
+                                @endif
+                                @if ($thueTncn > 0)
+                                    <span
+                                        class="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 rounded-full text-sm border border-red-200 dark:border-red-800">
+                                        Thuế TNCN: <strong
+                                            class="text-red-600">-{{ number_format($thueTncn, 0, ',', '.') }} ₫</strong>
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- Lịch sử lương --}}
                     <div class="mt-6 pt-6 border-t border-gray-200 dark:border-slate-700">
                         <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-3">📈 Lịch sử lương</h4>
-                        @if ($hoSo?->lich_su_luong && $hoSo->lich_su_luong->count() > 0)
+
+                        @if ($lichSuLuong && $lichSuLuong->count() > 0)
                             <div class="overflow-x-auto">
                                 <table class="min-w-full text-sm">
                                     <thead>
@@ -861,27 +1156,75 @@
                                             <th class="text-left p-2 font-semibold">Kỳ lương</th>
                                             <th class="text-left p-2 font-semibold">Ngày công</th>
                                             <th class="text-left p-2 font-semibold">Lương CB</th>
+                                            <th class="text-left p-2 font-semibold">Phụ cấp</th>
                                             <th class="text-left p-2 font-semibold">Thực nhận</th>
+                                            <th class="text-left p-2 font-semibold">Trạng thái</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($hoSo->lich_su_luong as $item)
+                                        @foreach ($lichSuLuong as $item)
                                             <tr
                                                 class="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition">
-                                                <td class="p-2 font-medium">Tháng
-                                                    {{ $item->luong_thang }}/{{ $item->luong_nam }}</td>
-                                                <td class="p-2">{{ $item->so_ngay_cong ?? 0 }}</td>
+                                                <td class="p-2 font-medium">
+                                                    @if ($item->bangLuong)
+                                                        Tháng {{ $item->bangLuong->thang }}/{{ $item->bangLuong->nam }}
+                                                        <br>
+                                                        <span
+                                                            class="text-xs text-gray-400">{{ $item->bangLuong->ma_bang_luong ?? '' }}</span>
+                                                    @else
+                                                        Tháng {{ $item->luong_thang }}/{{ $item->luong_nam }}
+                                                    @endif
+                                                </td>
+                                                <td class="p-2">{{ number_format($item->so_ngay_cong ?? 0, 2) }}</td>
                                                 <td class="p-2">
-                                                    {{ number_format($item->luong_co_ban ?? 0, 0, ',', '.') }}</td>
+                                                    {{ number_format($item->luong_co_ban ?? 0, 0, ',', '.') }}
+                                                </td>
+                                                <td class="p-2">
+                                                    {{ number_format($item->tong_phu_cap ?? 0, 0, ',', '.') }}
+                                                </td>
                                                 <td class="p-2 font-bold text-green-600">
                                                     {{ number_format($item->luong_thuc_nhan ?? 0, 0, ',', '.') }}</td>
+                                                <td class="p-2">
+                                                    @php
+                                                        $statusMap = [
+                                                            'da_chot' => '✅ Đã chốt',
+                                                            'da_duyet' => '✅ Đã duyệt',
+                                                            'cho_duyet' => '⏳ Chờ duyệt',
+                                                            'dang_xu_ly' => '🔄 Đang xử lý',
+                                                            'da_tra' => '💰 Đã trả',
+                                                        ];
+                                                        $trangThai = $item->bangLuong->trang_thai ?? '';
+                                                        $statusClass = [
+                                                            'da_chot' =>
+                                                                'text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400',
+                                                            'da_duyet' =>
+                                                                'text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400',
+                                                            'cho_duyet' =>
+                                                                'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400',
+                                                            'dang_xu_ly' =>
+                                                                'text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400',
+                                                            'da_tra' =>
+                                                                'text-purple-600 bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400',
+                                                        ];
+                                                    @endphp
+                                                    <span
+                                                        class="px-2 py-0.5 rounded-full text-xs font-medium {{ $statusClass[$trangThai] ?? 'bg-gray-100 text-gray-600' }}">
+                                                        {{ $statusMap[$trangThai] ?? ($trangThai ?? 'Không xác định') }}
+                                                    </span>
+                                                </td>
                                             </tr>
                                         @endforeach
                                     </tbody>
                                 </table>
                             </div>
+                            <div class="mt-2 text-xs text-gray-400">📌 Hiển thị {{ $lichSuLuong->count() }} bản ghi lương
+                                gần nhất</div>
                         @else
-                            <p class="text-gray-500 dark:text-gray-400 text-sm">Chưa có lịch sử lương</p>
+                            <div class="text-center py-8 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+                                <div class="text-4xl mb-2">📭</div>
+                                <p class="text-gray-500 dark:text-gray-400 text-sm">Chưa có lịch sử lương</p>
+                                <p class="text-xs text-gray-400 mt-1">Dữ liệu lương sẽ hiển thị sau khi chốt lương</p>
+                            </div>
                         @endif
                     </div>
 
@@ -895,64 +1238,27 @@
             <div id="tab5" class="tab-content hidden">
 
                 @php
-                    $luongCoBanHienTai = $hopDongHieuLuc->luong_co_ban ?? 0;
-
-                    $tongPhuCap = 0;
-                    if ($hopDongHieuLuc) {
-                        if (!empty($hopDongHieuLuc->phu_cap)) {
-                            $phuCapIds = is_string($hopDongHieuLuc->phu_cap)
-                                ? json_decode($hopDongHieuLuc->phu_cap, true)
-                                : $hopDongHieuLuc->phu_cap;
-
-                            if (is_array($phuCapIds) && count($phuCapIds) > 0) {
-                                $tongPhuCap = \App\Models\PhuCap::whereIn('id', $phuCapIds)->sum('so_tien_mac_dinh');
-                            }
-                        }
-                    }
-
+                    // Sử dụng dữ liệu đã được truyền từ Controller
+                    $luongCoBanHienTai = $luongGanNhat->luong_co_ban ?? ($hopDongHieuLuc->luong_co_ban ?? 0);
+                    $tongPhuCap = $luongGanNhat->tong_phu_cap ?? 0;
                     $tienTangCa = $luongGanNhat->tien_tang_ca ?? 0;
-                    $coTangCa = $tienTangCa > 0;
-
-                    $tongThuNhap = $luongCoBanHienTai + $tongPhuCap + $tienTangCa;
-
-                    $luongDongBhxh = $hopDongHieuLuc->luong_co_ban ?? 0;
-
-                    $bhxh = round($luongDongBhxh * 0.08, 0);
-                    $bhyt = round($luongDongBhxh * 0.015, 0);
-                    $bhtn = round($luongDongBhxh * 0.01, 0);
-                    $tongBaoHiem = $bhxh + $bhyt + $bhtn;
-
-                    // ⭐ LẤY DANH SÁCH NGƯỜI PHỤ THUỘC
-                    $nguoiPhuThuocs = $hoSo->nguoiPhuThuoc ?? collect();
-                    $soNguoiPhuThuoc = $nguoiPhuThuocs->count();
+                    $tongBaoHiem = $luongGanNhat->tong_bao_hiem ?? 0;
+                    $thueTncn = $luongGanNhat->thue_thu_nhap_ca_nhan ?? 0;
+                    $tongThuNhap = $luongGanNhat->tong_luong ?? $luongCoBanHienTai + $tongPhuCap;
+                    $thucNhan = $luongGanNhat->luong_thuc_nhan ?? $tongThuNhap;
+                    $bhxh = $luongGanNhat->bhxh ?? 0;
+                    $bhyt = $luongGanNhat->bhyt ?? 0;
+                    $bhtn = $luongGanNhat->bhtn ?? 0;
+                    $soNguoiPhuThuoc = $hoSo?->nguoiPhuThuoc?->count() ?? 0;
 
                     $giamTruBanThan = 15500000;
                     $giamTruGiaCanh = $giamTruBanThan + 6200000 * $soNguoiPhuThuoc;
-
                     $thuNhapChiuThue = max(0, $tongThuNhap - $tongBaoHiem);
                     $thuNhapTinhThue = max(0, $thuNhapChiuThue - $giamTruGiaCanh);
 
-                    $thueTncn = 0;
-                    $remaining = $thuNhapTinhThue;
-                    $bac = [
-                        ['tu' => 0, 'den' => 10000000, 'thue_suat' => 0.05],
-                        ['tu' => 10000000, 'den' => 30000000, 'thue_suat' => 0.1],
-                        ['tu' => 30000000, 'den' => 60000000, 'thue_suat' => 0.2],
-                        ['tu' => 60000000, 'den' => 100000000, 'thue_suat' => 0.3],
-                        ['tu' => 100000000, 'den' => PHP_INT_MAX, 'thue_suat' => 0.35],
-                    ];
-                    foreach ($bac as $b) {
-                        if ($remaining <= 0) {
-                            break;
-                        }
-                        $khoang = min($remaining, $b['den'] - $b['tu']);
-                        $thueTncn += $khoang * $b['thue_suat'];
-                        $remaining -= $khoang;
-                    }
-                    $thueTncn = round($thueTncn, 0);
-
-                    $thucNhan = $tongThuNhap - $tongBaoHiem - $thueTncn;
                     $coPhuCap = $tongPhuCap > 0;
+                    $coTangCa = $tienTangCa > 0;
+                    $nguoiPhuThuocs = $hoSo->nguoiPhuThuoc ?? collect();
                 @endphp
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -983,7 +1289,7 @@
                             <div class="flex justify-between py-2 border-b border-gray-100 dark:border-slate-700">
                                 <span class="text-gray-500 dark:text-gray-400">Mức lương đóng BHXH</span>
                                 <span
-                                    class="font-medium text-green-600 dark:text-green-400">{{ number_format($luongDongBhxh, 0, ',', '.') }}
+                                    class="font-medium text-green-600 dark:text-green-400">{{ number_format($luongCoBanHienTai, 0, ',', '.') }}
                                     VNĐ</span>
                             </div>
 
@@ -1106,18 +1412,24 @@
                                     </p>
                                 </div>
                             @endif
+
+                            @if ($bangLuongGanNhat)
+                                <div class="text-xs text-gray-400 mt-2">
+                                    📋 Kỳ lương: {{ $kyLuu }}
+                                </div>
+                            @endif
                         </div>
                     </div>
 
                     {{-- Thuế TNCN --}}
-                    <div
-                        class="bg-blue-50 dark:bg-blue-900/20 rounded-xl shadow-sm p-6 border border-blue-200 dark:border-blue-800">
-                        <h3
-                            class="text-lg font-semibold text-gray-800 dark:text-white border-b border-blue-200 dark:border-blue-700 pb-3 mb-4">
-                            🏛️ Thuế TNCN
-                        </h3>
+                    <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-semibold text-gray-700 dark:text-gray-300">🏛️ Thuế TNCN</span>
+                            <span class="font-bold {{ $thueTncn > 0 ? 'text-red-600' : 'text-green-600' }} text-lg">
+                                {{ number_format($thueTncn, 0, ',', '.') }} ₫
+                            </span>
+                        </div>
 
-                        {{-- Tổng thu nhập --}}
                         <div class="flex justify-between py-1 text-sm border-t border-gray-200 dark:border-blue-700">
                             <span class="text-gray-500 dark:text-gray-400">📊 Tổng thu nhập</span>
                             <span
@@ -1134,14 +1446,12 @@
                             @endif
                         </div>
 
-                        {{-- Bảo hiểm --}}
                         <div class="flex justify-between py-1 text-sm border-t border-gray-200 dark:border-blue-700">
                             <span class="text-gray-500 dark:text-gray-400">🔻 Bảo hiểm (10.5%)</span>
                             <span class="font-medium text-red-600">-{{ number_format($tongBaoHiem, 0, ',', '.') }}
                                 ₫</span>
                         </div>
 
-                        {{-- ⭐ Giảm trừ gia cảnh --}}
                         <div class="flex justify-between py-1 text-sm border-t border-gray-200 dark:border-blue-700">
                             <span class="text-gray-500 dark:text-gray-400">👨‍👩‍👧‍👦 Giảm trừ gia cảnh</span>
                             <span class="font-medium text-blue-600">-{{ number_format($giamTruGiaCanh, 0, ',', '.') }}
@@ -1154,7 +1464,6 @@
                             @endif
                         </div>
 
-                        {{-- Thu nhập chịu thuế --}}
                         <div
                             class="flex justify-between py-1 text-sm border-t border-gray-200 dark:border-blue-700 font-medium">
                             <span class="text-gray-600 dark:text-gray-300">📝 Thu nhập chịu thuế</span>
@@ -1167,7 +1476,6 @@
                             {{ number_format($tongBaoHiem, 0, ',', '.') }}
                         </div>
 
-                        {{-- Thu nhập tính thuế --}}
                         <div class="flex justify-between py-1 text-sm border-t border-gray-200 dark:border-blue-700">
                             <span class="text-gray-500 dark:text-gray-400">📊 Thu nhập tính thuế</span>
                             <span class="font-medium {{ $thuNhapTinhThue > 0 ? 'text-orange-600' : 'text-green-600' }}">
@@ -1179,7 +1487,6 @@
                             {{ number_format($giamTruGiaCanh, 0, ',', '.') }}
                         </div>
 
-                        {{-- Thuế TNCN --}}
                         <div class="flex justify-between py-2 mt-1 border-t-2 border-blue-300 dark:border-blue-700">
                             <span class="font-semibold text-gray-700 dark:text-gray-300">🏛️ Thuế TNCN</span>
                             <span class="font-bold {{ $thueTncn > 0 ? 'text-red-600' : 'text-green-600' }} text-lg">
@@ -1237,6 +1544,11 @@
                                 - {{ number_format($tongBaoHiem, 0, ',', '.') }}
                                 - {{ number_format($thueTncn, 0, ',', '.') }}
                             </div>
+                            @if ($bangLuongGanNhat)
+                                <div class="text-xs text-gray-400 mt-1">
+                                    📋 Kỳ lương: {{ $kyLuu }}
+                                </div>
+                            @endif
                         </div>
                     </div>
 
@@ -1259,9 +1571,28 @@
                             🎓 Đào tạo đã tham gia
                         </h3>
 
-                        @if ($hoSo?->dao_tao && $hoSo->dao_tao->count() > 0)
+                        @php
+                            // ⭐ PHÂN TRANG ĐÀO TẠO
+                            $daoTaoCollection = $hoSo?->dao_tao ?? collect();
+                            $daoKhoaHocPerPage = 4;
+                            $daoKhoaHocPage = request()->get('dao_tao_page', 1);
+
+                            $daoKhoaHocPaginator = new \Illuminate\Pagination\LengthAwarePaginator(
+                                $daoTaoCollection->forPage($daoKhoaHocPage, $daoKhoaHocPerPage),
+                                $daoTaoCollection->count(),
+                                $daoKhoaHocPerPage,
+                                $daoKhoaHocPage,
+                                ['path' => request()->url(), 'query' => request()->query()],
+                            );
+
+                            $daoKhoaHocItems = $daoKhoaHocPaginator->items();
+                            $totalDaoKhoaHoc = $daoKhoaHocPaginator->total();
+                            $totalDaoKhoaHocPages = $daoKhoaHocPaginator->lastPage();
+                        @endphp
+
+                        @if ($daoKhoaHocItems && count($daoKhoaHocItems) > 0)
                             <div class="space-y-3">
-                                @foreach ($hoSo->dao_tao as $item)
+                                @foreach ($daoKhoaHocItems as $item)
                                     <div class="bg-gray-50 dark:bg-slate-700 rounded-lg p-3 border-l-4 border-blue-500">
                                         <div class="flex justify-between items-start">
                                             <div>
@@ -1286,6 +1617,63 @@
                                     </div>
                                 @endforeach
                             </div>
+
+                            {{-- ⭐ PHÂN TRANG ĐÀO TẠO --}}
+                            @if ($totalDaoKhoaHocPages > 1)
+                                <div
+                                    class="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-slate-700">
+                                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                                        Hiển thị {{ $daoKhoaHocPaginator->firstItem() }} -
+                                        {{ $daoKhoaHocPaginator->lastItem() }} / {{ $totalDaoKhoaHoc }} khóa học
+                                    </span>
+                                    <div class="flex gap-1">
+                                        @if ($daoKhoaHocPaginator->onFirstPage())
+                                            <button disabled
+                                                class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-lg cursor-not-allowed">←</button>
+                                        @else
+                                            <button onclick="changePage('dao_tao_page', {{ $daoKhoaHocPage - 1 }})"
+                                                class="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition">←</button>
+                                        @endif
+
+                                        @php
+                                            $start = max(1, $daoKhoaHocPage - 2);
+                                            $end = min($totalDaoKhoaHocPages, $daoKhoaHocPage + 2);
+                                        @endphp
+
+                                        @if ($start > 1)
+                                            <button onclick="changePage('dao_tao_page', 1)"
+                                                class="px-3 py-1.5 text-sm rounded-lg transition bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">1</button>
+                                            @if ($start > 2)
+                                                <span class="px-2 py-1.5 text-sm text-gray-400">...</span>
+                                            @endif
+                                        @endif
+
+                                        @for ($i = $start; $i <= $end; $i++)
+                                            <button onclick="changePage('dao_tao_page', {{ $i }})"
+                                                class="px-3 py-1.5 text-sm rounded-lg transition
+                                                {{ $i == $daoKhoaHocPage ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600' }}">
+                                                {{ $i }}
+                                            </button>
+                                        @endfor
+
+                                        @if ($end < $totalDaoKhoaHocPages)
+                                            @if ($end < $totalDaoKhoaHocPages - 1)
+                                                <span class="px-2 py-1.5 text-sm text-gray-400">...</span>
+                                            @endif
+                                            <button onclick="changePage('dao_tao_page', {{ $totalDaoKhoaHocPages }})"
+                                                class="px-3 py-1.5 text-sm rounded-lg transition bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">{{ $totalDaoKhoaHocPages }}</button>
+                                        @endif
+
+                                        @if ($daoKhoaHocPaginator->hasMorePages())
+                                            <button onclick="changePage('dao_tao_page', {{ $daoKhoaHocPage + 1 }})"
+                                                class="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition">→</button>
+                                        @else
+                                            <button disabled
+                                                class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-lg cursor-not-allowed">→</button>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
                         @else
                             <div class="text-center py-8 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
                                 <div class="text-4xl mb-2">📚</div>
@@ -1302,9 +1690,28 @@
                             ⚖️ Khen thưởng & Kỷ luật
                         </h3>
 
-                        @if ($hoSo?->khen_thuong_ky_luat && $hoSo->khen_thuong_ky_luat->count() > 0)
+                        @php
+                            // ⭐ PHÂN TRANG KHEN THƯỞNG & KỶ LUẬT
+                            $ktklCollection = $hoSo?->khen_thuong_ky_luat ?? collect();
+                            $ktklPerPage = 4;
+                            $ktklPage = request()->get('ktkl_page', 1);
+
+                            $ktklPaginator = new \Illuminate\Pagination\LengthAwarePaginator(
+                                $ktklCollection->forPage($ktklPage, $ktklPerPage),
+                                $ktklCollection->count(),
+                                $ktklPerPage,
+                                $ktklPage,
+                                ['path' => request()->url(), 'query' => request()->query()],
+                            );
+
+                            $ktklItems = $ktklPaginator->items();
+                            $totalKtkl = $ktklPaginator->total();
+                            $totalKtklPages = $ktklPaginator->lastPage();
+                        @endphp
+
+                        @if ($ktklItems && count($ktklItems) > 0)
                             <div class="space-y-3">
-                                @foreach ($hoSo->khen_thuong_ky_luat as $item)
+                                @foreach ($ktklItems as $item)
                                     <div class="rounded-lg p-3 {{ $item->mau_loai }}">
                                         <div class="flex justify-between items-start">
                                             <div>
@@ -1333,6 +1740,63 @@
                                     </div>
                                 @endforeach
                             </div>
+
+                            {{-- ⭐ PHÂN TRANG KHEN THƯỞNG & KỶ LUẬT --}}
+                            @if ($totalKtklPages > 1)
+                                <div
+                                    class="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-slate-700">
+                                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                                        Hiển thị {{ $ktklPaginator->firstItem() }} - {{ $ktklPaginator->lastItem() }} /
+                                        {{ $totalKtkl }} bản ghi
+                                    </span>
+                                    <div class="flex gap-1">
+                                        @if ($ktklPaginator->onFirstPage())
+                                            <button disabled
+                                                class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-lg cursor-not-allowed">←</button>
+                                        @else
+                                            <button onclick="changePage('ktkl_page', {{ $ktklPage - 1 }})"
+                                                class="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition">←</button>
+                                        @endif
+
+                                        @php
+                                            $start = max(1, $ktklPage - 2);
+                                            $end = min($totalKtklPages, $ktklPage + 2);
+                                        @endphp
+
+                                        @if ($start > 1)
+                                            <button onclick="changePage('ktkl_page', 1)"
+                                                class="px-3 py-1.5 text-sm rounded-lg transition bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">1</button>
+                                            @if ($start > 2)
+                                                <span class="px-2 py-1.5 text-sm text-gray-400">...</span>
+                                            @endif
+                                        @endif
+
+                                        @for ($i = $start; $i <= $end; $i++)
+                                            <button onclick="changePage('ktkl_page', {{ $i }})"
+                                                class="px-3 py-1.5 text-sm rounded-lg transition
+                                                {{ $i == $ktklPage ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600' }}">
+                                                {{ $i }}
+                                            </button>
+                                        @endfor
+
+                                        @if ($end < $totalKtklPages)
+                                            @if ($end < $totalKtklPages - 1)
+                                                <span class="px-2 py-1.5 text-sm text-gray-400">...</span>
+                                            @endif
+                                            <button onclick="changePage('ktkl_page', {{ $totalKtklPages }})"
+                                                class="px-3 py-1.5 text-sm rounded-lg transition bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">{{ $totalKtklPages }}</button>
+                                        @endif
+
+                                        @if ($ktklPaginator->hasMorePages())
+                                            <button onclick="changePage('ktkl_page', {{ $ktklPage + 1 }})"
+                                                class="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition">→</button>
+                                        @else
+                                            <button disabled
+                                                class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-lg cursor-not-allowed">→</button>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
                         @else
                             <div class="text-center py-8 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
                                 <div class="text-4xl mb-2">⚖️</div>
@@ -1414,7 +1878,7 @@
                     </div>
                     <div
                         class="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-4 border border-orange-200 dark:border-orange-800 text-center">
-                        <p class="text-2xl font-bold text-orange-600">{{ $lichSuVeSom->total() ?? 0 }}</p>
+                        <p class="text-2xl font-bold text-orange-600">{{ $thongKeDonTu['tong_ve_som'] ?? 0 }}</p>
                         <p class="text-xs text-gray-500 dark:text-gray-400">🏠 Tổng về sớm</p>
                     </div>
                 </div>
@@ -1642,11 +2106,10 @@
                         <h3 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
                             <span>🏠</span> Lịch sử đơn xin về sớm
                         </h3>
-                        <span class="text-xs text-gray-400">Tổng: {{ isset($lichSuVeSom) ? $lichSuVeSom->total() : 0 }}
-                            đơn</span>
+                        <span class="text-xs text-gray-400">Tổng: {{ $lichSuVeSom->total() }} đơn</span>
                     </div>
 
-                    @if (isset($lichSuVeSom) && $lichSuVeSom->count() > 0)
+                    @if ($lichSuVeSom && $lichSuVeSom->count() > 0)
                         <div class="overflow-x-auto">
                             <table class="min-w-full text-sm">
                                 <thead>
@@ -1822,7 +2285,38 @@
                 }
             }
 
+            // ⭐ KHÔI PHỤC VỊ TRÍ SCROLL
+            const savedScroll = sessionStorage.getItem('scroll_position');
+            if (savedScroll !== null) {
+                setTimeout(() => {
+                    window.scrollTo({
+                        top: parseInt(savedScroll),
+                        behavior: 'smooth'
+                    });
+                    sessionStorage.removeItem('scroll_position');
+                }, 300);
+            }
+
         });
+
+        // ⭐ HÀM CHUYỂN TRANG CHO TẤT CẢ CÁC TAB
+        function changePage(pageParam, page) {
+            const url = new URL(window.location.href);
+            url.searchParams.set(pageParam, page);
+
+            // Lưu tab đang active
+            const activeTab = document.querySelector('.tab-btn.active');
+            if (activeTab) {
+                url.searchParams.set('tab', activeTab.dataset.tab);
+                sessionStorage.setItem('active_tab', activeTab.dataset.tab);
+            }
+
+            // Lưu vị trí scroll
+            const currentScroll = window.scrollY;
+            sessionStorage.setItem('scroll_position', currentScroll);
+
+            window.location.href = url.toString();
+        }
 
         function openFilePreview(url, title) {
             const modal = document.getElementById('filePreviewModal');
@@ -1830,69 +2324,60 @@
             const titleEl = document.getElementById('filePreviewTitle');
             const downloadLink = document.getElementById('fileDownloadLink');
 
-            // Cập nhật tiêu đề
-            const isCV = title.toLowerCase().includes('cv');
             titleEl.textContent = '📄 ' + title;
             downloadLink.href = url;
 
-            // Hiển thị loading với animation đẹp hơn
             content.innerHTML = `
-        <div class="flex items-center justify-center h-full min-h-[400px]">
-            <div class="text-center">
-                <div class="relative inline-block">
-                    <div class="w-20 h-20 border-4 border-blue-200 dark:border-blue-800 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin"></div>
-                    <div class="absolute inset-0 flex items-center justify-center text-blue-600 dark:text-blue-400 text-2xl">
-                        <i class="fa-regular fa-file-pdf"></i>
+                <div class="flex items-center justify-center h-full min-h-[400px]">
+                    <div class="text-center">
+                        <div class="relative inline-block">
+                            <div class="w-20 h-20 border-4 border-blue-200 dark:border-blue-800 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin"></div>
+                            <div class="absolute inset-0 flex items-center justify-center text-blue-600 dark:text-blue-400 text-2xl">
+                                <i class="fa-regular fa-file-pdf"></i>
+                            </div>
+                        </div>
+                        <p class="text-gray-500 dark:text-gray-400 mt-4 font-medium">Đang tải tài liệu...</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Vui lòng đợi trong giây lát</p>
                     </div>
                 </div>
-                <p class="text-gray-500 dark:text-gray-400 mt-4 font-medium">Đang tải tài liệu...</p>
-                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Vui lòng đợi trong giây lát</p>
-            </div>
-        </div>
-    `;
+            `;
 
             modal.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
 
-            // Hiển thị file với iframe và styling tốt hơn
             setTimeout(() => {
-                // Phân loại file để hiển thị phù hợp
                 const fileExt = url.split('.').pop().toLowerCase();
                 const isPDF = fileExt === 'pdf';
                 const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(fileExt);
-                const isDoc = ['doc', 'docx'].includes(fileExt);
 
                 let displayContent = '';
 
                 if (isImage) {
-                    // Hiển thị ảnh to hơn
                     displayContent = `
-                <div class="flex items-center justify-center h-full bg-white dark:bg-gray-900 rounded-lg p-4">
-                    <img src="${url}" alt="Preview" class="max-w-full max-h-[80vh] object-contain rounded-lg shadow-lg">
-                </div>
-            `;
+                        <div class="flex items-center justify-center h-full bg-white dark:bg-gray-900 rounded-lg p-4">
+                            <img src="${url}" alt="Preview" class="max-w-full max-h-[80vh] object-contain rounded-lg shadow-lg">
+                        </div>
+                    `;
                 } else {
-                    // Hiển thị PDF hoặc các file khác bằng iframe
                     displayContent = `
-                <div class="w-full h-full bg-white dark:bg-gray-900 rounded-lg overflow-hidden shadow-inner">
-                    <div class="h-full min-h-[600px]">
-                        <iframe 
-                            src="${url}" 
-                            class="w-full h-full min-h-[600px] border-0"
-                            style="min-height: 600px; width: 100%;"
-                            onload="this.style.opacity='1'"
-                            onerror="handleIframeError(this)"
-                        ></iframe>
-                    </div>
-                </div>
-            `;
+                        <div class="w-full h-full bg-white dark:bg-gray-900 rounded-lg overflow-hidden shadow-inner">
+                            <div class="h-full min-h-[600px]">
+                                <iframe 
+                                    src="${url}" 
+                                    class="w-full h-full min-h-[600px] border-0"
+                                    style="min-height: 600px; width: 100%;"
+                                    onload="this.style.opacity='1'"
+                                    onerror="handleIframeError(this)"
+                                ></iframe>
+                            </div>
+                        </div>
+                    `;
                 }
 
                 content.innerHTML = displayContent;
             }, 600);
         }
 
-        // Cập nhật hàm handleIframeError để hiển thị đẹp hơn
         function handleIframeError(iframe) {
             const content = document.getElementById('filePreviewContent');
             const url = iframe.src;
@@ -1900,45 +2385,43 @@
             const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(fileExt);
             const isPDF = fileExt === 'pdf';
 
-            // Nếu là ảnh, thử hiển thị trực tiếp
             if (isImage) {
                 content.innerHTML = `
-            <div class="flex items-center justify-center h-full bg-white dark:bg-gray-900 rounded-lg p-4">
-                <img src="${url}" alt="Preview" class="max-w-full max-h-[80vh] object-contain rounded-lg shadow-lg">
-            </div>
-        `;
+                    <div class="flex items-center justify-center h-full bg-white dark:bg-gray-900 rounded-lg p-4">
+                        <img src="${url}" alt="Preview" class="max-w-full max-h-[80vh] object-contain rounded-lg shadow-lg">
+                    </div>
+                `;
                 return;
             }
 
-            // Hiển thị thông báo lỗi đẹp
             content.innerHTML = `
-        <div class="flex flex-col items-center justify-center h-full min-h-[400px] text-center bg-white dark:bg-gray-900 rounded-lg p-8">
-            <div class="w-24 h-24 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center mb-4">
-                <i class="fa-regular fa-file-pdf text-4xl text-yellow-600 dark:text-yellow-400"></i>
-            </div>
-            <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Không thể hiển thị trực tiếp</h3>
-            <p class="text-gray-500 dark:text-gray-400 max-w-md">
-                ${isPDF ? 'PDF này không thể hiển thị trực tiếp trong trình duyệt.' : 'File này không hỗ trợ xem trực tiếp.'}
-                Vui lòng tải xuống để xem.
-            </p>
-            <div class="flex flex-wrap gap-3 mt-6">
-                <a href="${url}" download 
-                    class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition shadow-sm hover:shadow-md font-medium">
-                    <i class="fa-solid fa-download"></i>
-                    Tải xuống ngay
-                </a>
-                <button onclick="closeFilePreview()" 
-                    class="inline-flex items-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition font-medium">
-                    <i class="fa-regular fa-xmark"></i>
-                    Đóng
-                </button>
-            </div>
-            <p class="text-xs text-gray-400 dark:text-gray-500 mt-4">
-                <i class="fa-regular fa-circle-info mr-1"></i>
-                Tên file: ${url.split('/').pop()}
-            </p>
-        </div>
-    `;
+                <div class="flex flex-col items-center justify-center h-full min-h-[400px] text-center bg-white dark:bg-gray-900 rounded-lg p-8">
+                    <div class="w-24 h-24 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center mb-4">
+                        <i class="fa-regular fa-file-pdf text-4xl text-yellow-600 dark:text-yellow-400"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Không thể hiển thị trực tiếp</h3>
+                    <p class="text-gray-500 dark:text-gray-400 max-w-md">
+                        ${isPDF ? 'PDF này không thể hiển thị trực tiếp trong trình duyệt.' : 'File này không hỗ trợ xem trực tiếp.'}
+                        Vui lòng tải xuống để xem.
+                    </p>
+                    <div class="flex flex-wrap gap-3 mt-6">
+                        <a href="${url}" download 
+                            class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition shadow-sm hover:shadow-md font-medium">
+                            <i class="fa-solid fa-download"></i>
+                            Tải xuống ngay
+                        </a>
+                        <button onclick="closeFilePreview()" 
+                            class="inline-flex items-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition font-medium">
+                            <i class="fa-regular fa-xmark"></i>
+                            Đóng
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-4">
+                        <i class="fa-regular fa-circle-info mr-1"></i>
+                        Tên file: ${url.split('/').pop()}
+                    </p>
+                </div>
+            `;
         }
 
         function closeFilePreview() {
@@ -1986,44 +2469,6 @@
 
         .tab-content.hidden {
             display: none;
-        }
-
-        .tab-btn {
-            transition: all 0.3s ease;
-        }
-
-        .tab-btn.active {
-            background-color: #1d4ed8;
-            color: white;
-        }
-
-        .tab-btn:not(.active):hover {
-            background-color: #f3f4f6;
-        }
-
-        .dark .tab-btn:not(.active):hover {
-            background-color: #1f2937;
-        }
-
-        .tab-content {
-            transition: opacity 0.3s ease;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .tab-content.hidden {
-            display: none;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
 
         @keyframes fadeIn {
