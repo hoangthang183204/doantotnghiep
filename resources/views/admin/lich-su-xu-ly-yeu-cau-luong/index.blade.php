@@ -32,161 +32,161 @@ Theo dõi toàn bộ thay đổi yêu cầu và phiếu lương
 
 
 {{-- FILTER --}}
+<div class="bg-white rounded-2xl border border-gray-200 shadow-sm">
 
-<div class="bg-white rounded-xl shadow p-6">
+    {{-- Header --}}
+    <div class="flex items-center justify-between px-6 py-5 border-b border-gray-200">
 
+        <div>
+            <h2 class="text-xl font-bold text-gray-800">
+                Bộ lọc tìm kiếm
+            </h2>
 
-<form method="GET">
+            <p class="text-sm text-gray-500 mt-1">
+                Tìm kiếm lịch sử xử lý yêu cầu lương theo nhân viên, thời gian và hành động.
+            </p>
+        </div>
 
+        <div class="hidden lg:flex gap-3">
 
-<div class="grid grid-cols-4 gap-4">
+            <div class="px-4 py-2 rounded-full bg-blue-50 text-blue-600 text-sm font-semibold">
+                {{ $lichSus->total() }} kết quả
+            </div>
 
+        </div>
 
+    </div>
 
-<div>
+    {{-- Body --}}
+    <div class="p-6">
 
-<label class="text-sm">
-Nhân viên
-</label>
+        <form method="GET">
 
+            <div class="grid grid-cols-12 gap-4">
 
-<select 
-name="nguoi_dung_id"
-class="w-full border rounded-lg mt-1">
+                {{-- Nhân viên --}}
+                <div class="col-span-12 lg:col-span-4">
 
+                    <label class="block text-sm font-medium text-gray-600 mb-2">
+                        Nhân viên
+                    </label>
 
-<option value="">
--- Tất cả --
-</option>
+                    <select
+                        name="nguoi_dung_id"
+                        class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
 
+                        <option value="">Tất cả nhân viên</option>
 
-@foreach($nhanViens as $nv)
+                        @foreach($nhanViens as $nv)
 
-<option 
-value="{{ $nv->id }}"
-@if(request('nguoi_dung_id')==$nv->id)
-selected
-@endif
->
+                            <option
+                                value="{{ $nv->id }}"
+                                {{ request('nguoi_dung_id') == $nv->id ? 'selected' : '' }}>
 
+                                {{ $nv->ho_so->ho }} {{ $nv->ho_so->ten }}
 
-{{ $nv->ho_so->ho }}
-{{ $nv->ho_so->ten }}
+                            </option>
 
+                        @endforeach
 
-</option>
+                    </select>
 
-@endforeach
+                </div>
 
+                {{-- Từ ngày --}}
+                <div class="col-span-12 md:col-span-6 lg:col-span-2">
 
-</select>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">
+                        Từ ngày
+                    </label>
+
+                    <input
+                        type="date"
+                        name="tu_ngay"
+                        value="{{ request('tu_ngay') }}"
+                        class="w-full h-11 rounded-xl border border-gray-300 px-4 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+
+                </div>
+
+                {{-- Đến ngày --}}
+                <div class="col-span-12 md:col-span-6 lg:col-span-2">
+
+                    <label class="block text-sm font-medium text-gray-600 mb-2">
+                        Đến ngày
+                    </label>
+
+                    <input
+                        type="date"
+                        name="den_ngay"
+                        value="{{ request('den_ngay') }}"
+                        class="w-full h-11 rounded-xl border border-gray-300 px-4 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+
+                </div>
+
+                {{-- Hành động --}}
+                <div class="col-span-12 lg:col-span-2">
+
+                    <label class="block text-sm font-medium text-gray-600 mb-2">
+                        Hành động
+                    </label>
+
+                    <select
+                        name="hanh_dong"
+                        class="w-full h-11 rounded-xl border border-gray-300 px-4 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+
+                        <option value="">Tất cả</option>
+
+                        <option value="tao"
+                            {{ request('hanh_dong')=='tao' ? 'selected' : '' }}>
+                            Tạo
+                        </option>
+
+                        <option value="duyet"
+                            {{ request('hanh_dong')=='duyet' ? 'selected' : '' }}>
+                            Duyệt
+                        </option>
+
+                        <option value="cap_nhat"
+                            {{ request('hanh_dong')=='cap_nhat' ? 'selected' : '' }}>
+                            Cập nhật
+                        </option>
+
+                        <option value="tu_choi"
+                            {{ request('hanh_dong')=='tu_choi' ? 'selected' : '' }}>
+                            Từ chối
+                        </option>
+
+                    </select>
+
+                </div>
+
+                {{-- Buttons --}}
+                <div class="col-span-12 lg:col-span-2 flex items-end gap-2">
+
+                    <a href="{{ url()->current() }}"
+                       class="flex-1 h-11 flex items-center justify-center rounded-xl border border-gray-300 bg-white hover:bg-gray-100 text-gray-700 font-medium transition">
+
+                        Reset
+
+                    </a>
+
+                    <button
+                        type="submit"
+                        class="flex-1 h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm transition">
+
+                        Lọc
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
 
 </div>
-
-
-
-
-<div>
-
-<label>
-Từ ngày
-</label>
-
-<input
-type="date"
-name="tu_ngay"
-value="{{request('tu_ngay')}}"
-class="w-full border rounded-lg"
-/>
-
-</div>
-
-
-
-
-<div>
-
-<label>
-Đến ngày
-</label>
-
-<input
-type="date"
-name="den_ngay"
-value="{{request('den_ngay')}}"
-class="w-full border rounded-lg"
-/>
-
-</div>
-
-
-
-<div>
-
-<label>
-Hành động
-</label>
-
-
-<select
-name="hanh_dong"
-class="w-full border rounded-lg">
-
-
-<option value="">
-Tất cả
-</option>
-
-
-<option value="tao">
-Tạo
-</option>
-
-
-<option value="duyet">
-Duyệt
-</option>
-
-
-<option value="cap_nhat">
-Cập nhật
-</option>
-
-
-<option value="tu_choi">
-Từ chối
-</option>
-
-
-</select>
-
-
-</div>
-
-
-</div>
-
-
-<div class="mt-5">
-
-<button
-class="px-5 py-2 bg-blue-600 text-white rounded-lg">
-
-Lọc dữ liệu
-
-</button>
-
-</div>
-
-
-</form>
-
-
-</div>
-
-
-
-
 
 {{-- TABLE --}}
 
