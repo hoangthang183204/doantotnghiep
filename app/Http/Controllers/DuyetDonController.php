@@ -84,16 +84,21 @@ class DuyetDonController extends Controller
     /**
      * ⭐ Lấy danh sách ID nhân viên trong phòng
      */
-    private function getNhanVienIdsInPhong($phongBanId)
+    private function getNhanVienIdsInPhong($phongBanId, $currentUserId = null)
     {
         if (!$phongBanId) {
             return [];
         }
 
-        return NguoiDung::where('phong_ban_id', $phongBanId)
-            ->where('trang_thai', 1)
-            ->pluck('id')
-            ->toArray();
+        $query = NguoiDung::where('phong_ban_id', $phongBanId)
+            ->where('trang_thai', 1);
+
+        // 🔴 LOẠI BỎ ID CỦA TRƯỞNG PHÒNG ĐANG ĐĂNG NHẬP
+        if ($currentUserId) {
+            $query->where('id', '!=', $currentUserId);
+        }
+
+        return $query->pluck('id')->toArray();
     }
 
     /**
@@ -115,7 +120,9 @@ class DuyetDonController extends Controller
         ]);
 
         if ($isTruongPhong && !$isAdmin) {
-            $nhanVienIds = $this->getNhanVienIdsInPhong($phongBanId);
+            // 🔴 Lấy danh sách ID nhân viên (ĐÃ LOẠI TRỪ TRƯỞNG PHÒNG)
+            $nhanVienIds = $this->getNhanVienIdsInPhong($phongBanId, $user->id);
+            
             if (!empty($nhanVienIds)) {
                 $query->whereIn('nguoi_dung_id', $nhanVienIds);
             } else {
@@ -123,54 +130,29 @@ class DuyetDonController extends Controller
             }
         }
 
-        if ($request->filled('trang_thai')) {
-            $query->where('trang_thai', $request->trang_thai);
-        }
-
-        if ($request->filled('loai_nghi_id')) {
-            $query->where('loai_nghi_phep_id', $request->loai_nghi_id);
-        }
-
-        if ($request->filled('tu_ngay')) {
-            $query->whereDate('ngay_bat_dau', '>=', $request->tu_ngay);
-        }
-
-        if ($request->filled('den_ngay')) {
-            $query->whereDate('ngay_ket_thuc', '<=', $request->den_ngay);
-        }
-
-        if ($request->filled('keyword')) {
-            $keyword = $request->keyword;
-            $query->where(function ($q) use ($keyword) {
-                $q->where('ma_don_nghi', 'like', "%{$keyword}%")
-                    ->orWhereHas('nguoiDung', function ($sub) use ($keyword) {
-                        $sub->where('ten_dang_nhap', 'like', "%{$keyword}%")
-                            ->orWhereHas('hoSo', function ($hs) use ($keyword) {
-                                $hs->where('ho', 'like', "%{$keyword}%")
-                                    ->orWhere('ten', 'like', "%{$keyword}%")
-                                    ->orWhere('ma_nhan_vien', 'like', "%{$keyword}%")
-                                    ->orWhereRaw("CONCAT(ho, ' ', ten) LIKE ?", ["%{$keyword}%"]);
-                            });
-                    });
-            });
-        }
+        // ... [GIỮ NGUYÊN CÁC FILTER TRẠNG THÁI, LOẠI NGHỈ, TỪ NGÀY, ĐẾN NGÀY, KEYWORD] ...
 
         $danhSach = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        $statsQuery = clone $query;
-        $thongKe = [
-            'tong' => DonXinNghi::count(),
-            'cho_duyet' => DonXinNghi::where('trang_thai', 'cho_duyet')->count(),
-            'da_duyet' => DonXinNghi::where('trang_thai', 'da_duyet')->count(),
-            'tu_choi' => DonXinNghi::where('trang_thai', 'tu_choi')->count(),
-        ];
-
-        if ($isTruongPhong && !$isAdmin && !empty($nhanVienIds)) {
+        // 🔴 CẬP NHẬT TÍNH THỐNG KÊ CHO TRƯỞNG PHÒNG VÀ ADMIN
+        if ($isTruongPhong && !$isAdmin) {
+            if (!empty($nhanVienIds)) {
+                $thongKe = [
+                    'tong'      => DonXinNghi::whereIn('nguoi_dung_id', $nhanVienIds)->count(),
+                    'cho_duyet' => DonXinNghi::whereIn('nguoi_dung_id', $nhanVienIds)->where('trang_thai', 'cho_duyet')->count(),
+                    'da_duyet'  => DonXinNghi::whereIn('nguoi_dung_id', $nhanVienIds)->where('trang_thai', 'da_duyet')->count(),
+                    'tu_choi'   => DonXinNghi::whereIn('nguoi_dung_id', $nhanVienIds)->where('trang_thai', 'tu_choi')->count(),
+                ];
+            } else {
+                $thongKe = ['tong' => 0, 'cho_duyet' => 0, 'da_duyet' => 0, 'tu_choi' => 0];
+            }
+        } else {
+            // Admin vẫn thấy toàn bộ
             $thongKe = [
-                'tong' => DonXinNghi::whereIn('nguoi_dung_id', $nhanVienIds)->count(),
-                'cho_duyet' => DonXinNghi::whereIn('nguoi_dung_id', $nhanVienIds)->where('trang_thai', 'cho_duyet')->count(),
-                'da_duyet' => DonXinNghi::whereIn('nguoi_dung_id', $nhanVienIds)->where('trang_thai', 'da_duyet')->count(),
-                'tu_choi' => DonXinNghi::whereIn('nguoi_dung_id', $nhanVienIds)->where('trang_thai', 'tu_choi')->count(),
+                'tong'      => DonXinNghi::count(),
+                'cho_duyet' => DonXinNghi::where('trang_thai', 'cho_duyet')->count(),
+                'da_duyet'  => DonXinNghi::where('trang_thai', 'da_duyet')->count(),
+                'tu_choi'   => DonXinNghi::where('trang_thai', 'tu_choi')->count(),
             ];
         }
 

@@ -171,12 +171,12 @@
                                     <button onclick="duyetDon({{ $don->id }})" 
                                         class="inline-flex items-center px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition" 
                                         title="Duyệt đơn">
-                                        <i class="fas fa-check mr-1"></i> Duyệt
+                                        <i class="fas fa-check mr-1"></i>
                                     </button>
                                     <button onclick="tuChoiDon({{ $don->id }})" 
                                         class="inline-flex items-center px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-medium transition" 
                                         title="Từ chối">
-                                        <i class="fas fa-times mr-1"></i> Từ chối
+                                        <i class="fas fa-times mr-1"></i>
                                     </button>
                                 @endif
                             </div>
