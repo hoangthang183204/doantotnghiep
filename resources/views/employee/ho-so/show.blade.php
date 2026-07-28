@@ -370,14 +370,19 @@
                         <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-3">📄 Lịch sử hợp đồng lao động</h4>
 
                         @php
-                            // ⭐ PHÂN TRANG LỊCH SỬ HỢP ĐỒNG
+                            // ⭐ LẤY TẤT CẢ HỢP ĐỒNG ĐÃ SẮP XẾP MỚI NHẤT LÊN ĐẦU
                             $hopDongCollection = $hoSo?->hop_dong ?? collect();
+
+                            // Sắp xếp theo ngày bắt đầu mới nhất
+                            $hopDongSorted = $hopDongCollection->sortByDesc('ngay_bat_dau');
+
+                            // Phân trang
                             $hopDongPerPage = 3;
                             $hopDongPage = request()->get('hop_dong_page', 1);
 
                             $hopDongPaginator = new \Illuminate\Pagination\LengthAwarePaginator(
-                                $hopDongCollection->forPage($hopDongPage, $hopDongPerPage),
-                                $hopDongCollection->count(),
+                                $hopDongSorted->forPage($hopDongPage, $hopDongPerPage),
+                                $hopDongSorted->count(),
                                 $hopDongPerPage,
                                 $hopDongPage,
                                 ['path' => request()->url(), 'query' => request()->query()],
@@ -391,47 +396,113 @@
                         @if ($hopDongItems && count($hopDongItems) > 0)
                             <div class="space-y-3">
                                 @foreach ($hopDongItems as $item)
-                                    <div
-                                        class="bg-gray-50 dark:bg-slate-700 rounded-lg p-4 border-l-4
-                                        {{ $item->trang_thai_hop_dong == 'hieu_luc'
-                                            ? 'border-green-500'
-                                            : ($item->trang_thai_hop_dong == 'het_han'
-                                                ? 'border-gray-400'
-                                                : ($item->trang_thai_hop_dong == 'chua_hieu_luc'
-                                                    ? 'border-yellow-500'
-                                                    : 'border-red-500')) }}">
+                                    @php
+                                        // Xác định màu border dựa trên trạng thái
+                                        $borderColor = 'border-gray-400';
+                                        $statusText = 'Không xác định';
+                                        $statusColor = 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
 
+                                        if ($item->trang_thai_hop_dong == 'hieu_luc') {
+                                            $borderColor = 'border-green-500';
+                                            $statusText = '✅ Hiệu lực';
+                                            $statusColor =
+                                                'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+                                        } elseif ($item->trang_thai_hop_dong == 'chua_hieu_luc') {
+                                            $borderColor = 'border-yellow-500';
+                                            $statusText = '⏳ Chưa hiệu lực';
+                                            $statusColor =
+                                                'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+                                        } elseif ($item->trang_thai_hop_dong == 'het_han') {
+                                            $borderColor = 'border-red-500';
+                                            $statusText = '⏰ Hết hạn';
+                                            $statusColor =
+                                                'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+                                        } elseif ($item->trang_thai_hop_dong == 'huy_bo') {
+                                            $borderColor = 'border-red-600';
+                                            $statusText = '🚫 Hủy bỏ';
+                                            $statusColor =
+                                                'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+                                        } elseif ($item->trang_thai_hop_dong == 'tao_moi') {
+                                            $borderColor = 'border-blue-400';
+                                            $statusText = '📝 Tạo mới';
+                                            $statusColor =
+                                                'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+                                        }
+
+                                        // Trạng thái ký
+                                        $kyStatus = '';
+                                        $kyStatusColor = '';
+                                        if ($item->trang_thai_ky == 'da_ky') {
+                                            $kyStatus = '✅ Đã ký';
+                                            $kyStatusColor = 'text-green-600 dark:text-green-400';
+                                        } elseif ($item->trang_thai_ky == 'cho_ky') {
+                                            $kyStatus = '⏳ Chờ ký';
+                                            $kyStatusColor = 'text-yellow-600 dark:text-yellow-400';
+                                        } elseif ($item->trang_thai_ky == 'tu_choi_ky') {
+                                            $kyStatus = '❌ Từ chối ký';
+                                            $kyStatusColor = 'text-red-600 dark:text-red-400';
+                                        }
+
+                                        $filePath = $item->file_hop_dong_da_ky
+                                            ? storage_path('app/public/' . $item->file_hop_dong_da_ky)
+                                            : null;
+                                        $fileExists = $filePath && file_exists($filePath);
+                                    @endphp
+
+                                    <div
+                                        class="bg-gray-50 dark:bg-slate-700 rounded-lg p-4 border-l-4 {{ $borderColor }}">
                                         <div class="flex justify-between items-start">
                                             <div>
                                                 <span
                                                     class="font-medium">{{ $item->ten_loai_hop_dong ?? $item->loai_hop_dong }}</span>
                                                 <span
                                                     class="text-sm text-gray-500 dark:text-gray-400 ml-2">({{ $item->so_hop_dong }})</span>
+
+                                                {{-- ⭐ HIỂN THỊ BADGE MỚI NẾU HỢP ĐỒNG ĐƯỢC TẠO TRONG 7 NGÀY GẦN ĐÂY --}}
+                                                @php
+                                                    $isNew =
+                                                        $item->created_at && $item->created_at->diffInDays(now()) <= 7;
+                                                @endphp
+                                                @if ($isNew)
+                                                    <span
+                                                        class="ml-2 text-xs px-2 py-0.5 bg-red-500 text-white rounded-full animate-pulse">
+                                                        🔴 Mới
+                                                    </span>
+                                                @endif
+
                                                 <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                                    {{ $item->ngay_bat_dau?->format('d/m/Y') ?? '---' }}
+                                                    📅 {{ $item->ngay_bat_dau?->format('d/m/Y') ?? '---' }}
                                                     →
-                                                    {{ $item->ngay_ket_thuc?->format('d/m/Y') ?? 'Không xác định' }}
+                                                    {{ $item->ngay_ket_thuc?->format('d/m/Y') ?? '♾️ Không xác định' }}
                                                 </div>
 
-                                                @php
-                                                    $filePath = $item->file_hop_dong_da_ky
-                                                        ? storage_path('app/public/' . $item->file_hop_dong_da_ky)
-                                                        : null;
-                                                    $fileExists = $filePath && file_exists($filePath);
-                                                @endphp
+                                                @if ($kyStatus)
+                                                    <div class="text-sm mt-1">
+                                                        <span class="font-medium">✍️ Trạng thái ký:</span>
+                                                        <span class="{{ $kyStatusColor }}">{{ $kyStatus }}</span>
+                                                    </div>
+                                                @endif
 
                                                 @if ($item->file_hop_dong_da_ky && $fileExists)
                                                     <div class="mt-3 flex flex-wrap gap-2">
                                                         <button
                                                             onclick="openFilePreview('{{ asset('storage/' . $item->file_hop_dong_da_ky) }}', 'Hợp đồng {{ $item->so_hop_dong }}')"
-                                                            class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition flex items-center gap-1">
+                                                            class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition flex items-center gap-1"
+                                                            title="Xem hợp đồng">
                                                             <i class="fa-regular fa-eye"></i> Xem
                                                         </button>
                                                         <a href="{{ asset('storage/' . $item->file_hop_dong_da_ky) }}"
                                                             download
-                                                            class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition flex items-center gap-1">
+                                                            class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition flex items-center gap-1"
+                                                            title="Tải xuống">
                                                             <i class="fa-solid fa-download"></i> Tải
                                                         </a>
+                                                    </div>
+                                                @elseif ($item->file_hop_dong_da_ky && !$fileExists)
+                                                    <div class="mt-3">
+                                                        <span class="text-sm text-red-500 flex items-center gap-2">
+                                                            ⚠️ File hợp đồng không tồn tại trên server
+                                                        </span>
                                                     </div>
                                                 @else
                                                     <div class="mt-3">
@@ -451,13 +522,36 @@
                                                         @endif
                                                     </div>
                                                 @endif
+
+                                                @if ($item->thoi_gian_gui)
+                                                    <div class="mt-1 text-xs text-gray-400">
+                                                        📨 Gửi lúc:
+                                                        {{ \Carbon\Carbon::parse($item->thoi_gian_gui)->format('d/m/Y H:i') }}
+                                                    </div>
+                                                @endif
                                             </div>
 
-                                            <span
-                                                class="text-xs px-2 py-1 {{ $item->mau_trang_thai }} rounded-full whitespace-nowrap ml-2">
-                                                {{ $item->ten_trang_thai }}
-                                            </span>
+                                            <div class="flex flex-col items-end gap-1">
+                                                <span
+                                                    class="text-xs px-2 py-1 {{ $statusColor }} rounded-full whitespace-nowrap ml-2">
+                                                    {{ $statusText }}
+                                                </span>
+                                                {{-- Hiển thị ngày tạo --}}
+                                                @if ($item->created_at)
+                                                    <span class="text-[10px] text-gray-400">
+                                                        📅 {{ $item->created_at->format('d/m/Y') }}
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </div>
+
+                                        @if ($item->ghi_chu)
+                                            <div
+                                                class="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                                                <p class="text-sm text-yellow-700 dark:text-yellow-300">📌
+                                                    {{ $item->ghi_chu }}</p>
+                                            </div>
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>
@@ -495,7 +589,7 @@
                                         @for ($i = $start; $i <= $end; $i++)
                                             <button onclick="changePage('hop_dong_page', {{ $i }})"
                                                 class="px-3 py-1.5 text-sm rounded-lg transition
-                                                {{ $i == $hopDongPage ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600' }}">
+                                    {{ $i == $hopDongPage ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600' }}">
                                                 {{ $i }}
                                             </button>
                                         @endfor
