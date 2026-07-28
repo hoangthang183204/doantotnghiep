@@ -50,12 +50,13 @@ class HoSoController extends Controller
         $hoSoNguoiDung = $user->hoSo;
         $hoSo = $hoSoNguoiDung?->hoSo;
 
-        // Lấy hợp đồng hiệu lực
+        // Lấy hợp đồng hiệu lực (mới nhất)
         $hopDongHieuLuc = $hoSo?->hop_dong
             ?->where('trang_thai_hop_dong', 'hieu_luc')
+            ?->sortByDesc('ngay_bat_dau') // Sắp xếp mới nhất lên đầu
             ?->first();
 
-        // Load thêm các quan hệ cho HoSo
+        // Load thêm các quan hệ cho HoSo - Sắp xếp hợp đồng theo thời gian
         if ($hoSo) {
             $hoSo->load([
                 'ky_nang',
@@ -63,7 +64,9 @@ class HoSoController extends Controller
                 'dao_tao',
                 'nguoiPhuThuoc',
                 'cv',
-                'hop_dong',
+                'hop_dong' => function ($query) {
+                    $query->orderBy('ngay_bat_dau', 'desc'); // Sắp xếp mới nhất lên đầu
+                },
                 'khen_thuong_ky_luat',
                 'du_an',
                 'lich_su_luong',
