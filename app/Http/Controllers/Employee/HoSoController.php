@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
+use App\Models\BangLuong;
 use App\Models\ChungChiNhanVien;
 use App\Models\DaoTaoNhanVien;
 use App\Models\DonXinNghi;
@@ -46,10 +47,7 @@ class HoSoController extends Controller
             'vai_tro',
         ]);
 
-        // LẤY ĐÚNG HO SO (HoSoNguoiDung)
         $hoSoNguoiDung = $user->hoSo;
-
-        // LẤY HO SO (HoSo) - ĐÂY LÀ BẢNG CHÍNH CHỨA THÔNG TIN
         $hoSo = $hoSoNguoiDung?->hoSo;
 
         // Lấy hợp đồng hiệu lực
@@ -72,11 +70,46 @@ class HoSoController extends Controller
             ]);
         }
 
-        // Lấy bảng lương gần nhất
-        $luongGanNhat = LuongNhanVien::where('nguoi_dung_id', $user->id)
-            ->orderBy('luong_nam', 'desc')
-            ->orderBy('luong_thang', 'desc')
+        // ⭐⭐ LẤY BẢNG LƯƠNG ĐÃ CHỐT GẦN NHẤT (GIỐNG BÊN ADMIN)
+        $bangLuongGanNhat = BangLuong::from('bang_luong as bl')
+            ->join('luong_nhan_vien as lnv', 'bl.id', '=', 'lnv.bang_luong_id')
+            ->where('bl.trang_thai', 'da_chot')
+            ->where('lnv.nguoi_dung_id', $user->id)
+            ->orderBy('bl.nam', 'desc')
+            ->orderBy('bl.thang', 'desc')
+            ->select('bl.*')
             ->first();
+
+        // ⭐ LẤY LƯƠNG GẦN NHẤT TỪ BẢNG LƯƠNG ĐÃ CHỐT
+        $luongGanNhat = null;
+        if ($bangLuongGanNhat) {
+            $luongGanNhat = LuongNhanVien::where('bang_luong_id', $bangLuongGanNhat->id)
+                ->where('nguoi_dung_id', $user->id)
+                ->first();
+        }
+
+        // Nếu chưa có bảng lương nào, lấy từ lịch sử lương (fallback)
+        if (!$luongGanNhat) {
+            $luongGanNhat = LuongNhanVien::where('nguoi_dung_id', $user->id)
+                ->orderBy('luong_nam', 'desc')
+                ->orderBy('luong_thang', 'desc')
+                ->first();
+        }
+
+        // ⭐⭐ LẤY LỊCH SỬ LƯƠNG ĐẦY ĐỦ (GIỐNG BÊN ADMIN)
+        $lichSuLuong = LuongNhanVien::where('nguoi_dung_id', $user->id)
+            ->join('bang_luong', 'luong_nhan_vien.bang_luong_id', '=', 'bang_luong.id')
+            ->where('bang_luong.trang_thai', 'da_chot')
+            ->orderBy('bang_luong.nam', 'desc')
+            ->orderBy('bang_luong.thang', 'desc')
+            ->limit(12)
+            ->select('luong_nhan_vien.*')
+            ->get();
+
+        // ⭐ TÍNH KỲ LƯƠNG
+        $kyLuu = $bangLuongGanNhat
+            ? 'Tháng ' . $bangLuongGanNhat->thang . '/' . $bangLuongGanNhat->nam
+            : 'Chưa có bảng lương';
 
         // Tính toán lương
         $luongCoBanHienTai = $hopDongHieuLuc?->luong_co_ban ?? 0;
@@ -111,14 +144,14 @@ class HoSoController extends Controller
         $coTangCa = $tienTangCa > 0;
 
         // Tổng thu nhập
-        $tongThuNhap = $luongCoBanHienTai + $tongPhuCap + $tienTangCa;
+        $tongThuNhap = $luongGanNhat?->tong_luong ?? ($luongCoBanHienTai + $tongPhuCap + $tienTangCa);
 
         // Bảo hiểm (10.5%)
         $luongDongBhxh = $hopDongHieuLuc?->luong_co_ban ?? 0;
-        $bhxh = round($luongDongBhxh * 0.08, 0);
-        $bhyt = round($luongDongBhxh * 0.015, 0);
-        $bhtn = round($luongDongBhxh * 0.01, 0);
-        $tongBaoHiem = $bhxh + $bhyt + $bhtn;
+        $bhxh = $luongGanNhat?->bhxh ?? round($luongDongBhxh * 0.08, 0);
+        $bhyt = $luongGanNhat?->bhyt ?? round($luongDongBhxh * 0.015, 0);
+        $bhtn = $luongGanNhat?->bhtn ?? round($luongDongBhxh * 0.01, 0);
+        $tongBaoHiem = $luongGanNhat?->tong_bao_hiem ?? ($bhxh + $bhyt + $bhtn);
 
         // Giảm trừ gia cảnh
         $soNguoiPhuThuoc = $hoSo?->nguoiPhuThuoc?->count() ?? 0;
@@ -129,24 +162,26 @@ class HoSoController extends Controller
         $thuNhapChiuThue = max(0, $tongThuNhap - $tongBaoHiem);
         $thuNhapTinhThue = max(0, $thuNhapChiuThue - $giamTruGiaCanh);
 
-        $thueTncn = 0;
-        $remaining = $thuNhapTinhThue;
-        $bac = [
-            ['tu' => 0, 'den' => 10000000, 'thue_suat' => 0.05],
-            ['tu' => 10000000, 'den' => 30000000, 'thue_suat' => 0.1],
-            ['tu' => 30000000, 'den' => 60000000, 'thue_suat' => 0.2],
-            ['tu' => 60000000, 'den' => 100000000, 'thue_suat' => 0.3],
-            ['tu' => 100000000, 'den' => PHP_INT_MAX, 'thue_suat' => 0.35],
-        ];
-        foreach ($bac as $b) {
-            if ($remaining <= 0) break;
-            $khoang = min($remaining, $b['den'] - $b['tu']);
-            $thueTncn += $khoang * $b['thue_suat'];
-            $remaining -= $khoang;
+        $thueTncn = $luongGanNhat?->thue_thu_nhap_ca_nhan ?? 0;
+        if ($thueTncn == 0) {
+            $remaining = $thuNhapTinhThue;
+            $bac = [
+                ['tu' => 0, 'den' => 10000000, 'thue_suat' => 0.05],
+                ['tu' => 10000000, 'den' => 30000000, 'thue_suat' => 0.1],
+                ['tu' => 30000000, 'den' => 60000000, 'thue_suat' => 0.2],
+                ['tu' => 60000000, 'den' => 100000000, 'thue_suat' => 0.3],
+                ['tu' => 100000000, 'den' => PHP_INT_MAX, 'thue_suat' => 0.35],
+            ];
+            foreach ($bac as $b) {
+                if ($remaining <= 0) break;
+                $khoang = min($remaining, $b['den'] - $b['tu']);
+                $thueTncn += $khoang * $b['thue_suat'];
+                $remaining -= $khoang;
+            }
+            $thueTncn = round($thueTncn, 0);
         }
-        $thueTncn = round($thueTncn, 0);
 
-        $thucNhan = $tongThuNhap - $tongBaoHiem - $thueTncn;
+        $thucNhan = $luongGanNhat?->luong_thuc_nhan ?? ($tongThuNhap - $tongBaoHiem - $thueTncn);
 
         // Lấy chi tiết phụ cấp
         $phuCapChiTiets = collect();
@@ -203,12 +238,16 @@ class HoSoController extends Controller
             'tong_ve_som' => DonXinVeSom::where('nguoi_dung_id', $user->id)->count(),
         ];
 
+        // ⭐ TRUYỀN THÊM BIẾN VÀO VIEW
         return view('employee.ho-so.show', compact(
             'user',
             'hoSo',
             'hoSoNguoiDung',
             'hopDongHieuLuc',
+            'bangLuongGanNhat',  // ⭐ THÊM BIẾN NÀY
             'luongGanNhat',
+            'lichSuLuong',       // ⭐ THÊM BIẾN NÀY
+            'kyLuu',             // ⭐ THÊM BIẾN NÀY
             'luongCoBanHienTai',
             'tongPhuCap',
             'tienTangCa',
