@@ -226,16 +226,6 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                         </svg>
                                     </button>
-                                @elseif($don->trang_thai == 'da_duyet' || $don->trang_thai == 'tu_choi')
-                                    <form action="{{ route('admin.don_nghi.duyet', $don->id) }}" method="POST" class="inline">
-                                        @csrf
-                                        <input type="hidden" name="trang_thai" value="cho_duyet"> 
-                                        <button type="submit" class="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded-lg transition" title="Hoàn tác" onclick="return confirm('Hoàn tác đơn này?')">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
-                                            </svg>
-                                        </button>
-                                    </form>
                                 @elseif($don->trang_thai == 'huy_bo')
                                     <span class="text-xs text-gray-400">🚫 Đã hủy</span>
                                 @endif
