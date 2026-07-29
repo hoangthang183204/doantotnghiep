@@ -49,6 +49,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\TruongPhong\DashboardTruongPhongController;
 use App\Http\Controllers\Admin\YeuCauXemXetLuongController;
 use App\Http\Controllers\Admin\LichSuXuLyYeuCauLuongController;
+use App\Http\Controllers\TruongPhong\DuyetVeSomController;
 
 
 // =============================================
@@ -315,17 +316,18 @@ Route::prefix('admin')
                     ->whereNumber('id')
                     ->name('tu-choi')
                     ->middleware('CheckPermission:salary.approve');
-             Route::get('/{id}/edit', [YeuCauXemXetLuongController::class, 'edit'])
-    ->whereNumber('id')
-    ->name('edit');
+                Route::get('/{id}/edit', [YeuCauXemXetLuongController::class, 'edit'])
+                    ->whereNumber('id')
+                    ->name('edit');
 
-Route::put('/{id}/update-luong', [YeuCauXemXetLuongController::class, 'updateLuong'])
-    ->whereNumber('id')
-    ->name('update');
+                Route::put('/{id}/update-luong', [YeuCauXemXetLuongController::class, 'updateLuong'])
+                    ->whereNumber('id')
+                    ->name('update');
             });
-Route::get('/lich-su-xu-ly-yeu-cau-luong',
-    [LichSuXuLyYeuCauLuongController::class,'index']
-)->name('lich-su-xu-ly-yeu-cau-luong.index');
+        Route::get(
+            '/lich-su-xu-ly-yeu-cau-luong',
+            [LichSuXuLyYeuCauLuongController::class, 'index']
+        )->name('lich-su-xu-ly-yeu-cau-luong.index');
         // ========== PHỤ CẤP - CHỈ HR VÀ ADMIN ==========
         Route::resource('phu-cap', PhuCapController::class)->middleware(['CheckPermission:salary.allowance']);
 
@@ -719,7 +721,7 @@ Route::prefix('employee')
                 \App\Http\Controllers\Employee\YeuCauXemXetLuongController::class,
                 'store'
             ])->name('store');
-            Route::get('/lich-su-xu-ly-yeu-cau-luong',[\App\Http\Controllers\Employee\LichSuXuLyYeuCauLuongController::class,'index'])->name('lich-su-xu-ly-yeu-cau-luong.index');
+            Route::get('/lich-su-xu-ly-yeu-cau-luong', [\App\Http\Controllers\Employee\LichSuXuLyYeuCauLuongController::class, 'index'])->name('lich-su-xu-ly-yeu-cau-luong.index');
         });
         // ========== THÔNG BÁO ==========
         Route::prefix('notifications')->name('notifications.')->group(function () {
@@ -790,5 +792,12 @@ Route::middleware(['auth', 'truong_phong'])
         Route::prefix('nhan-vien')->name('nhan-vien.')->group(function () {
             Route::get('/', [NhanVienController::class, 'index'])->name('index');
             Route::get('/{id}', [NhanVienController::class, 'show'])->name('show');
+        });
+
+        Route::prefix('duyet-ve-som')->name('duyet-ve-som.')->group(function () {
+            Route::get('/', [DuyetVeSomController::class, 'index'])->name('index');
+            Route::get('/{id}', [DuyetVeSomController::class, 'show'])->name('show'); // 🔴 Thêm trang xem chi tiết
+            Route::post('/{id}/duyet', [DuyetVeSomController::class, 'duyet'])->name('duyet');
+            Route::post('/{id}/tu-choi', [DuyetVeSomController::class, 'tuChoi'])->name('tu-choi');
         });
     });
