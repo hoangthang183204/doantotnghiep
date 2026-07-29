@@ -25,7 +25,8 @@ class ChiTietBangLuongExport implements FromCollection, WithHeadings
 
                 return [
                     $item->nguoiDung->id ?? '',
-                    $item->nguoiDung->ten_dang_nhap ?? '',
+                    // Lấy họ tên từ bảng ho_so_nguoi_dung nếu có
+                    optional($hoSo)->ho_ten ?? trim((optional($hoSo)->ho ?? '') . ' ' . (optional($hoSo)->ten ?? '')) ?: ($item->nguoiDung->ten_dang_nhap ?? ''),
 
                     optional($hoSo)->so_tai_khoan ?? '',
                     optional($hoSo)->ten_ngan_hang ?? '',
@@ -50,7 +51,7 @@ class ChiTietBangLuongExport implements FromCollection, WithHeadings
     {
         return [
             'Mã NV',
-            'Tên nhân viên',
+            'Họ và tên',
 
             'Số tài khoản',
             'Tên ngân hàng',
