@@ -17,14 +17,18 @@ class ChiTietBangLuongExport implements FromCollection, WithHeadings
 
     public function collection()
     {
-        return LuongNhanVien::with('nguoiDung')
+        return LuongNhanVien::with('nguoiDung.hoSo')
             ->where('bang_luong_id', $this->bangLuongId)
             ->get()
             ->map(function ($item) {
+                $hoSo = $item->nguoiDung ? $item->nguoiDung->hoSo : null;
 
                 return [
                     $item->nguoiDung->id ?? '',
                     $item->nguoiDung->ten_dang_nhap ?? '',
+
+                    optional($hoSo)->so_tai_khoan ?? '',
+                    optional($hoSo)->ten_ngan_hang ?? '',
 
                     $item->luong_co_ban,
                     $item->so_ngay_cong,
@@ -47,6 +51,9 @@ class ChiTietBangLuongExport implements FromCollection, WithHeadings
         return [
             'Mã NV',
             'Tên nhân viên',
+
+            'Số tài khoản',
+            'Tên ngân hàng',
 
             'Lương cơ bản',
             'Ngày công',

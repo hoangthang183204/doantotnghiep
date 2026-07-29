@@ -11,7 +11,7 @@ class LuongExport implements FromCollection, WithHeadings
     public function collection()
     {
         return Luong::with([
-            'nguoiDung',
+            'nguoiDung.hoSo',
             'hopDongLaoDong.chucVu'
         ])->get()->map(function ($luong, $index) {
 
@@ -21,11 +21,15 @@ class LuongExport implements FromCollection, WithHeadings
                 $luong->tien_thuong -
                 $luong->tien_phat;
 
+            $hoSo = $luong->nguoiDung ? $luong->nguoiDung->hoSo : null;
+
             return [
                 $index + 1,
                 $luong->nguoiDung->ho_ten ?? '',
                 $luong->hopDongLaoDong->chucVu->ten ?? '',
                 $luong->hopDongLaoDong->so_hop_dong ?? '',
+                optional($hoSo)->so_tai_khoan ?? '',
+                optional($hoSo)->ten_ngan_hang ?? '',
                 $luong->luong_co_ban,
                 $luong->phu_cap,
                 $tongLuong,
@@ -41,6 +45,8 @@ class LuongExport implements FromCollection, WithHeadings
             'Nhân viên',
             'Chức vụ',
             'Hợp đồng',
+            'Số tài khoản',
+            'Tên ngân hàng',
             'Lương cơ bản',
             'Phụ cấp',
             'Tổng lương',
