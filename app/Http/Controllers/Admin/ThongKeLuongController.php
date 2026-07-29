@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\LuongNhanVien;
 use App\Models\KhauTruLuong;
-use App\Models\PhongBan;
 use App\Services\PdfService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -104,47 +103,21 @@ class ThongKeLuongController extends Controller
      */
     public function theoNam(Request $request)
     {
-        // Bộ lọc theo năm (null = xem tất cả các năm)
+        // Nếu có năm được chọn hoặc có dữ liệu, chuyển thẳng sang trang chi tiết năm đó
         $namChon = $request->filled('nam') ? (int) $request->input('nam') : null;
+        $namMax  = LuongNhanVien::query()->max('luong_nam');
 
-        // Danh sách năm có dữ liệu lương (đổ vào dropdown lọc)
-        $namList = LuongNhanVien::query()
-            ->distinct()
-            ->orderByDesc('luong_nam')
-            ->pluck('luong_nam');
+        // nếu có năm được chọn thì dùng năm đó, ngược lại dùng năm lớn nhất trong DB
+        $nam = $namChon ?? $namMax;
 
-        // Gom nhóm toàn bộ dòng lương theo NĂM (lọc theo năm nếu có chọn)
-        $rows = LuongNhanVien::query()
-            ->when($namChon, fn($q) => $q->where('luong_nam', $namChon))
-            ->selectRaw('luong_nam as nam')
-            ->selectRaw('COUNT(*) as so_ky_luong')
-            ->selectRaw('COUNT(DISTINCT nguoi_dung_id) as so_nhan_vien')
-            ->selectRaw('SUM(tong_luong) as tong_luong')
-            ->selectRaw('SUM(thue_thu_nhap_ca_nhan) as tong_thue')
-            ->selectRaw('SUM(tong_khau_tru) as tong_khau_tru')
-            ->selectRaw('SUM(luong_thuc_nhan) as tong_thuc_nhan')
-            ->groupBy('luong_nam')
-            ->orderByDesc('luong_nam')
-            ->get();
+        if ($nam) {
+            return redirect()->route('admin.tong-luong.chi-tiet', $nam);
+        }
 
-        // Bảo hiểm (BHXH + BHYT + BHTN) không lưu trên luong_nhan_vien -> lấy từ bảng khấu trừ chi tiết
-        $baoHiemTheoNam = KhauTruLuong::query()
-            ->join('luong_nhan_vien', 'luong_nhan_vien.id', '=', 'khau_tru_luong.luong_nhan_vien_id')
-            ->when($namChon, fn($q) => $q->where('luong_nhan_vien.luong_nam', $namChon))
-            ->whereIn('khau_tru_luong.loai_khau_tru', ['bhxh', 'bhyt', 'bhtn'])
-            ->groupBy('luong_nhan_vien.luong_nam')
-            ->selectRaw('luong_nhan_vien.luong_nam as nam, SUM(khau_tru_luong.so_tien) as tong_bao_hiem')
-            ->pluck('tong_bao_hiem', 'nam');
-
-        $rows->each(function ($r) use ($baoHiemTheoNam) {
-            $r->tong_bao_hiem = (float) ($baoHiemTheoNam[$r->nam] ?? 0);
-        });
-
-        $tongLuong    = (float) $rows->sum('tong_luong');
-        $tongThue     = (float) $rows->sum('tong_thue');
-        $tongKhauTru  = (float) $rows->sum('tong_khau_tru');
-        $tongBaoHiem  = (float) $rows->sum('tong_bao_hiem');
-        $tongThucNhan = (float) $rows->sum('tong_thuc_nhan');
+        // Nếu không có dữ liệu lương, giữ nguyên trang danh sách (thông báo trống)
+        $namList = collect();
+        $rows = collect();
+        $tongLuong = $tongThue = $tongKhauTru = $tongBaoHiem = $tongThucNhan = 0;
 
         return view('admin.tong-luong.index', compact(
             'rows',
@@ -164,6 +137,11 @@ class ThongKeLuongController extends Controller
     public function chiTietNam(Request $request, $nam)
     {
         $nam = (int) $nam;
+        // Danh sách năm có dữ liệu để hiển thị bộ lọc trên view chi tiết
+        $namList = LuongNhanVien::query()
+            ->distinct()
+            ->orderByDesc('luong_nam')
+            ->pluck('luong_nam');
 
         $rows = LuongNhanVien::query()
             ->where('luong_nam', $nam)
@@ -198,6 +176,7 @@ class ThongKeLuongController extends Controller
         return view('admin.tong-luong.chi-tiet', compact(
             'nam',
             'rows',
+            'namList',
             'tongLuong',
             'tongThue',
             'tongKhauTru',

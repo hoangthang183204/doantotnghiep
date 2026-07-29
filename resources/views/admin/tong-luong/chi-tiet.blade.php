@@ -18,17 +18,20 @@
     <div class="flex flex-wrap justify-between items-center gap-3">
         <div>
             <nav class="text-sm text-gray-500 dark:text-slate-400 mb-1">
-                <a href="{{ route('admin.tong-luong.index') }}" class="hover:text-blue-600 dark:hover:text-sky-400">Tổng lương theo năm</a>
-                <span class="mx-1">/</span>
-                <span class="text-gray-700 dark:text-slate-200">Năm {{ $nam }}</span>
+                <span class="text-gray-700 dark:text-slate-200">Tổng lương theo năm / Năm {{ $nam }}</span>
             </nav>
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Chi tiết lương năm {{ $nam }}</h1>
             <p class="text-gray-500 dark:text-slate-400 mt-1">Tổng lương, thuế TNCN, bảo hiểm và thực nhận theo từng tháng.</p>
         </div>
-        <a href="{{ route('admin.tong-luong.index') }}"
-           class="px-4 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 rounded-lg text-sm shadow-sm hover:bg-gray-50">
-            <i class="fa-solid fa-arrow-left mr-1"></i> Quay lại
-        </a>
+        <form method="GET" action="{{ route('admin.tong-luong.index') }}" class="ml-auto">
+            <label class="block text-sm text-gray-500 dark:text-slate-400 mb-1">Lọc theo năm</label>
+            <select name="nam" onchange="this.form.submit()"
+                    class="px-3 py-2 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 rounded-lg text-sm">
+                @foreach($namList as $n)
+                    <option value="{{ $n }}" {{ (string)$nam === (string)$n ? 'selected' : '' }}>Năm {{ $n }}</option>
+                @endforeach
+            </select>
+        </form>
     </div>
 
     @include('layouts.partials.alerts')
