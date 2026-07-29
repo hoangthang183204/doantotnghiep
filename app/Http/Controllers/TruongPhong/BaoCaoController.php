@@ -40,8 +40,12 @@ class BaoCaoController extends Controller
     private function getNhanVienIds($phongBanId)
     {
         if (!$phongBanId) return [];
+
+        $currentUserId = Auth::id(); // 🔴 LẤY ID CỦA TRƯỞNG PHÒNG ĐANG DÙNG
+
         return NguoiDung::where('phong_ban_id', $phongBanId)
             ->where('trang_thai', 1)
+            ->where('id', '!=', $currentUserId) // 🔴 BỎ CÁC ĐƠN/DỮ LIỆU CỦA TRƯỞNG PHÒNG
             ->pluck('id')
             ->toArray();
     }

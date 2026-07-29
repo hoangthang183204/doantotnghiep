@@ -350,6 +350,7 @@
                                                 },
                                             )
                                                 ->where('trang_thai', 'cho_duyet')
+                                                ->where('nguoi_dung_id', '!=', $user->id) // 🔴 THÊM DÒNG NÀY TO LOẠI TRỪ TRƯỞNG PHÒNG
                                                 ->count();
                                         @endphp
                                         @if ($donNghiChoDuyet > 0)
@@ -387,6 +388,7 @@
                                                 },
                                             )
                                                 ->where('trang_thai', 'cho_duyet')
+                                                ->where('nguoi_dung_id', '!=', $user->id)
                                                 ->count();
                                         @endphp
                                         @if ($donChoDuyetCount > 0)
