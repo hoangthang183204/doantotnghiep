@@ -71,7 +71,9 @@ class DonNghiController extends Controller
             $query->whereDate('ngay_ket_thuc', '<=', $request->den_ngay_nghi);
         }
 
-        $danhSachDon = $query->orderBy('created_at', 'desc')->paginate(10)->appends($request->query());
+        $danhSachDon = $query->orderBy('created_at', 'desc')
+                     ->paginate(10)
+                     ->withQueryString();
 
         $countChoDuyet = DonXinNghi::where('trang_thai', 'cho_duyet')->count();
         $countDaDuyet = DonXinNghi::where('trang_thai', 'da_duyet')->count();
