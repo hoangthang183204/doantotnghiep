@@ -699,14 +699,39 @@
 
             {{-- ================= TAB 5: BẢO HIỂM & THUẾ (BẢN ĐẦY ĐỦ NHƯ ẢNH) ================= --}}
             <div id="tab5" class="tab-content hidden">
+
+                @php
+                    // Sử dụng dữ liệu đã được truyền từ Controller
+                    $luongCoBanHienTai = $luongGanNhat->luong_co_ban ?? ($hopDongHieuLuc->luong_co_ban ?? 0);
+                    $tongPhuCap = $luongGanNhat->tong_phu_cap ?? 0;
+                    $tienTangCa = $luongGanNhat->tien_tang_ca ?? 0;
+                    $tongBaoHiem = $luongGanNhat->tong_bao_hiem ?? 0;
+                    $thueTncn = $luongGanNhat->thue_thu_nhap_ca_nhan ?? 0;
+                    $tongThuNhap = $luongGanNhat->tong_luong ?? $luongCoBanHienTai + $tongPhuCap;
+                    $thucNhan = $luongGanNhat->luong_thuc_nhan ?? $tongThuNhap;
+                    $bhxh = $luongGanNhat->bhxh ?? 0;
+                    $bhyt = $luongGanNhat->bhyt ?? 0;
+                    $bhtn = $luongGanNhat->bhtn ?? 0;
+                    $soNguoiPhuThuoc = $hoSo?->nguoiPhuThuoc?->count() ?? 0;
+
+                    $giamTruBanThan = 15500000;
+                    $giamTruGiaCanh = $giamTruBanThan + 6200000 * $soNguoiPhuThuoc;
+                    $thuNhapChiuThue = max(0, $tongThuNhap - $tongBaoHiem);
+                    $thuNhapTinhThue = max(0, $thuNhapChiuThue - $giamTruGiaCanh);
+
+                    $coPhuCap = $tongPhuCap > 0;
+                    $coTangCa = $tienTangCa > 0;
+                    $nguoiPhuThuocs = $hoSo->nguoiPhuThuoc ?? collect();
+                @endphp
+
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-                    {{-- Cột trái: Bảo hiểm xã hội --}}
+                    {{-- Bảo hiểm xã hội --}}
                     <div
                         class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-slate-700">
                         <h3
-                            class="text-lg font-semibold text-gray-800 dark:text-white border-b border-gray-200 dark:border-slate-700 pb-3 mb-4 flex items-center gap-2">
-                            <span>🛡️</span> Bảo hiểm xã hội
+                            class="text-lg font-semibold text-gray-800 dark:text-white border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
+                            🛡️ Bảo hiểm xã hội
                         </h3>
                         <div class="space-y-3">
                             <div class="flex justify-between py-2 border-b border-gray-100 dark:border-slate-700">
@@ -727,129 +752,260 @@
                             <div class="flex justify-between py-2 border-b border-gray-100 dark:border-slate-700">
                                 <span class="text-gray-500 dark:text-gray-400">Mức lương đóng BHXH</span>
                                 <span
-                                    class="font-bold text-green-600 dark:text-green-400">{{ number_format($luongDongBhxh, 0, ',', '.') }}
+                                    class="font-medium text-green-600 dark:text-green-400">{{ number_format($luongCoBanHienTai, 0, ',', '.') }}
                                     VNĐ</span>
                             </div>
 
-                            {{-- Bảng chi tiết đóng BH --}}
-                            <div class="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 mt-3 space-y-2">
-                                <div class="flex justify-between text-sm py-1">
+                            {{-- Chi tiết đóng BH --}}
+                            <div class="bg-gray-50 dark:bg-slate-700 rounded-lg p-3 mt-2">
+                                <div class="flex justify-between py-1">
                                     <span class="text-gray-500 dark:text-gray-400">BHXH (8%)</span>
-                                    <span
-                                        class="font-semibold text-blue-600 dark:text-blue-400">{{ number_format($bhxh, 0, ',', '.') }}
+                                    <span class="font-medium text-blue-600">{{ number_format($bhxh, 0, ',', '.') }}
                                         VNĐ</span>
                                 </div>
-                                <div
-                                    class="flex justify-between text-sm py-1 border-t border-gray-200 dark:border-slate-600">
+                                <div class="flex justify-between py-1 border-t border-gray-200 dark:border-slate-600">
                                     <span class="text-gray-500 dark:text-gray-400">BHYT (1.5%)</span>
-                                    <span
-                                        class="font-semibold text-blue-600 dark:text-blue-400">{{ number_format($bhyt, 0, ',', '.') }}
+                                    <span class="font-medium text-blue-600">{{ number_format($bhyt, 0, ',', '.') }}
                                         VNĐ</span>
                                 </div>
-                                <div
-                                    class="flex justify-between text-sm py-1 border-t border-gray-200 dark:border-slate-600">
+                                <div class="flex justify-between py-1 border-t border-gray-200 dark:border-slate-600">
                                     <span class="text-gray-500 dark:text-gray-400">BHTN (1%)</span>
-                                    <span
-                                        class="font-semibold text-blue-600 dark:text-blue-400">{{ number_format($bhtn, 0, ',', '.') }}
+                                    <span class="font-medium text-blue-600">{{ number_format($bhtn, 0, ',', '.') }}
                                         VNĐ</span>
                                 </div>
                                 <div
-                                    class="flex justify-between text-sm py-2 border-t-2 border-gray-300 dark:border-slate-500 font-bold mt-1">
-                                    <span class="text-gray-700 dark:text-gray-200">Tổng đóng (10.5%)</span>
-                                    <span
-                                        class="text-red-600 dark:text-red-400">{{ number_format($tongBaoHiem, 0, ',', '.') }}
-                                        VNĐ</span>
+                                    class="flex justify-between py-2 border-t-2 border-gray-300 dark:border-slate-500 font-bold mt-1">
+                                    <span class="text-gray-700 dark:text-gray-300">Tổng đóng (10.5%)</span>
+                                    <span class="text-red-600">{{ number_format($tongBaoHiem, 0, ',', '.') }} VNĐ</span>
                                 </div>
                             </div>
+
+                            {{-- ⭐ THÔNG TIN NGƯỜI PHỤ THUỘC --}}
+                            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-slate-700">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4
+                                        class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                                        👨‍👩‍👧‍👦 Người phụ thuộc
+                                        <span class="text-xs font-normal text-gray-500">({{ $soNguoiPhuThuoc }}
+                                            người)</span>
+                                    </h4>
+                                    @if ($soNguoiPhuThuoc > 0)
+                                        <span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
+                                            Giảm trừ: {{ number_format(6200000 * $soNguoiPhuThuoc, 0, ',', '.') }} ₫/tháng
+                                        </span>
+                                    @endif
+                                </div>
+
+                                @if ($soNguoiPhuThuoc > 0)
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full text-sm">
+                                            <thead>
+                                                <tr
+                                                    class="border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700">
+                                                    <th class="text-left p-1.5 font-semibold text-xs">Họ tên</th>
+                                                    <th class="text-left p-1.5 font-semibold text-xs">Ngày sinh</th>
+                                                    <th class="text-left p-1.5 font-semibold text-xs">Quan hệ</th>
+                                                    <th class="text-left p-1.5 font-semibold text-xs">Mã số thuế</th>
+                                                    <th class="text-left p-1.5 font-semibold text-xs">Ngày bắt đầu</th>
+                                                    <th class="text-left p-1.5 font-semibold text-xs">Trạng thái</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($nguoiPhuThuocs as $npt)
+                                                    @php
+                                                        $isActive =
+                                                            is_null($npt->ngay_ket_thuc) ||
+                                                            $npt->ngay_ket_thuc >= now();
+                                                        $statusColor = $isActive
+                                                            ? 'text-green-600 bg-green-100'
+                                                            : 'text-red-600 bg-red-100';
+                                                        $statusText = $isActive ? '✅ Đang áp dụng' : '⛔ Đã kết thúc';
+                                                    @endphp
+                                                    <tr
+                                                        class="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition">
+                                                        <td class="p-1.5 text-xs font-medium">{{ $npt->ho_ten }}</td>
+                                                        <td class="p-1.5 text-xs">
+                                                            {{ $npt->ngay_sinh ? $npt->ngay_sinh->format('d/m/Y') : '---' }}
+                                                        </td>
+                                                        <td class="p-1.5 text-xs">
+                                                            <span
+                                                                class="px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-700">
+                                                                {{ $npt->quan_he == 'con' ? '👶 Con' : ($npt->quan_he == 'vo' ? '👩 Vợ' : ($npt->quan_he == 'chong' ? '👨 Chồng' : ($npt->quan_he == 'cha' ? '👨 Cha' : ($npt->quan_he == 'me' ? '👩 Mẹ' : '👤 Khác')))) }}
+                                                            </span>
+                                                        </td>
+                                                        <td class="p-1.5 text-xs font-mono">
+                                                            {{ $npt->ma_so_thue ?? '---' }}</td>
+                                                        <td class="p-1.5 text-xs">
+                                                            {{ $npt->ngay_bat_dau ? $npt->ngay_bat_dau->format('d/m/Y') : '---' }}
+                                                        </td>
+                                                        <td class="p-1.5 text-xs">
+                                                            <span
+                                                                class="px-2 py-0.5 rounded-full text-xs font-medium {{ $statusColor }}">
+                                                                {{ $statusText }}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="mt-2 text-xs text-gray-400">
+                                        📌 Tổng giảm trừ gia cảnh: {{ number_format($giamTruGiaCanh, 0, ',', '.') }}
+                                        ₫/tháng
+                                        (Bản thân: {{ number_format($giamTruBanThan, 0, ',', '.') }} ₫ +
+                                        {{ $soNguoiPhuThuoc }} người phụ thuộc × 6.200.000 ₫)
+                                    </div>
+                                @else
+                                    <div class="text-center py-4 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+                                        <p class="text-gray-500 dark:text-gray-400 text-sm">📭 Chưa có người phụ thuộc đăng
+                                            ký</p>
+                                        <p class="text-xs text-gray-400 mt-1">Thêm người phụ thuộc để được giảm trừ gia
+                                            cảnh</p>
+                                    </div>
+                                @endif
+                            </div>
+
+                            @if (!$hoSo?->so_bhxh && !$hoSo?->ma_so_thue)
+                                <div
+                                    class="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                                    <p class="text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2">
+                                        <span>⚠️</span> Thông tin bảo hiểm chưa được cập nhật.
+                                    </p>
+                                </div>
+                            @endif
+
                         </div>
                     </div>
 
-                    {{-- Cột phải: Thuế TNCN (BẢN CHUẨN ĐẦY ĐỦ VỚI KHỐI THỰC NHẬN MÀU XANH) --}}
-                    <div
-                        class="bg-blue-50/50 dark:bg-blue-900/10 rounded-xl shadow-sm p-6 border border-blue-100 dark:border-blue-900/30">
-                        <h3
-                            class="text-lg font-semibold text-gray-800 dark:text-white border-b border-blue-200 dark:border-blue-800 pb-3 mb-4 flex items-center gap-2">
-                            <span>🏛️</span> Thuế TNCN
-                        </h3>
+                    {{-- Thuế TNCN --}}
+                    <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-semibold text-gray-700 dark:text-gray-300">🏛️ Thuế TNCN</span>
+                            <span class="font-bold {{ $thueTncn > 0 ? 'text-red-600' : 'text-green-600' }} text-lg">
+                                {{ number_format($thueTncn, 0, ',', '.') }} ₫
+                            </span>
+                        </div>
 
-                        <div class="space-y-3 text-sm">
-                            <div class="flex justify-between py-1">
-                                <span class="text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                                    <span>📊</span> Tổng thu nhập
-                                </span>
-                                <span
-                                    class="font-semibold text-gray-800 dark:text-gray-200">{{ number_format($tongThuNhap, 0, ',', '.') }}
-                                    ₫</span>
-                            </div>
-                            <div class="text-[11px] text-gray-400 pl-6 -mt-2">
-                                = {{ number_format($luongCoBanHienTai, 0, ',', '.') }}
-                                @if ($tongPhuCap > 0)
-                                    + {{ number_format($tongPhuCap, 0, ',', '.') }}
-                                @endif
-                                @if ($coTangCa)
-                                    + {{ number_format($tienTangCa, 0, ',', '.') }}
-                                @endif
-                            </div>
+                        <div class="flex justify-between py-1 text-sm border-t border-gray-200 dark:border-blue-700">
+                            <span class="text-gray-500 dark:text-gray-400">📊 Tổng thu nhập</span>
+                            <span
+                                class="font-medium text-gray-700 dark:text-gray-300">{{ number_format($tongThuNhap, 0, ',', '.') }}
+                                ₫</span>
+                        </div>
+                        <div class="pl-4 text-xs text-gray-400">
+                            = {{ number_format($luongCoBanHienTai, 0, ',', '.') }}
+                            @if ($coPhuCap)
+                                + {{ number_format($tongPhuCap, 0, ',', '.') }}
+                            @endif
+                            @if ($coTangCa)
+                                + {{ number_format($tienTangCa, 0, ',', '.') }}
+                            @endif
+                        </div>
 
-                            <div class="flex justify-between py-1 border-t border-blue-100 dark:border-blue-900/20">
-                                <span class="text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                                    <span>🔻</span> Bảo hiểm (10.5%)
-                                </span>
-                                <span class="font-semibold text-red-600">-{{ number_format($tongBaoHiem, 0, ',', '.') }}
-                                    ₫</span>
-                            </div>
+                        <div class="flex justify-between py-1 text-sm border-t border-gray-200 dark:border-blue-700">
+                            <span class="text-gray-500 dark:text-gray-400">🔻 Bảo hiểm (10.5%)</span>
+                            <span class="font-medium text-red-600">-{{ number_format($tongBaoHiem, 0, ',', '.') }}
+                                ₫</span>
+                        </div>
 
-                            <div
-                                class="flex justify-between py-1 border-t border-blue-100 dark:border-blue-900/20 font-medium">
-                                <span class="text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-                                    <span>📝</span> Thu nhập chịu thuế
-                                </span>
-                                <span class="font-bold text-red-500">
-                                    {{ number_format($thuNhapChiuThue, 0, ',', '.') }} ₫
-                                </span>
-                            </div>
-                            <div class="text-[11px] text-gray-400 pl-6 -mt-2">
-                                = {{ number_format($tongThuNhap, 0, ',', '.') }} -
-                                {{ number_format($tongBaoHiem, 0, ',', '.') }}
-                            </div>
+                        <div class="flex justify-between py-1 text-sm border-t border-gray-200 dark:border-blue-700">
+                            <span class="text-gray-500 dark:text-gray-400">👨‍👩‍👧‍👦 Giảm trừ gia cảnh</span>
+                            <span class="font-medium text-blue-600">-{{ number_format($giamTruGiaCanh, 0, ',', '.') }}
+                                ₫</span>
+                        </div>
+                        <div class="text-xs text-gray-400 pl-4">
+                            Bản thân: {{ number_format($giamTruBanThan, 0, ',', '.') }} ₫
+                            @if ($soNguoiPhuThuoc > 0)
+                                + {{ $soNguoiPhuThuoc }} người PT × 6.200.000 ₫
+                            @endif
+                        </div>
 
-                            <div
-                                class="flex justify-between py-2 border-t-2 border-blue-200 dark:border-blue-800 mt-2 font-bold text-base">
-                                <span class="text-gray-800 dark:text-white flex items-center gap-1.5">
-                                    <span>🏛️</span> Thuế TNCN
-                                </span>
-                                <span
-                                    class="text-emerald-600 dark:text-emerald-400">{{ number_format($thueTncn, 0, ',', '.') }}
-                                    ₫</span>
-                            </div>
+                        <div
+                            class="flex justify-between py-1 text-sm border-t border-gray-200 dark:border-blue-700 font-medium">
+                            <span class="text-gray-600 dark:text-gray-300">📝 Thu nhập chịu thuế</span>
+                            <span class="font-bold {{ $thuNhapChiuThue > 0 ? 'text-orange-600' : 'text-green-600' }}">
+                                {{ number_format($thuNhapChiuThue, 0, ',', '.') }} ₫
+                            </span>
+                        </div>
+                        <div class="text-xs text-gray-400 pl-4">
+                            = {{ number_format($tongThuNhap, 0, ',', '.') }} -
+                            {{ number_format($tongBaoHiem, 0, ',', '.') }}
+                        </div>
 
-                            <div
-                                class="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
-                                <i class="fa-regular fa-circle-check"></i> Không phải nộp thuế
-                            </div>
+                        <div class="flex justify-between py-1 text-sm border-t border-gray-200 dark:border-blue-700">
+                            <span class="text-gray-500 dark:text-gray-400">📊 Thu nhập tính thuế</span>
+                            <span class="font-medium {{ $thuNhapTinhThue > 0 ? 'text-orange-600' : 'text-green-600' }}">
+                                {{ number_format(max(0, $thuNhapTinhThue), 0, ',', '.') }} ₫
+                            </span>
+                        </div>
+                        <div class="text-xs text-gray-400 pl-4">
+                            = {{ number_format($thuNhapChiuThue, 0, ',', '.') }} -
+                            {{ number_format($giamTruGiaCanh, 0, ',', '.') }}
+                        </div>
 
-                            {{-- Khối Thực Nhận Màu Xanh Lá Nổi Bật --}}
-                            <div
-                                class="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border-2 border-green-300 dark:border-green-800 mt-4 shadow-sm">
-                                <div class="flex justify-between items-center">
+                        <div class="flex justify-between py-2 mt-1 border-t-2 border-blue-300 dark:border-blue-700">
+                            <span class="font-semibold text-gray-700 dark:text-gray-300">🏛️ Thuế TNCN</span>
+                            <span class="font-bold {{ $thueTncn > 0 ? 'text-red-600' : 'text-green-600' }} text-lg">
+                                {{ number_format($thueTncn, 0, ',', '.') }} ₫
+                            </span>
+                        </div>
+
+                        @if ($thueTncn > 0)
+                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">ℹ️ Áp dụng biểu thuế lũy tiến từng
+                                phần</div>
+                        @else
+                            <div class="text-xs text-green-600 dark:text-green-400 mt-1">✅ Không phải nộp thuế</div>
+                        @endif
+
+                        {{-- ⭐ TÓM TẮT GIẢM TRỪ --}}
+                        <div
+                            class="mt-3 p-3 bg-gray-50 dark:bg-slate-700 rounded-lg border border-gray-200 dark:border-slate-600">
+                            <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">📋 Tóm tắt giảm trừ</p>
+                            <div class="grid grid-cols-2 gap-1 text-xs">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Giảm trừ bản thân:</span>
+                                    <span class="font-medium">{{ number_format($giamTruBanThan, 0, ',', '.') }}
+                                        ₫</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Người phụ thuộc:</span>
+                                    <span class="font-medium">{{ $soNguoiPhuThuoc }} người</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Giảm trừ NPT:</span>
                                     <span
-                                        class="text-green-900 dark:text-green-300 font-bold text-base flex items-center gap-2">
-                                        <span>💰</span> THỰC NHẬN
-                                    </span>
-                                    <span class="text-2xl font-bold text-green-600 dark:text-green-400">
-                                        {{ number_format($thucNhan, 0, ',', '.') }} ₫
-                                    </span>
+                                        class="font-medium">{{ number_format(6200000 * $soNguoiPhuThuoc, 0, ',', '.') }}
+                                        ₫</span>
                                 </div>
-                                <div class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
-                                    = {{ number_format($tongThuNhap, 0, ',', '.') }} -
-                                    {{ number_format($tongBaoHiem, 0, ',', '.') }} -
-                                    {{ number_format($thueTncn, 0, ',', '.') }}
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Tổng giảm trừ:</span>
+                                    <span
+                                        class="font-medium text-blue-600">{{ number_format($giamTruGiaCanh, 0, ',', '.') }}
+                                        ₫</span>
                                 </div>
                             </div>
+                        </div>
+
+                        {{-- Thực nhận --}}
+                        <div
+                            class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border-2 border-green-300 dark:border-green-700 mt-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-700 dark:text-gray-300 font-bold text-lg">💰 THỰC NHẬN</span>
+                                <span class="text-2xl font-bold text-green-600 dark:text-green-400">
+                                    {{ number_format($thucNhan, 0, ',', '.') }} ₫
+                                </span>
+                            </div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                = {{ number_format($tongThuNhap, 0, ',', '.') }}
+                                - {{ number_format($tongBaoHiem, 0, ',', '.') }}
+                                - {{ number_format($thueTncn, 0, ',', '.') }}
+                            </div>
+
                         </div>
                     </div>
 
                 </div>
+
             </div>
 
             {{-- ================= TAB 6: ĐÀO TẠO & KỶ LUẬT (BẢN CHUẨN THEO ẢNH) ================= --}}
