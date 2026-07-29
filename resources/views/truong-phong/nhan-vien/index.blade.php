@@ -103,7 +103,7 @@
                             <a href="{{ route('truong-phong.nhan-vien.show', $nv->id) }}" 
                                 class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition" 
                                 title="Xem chi tiết">
-                                <i class="fas fa-eye mr-1"></i> Xem
+                                <i class="fas fa-eye mr-1"></i>
                             </a>
                         </td>
                     </tr>
