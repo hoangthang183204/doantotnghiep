@@ -1239,86 +1239,39 @@
 
                     {{-- Lịch sử lương --}}
                     <div class="mt-6 pt-6 border-t border-gray-200 dark:border-slate-700">
-                        <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-3">📈 Lịch sử lương</h4>
-
-                        @if ($lichSuLuong && $lichSuLuong->count() > 0)
+                        <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-1.5">
+                            📈 Lịch sử lương
+                        </h4>
+                        @if ($hoSo?->lich_su_luong && $hoSo->lich_su_luong->count() > 0)
                             <div class="overflow-x-auto">
                                 <table class="min-w-full text-sm">
                                     <thead>
                                         <tr
                                             class="border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700">
-                                            <th class="text-left p-2 font-semibold">Kỳ lương</th>
-                                            <th class="text-left p-2 font-semibold">Ngày công</th>
-                                            <th class="text-left p-2 font-semibold">Lương CB</th>
-                                            <th class="text-left p-2 font-semibold">Phụ cấp</th>
-                                            <th class="text-left p-2 font-semibold">Thực nhận</th>
-                                            <th class="text-left p-2 font-semibold">Trạng thái</th>
+                                            <th class="text-left p-2.5 font-semibold">Kỳ lương</th>
+                                            <th class="text-left p-2.5 font-semibold">Ngày công</th>
+                                            <th class="text-left p-2.5 font-semibold">Lương CB</th>
+                                            <th class="text-left p-2.5 font-semibold">Thực nhận</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($lichSuLuong as $item)
+                                        @foreach ($hoSo->lich_su_luong as $item)
                                             <tr
                                                 class="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition">
-                                                <td class="p-2 font-medium">
-                                                    @if ($item->bangLuong)
-                                                        Tháng {{ $item->bangLuong->thang }}/{{ $item->bangLuong->nam }}
-                                                        <br>
-                                                        <span
-                                                            class="text-xs text-gray-400">{{ $item->bangLuong->ma_bang_luong ?? '' }}</span>
-                                                    @else
-                                                        Tháng {{ $item->luong_thang }}/{{ $item->luong_nam }}
-                                                    @endif
-                                                </td>
-                                                <td class="p-2">{{ number_format($item->so_ngay_cong ?? 0, 2) }}</td>
-                                                <td class="p-2">
-                                                    {{ number_format($item->luong_co_ban ?? 0, 0, ',', '.') }}
-                                                </td>
-                                                <td class="p-2">
-                                                    {{ number_format($item->tong_phu_cap ?? 0, 0, ',', '.') }}
-                                                </td>
-                                                <td class="p-2 font-bold text-green-600">
+                                                <td class="p-2.5 font-medium">Tháng
+                                                    {{ $item->luong_thang }}/{{ $item->luong_nam }}</td>
+                                                <td class="p-2.5">{{ number_format($item->so_ngay_cong ?? 0, 2) }}</td>
+                                                <td class="p-2.5">
+                                                    {{ number_format($item->luong_co_ban ?? 0, 0, ',', '.') }}</td>
+                                                <td class="p-2.5 font-bold text-green-600">
                                                     {{ number_format($item->luong_thuc_nhan ?? 0, 0, ',', '.') }}</td>
-                                                <td class="p-2">
-                                                    @php
-                                                        $statusMap = [
-                                                            'da_chot' => '✅ Đã chốt',
-                                                            'da_duyet' => '✅ Đã duyệt',
-                                                            'cho_duyet' => '⏳ Chờ duyệt',
-                                                            'dang_xu_ly' => '🔄 Đang xử lý',
-                                                            'da_tra' => '💰 Đã trả',
-                                                        ];
-                                                        $trangThai = $item->bangLuong->trang_thai ?? '';
-                                                        $statusClass = [
-                                                            'da_chot' =>
-                                                                'text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400',
-                                                            'da_duyet' =>
-                                                                'text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400',
-                                                            'cho_duyet' =>
-                                                                'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400',
-                                                            'dang_xu_ly' =>
-                                                                'text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400',
-                                                            'da_tra' =>
-                                                                'text-purple-600 bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400',
-                                                        ];
-                                                    @endphp
-                                                    <span
-                                                        class="px-2 py-0.5 rounded-full text-xs font-medium {{ $statusClass[$trangThai] ?? 'bg-gray-100 text-gray-600' }}">
-                                                        {{ $statusMap[$trangThai] ?? ($trangThai ?? 'Không xác định') }}
-                                                    </span>
-                                                </td>
                                             </tr>
                                         @endforeach
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="mt-2 text-xs text-gray-400">📌 Hiển thị {{ $lichSuLuong->count() }} bản ghi lương
-                                gần nhất</div>
                         @else
-                            <div class="text-center py-8 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
-                                <div class="text-4xl mb-2">📭</div>
-                                <p class="text-gray-500 dark:text-gray-400 text-sm">Chưa có lịch sử lương</p>
-                                <p class="text-xs text-gray-400 mt-1">Dữ liệu lương sẽ hiển thị sau khi chốt lương</p>
-                            </div>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm">Chưa có lịch sử lương</p>
                         @endif
                     </div>
 
