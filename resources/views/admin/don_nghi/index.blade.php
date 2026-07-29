@@ -243,9 +243,17 @@
                 </tbody>
             </table>
             
+            {{-- Footer Phân Trang --}}
             @if($danhSachDon->hasPages())
-                <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-                    {{ $danhSachDon->links() }}
+                <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                        Hiển thị từ <span class="font-semibold text-gray-700 dark:text-gray-200">{{ $danhSachDon->firstItem() }}</span> 
+                        đến <span class="font-semibold text-gray-700 dark:text-gray-200">{{ $danhSachDon->lastItem() }}</span> 
+                        trong tổng số <span class="font-semibold text-gray-700 dark:text-gray-200">{{ $danhSachDon->total() }}</span> kết quả
+                    </div>
+                    <div class="w-full sm:w-auto overflow-x-auto">
+                        {{ $danhSachDon->links() }}
+                    </div>
                 </div>
             @endif
         </div>

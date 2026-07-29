@@ -202,6 +202,19 @@
         </div>
         @endif
     </div>
+    {{-- Footer Phân Trang --}}
+    @if($danhSach->hasPages())
+    <div class="px-4 py-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <div class="text-xs text-gray-500 dark:text-gray-400">
+            Hiển thị từ <b>{{ $danhSach->firstItem() }}</b> đến <b>{{ $danhSach->lastItem() }}</b> trong tổng số <b>{{ $danhSach->total() }}</b> kết quả
+        </div>
+        <div>
+            {{ $danhSach->links() }}
+        </div>
+    </div>
+    @endif
+</div>
+</div>
 </div>
 
 {{-- ============================================= --}}

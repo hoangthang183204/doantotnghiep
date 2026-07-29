@@ -787,6 +787,7 @@ Route::middleware(['auth', 'truong_phong'])
             Route::get('/attendance', [BaoCaoController::class, 'attendance'])->name('attendance');
             Route::get('/leave', [BaoCaoController::class, 'leave'])->name('leave');
             Route::get('/export', [BaoCaoController::class, 'export'])->name('export');
+            Route::get('/attendance/detail', [BaoCaoController::class, 'attendanceDetail'])->name('attendance.detail');
         });
 
         Route::prefix('nhan-vien')->name('nhan-vien.')->group(function () {

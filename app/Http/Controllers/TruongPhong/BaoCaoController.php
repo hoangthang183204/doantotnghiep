@@ -336,21 +336,7 @@ class BaoCaoController extends Controller
             ];
         }
 
-        // ========== ⭐ DỮ LIỆU CHO LỊCH THÁNG (GIỐNG EMPLOYEE) ==========
-        $chamCongTrongThang = ChamCong::whereIn('nguoi_dung_id', $nhanViens->pluck('id'))
-            ->whereMonth('ngay_cham_cong', $thang)
-            ->whereYear('ngay_cham_cong', $nam)
-            ->whereNotNull('gio_vao')
-            ->get()
-            ->groupBy('nguoi_dung_id')
-            ->map(function ($items) {
-                return $items->keyBy(function ($item) {
-                    return $item->ngay_cham_cong->format('d');
-                });
-            });
-
-        $thuTrongTuan = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
-        $weekDays = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+        
 
         return view('truong-phong.bao-cao.attendance', compact(
             'phongBan',
@@ -367,9 +353,8 @@ class BaoCaoController extends Controller
             'thuBatDau',
             'nhanViens',
             'weeks',
-            'weekDays',
-            'chamCongTrongThang', // ⭐ THÊM
-            'thuTrongTuan' // ⭐ THÊM
+            
+            
         ));
     }
 
@@ -601,5 +586,68 @@ class BaoCaoController extends Controller
         }
 
         return redirect()->back()->with('error', 'Loại báo cáo không hợp lệ.');
+    }
+    /**
+     * 📊 BÁO CÁO LỊCH CHẤM CÔNG CHI TIẾT CỦA 1 NHÂN VIÊN
+     */
+    public function attendanceDetail(Request $request)
+    {
+        $user = Auth::user();
+        $phongBanId = $this->getPhongBanId($user);
+
+        if (!$phongBanId) {
+            return redirect()->back()->with('error', 'Bạn chưa được phân công phòng ban.');
+        }
+
+        $nhanVienId = $request->input('nhan_vien_id');
+        $thang = $request->input('thang', date('m'));
+        $nam = $request->input('nam', date('Y'));
+
+        if (!$nhanVienId) {
+            return redirect()->route('truong-phong.bao-cao.attendance')
+                ->with('error', 'Vui lòng chọn nhân viên để xem lịch chấm công.');
+        }
+
+        // Lấy thông tin nhân viên (đảm bảo nhân viên thuộc phòng ban này và không phải trưởng phòng)
+        $selectedNhanVien = NguoiDung::with(['hoSo', 'chucVu'])
+            ->where('phong_ban_id', $phongBanId)
+            ->where('trang_thai', 1)
+            ->where('id', '!=', Auth::id())
+            ->where('id', $nhanVienId)
+            ->first();
+
+        if (!$selectedNhanVien) {
+            return redirect()->route('truong-phong.bao-cao.attendance')
+                ->with('error', 'Không tìm thấy thông tin nhân viên hợp lệ.');
+        }
+
+        // Thông tin thời gian & lịch
+        $ngayDauThang = Carbon::create($nam, $thang, 1);
+        $soNgayTrongThang = $ngayDauThang->daysInMonth;
+        $thuBatDau = $ngayDauThang->dayOfWeek; // 0 (CN) -> 6 (T7)
+        $thuTrongTuan = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+
+        // Lấy dữ liệu chấm công trong tháng của duy nhất nhân viên được chọn
+        $chamCongList = ChamCong::where('nguoi_dung_id', $selectedNhanVien->id)
+            ->whereMonth('ngay_cham_cong', $thang)
+            ->whereYear('ngay_cham_cong', $nam)
+            ->get();
+
+        // Gom nhóm theo ngày (format 2 chữ số hoặc số nguyên để dễ dùng bên view)
+        $chamCongTrongThang = [
+            $selectedNhanVien->id => $chamCongList->keyBy(function ($item) {
+                return (int) Carbon::parse($item->ngay_cham_cong)->day;
+            })
+        ];
+
+        return view('truong-phong.bao-cao.attendance-detail', compact(
+            'selectedNhanVien',
+            'thang',
+            'nam',
+            'soNgayTrongThang',
+            'thuBatDau',
+            'thuTrongTuan',
+            'chamCongTrongThang'
+        ));
     }
 }

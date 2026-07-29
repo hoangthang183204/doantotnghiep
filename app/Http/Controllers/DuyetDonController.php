@@ -132,7 +132,9 @@ class DuyetDonController extends Controller
 
         // ... [GIỮ NGUYÊN CÁC FILTER TRẠNG THÁI, LOẠI NGHỈ, TỪ NGÀY, ĐẾN NGÀY, KEYWORD] ...
 
-        $danhSach = $query->orderBy('created_at', 'desc')->paginate(15);
+        $danhSach = $query->orderBy('created_at', 'desc')
+                  ->paginate(10)
+                  ->withQueryString();
 
         // 🔴 CẬP NHẬT TÍNH THỐNG KÊ CHO TRƯỞNG PHÒNG VÀ ADMIN
         if ($isTruongPhong && !$isAdmin) {
