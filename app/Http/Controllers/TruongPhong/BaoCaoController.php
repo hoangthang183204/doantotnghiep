@@ -226,72 +226,150 @@ class BaoCaoController extends Controller
         }
 
         $phongBan = PhongBan::find($phongBanId);
-        $nhanVienIds = $this->getNhanVienIds($phongBanId);
-        $thang = $request->input('thang', Carbon::now()->month);
-        $nam = $request->input('nam', Carbon::now()->year);
 
-        // Lấy danh sách nhân viên và số ngày chấm công
-        $nhanViens = NguoiDung::with(['hoSo', 'chucVu'])
-            ->whereIn('id', $nhanVienIds)
-            ->get()
-            ->map(function ($nv) use ($thang, $nam) {
-                $soNgayChamCong = ChamCong::where('nguoi_dung_id', $nv->id)
-                    ->whereMonth('ngay_cham_cong', $thang)
-                    ->whereYear('ngay_cham_cong', $nam)
-                    ->count();
+        $thang = $request->input('thang', date('m'));
+        $nam = $request->input('nam', date('Y'));
 
-                $soNgayDiMuon = ChamCong::where('nguoi_dung_id', $nv->id)
-                    ->whereMonth('ngay_cham_cong', $thang)
-                    ->whereYear('ngay_cham_cong', $nam)
-                    ->where('trang_thai', 'di_muon')
-                    ->count();
+        // Lấy danh sách nhân viên trong phòng ban (KHÔNG BAO GỒM TRƯỞNG PHÒNG)
+        $currentUserId = Auth::id();
 
-                $soNgayVeSom = ChamCong::where('nguoi_dung_id', $nv->id)
-                    ->whereMonth('ngay_cham_cong', $thang)
-                    ->whereYear('ngay_cham_cong', $nam)
-                    ->where('trang_thai', 've_som')
-                    ->count();
+        // ⭐ THÊM BỘ LỌC NHÂN VIÊN
+        $nhanVienIdLoc = $request->input('nhan_vien_id');
 
-                $tongGioLam = ChamCong::where('nguoi_dung_id', $nv->id)
-                    ->whereMonth('ngay_cham_cong', $thang)
-                    ->whereYear('ngay_cham_cong', $nam)
-                    ->sum('so_gio_lam');
+        $queryNhanVien = NguoiDung::with(['hoSo', 'chucVu'])
+            ->where('phong_ban_id', $phongBanId)
+            ->where('trang_thai', 1)
+            ->where('id', '!=', $currentUserId);
 
-                return [
-                    'id' => $nv->id,
-                    'ho_ten' => ($nv->hoSo->ho ?? '') . ' ' . ($nv->hoSo->ten ?? ''),
-                    'ma_nhan_vien' => $nv->hoSo->ma_nhan_vien ?? 'N/A',
-                    'chuc_vu' => $nv->chucVu->ten ?? 'N/A',
-                    'so_ngay_cham_cong' => $soNgayChamCong,
-                    'so_ngay_di_muon' => $soNgayDiMuon,
-                    'so_ngay_ve_som' => $soNgayVeSom,
-                    'tong_gio_lam' => round($tongGioLam, 2),
-                ];
-            })
-            ->sortByDesc('so_ngay_cham_cong');
+        if ($nhanVienIdLoc) {
+            $queryNhanVien->where('id', $nhanVienIdLoc);
+        }
 
-        // Thống kê tổng hợp
+        $nhanViens = $queryNhanVien->get();
         $tongNhanVien = $nhanViens->count();
-        $tongNgayChamCong = $nhanViens->sum('so_ngay_cham_cong');
-        $tongNgayDiMuon = $nhanViens->sum('so_ngay_di_muon');
-        $tongNgayVeSom = $nhanViens->sum('so_ngay_ve_som');
-        $tongGioLam = $nhanViens->sum('tong_gio_lam');
 
-        $tyLeChamCong = $tongNhanVien > 0
-            ? round(($tongNgayChamCong / ($tongNhanVien * Carbon::create($nam, $thang)->daysInMonth)) * 100, 1)
-            : 0;
+        // Lấy dữ liệu chấm công trong tháng
+        $chamCongs = ChamCong::whereIn('nguoi_dung_id', $nhanViens->pluck('id'))
+            ->whereMonth('ngay_cham_cong', $thang)
+            ->whereYear('ngay_cham_cong', $nam)
+            ->get();
+
+        // ========== THỐNG KÊ CHUNG ==========
+        $tongNgayChamCong = $chamCongs->count();
+        $tongNgayDiMuon = $chamCongs->where('trang_thai', 'di_muon')->count();
+        $tongNgayVeSom = $chamCongs->where('trang_thai', 've_som')->count();
+
+        // ========== DỮ LIỆU CHO LỊCH ==========
+        $ngayDauThang = Carbon::create($nam, $thang, 1);
+        $soNgayTrongThang = $ngayDauThang->daysInMonth;
+        $thuBatDau = $ngayDauThang->dayOfWeek;
+
+        $weeks = [];
+        $currentDay = Carbon::create($nam, $thang, 1);
+        $weekIndex = 0;
+        $dayOfWeek = $thuBatDau;
+
+        $weeks[$weekIndex] = array_fill(0, 7, null);
+
+        for ($day = 1; $day <= $soNgayTrongThang; $day++) {
+            $weeks[$weekIndex][$dayOfWeek] = $day;
+            $dayOfWeek++;
+            if ($dayOfWeek == 7) {
+                $dayOfWeek = 0;
+                $weekIndex++;
+                $weeks[$weekIndex] = array_fill(0, 7, null);
+            }
+        }
+
+        if (end($weeks) === array_fill(0, 7, null)) {
+            array_pop($weeks);
+        }
+
+        $statusColors = [
+            'dung_gio' => 'bg-green-500',
+            'di_muon' => 'bg-yellow-500',
+            've_som' => 'bg-orange-500',
+            'den_som' => 'bg-blue-500',
+            'vang_mat' => 'bg-red-500',
+        ];
+
+        $attendanceData = [];
+        foreach ($nhanViens as $nv) {
+            $attendanceData[$nv->id] = [
+                'ho_ten' => ($nv->hoSo->ho ?? '') . ' ' . ($nv->hoSo->ten ?? $nv->ten_dang_nhap),
+                'ma_nhan_vien' => $nv->hoSo->ma_nhan_vien ?? 'N/A',
+                'data' => []
+            ];
+            for ($d = 1; $d <= $soNgayTrongThang; $d++) {
+                $attendanceData[$nv->id]['data'][$d] = null;
+            }
+        }
+
+        foreach ($chamCongs as $cong) {
+            $ngay = (int) Carbon::parse($cong->ngay_cham_cong)->day;
+            if (isset($attendanceData[$cong->nguoi_dung_id])) {
+                $attendanceData[$cong->nguoi_dung_id]['data'][$ngay] = [
+                    'trang_thai' => $cong->trang_thai,
+                    'color' => $statusColors[$cong->trang_thai] ?? 'bg-gray-400',
+                    'so_gio' => $cong->so_gio_lam,
+                    'gio_vao' => $cong->gio_vao,
+                    'gio_ra' => $cong->gio_ra,
+                    'so_cong' => $cong->so_cong,
+                ];
+            }
+        }
+
+        $tyLeChamCong = $tongNhanVien > 0 ? round(($tongNgayChamCong / ($tongNhanVien * $soNgayTrongThang)) * 100, 1) : 0;
+
+        // ========== CHI TIẾT NHÂN VIÊN ==========
+        $chiTietNhanViens = [];
+        foreach ($nhanViens as $nv) {
+            $congNv = $chamCongs->where('nguoi_dung_id', $nv->id);
+            $chiTietNhanViens[$nv->id] = [
+                'id' => $nv->id,
+                'ma_nhan_vien' => $nv->hoSo->ma_nhan_vien ?? 'N/A',
+                'ho_ten' => ($nv->hoSo->ho ?? '') . ' ' . ($nv->hoSo->ten ?? $nv->ten_dang_nhap),
+                'so_ngay_cham_cong' => $congNv->count(),
+                'so_ngay_di_muon' => $congNv->where('trang_thai', 'di_muon')->count(),
+                'so_ngay_ve_som' => $congNv->where('trang_thai', 've_som')->count(),
+                'tong_gio_lam' => number_format($congNv->sum('so_gio_lam'), 1),
+            ];
+        }
+
+        // ========== ⭐ DỮ LIỆU CHO LỊCH THÁNG (GIỐNG EMPLOYEE) ==========
+        $chamCongTrongThang = ChamCong::whereIn('nguoi_dung_id', $nhanViens->pluck('id'))
+            ->whereMonth('ngay_cham_cong', $thang)
+            ->whereYear('ngay_cham_cong', $nam)
+            ->whereNotNull('gio_vao')
+            ->get()
+            ->groupBy('nguoi_dung_id')
+            ->map(function ($items) {
+                return $items->keyBy(function ($item) {
+                    return $item->ngay_cham_cong->format('d');
+                });
+            });
+
+        $thuTrongTuan = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+        $weekDays = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
         return view('truong-phong.bao-cao.attendance', compact(
             'phongBan',
             'thang',
             'nam',
-            'nhanViens',
             'tongNhanVien',
             'tongNgayChamCong',
             'tongNgayDiMuon',
             'tongNgayVeSom',
-            'tongGioLam',
-            'tyLeChamCong'
+            'tyLeChamCong',
+            'chiTietNhanViens',
+            'attendanceData',
+            'soNgayTrongThang',
+            'thuBatDau',
+            'nhanViens',
+            'weeks',
+            'weekDays',
+            'chamCongTrongThang', // ⭐ THÊM
+            'thuTrongTuan' // ⭐ THÊM
         ));
     }
 
