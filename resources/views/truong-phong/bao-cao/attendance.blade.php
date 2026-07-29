@@ -353,9 +353,7 @@
                             <th
                                 class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 Số công</th>
-                            <th
-                                class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Thao tác</th>
+                            
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -398,12 +396,7 @@
                                     class="px-4 py-3 text-sm font-semibold text-purple-600 dark:text-purple-400 text-center">
                                     {{ number_format($soCong, 2) }}
                                 </td>
-                                <td class="px-4 py-3 text-center">
-                                    <a href="{{ route('truong-phong.bao-cao.attendance') }}?thang={{ $thang }}&nam={{ $nam }}&nhan_vien_id={{ $nv->id }}"
-                                        class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm inline-flex items-center gap-1">
-                                        <i class="fas fa-eye"></i> Xem
-                                    </a>
-                                </td>
+                                
                             </tr>
                         @empty
                             <tr>
