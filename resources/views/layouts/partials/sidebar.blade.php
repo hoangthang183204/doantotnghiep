@@ -245,7 +245,8 @@
                         {{ str_starts_with($currentRoute, 'truong-phong.') ||
                         str_starts_with($currentRoute, 'duyet-don.') ||
                         str_starts_with($currentRoute, 'duyet-tang-ca.') ||
-                        str_starts_with($currentRoute, 'duyet-chinh-cong.')
+                        str_starts_with($currentRoute, 'duyet-chinh-cong.') ||
+                        str_starts_with($currentRoute, 'truong-phong.duyet-ve-som.')
                             ? 'open'
                             : '' }}>
                         <summary
@@ -437,7 +438,43 @@
                                     </a>
                                 </li>
                             @endif
-
+                            {{-- DUYỆT ĐƠN VỀ SỚM (Dành cho Trưởng phòng) --}}
+                            @if (Route::has('truong-phong.duyet-ve-som.index'))
+                                <li>
+                                    <a href="{{ route('truong-phong.duyet-ve-som.index') }}"
+                                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors 
+        {{ str_starts_with($currentRoute, 'truong-phong.duyet-ve-som.')
+            ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                        <svg class="w-4 h-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg"
+                                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                            stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                                        </svg>
+                                        <span class="menu-text">Duyệt đơn về sớm</span>
+                                        @php
+                                            $veSomChoDuyetCount = \App\Models\DonXinVeSom::whereIn(
+                                                'nguoi_dung_id',
+                                                function ($q) use ($phongBanInfo) {
+                                                    $q->select('id')
+                                                        ->from('nguoi_dung')
+                                                        ->where('phong_ban_id', $phongBanInfo->id);
+                                                },
+                                            )
+                                                ->where('trang_thai', 'cho_duyet')
+                                                ->where('nguoi_dung_id', '!=', $user->id)
+                                                ->count();
+                                        @endphp
+                                        @if ($veSomChoDuyetCount > 0)
+                                            <span
+                                                class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                                                {{ $veSomChoDuyetCount }}
+                                            </span>
+                                        @endif
+                                    </a>
+                                </li>
+                            @endif
                             {{-- DUYỆT CHỈNH CÔNG --}}
                             @if (Route::has('duyet-chinh-cong.index'))
                                 <li>
@@ -793,10 +830,13 @@
                     $submenuLuong[] = ['title' => 'Lịch sử tăng lương', 'route' => 'admin.tang-luong.index'];
                 }
                 if ($canViewSalary && Route::has('admin.yeu-cau-luong.index')) {
-                    $submenuLuong[] = ['title' => 'Yêu cầu xem xét lương','route' => 'admin.yeu-cau-luong.index'];
+                    $submenuLuong[] = ['title' => 'Yêu cầu xem xét lương', 'route' => 'admin.yeu-cau-luong.index'];
                 }
                 if ($canViewSalary && Route::has('admin.lich-su-xu-ly-yeu-cau-luong.index')) {
-                    $submenuLuong[] = ['title' => 'Lịch sử xử lý yêu cầu lương','route' => 'admin.lich-su-xu-ly-yeu-cau-luong.index'];
+                    $submenuLuong[] = [
+                        'title' => 'Lịch sử xử lý yêu cầu lương',
+                        'route' => 'admin.lich-su-xu-ly-yeu-cau-luong.index',
+                    ];
                 }
             @endphp
             @if (!empty($submenuLuong))
