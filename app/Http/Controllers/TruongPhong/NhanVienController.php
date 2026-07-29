@@ -92,11 +92,46 @@ class NhanVienController extends Controller
             ?->first();
 
         // Lấy bảng lương gần nhất
-        $luongGanNhat = \App\Models\LuongNhanVien::where('nguoi_dung_id', $user->id)
-            ->orderBy('luong_nam', 'desc')
-            ->orderBy('luong_thang', 'desc')
-            ->first();
+// Lấy bảng lương đã chốt gần nhất
+$bangLuongGanNhat = \App\Models\BangLuong::from('bang_luong as bl')
+    ->join('luong_nhan_vien as lnv', 'bl.id', '=', 'lnv.bang_luong_id')
+    ->where('bl.trang_thai', 'da_chot')
+    ->where('lnv.nguoi_dung_id', $user->id)
+    ->orderBy('bl.nam', 'desc')
+    ->orderBy('bl.thang', 'desc')
+    ->select('bl.*')
+    ->first();
 
+$luongGanNhat = null;
+
+if ($bangLuongGanNhat) {
+    $luongGanNhat = \App\Models\LuongNhanVien::where('bang_luong_id', $bangLuongGanNhat->id)
+        ->where('nguoi_dung_id', $user->id)
+        ->first();
+}
+
+// Nếu chưa có bảng lương đã chốt thì lấy bản gần nhất
+if (!$luongGanNhat) {
+    $luongGanNhat = \App\Models\LuongNhanVien::where('nguoi_dung_id', $user->id)
+        ->orderBy('luong_nam', 'desc')
+        ->orderBy('luong_thang', 'desc')
+        ->first();
+}
+
+// Lịch sử lương
+$lichSuLuong = \App\Models\LuongNhanVien::where('nguoi_dung_id', $user->id)
+    ->with('bangLuong')
+    ->join('bang_luong', 'luong_nhan_vien.bang_luong_id', '=', 'bang_luong.id')
+    ->where('bang_luong.trang_thai', 'da_chot')
+    ->orderBy('bang_luong.nam', 'desc')
+    ->orderBy('bang_luong.thang', 'desc')
+    ->select('luong_nhan_vien.*')
+    ->get();
+
+// Kỳ lương
+$kyLuu = $bangLuongGanNhat
+    ? 'Tháng ' . $bangLuongGanNhat->thang . '/' . $bangLuongGanNhat->nam
+    : 'Chưa có bảng lương';
         // Tính toán lương
         $luongCoBanHienTai = $hopDongHieuLuc?->luong_co_ban ?? 0;
 
@@ -130,14 +165,19 @@ class NhanVienController extends Controller
         $coTangCa = $tienTangCa > 0;
 
         // Tổng thu nhập
-        $tongThuNhap = $luongCoBanHienTai + $tongPhuCap + $tienTangCa;
+        $tongThuNhap = $luongGanNhat?->tong_luong
+    ?? ($luongCoBanHienTai + $tongPhuCap + $tienTangCa);
 
         // Bảo hiểm (10.5%)
-        $luongDongBhxh = $hopDongHieuLuc?->luong_co_ban ?? 0;
-        $bhxh = round($luongDongBhxh * 0.08, 0);
-        $bhyt = round($luongDongBhxh * 0.015, 0);
-        $bhtn = round($luongDongBhxh * 0.01, 0);
-        $tongBaoHiem = $bhxh + $bhyt + $bhtn;
+        $luongDongBhxh = $luongGanNhat?->luong_co_ban
+        ?? $hopDongHieuLuc?->luong_co_ban
+        ?? 0;
+        $bhxh = $luongGanNhat?->bhxh ?? round($luongDongBhxh * 0.08,0);
+        $bhyt = $luongGanNhat?->bhyt ?? round($luongDongBhxh * 0.015,0);
+        $bhtn = $luongGanNhat?->bhtn ?? round($luongDongBhxh * 0.01,0);
+
+        $tongBaoHiem = $luongGanNhat?->tong_bao_hiem
+            ?? ($bhxh+$bhyt+$bhtn);
 
         // Giảm trừ gia cảnh
         $soNguoiPhuThuoc = $hoSo?->nguoiPhuThuoc?->count() ?? 0;
@@ -165,7 +205,8 @@ class NhanVienController extends Controller
         }
         $thueTncn = round($thueTncn, 0);
 
-        $thucNhan = $tongThuNhap - $tongBaoHiem - $thueTncn;
+        $thucNhan = $luongGanNhat?->luong_thuc_nhan
+        ?? ($tongThuNhap-$tongBaoHiem-$thueTncn);
 
         // Lấy chi tiết phụ cấp
         $phuCapChiTiets = collect();
@@ -241,6 +282,9 @@ class NhanVienController extends Controller
             'lichSuTangCa',
             'lichSuVeSom', // <-- Đã bổ sung biến này vào compact
             'thongKeDonTu',
+            'bangLuongGanNhat',
+            'lichSuLuong',
+            'kyLuu',
             'soDuPhep'
         ));
     }
