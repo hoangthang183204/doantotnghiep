@@ -1,4 +1,4 @@
-@extends('layouts.employee')
+@extends('layouts.admin')
 
 @section('title', 'Quy định công ty')
 
@@ -667,27 +667,55 @@
             </div>
 
             <div class="hr-right-col">
+                {{-- ====== PHẦN LIÊN HỆ HR (ĐÃ SỬA ẢNH ĐỘNG - CHỈ LẤY HR) ====== --}}
+                @php
+                    // 1. Chỉ lấy người dùng có role 'hr'
+                    $hrUser = \App\Models\NguoiDung::whereHas('vaiTros', function($q) {
+                        $q->where('name', 'hr');
+                    })->first();
+
+                    // 2. Nếu không tìm thấy HR, fallback về admin để không bị lỗi trống
+                    if (!$hrUser) {
+                        $hrUser = \App\Models\NguoiDung::whereHas('vaiTros', function($q) {
+                            $q->where('name', 'admin');
+                        })->first();
+                    }
+
+                    // 3. Lấy hồ sơ và ảnh
+                    $hrProfile = $hrUser?->hoSo;
+                    $avatarPath = $hrProfile && $hrProfile->anh_dai_dien 
+                        ? asset('storage/' . $hrProfile->anh_dai_dien) 
+                        : asset('images/avatar-default.png');
+
+                    // 4. Thông tin hiển thị
+                    $hrName = $hrProfile ? $hrProfile->ho . ' ' . $hrProfile->ten : ($hrUser->email ?? 'HR Support');
+                    $hrEmail = $hrUser->email ?? 'hr@company.com';
+                    $hrPhone = $hrProfile->so_dien_thoai ?? '0901234567';
+                    $hrDepartment = $hrUser->phongBan?->ten_phong_ban ?? 'Phòng Nhân Sự';
+                @endphp
+
                 <div class="card-custom sidebar-card border-teal mb-4">
                     <div class="card-header-custom">
                         <i class="fas fa-headset me-2 text-info"></i> Liên Hệ HR
                     </div>
                     <div class="card-body-custom">
                         <div class="d-flex align-items-center mb-4">
-                            <img src="{{ asset('images/avatar-default.png') }}" alt="HR" width="48"
-                                height="48"
-                                style="border-radius: 50%; object-fit: cover; background: #eee; margin-right: 12px;">
+                            <img src="{{ $avatarPath }}" alt="HR Avatar" width="48" height="48"
+                                style="border-radius: 50%; object-fit: cover; background: #eee; margin-right: 12px; border: 2px solid #3b59d6;">
+                            
                             <div>
-                                <div class="text-muted small">Phòng Kế Toán / Nhân Sự</div>
-                                <div class="fw-bold text-dark">Hoàng Thị Hoa</div>
+                                <div class="text-muted small">{{ $hrDepartment }}</div>
+                                <div class="fw-bold text-dark">{{ $hrName }}</div>
                             </div>
                         </div>
                         <ul class="list-unstyled small">
-                            <li class="mb-2"><i class="fas fa-phone-alt text-success me-2"></i> 0901234568</li>
-                            <li class="mb-2"><i class="fas fa-envelope text-primary me-2"></i> ke.toan@hrflow.com</li>
-                            <li><i class="fas fa-map-marker-alt text-danger me-2"></i> TP.HCM</li>
+                            <li class="mb-2"><i class="fas fa-phone-alt text-success me-2"></i> {{ $hrPhone }}</li>
+                            <li class="mb-2"><i class="fas fa-envelope text-primary me-2"></i> {{ $hrEmail }}</li>
+                            <li><i class="fas fa-map-marker-alt text-danger me-2"></i> Hệ thống nội bộ</li>
                         </ul>
                     </div>
                 </div>
+                {{-- ====== HẾT PHẦN LIÊN HỆ HR ====== --}}
 
                 <div class="card-custom sidebar-card border-green">
                     <div class="card-header-custom">
@@ -797,19 +825,9 @@
                 const opt = {
                     margin: 10,
                     filename: 'Quy_Dinh_Cong_Ty.pdf',
-                    image: {
-                        type: 'jpeg',
-                        quality: 0.98
-                    },
-                    html2canvas: {
-                        scale: 2,
-                        useCORS: true
-                    },
-                    jsPDF: {
-                        unit: 'mm',
-                        format: 'a4',
-                        orientation: 'portrait'
-                    }
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                 };
                 html2pdf().set(opt).from(element).save();
             }, 500);
