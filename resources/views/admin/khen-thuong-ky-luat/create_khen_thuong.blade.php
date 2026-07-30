@@ -3,285 +3,160 @@
 @section('title', 'Thêm khen thưởng')
 
 @section('content')
+<div class="p-6 max-w-7xl mx-auto space-y-6">
 
-    <div class="min-h-screen bg-slate-50 dark:bg-slate-950 py-10">
-
-        <div class="max-w-[95%] xl:max-w-[1600px] mx-auto px-10">
-
-            {{-- BANNER --}}
-            <div
-                class="relative overflow-hidden rounded-3xl shadow-xl mb-10
-            bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100
-            dark:from-slate-950 dark:via-slate-900 dark:to-slate-900">
-
-                <div class="absolute right-0 top-0 opacity-10 text-[180px] pr-10 pt-4">
-                    <i class="fa-solid fa-trophy"></i>
+    {{-- HEADER --}}
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
                 </div>
-
-                <div class="relative flex items-center justify-between px-10 py-10">
-
-                    <div class="flex items-center gap-5">
-
-                        <div
-                            class="w-20 h-20 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center">
-                            <i class="fa-solid fa-award text-3xl text-slate-600 dark:text-slate-300"></i>
-                        </div>
-
-                        <div>
-                            <h1 class="text-3xl font-bold text-slate-800 dark:text-white">
-                                Thêm khen thưởng
-                            </h1>
-
-                            <p class="text-slate-500 dark:text-slate-400 mt-2">
-                                Tạo quyết định khen thưởng cho nhân viên
-                            </p>
-                        </div>
-
-                    </div>
-
-                    <a href="{{ route('admin.khen-thuong-ky-luat.index') }}"
-                        class="px-5 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700
-                   text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                        ← Quay lại
-                    </a>
-
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900 dark:text-white">
+                        Thêm khen thưởng
+                    </h1>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                        Tạo quyết định khen thưởng cho nhân viên
+                    </p>
                 </div>
             </div>
-
-            @include('layouts.partials.alerts')
-
-            {{-- FORM --}}
-            <form action="{{ route('admin.khen-thuong-ky-luat.khen-thuong.store') }}" method="POST"
-                enctype="multipart/form-data">
-
-                @csrf
-
-                <div
-                    class="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-
-                    {{-- HEADER --}}
-                    <div class="px-10 py-7 border-b border-slate-200 dark:border-slate-800 flex items-center gap-4">
-
-                        <div class="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                            <i class="fa-solid fa-file-signature text-blue-600 text-2xl"></i>
-                        </div>
-
-                        <div>
-                            <h2 class="text-xl font-bold text-slate-800 dark:text-white">
-                                Thông tin khen thưởng
-                            </h2>
-                            <p class="text-slate-500 dark:text-slate-400 text-sm">
-                                Nhập đầy đủ thông tin bên dưới
-                            </p>
-                        </div>
-
-                    </div>
-
-                    {{-- BODY --}}
-                    <div class="p-10 space-y-8">
-
-                        {{-- NHÂN VIÊN --}}
-                        <div>
-                            <label class="label-ui">
-                                <i class="fa-solid fa-user"></i>
-                                Nhân viên *
-                            </label>
-
-                            <select name="ho_so_id" class="input-ui">
-                                <option value="">-- Chọn nhân viên --</option>
-                                @foreach ($hoSos as $hs)
-                                    <option value="{{ $hs->id }}" @selected(old('ho_so_id') == $hs->id)>
-                                        {{ $hs->ma_nhan_vien }} - {{ $hs->ho . ' ' . $hs->ten }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        {{-- NGÀY --}}
-                        <div>
-                            <label class="label-ui">
-                                <i class="fa-solid fa-calendar"></i>
-                                Ngày quyết định
-                            </label>
-
-                            <input type="date" name="ngay" value="{{ old('ngay', date('Y-m-d')) }}"
-                                class="input-ui dark:[color-scheme:dark]">
-                        </div>
-
-                        {{-- HÌNH THỨC --}}
-                        <div>
-                            <label class="label-ui">
-                                <i class="fa-solid fa-tag"></i>
-                                Hình thức
-                            </label>
-
-                            <input type="text" name="hinh_thuc" value="{{ old('hinh_thuc') }}" class="input-ui">
-                        </div>
-
-                        {{-- MỨC ĐỘ KHEN THƯỞNG --}}
-                        <div>
-                            <label class="label-ui">
-                                <i class="fa-solid fa-ranking-star text-amber-500"></i>
-                                Mức độ khen thưởng <span class="text-red-500">*</span>
-                            </label>
-
-                            <select name="muc_do" class="input-ui dark:[color-scheme:dark]" required>
-                                <option value="">-- Chọn mức độ --</option>
-
-                                <option value="kha" {{ old('muc_do') == 'kha' ? 'selected' : '' }}>
-                                    ⭐ Khá
-                                </option>
-
-                                <option value="gioi" {{ old('muc_do') == 'gioi' ? 'selected' : '' }}>
-                                    🥈 Giỏi
-                                </option>
-
-                                <option value="xuat_sac" {{ old('muc_do') == 'xuat_sac' ? 'selected' : '' }}>
-                                    🏆 Xuất sắc
-                                </option>
-                            </select>
-
-                            @error('muc_do')
-                                <p class="mt-2 text-sm text-red-500">
-                                    <i class="fa-solid fa-circle-exclamation mr-1"></i>
-                                    {{ $message }}
-                                </p>
-                            @enderror
-                        </div>
-
-                        {{-- SỐ TIỀN --}}
-                        <div>
-                            <label class="label-ui">
-                                <i class="fa-solid fa-coins"></i>
-                                Số tiền
-                            </label>
-
-                            <input type="number" name="so_tien" value="{{ old('so_tien') }}" class="input-ui">
-                        </div>
-
-                        {{-- NGƯỜI KÝ --}}
-                        <div>
-                            <label class="label-ui">
-                                <i class="fa-solid fa-signature"></i>
-                                Người ký
-                            </label>
-
-                            <select name="nguoi_ky_id" class="input-ui">
-                                <option value="">-- Chọn --</option>
-                                @foreach ($nguoiKys as $nguoiKy)
-                                    <option value="{{ $nguoiKy->id }}" @selected(old('nguoi_ky_id') == $nguoiKy->id)>
-                                        {{ $nguoiKy->ten_dang_nhap }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        {{-- SỐ QUYẾT ĐỊNH --}}
-                        <div>
-                            <label class="label-ui">
-                                <i class="fa-solid fa-hashtag"></i>
-                                Số quyết định
-                            </label>
-
-                            <input type="text" name="quyet_dinh_so" value="{{ old('quyet_dinh_so') }}" class="input-ui">
-                        </div>
-
-                        {{-- TIÊU ĐỀ --}}
-                        <div>
-                            <label class="label-ui">
-                                <i class="fa-solid fa-heading"></i>
-                                Tiêu đề *
-                            </label>
-
-                            <input type="text" name="ten" value="{{ old('ten') }}" class="input-ui">
-                        </div>
-
-                        {{-- NỘI DUNG --}}
-                        <div>
-                            <label class="label-ui">
-                                <i class="fa-solid fa-file-lines"></i>
-                                Nội dung
-                            </label>
-
-                            <textarea name="noi_dung" rows="6" class="input-ui">{{ old('noi_dung') }}</textarea>
-                        </div>
-
-                        {{-- 📎 BẰNG CHỨNG --}}
-                        <div>
-                            <label class="label-ui">
-                                <i class="fa-solid fa-paperclip"></i>
-                                Bằng chứng
-                            </label>
-
-                            <input type="file" name="bang_chung" class="input-ui dark:[color-scheme:dark]">
-                        </div>
-
-                        {{-- 📄 QUYẾT ĐỊNH FILE --}}
-                        <div>
-                            <label class="label-ui">
-                                <i class="fa-solid fa-file-contract"></i>
-                                Quyết định (file)
-                            </label>
-
-                            <input type="file" name="quyet_dinh_file" class="input-ui dark:[color-scheme:dark]">
-                        </div>
-
-                    </div>
-
-                    {{-- FOOTER --}}
-                    <div class="px-10 py-7 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-4">
-
-                        <a href="{{ route('admin.khen-thuong-ky-luat.index') }}"
-                            class="px-6 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-white">
-                            Hủy
-                        </a>
-
-                        <button class="px-7 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-semibold">
-                            Lưu khen thưởng
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </form>
-
+            <a href="{{ route('admin.khen-thuong-ky-luat.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm transition gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Quay lại
+            </a>
         </div>
     </div>
 
-    {{-- STYLE --}}
-    <style>
-        .label-ui {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 6px;
-            font-weight: 600;
-            color: #334155;
-        }
+    @include('layouts.partials.alerts')
 
-        .label-ui i {
-            font-size: 14px;
-            color: #64748b;
-        }
+    {{-- FORM --}}
+    <form action="{{ route('admin.khen-thuong-ky-luat.khen-thuong.store') }}" method="POST" enctype="multipart/form-data">
+        @csrf
 
-        .dark .label-ui {
-            color: #cbd5e1;
-        }
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
 
-        .input-ui {
-            width: 100%;
-            padding: 10px 14px;
-            border-radius: 12px;
-            border: 1px solid #cbd5e1;
-            background: white;
-        }
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        .dark .input-ui {
-            background: #0f172a;
-            border-color: #334155;
-            color: white;
-        }
-    </style>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Nhân viên <span class="text-red-500">*</span>
+                    </label>
+                    <select name="ho_so_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">-- Chọn nhân viên --</option>
+                        @foreach ($hoSos as $hs)
+                            <option value="{{ $hs->id }}" @selected(old('ho_so_id') == $hs->id)>
+                                {{ $hs->ma_nhan_vien }} - {{ $hs->ho . ' ' . $hs->ten }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Ngày quyết định
+                    </label>
+                    <input type="date" name="ngay" value="{{ old('ngay', date('Y-m-d')) }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:[color-scheme:dark]">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Hình thức
+                    </label>
+                    <input type="text" name="hinh_thuc" value="{{ old('hinh_thuc') }}" placeholder="VD: Tiền mặt, Bằng khen..." class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Mức độ khen thưởng <span class="text-red-500">*</span>
+                    </label>
+                    <select name="muc_do" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                        <option value="">-- Chọn mức độ --</option>
+                        <option value="kha" {{ old('muc_do') == 'kha' ? 'selected' : '' }}>Khá</option>
+                        <option value="gioi" {{ old('muc_do') == 'gioi' ? 'selected' : '' }}>Giỏi</option>
+                        <option value="xuat_sac" {{ old('muc_do') == 'xuat_sac' ? 'selected' : '' }}>Xuất sắc</option>
+                    </select>
+                    @error('muc_do')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Số tiền
+                    </label>
+                    <input type="number" name="so_tien" value="{{ old('so_tien') }}" placeholder="0" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Người ký
+                    </label>
+                    <select name="nguoi_ky_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">-- Chọn --</option>
+                        @foreach ($nguoiKys as $nguoiKy)
+                            <option value="{{ $nguoiKy->id }}" @selected(old('nguoi_ky_id') == $nguoiKy->id)>
+                                {{ $nguoiKy->ten_dang_nhap }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Số quyết định
+                    </label>
+                    <input type="text" name="quyet_dinh_so" value="{{ old('quyet_dinh_so') }}" placeholder="VD: QĐ-2025-001" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Tiêu đề <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" name="ten" value="{{ old('ten') }}" placeholder="Tiêu đề quyết định" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+            </div>
+
+            <div class="mt-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                    Nội dung
+                </label>
+                <textarea name="noi_dung" rows="4" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ old('noi_dung') }}</textarea>
+            </div>
+
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Bằng chứng
+                    </label>
+                    <input type="file" name="bang_chung" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Quyết định (file)
+                    </label>
+                    <input type="file" name="quyet_dinh_file" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+
+        </div>
+
+        {{-- FOOTER --}}
+        <div class="flex justify-end gap-3 mt-6">
+            <a href="{{ route('admin.khen-thuong-ky-luat.index') }}" class="px-5 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium transition">
+                Hủy
+            </a>
+            <button type="submit" class="px-6 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition shadow-sm">
+                Lưu khen thưởng
+            </button>
+        </div>
+
+    </form>
+
+</div>
 @endsection

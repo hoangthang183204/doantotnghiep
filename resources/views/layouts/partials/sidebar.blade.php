@@ -19,7 +19,7 @@
     $isKeToan = $user->vaiTros()->where('name', 'ke_toan')->exists();
 
     // ============================================================
-    // ⭐ KIỂM TRA TRƯỞNG PHÒNG
+    // ⭐ KIỂM TRA TRƯỞNG PHÒNG - CHỈ TRUE KHI THỰC SỰ LÀ TRƯỞNG PHÒNG
     // ============================================================
     $isTruongPhong = false;
     $phongBanInfo = null;
@@ -37,7 +37,7 @@
         }
     }
 
-    // CÁCH 2: Kiểm tra từ bảng phong_ban
+    // CÁCH 2: Kiểm tra từ bảng phong_ban (trường truong_phong_id)
     if (!$isTruongPhong) {
         $phongBan = \App\Models\PhongBan::where('truong_phong_id', $user->id)->first();
         if ($phongBan) {
@@ -60,8 +60,14 @@
         }
     }
 
-    // ⛔ NẾU LÀ KẾ TOÁN -> KHÔNG HIỂN THỊ MENU QUẢN LÝ PHÒNG
+    // ⛔ NẾU LÀ KẾ TOÁN -> KHÔNG BAO GIỜ LÀ TRƯỞNG PHÒNG
     if ($isKeToan) {
+        $isTruongPhong = false;
+        $phongBanInfo = null;
+    }
+
+    // ⛔ NẾU LÀ ADMIN HOẶC HR -> KHÔNG HIỂN THỊ MENU QUẢN LÝ PHÒNG (VÌ HỌ ĐÃ CÓ MENU RIÊNG)
+    if ($isAdmin || $isHR) {
         $isTruongPhong = false;
         $phongBanInfo = null;
     }
@@ -71,14 +77,14 @@
         $isTruongPhong = false;
     }
 
-    $isAdminOrHR = $isAdmin || $isHR || $isTruongPhong;
+    $isAdminOrHR = $isAdmin || $isHR;
 
     // ============================================================
     // ⭐ KIỂM TRA PERMISSION
     // ============================================================
     $canViewDashboardAdmin = $user->hasPermission('dashboard.admin');
     $canViewDashboardEmployee = $user->hasPermission('dashboard.employee');
-    $canViewProfile = $user->hasPermission('profile.view') || $user->hasPermission('hoso.personal');
+    $canViewProfile = $user->hasPermission('profile.view') || $user->hasPermission('hoso.personal') || $isHR;
     $canCheckin = $user->hasPermission('attendance.checkin');
     $canCheckout = $user->hasPermission('attendance.checkout');
     $canViewAttendanceHistory = $user->hasPermission('attendance.history');
@@ -159,7 +165,7 @@
 <aside id="sidebar" class="sidebar">
     <!-- Logo -->
     <div class="flex items-center justify-between px-4 py-4 border-b dark:border-gray-700">
-        <a href="{{ $isSuperAdmin ? route('admin.dashboard') : ($showAdminMenus ? route('admin.dashboard') : route('employee.dashboard')) }}"
+        <a href="{{ $isSuperAdmin ? route('admin.dashboard') : ($isHR ? route('employee.dashboard') : ($showAdminMenus ? route('admin.dashboard') : route('employee.dashboard'))) }}"
             class="flex items-center space-x-2 logo-container">
             <div
                 class="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -203,7 +209,7 @@
             {{-- ========================================================== --}}
             @if ($canViewDashboardAdmin || $canViewDashboardEmployee)
                 <li>
-                    <a href="{{ $isAdminOrHR ? route('admin.dashboard') : route('employee.dashboard') }}"
+                    <a href="{{ $isAdmin ? route('admin.dashboard') : route('employee.dashboard') }}"
                         class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'admin.dashboard' || $currentRoute == 'employee.dashboard' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                         <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -212,7 +218,7 @@
                                     d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                             </svg>
                         </span>
-                        <span class="font-medium menu-text">{{ $isAdminOrHR ? 'Tổng quan' : 'Thống kê cá nhân' }}</span>
+                        <span class="font-medium menu-text">{{ $isAdmin ? 'Tổng quan' : 'Thống kê cá nhân' }}</span>
                     </a>
                 </li>
             @endif
@@ -1043,7 +1049,8 @@
                         <details class="menu-details"
                             {{ str_starts_with($currentRoute, 'admin.khen-thuong-ky-luat.') ? 'open' : '' }}>
                             <summary
-                                class="flex items-center w-full px-3 py-2.5 rounded-lg transition-colors cursor-pointer {{ str_starts_with($currentRoute, 'admin.khen-thuong-ky-luat.') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                                class="flex items-center w-full px-3 py-2.5 rounded-lg transition-colors cursor-pointer 
+                    {{ str_starts_with($currentRoute, 'admin.khen-thuong-ky-luat.') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                                 <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                         stroke="currentColor" stroke-width="1.5">
@@ -1053,8 +1060,9 @@
                                             d="M12 9.75l.9 1.83 2.02.29-1.46 1.42.34 2.01L12 14.36l-1.8.94.34-2.01-1.46-1.42 2.02-.29L12 9.75z" />
                                     </svg>
                                 </span>
-                                <span class="flex-1 text-left font-medium menu-text">Khen thưởng / Kỷ luật</span>
-                                <svg class="w-4 h-4 transition-transform duration-200 arrow-icon flex-shrink-0 {{ str_starts_with($currentRoute, 'admin.khen-thuong-ky-luat.') ? 'rotate-180' : '' }}"
+                                <span class="flex-1 text-left font-medium menu-text">Khen thưởng kỷ luật</span>
+                                {{-- CHỈ CẦN THÊM SVG NÀY LÀ MŨI TÊN SẼ TỰ XOAY KHI MỞ/ĐÓNG BẰNG CSS --}}
+                                <svg class="w-4 h-4 transition-transform duration-200 arrow-icon flex-shrink-0"
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7" />

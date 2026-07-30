@@ -8,293 +8,219 @@
         $isKhenThuong = $ktkl->loai === 'khen_thuong';
 
         $badge = $isKhenThuong
-            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300'
-            : 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300';
+            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
 
         $label = $isKhenThuong ? 'Khen thưởng' : 'Kỷ luật';
 
         $avatar = $hoSo?->anh_dai_dien;
     @endphp
 
-    <div class="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div class="p-6 max-w-7xl mx-auto space-y-6">
 
-        {{-- HERO --}}
-        <div
-            class="relative overflow-hidden
-            bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100
-            dark:from-slate-950 dark:via-slate-900 dark:to-slate-900">
-
-            <div class="absolute inset-0 opacity-20">
-                <div class="absolute -top-20 -left-20 w-72 h-72 bg-slate-300 rounded-full blur-3xl"></div>
-                <div class="absolute -bottom-20 -right-20 w-72 h-72 bg-slate-400 rounded-full blur-3xl"></div>
-            </div>
-
-            <div class="relative px-10 py-10">
-
-                <div class="max-w-[1600px] mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-
-                    {{-- LEFT --}}
-                    <div class="flex items-center gap-5">
-
-                        {{-- AVATAR --}}
-                        <div class="flex items-center gap-4">
-                            @if (!empty($avatar))
-                                <img src="{{ asset('storage/' . $avatar) }}"
-                                    class="w-16 h-16 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
-                                    alt="avatar">
-                            @else
-                                <div
-                                    class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600
-                                            flex items-center justify-center text-white font-bold text-xl">
-                                    {{ strtoupper(substr($hoSo?->ho ?? 'U', 0, 1) . substr($hoSo?->ten ?? 'N', 0, 1)) }}
-                                </div>
-                            @endif
-                        </div>
-
-                        {{-- INFO --}}
-                        <div>
-                            <div class="flex items-center gap-3">
-                                <h1 class="text-xl md:text-2xl font-semibold text-slate-800 dark:text-white">
-                                    {{ $ktkl->ten }}
-                                </h1>
-
-                                <span class="px-2.5 py-1 text-xs rounded-full {{ $badge }}">
-                                    {{ $label }}
-                                </span>
+        {{-- HEADER --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    {{-- Avatar --}}
+                    <div class="flex-shrink-0">
+                        @if (!empty($avatar))
+                            <img src="{{ asset('storage/' . $avatar) }}"
+                                class="w-12 h-12 rounded-full object-cover border border-gray-200 dark:border-gray-700"
+                                alt="avatar">
+                        @else
+                            <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-lg">
+                                {{ strtoupper(substr($hoSo?->ho ?? 'U', 0, 1) . substr($hoSo?->ten ?? 'N', 0, 1)) }}
                             </div>
-
-                            <div class="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                                {{ $hoSo?->ho_ten ?? ($user?->ho . ' ' . $user?->ten ?? '---') }}
-                                <span class="text-slate-400">•</span>
-                                {{ $hoSo?->ma_nhan_vien ?? '---' }}
-                            </div>
-                        </div>
-
+                        @endif
                     </div>
 
-                    {{-- RIGHT --}}
-                    <div class="flex items-center gap-3">
-
-                        <a href="{{ url()->previous() }}"
-                            class="px-4 py-2 rounded-2xl bg-white dark:bg-slate-900
-                                  hover:bg-slate-100 dark:hover:bg-slate-800
-                                  border border-slate-200 dark:border-slate-800
-                                  text-slate-700 dark:text-white text-sm transition">
-                            ← Quay lại
-                        </a>
-
-                        <div class="text-right">
-                            <div class="text-xs text-slate-500 dark:text-slate-400">Ngày quyết định</div>
-                            <div class="text-slate-800 dark:text-white font-medium">
-                                {{ \Carbon\Carbon::parse($ktkl->ngay)->format('d/m/Y') }}
-                            </div>
+                    <div>
+                        <div class="flex items-center gap-3 flex-wrap">
+                            <h1 class="text-xl font-bold text-gray-900 dark:text-white">
+                                {{ $ktkl->ten }}
+                            </h1>
+                            <span class="px-2.5 py-0.5 text-xs rounded-full {{ $badge }}">
+                                {{ $label }}
+                            </span>
                         </div>
-
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                            {{ $hoSo?->ho_ten ?? ($user?->ho . ' ' . $user?->ten ?? '---') }}
+                            <span class="text-gray-400 mx-1">•</span>
+                            {{ $hoSo?->ma_nhan_vien ?? '---' }}
+                        </p>
                     </div>
+                </div>
 
+                <div class="flex items-center gap-3">
+                    <a href="{{ url()->previous() }}"
+                        class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm transition gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        Quay lại
+                    </a>
+                    <div class="text-right">
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Ngày quyết định</div>
+                        <div class="text-sm font-medium text-gray-800 dark:text-white">
+                            {{ \Carbon\Carbon::parse($ktkl->ngay)->format('d/m/Y') }}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         {{-- BODY --}}
-        <div class="max-w-[95%] xl:max-w-[1600px] mx-auto px-10 py-12 grid grid-cols-1 xl:grid-cols-12 gap-10">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
 
-            {{-- LEFT --}}
-            <div class="xl:col-span-8 space-y-10">
-
-                {{-- INFO --}}
-                <div
-                    class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
-                    <h2 class="text-base font-semibold text-slate-800 dark:text-white mb-6">
-                        Thông tin nhân sự
-                    </h2>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-
-                        <div>
-                            <div class="text-slate-500 text-xs">Họ tên</div>
-                            <div class="font-semibold text-slate-800 dark:text-white">
-                                {{ $hoSo?->ho_ten ?? ($user?->ho . ' ' . $user?->ten ?? '---') }}
-                            </div>
+            {{-- Thông tin nhân sự --}}
+            <div class="mb-8">
+                <h2 class="text-base font-semibold text-gray-800 dark:text-white mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
+                    Thông tin nhân sự
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    <div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Họ tên</div>
+                        <div class="font-medium text-gray-800 dark:text-white">
+                            {{ $hoSo?->ho_ten ?? ($user?->ho . ' ' . $user?->ten ?? '---') }}
                         </div>
-
-                        <div>
-                            <div class="text-slate-500 text-xs">Mã nhân viên</div>
-                            <div class="font-semibold text-slate-800 dark:text-white">
-                                {{ $hoSo?->ma_nhan_vien ?? '---' }}
-                            </div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Mã nhân viên</div>
+                        <div class="font-medium text-gray-800 dark:text-white">
+                            {{ $hoSo?->ma_nhan_vien ?? '---' }}
                         </div>
-
-                        <div>
-                            <div class="text-slate-500 text-xs">Phòng ban</div>
-                            <div class="font-semibold text-slate-800 dark:text-white">
-                                {{ $user?->phongBan?->ten_phong_ban ?? '---' }}
-                            </div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Phòng ban</div>
+                        <div class="font-medium text-gray-800 dark:text-white">
+                            {{ $user?->phongBan?->ten_phong_ban ?? '---' }}
                         </div>
-
-                        <div>
-                            <div class="text-slate-500 text-xs">Chức vụ</div>
-                            <div class="font-semibold text-slate-800 dark:text-white">
-                                {{ $user?->chucVu?->ten_chuc_vu ?? '---' }}
-                            </div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Chức vụ</div>
+                        <div class="font-medium text-gray-800 dark:text-white">
+                            {{ $user?->chucVu?->ten_chuc_vu ?? '---' }}
                         </div>
-
                     </div>
                 </div>
-
-                {{-- DECISION --}}
-                <div
-                    class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
-
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-base font-semibold text-slate-800 dark:text-white">
-                            Thông tin quyết định
-                        </h2>
-
-                        <span class="px-3 py-1 text-xs rounded-full {{ $badge }}">
-                            {{ $label }}
-                        </span>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-
-                        <div>
-                            <div class="text-slate-500 text-xs">Số quyết định</div>
-                            <div class="font-semibold text-slate-800 dark:text-white">
-                                {{ $ktkl->quyet_dinh_so ?? '---' }}
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="text-slate-500 text-xs">Hình thức</div>
-                            <div class="font-semibold text-slate-800 dark:text-white">
-                                {{ $ktkl->hinh_thuc ?? '---' }}
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="text-slate-500 text-xs">Số tiền</div>
-                            <div class="font-semibold text-slate-800 dark:text-white">
-                                {{ number_format($ktkl->so_tien ?? 0, 0, ',', '.') }} đ
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="text-slate-500 text-xs">
-                                {{ $isKhenThuong ? 'Mức độ khen thưởng' : 'Mức độ kỷ luật' }}
-                            </div>
-
-                            <div class="font-semibold text-slate-800 dark:text-white">
-                                {{ $ktkl->muc_do_text ?? '---' }}
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="text-slate-500 text-xs">Người ký</div>
-                            <div class="font-semibold text-slate-800 dark:text-white">
-                                {{ $ktkl->nguoiKy?->ho_ten ?? ($ktkl->nguoiKy?->ten_dang_nhap ?? '---') }}
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                {{-- FILES --}}
-                @if ($isKhenThuong)
-                    <div
-                        class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
-
-                        <h2 class="text-base font-semibold text-slate-800 dark:text-white mb-5">
-                            Tài liệu khen thưởng
-                        </h2>
-
-                        <div class="space-y-6 text-sm">
-
-                            {{-- BẰNG CHỨNG --}}
-                            <div>
-                                <div class="text-slate-500 text-xs mb-1">Bằng chứng</div>
-
-                                @if (!empty($ktkl->bang_chung))
-                                    <a href="{{ Storage::url($ktkl->bang_chung) }}" target="_blank"
-                                        class="text-blue-500 hover:underline">
-                                        Xem bằng chứng
-                                    </a>
-                                @else
-                                    <span class="text-slate-400">Không có</span>
-                                @endif
-                            </div>
-
-                            {{-- QUYẾT ĐỊNH FILE --}}
-                            <div>
-                                <div class="text-slate-500 text-xs mb-1">Quyết định (file)</div>
-
-                                @if (!empty($ktkl->quyet_dinh_file))
-                                    <a href="{{ Storage::url($ktkl->quyet_dinh_file) }}" target="_blank"
-                                        class="text-blue-500 hover:underline">
-                                        Xem quyết định
-                                    </a>
-                                @else
-                                    <span class="text-slate-400">Không có</span>
-                                @endif
-                            </div>
-
-                        </div>
-                    </div>
-                @endif
-
-                {{-- CONTENT --}}
-                <div
-                    class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
-                    <h2 class="text-base font-semibold text-slate-800 dark:text-white mb-5">
-                        Nội dung
-                    </h2>
-
-                    <div class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                        {!! nl2br(e($ktkl->noi_dung)) !!}
-                    </div>
-                </div>
-
             </div>
 
-            {{-- RIGHT --}}
-            <div class="xl:col-span-4 space-y-10">
-
-                {{-- TIMELINE --}}
-                <div
-                    class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
-
-                    <h2 class="text-base font-semibold text-slate-800 dark:text-white mb-6">
-                        Timeline
+            {{-- Thông tin quyết định --}}
+            <div class="mb-8">
+                <div class="flex items-center justify-between mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
+                    <h2 class="text-base font-semibold text-gray-800 dark:text-white">
+                        Thông tin quyết định
                     </h2>
-
-                    <div class="space-y-4 text-sm">
-
-                        <div>
-                            <div class="text-xs text-slate-500">Ngày quyết định</div>
-                            <div class="font-medium text-slate-800 dark:text-white">
-                                {{ \Carbon\Carbon::parse($ktkl->ngay)->format('d/m/Y') }}
-                            </div>
+                    <span class="px-2.5 py-0.5 text-xs rounded-full {{ $badge }}">
+                        {{ $label }}
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    <div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Số quyết định</div>
+                        <div class="font-medium text-gray-800 dark:text-white">
+                            {{ $ktkl->quyet_dinh_so ?? '---' }}
                         </div>
-
-                        <div>
-                            <div class="text-xs text-slate-500">Tạo</div>
-                            <div class="font-medium text-slate-800 dark:text-white">
-                                {{ $ktkl->created_at?->format('d/m/Y H:i') }}
-                            </div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Hình thức</div>
+                        <div class="font-medium text-gray-800 dark:text-white">
+                            {{ $ktkl->hinh_thuc ?? '---' }}
                         </div>
-
-                        <div>
-                            <div class="text-xs text-slate-500">Cập nhật</div>
-                            <div class="font-medium text-slate-800 dark:text-white">
-                                {{ $ktkl->updated_at?->format('d/m/Y H:i') }}
-                            </div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Số tiền</div>
+                        <div class="font-medium text-gray-800 dark:text-white">
+                            {{ number_format($ktkl->so_tien ?? 0, 0, ',', '.') }} đ
                         </div>
-
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                            {{ $isKhenThuong ? 'Mức độ khen thưởng' : 'Mức độ kỷ luật' }}
+                        </div>
+                        <div class="font-medium text-gray-800 dark:text-white">
+                            {{ $ktkl->muc_do_text ?? '---' }}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Người ký</div>
+                        <div class="font-medium text-gray-800 dark:text-white">
+                            {{ $ktkl->nguoiKy?->ho_ten ?? ($ktkl->nguoiKy?->ten_dang_nhap ?? '---') }}
+                        </div>
                     </div>
                 </div>
+            </div>
 
+            {{-- Tài liệu khen thưởng --}}
+            @if ($isKhenThuong)
+            <div class="mb-8">
+                <h2 class="text-base font-semibold text-gray-800 dark:text-white mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
+                    Tài liệu khen thưởng
+                </h2>
+                <div class="space-y-4 text-sm">
+                    <div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Bằng chứng</div>
+                        @if (!empty($ktkl->bang_chung))
+                            <a href="{{ Storage::url($ktkl->bang_chung) }}" target="_blank" class="text-blue-600 hover:underline">
+                                Xem bằng chứng
+                            </a>
+                        @else
+                            <span class="text-gray-400">Không có</span>
+                        @endif
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Quyết định (file)</div>
+                        @if (!empty($ktkl->quyet_dinh_file))
+                            <a href="{{ Storage::url($ktkl->quyet_dinh_file) }}" target="_blank" class="text-blue-600 hover:underline">
+                                Xem quyết định
+                            </a>
+                        @else
+                            <span class="text-gray-400">Không có</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            {{-- Nội dung --}}
+            <div>
+                <h2 class="text-base font-semibold text-gray-800 dark:text-white mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
+                    Nội dung
+                </h2>
+                <div class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50">
+                    {!! nl2br(e($ktkl->noi_dung)) !!}
+                </div>
             </div>
 
         </div>
+
+        {{-- TIMELINE --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-base font-semibold text-gray-800 dark:text-white mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
+                Timeline
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                <div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">Ngày quyết định</div>
+                    <div class="font-medium text-gray-800 dark:text-white">
+                        {{ \Carbon\Carbon::parse($ktkl->ngay)->format('d/m/Y') }}
+                    </div>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">Tạo</div>
+                    <div class="font-medium text-gray-800 dark:text-white">
+                        {{ $ktkl->created_at?->format('d/m/Y H:i') }}
+                    </div>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">Cập nhật</div>
+                    <div class="font-medium text-gray-800 dark:text-white">
+                        {{ $ktkl->updated_at?->format('d/m/Y H:i') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 @endsection
