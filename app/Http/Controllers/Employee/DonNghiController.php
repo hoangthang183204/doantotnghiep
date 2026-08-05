@@ -52,6 +52,7 @@ class DonNghiController extends Controller
               ->where('ten', 'not like', '%không lương%');
         })
         ->sum('so_ngay_nghi');
+    // $soNgayDaNghi = $soDuPhep->phep_da_dung;
 
     $soDuConLai = max(0, $tongPhepDuocHuong - $soNgayDaNghi);
 
@@ -281,7 +282,14 @@ public function store(Request $request)
         $donNghi = DonXinNghi::where('nguoi_dung_id', $user->id)
             ->where('trang_thai', 'cho_duyet')
             ->findOrFail($id);
-
+    
+        // 1. Kiểm tra số ngày thực tế dựa trên khoảng ngày chọn (loại trừ T7, CN)
+        $soNgayThucTe = $this->tinhSoNgayNghiThucTe($request->ngay_bat_dau, $request->ngay_ket_thuc);
+        if ($soNgayThucTe == 0) {
+            return back()->withInput()->withErrors(['ngay_bat_dau' => 'Khoảng thời gian chọn chỉ gồm ngày nghỉ tuần (Thứ 7, Chủ Nhật)!']);
+        }
+    
+        // 2. Validate dữ liệu cơ bản
         $request->validate([
             'loai_nghi_id' => 'required|exists:loai_nghi_phep,id',
             'ngay_bat_dau' => 'required|date|after_or_equal:today',
@@ -289,8 +297,70 @@ public function store(Request $request)
             'so_ngay_nghi' => 'required|numeric|min:0.5',
             'ly_do' => 'required|string|min:10',
             'ghi_chu' => 'nullable|string',
+        ], [
+            'so_ngay_nghi.min' => 'Số ngày nghỉ tối thiểu phải từ 0.5 ngày.',
+            'ly_do.min' => 'Lý do xin nghỉ phải nhập tối thiểu 10 ký tự.',
         ]);
-
+    
+        $loaiNghi = LoaiNghiPhep::find($request->loai_nghi_id);
+        $soDu = $this->getSoDuNghiPhep($user->id);
+        $tenLoaiCheck = mb_strtolower($loaiNghi->ten, 'UTF-8');
+        $namHienTai = Carbon::now()->year;
+    
+        // 3. Kiểm tra giới hạn quỹ phép năm & loại nghỉ
+        if (str_contains($tenLoaiCheck, 'thai sản')) {
+            if ($request->so_ngay_nghi > 5) {
+                return back()->withInput()->withErrors(['so_ngay_nghi' => 'Đơn xin nghỉ thai sản ngắn hạn tối đa là 5 ngày/đơn!']);
+            }
+            $daNghiThaiSan = DonXinNghi::where('nguoi_dung_id', $user->id)
+                ->where('id', '!=', $id) // Bỏ qua đơn hiện tại
+                ->where('loai_nghi_phep_id', $request->loai_nghi_id)
+                ->where('trang_thai', 'da_duyet')
+                ->whereYear('ngay_bat_dau', $namHienTai)
+                ->sum('so_ngay_nghi');
+    
+            if (($daNghiThaiSan + $request->so_ngay_nghi) > 5) {
+                return back()->withInput()->withErrors(['so_ngay_nghi' => 'Tổng số ngày nghỉ thai sản vượt quá giới hạn 5 ngày/năm!']);
+            }
+        } elseif (str_contains($tenLoaiCheck, 'không lương')) {
+            if ($request->so_ngay_nghi > 5) {
+                return back()->withInput()->withErrors(['so_ngay_nghi' => 'Đơn xin nghỉ không lương tối đa là 5 ngày/đơn!']);
+            }
+            $daNghiKhongLuong = DonXinNghi::where('nguoi_dung_id', $user->id)
+                ->where('id', '!=', $id)
+                ->where('loai_nghi_phep_id', $request->loai_nghi_id)
+                ->where('trang_thai', 'da_duyet')
+                ->whereYear('ngay_bat_dau', $namHienTai)
+                ->sum('so_ngay_nghi');
+    
+            if (($daNghiKhongLuong + $request->so_ngay_nghi) > 10) {
+                return back()->withInput()->withErrors(['so_ngay_nghi' => 'Tổng số ngày nghỉ không lương vượt quá giới hạn 10 ngày/năm!']);
+            }
+        } else {
+            // Kiểm tra trừ trực tiếp vào quỹ phép năm
+            if ($request->so_ngay_nghi > $soDu['so_du_con_lai']) {
+                return back()->withInput()->withErrors(['so_ngay_nghi' => 'Số ngày nghỉ vượt quá số dư nghỉ phép năm hiện tại (' . $soDu['so_du_con_lai'] . ' ngày)']);
+            }
+            if (str_contains($tenLoaiCheck, 'ốm') && $request->so_ngay_nghi > 3) {
+                return back()->withInput()->withErrors(['so_ngay_nghi' => 'Nghỉ ốm thông thường (Có lương) tối đa không quá 3 ngày/đơn!']);
+            }
+        }
+    
+        // 4. Kiểm tra đơn trùng lặp (ngoại trừ chính đơn này)
+        $exists = DonXinNghi::where('nguoi_dung_id', $user->id)
+            ->where('id', '!=', $id)
+            ->where('trang_thai', 'cho_duyet')
+            ->where(function ($q) use ($request) {
+                $q->whereBetween('ngay_bat_dau', [$request->ngay_bat_dau, $request->ngay_ket_thuc])
+                    ->orWhereBetween('ngay_ket_thuc', [$request->ngay_bat_dau, $request->ngay_ket_thuc]);
+            })
+            ->exists();
+    
+        if ($exists) {
+            return back()->withInput()->withErrors(['ngay_bat_dau' => 'Bạn đã có đơn nghỉ khác trùng khoảng thời gian này đang chờ duyệt!']);
+        }
+    
+        // 5. Cập nhật vào DB
         DB::beginTransaction();
         try {
             $donNghi->update([
@@ -301,15 +371,15 @@ public function store(Request $request)
                 'ly_do' => $request->ly_do,
                 'ghi_chu' => $request->ghi_chu,
             ]);
-
+    
             DB::commit();
-
+    
             return redirect()->route('employee.don-nghi.index')
-                ->with('success', '✅ Đã cập nhật đơn xin nghỉ phép!');
+                ->with('success', '✅ Đã cập nhật đơn xin nghỉ phép thành công!');
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Don nghi update error: ' . $e->getMessage());
-            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
         }
     }
 
