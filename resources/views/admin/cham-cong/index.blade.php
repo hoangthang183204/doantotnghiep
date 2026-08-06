@@ -263,27 +263,51 @@
                                 <td class="px-4 py-4 font-semibold text-blue-600">{{ number_format($cc->so_cong ?? 0, 2) }}</td>
                                 <td class="px-4 py-4">
                                     @php
-                                        $statusColors = [
-                                            'dung_gio' => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-                                            'di_muon' => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
-                                            've_som' => 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-                                            'den_som' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-                                            'vang_mat' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-                                            'khong_cham_cong' => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400',
-                                            'nghi_phep' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
-                                        ];
-                                        $statusTexts = [
-                                            'dung_gio' => '✅ Đúng giờ',
-                                            'di_muon' => '⚠️ Đi muộn',
-                                            've_som' => '🔻 Về sớm',
-                                            'den_som' => '📈 Đến sớm',
-                                            'vang_mat' => '❌ Vắng mặt',
-                                            'khong_cham_cong' => '⏳ Chưa chấm công',
-                                            'nghi_phep' => '📋 Nghỉ phép',
-                                        ];
+                                        $soCong = $cc->so_cong ?? 0;
+                                        
+                                        // 🟢 LOGIC MỚI: Ưu tiên kiểm tra giờ vào
+                                        if ($cc->gio_vao && !$cc->gio_ra) {
+                                            // Đã check-in, chưa check-out
+                                            $mau = 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+                                            $text = '⏳ Đang làm';
+                                        } elseif ($cc->gio_vao && $cc->gio_ra && $soCong > 0) {
+                                            // Đã check-in, check-out và có công
+                                            $mau = 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300';
+                                            $text = '✅ Đúng giờ';
+
+                                            if ($cc->trang_thai == 'di_muon') {
+                                                $mau = 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300';
+                                                $text = '⚠️ Đi muộn';
+                                            } elseif ($cc->trang_thai == 've_som') {
+                                                $mau = 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300';
+                                                $text = '🔻 Về sớm';
+                                            }
+                                        } elseif ($cc->gio_vao && $cc->gio_ra && $soCong == 0) {
+                                            // Đã check-in, check-out nhưng 0 công
+                                            $mau = 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
+                                            $text = '❌ 0 công';
+                                        } else {
+                                            // Chưa check-in
+                                            $mau = 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400';
+                                            $text = '⏸️ Chưa chấm công';
+
+                                            if ($cc->trang_thai == 'di_muon') {
+                                                $mau = 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300';
+                                                $text = '⚠️ Đi muộn';
+                                            } elseif ($cc->trang_thai == 've_som') {
+                                                $mau = 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300';
+                                                $text = '🔻 Về sớm';
+                                            } elseif ($cc->trang_thai == 'vang_mat') {
+                                                $mau = 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
+                                                $text = '❌ Vắng mặt';
+                                            } elseif ($cc->trang_thai == 'nghi_phep') {
+                                                $mau = 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300';
+                                                $text = '📋 Nghỉ phép';
+                                            }
+                                        }
                                     @endphp
-                                    <span class="px-2 py-1 rounded text-xs {{ $statusColors[$cc->trang_thai] ?? 'bg-gray-100 text-gray-700' }}">
-                                        {{ $statusTexts[$cc->trang_thai] ?? $cc->trang_thai }}
+                                    <span class="px-2 py-1 rounded text-xs {{ $mau }}">
+                                        {{ $text }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-4">

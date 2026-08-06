@@ -871,4 +871,14 @@ class ChamCong extends Model
             'updated_at' => $this->updated_at?->format('Y-m-d H:i:s'),
         ];
     }
+
+    public function faceRecords()
+    {
+        return $this->hasMany(ChamCongFace::class, 'cham_cong_id');
+    }
+
+    public function faceRecord()
+    {
+        return $this->hasOne(ChamCongFace::class, 'cham_cong_id');
+    }
 }

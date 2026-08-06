@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="min-h-screen bg-gray-50 dark:bg-slate-900 py-8 px-6">
-    <div class="max-w-4xl mx-auto space-y-8">
+    <div class="max-w-7xl mx-auto space-y-8">
 
         {{-- Header --}}
         <div class="flex items-center justify-between">

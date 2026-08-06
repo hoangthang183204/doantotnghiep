@@ -102,9 +102,6 @@ Sai sót
 </th>
 
 
-<th class="px-5 py-4 text-left text-xs uppercase">
-Lý do
-</th>
 
 
 <th class="px-5 py-4 text-left text-xs uppercase">
@@ -262,13 +259,6 @@ Tất cả
 
 
 
-<td class="px-5 py-4 max-w-xs">
-
-<p class="truncate">
-{{ $yc->ly_do }}
-</p>
-
-</td>
 
 
 

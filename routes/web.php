@@ -386,6 +386,8 @@ Route::prefix('admin')
         // ========== LOẠI NGHỈ PHÉP - CHỈ HR VÀ ADMIN ==========
         Route::resource('loai-nghi-phep', LoaiNghiController::class)->middleware(['CheckPermission:leave_type.index']);
 
+
+
         // ========== KHEN THƯỞNG VÀ KỶ LUẬT - CHỈ HR VÀ ADMIN ==========
         Route::prefix('khen-thuong-ky-luat')
             ->name('khen-thuong-ky-luat.')

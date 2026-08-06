@@ -12,15 +12,12 @@
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 
             <div>
-
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
                     Quản lý chứng chỉ nhân viên
                 </h1>
-
                 <p class="text-gray-500 dark:text-gray-400 mt-1">
                     Danh sách các chứng chỉ được cấp sau quá trình đào tạo.
                 </p>
-
             </div>
 
         </div>
@@ -31,7 +28,6 @@
             <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
 
                 <div class="md:col-span-4">
-
                     <input
                         type="text"
                         name="search"
@@ -42,26 +38,15 @@
                         text-gray-900 dark:text-white
                         px-4 py-2
                         focus:ring-2 focus:ring-blue-500">
-
                 </div>
 
                 <div class="flex gap-2">
-
-                    <button
-                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2">
-
+                    <button class="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2">
                         Tìm kiếm
-
                     </button>
-
-                    <a
-                        href="{{ route('admin.chung-chi.index') }}"
-                        class="flex-1 text-center bg-gray-500 hover:bg-gray-600 text-white rounded-lg px-4 py-2">
-
+                    <a href="{{ route('admin.chung-chi.index') }}" class="flex-1 text-center bg-gray-500 hover:bg-gray-600 text-white rounded-lg px-4 py-2">
                         Làm mới
-
                     </a>
-
                 </div>
 
             </div>
@@ -80,23 +65,14 @@
                 <thead class="bg-gray-50 dark:bg-gray-700">
 
                 <tr>
-
                     <th class="px-4 py-3 text-center text-gray-800 dark:text-gray-200">#</th>
-
                     <th class="px-4 py-3 text-left text-gray-800 dark:text-gray-200">Mã NV</th>
-
                     <th class="px-4 py-3 text-left text-gray-800 dark:text-gray-200">Nhân viên</th>
-
                     <th class="px-4 py-3 text-left text-gray-800 dark:text-gray-200">Chứng chỉ</th>
-
-                    <th class="px-4 py-3 text-left text-gray-800 dark:text-gray-200">Đơn vị cấp</th>
-
+                    {{-- <th class="px-4 py-3 text-left text-gray-800 dark:text-gray-200">Đơn vị cấp</th> --}}
                     <th class="px-4 py-3 text-center text-gray-800 dark:text-gray-200">Năm cấp</th>
-
                     <th class="px-4 py-3 text-center text-gray-800 dark:text-gray-200">Trạng thái</th>
-
                     <th class="px-4 py-3 text-center text-gray-800 dark:text-gray-200">Thao tác</th>
-
                 </tr>
 
                 </thead>
@@ -108,88 +84,57 @@
                     <tr class="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition">
 
                         <td class="px-4 py-3 text-center text-gray-800 dark:text-gray-200">
-
                             {{ $loop->iteration + ($chungChis->currentPage()-1)*$chungChis->perPage() }}
-
                         </td>
 
                         <td class="px-4 py-3 font-medium text-gray-800 dark:text-white">
-
-                            {{ $item->hoSo->ma_nhan_vien }}
-
+                            {{ $item->hoSo->ma_nhan_vien ?? 'N/A' }}
                         </td>
 
                         <td class="px-4 py-3 text-gray-700 dark:text-gray-300">
-
-                            {{ $item->hoSo->ho_ten }}
-
+                            {{ $item->hoSo->ho_ten ?? 'N/A' }}
                         </td>
 
                         <td class="px-4 py-3 text-gray-700 dark:text-gray-300">
-
                             {{ $item->ten_chung_chi }}
-
                         </td>
 
-                        <td class="px-4 py-3 text-gray-700 dark:text-gray-300">
-
+                        {{-- <td class="px-4 py-3 text-gray-700 dark:text-gray-300">
                             {{ $item->to_chuc_cap }}
-
-                        </td>
+                        </td> --}}
 
                         <td class="px-4 py-3 text-center text-gray-700 dark:text-gray-300">
-
                             {{ $item->nam_cap }}
-
                         </td>
 
                         <td class="px-4 py-3 text-center">
-
-                            <span class="px-3 py-1 rounded-full text-sm {{ $item->mau_trang_thai }}">
-
-                                {{ $item->trang_thai_hien_thi }}
-
+                            <span class="px-3 py-1 rounded-full text-sm {{ $item->mau_trang_thai ?? 'bg-gray-100 text-gray-700' }}">
+                                {{ $item->trang_thai_hien_thi ?? 'Chưa xác định' }}
                             </span>
-
                         </td>
 
                         <td class="px-4 py-3">
-
                             <div class="flex justify-center gap-1.5">
 
-                                <a href="{{ route('admin.chung-chi.show',$item->id) }}"
+                                <a href="{{ route('admin.chung-chi.show', $item->id) }}"
                                    class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-blue-100 text-blue-600">
-
                                     <i class="fas fa-eye"></i>
-
                                 </a>
 
-                                <a href="{{ route('admin.chung-chi.edit',$item->id) }}"
+                                <a href="{{ route('admin.chung-chi.edit', $item->id) }}"
                                    class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-yellow-100 text-yellow-600">
-
                                     <i class="fas fa-pen"></i>
-
                                 </a>
 
-                                <form
-                                    action="{{ route('admin.chung-chi.destroy',$item->id) }}"
-                                    method="POST"
-                                    onsubmit="return confirm('Xóa chứng chỉ này?')">
-
+                                <form action="{{ route('admin.chung-chi.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Xóa chứng chỉ này?')">
                                     @csrf
                                     @method('DELETE')
-
-                                    <button
-                                        class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-100 text-red-600">
-
+                                    <button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-100 text-red-600">
                                         <i class="fas fa-trash"></i>
-
                                     </button>
-
                                 </form>
 
                             </div>
-
                         </td>
 
                     </tr>
@@ -197,14 +142,9 @@
                 @empty
 
                     <tr>
-
-                        <td colspan="8"
-                            class="text-center py-10 text-gray-500 dark:text-gray-400">
-
+                        <td colspan="7" class="text-center py-10 text-gray-500 dark:text-gray-400">
                             Chưa có chứng chỉ nào.
-
                         </td>
-
                     </tr>
 
                 @endforelse
@@ -217,10 +157,14 @@
 
     </div>
 
-    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-4">
-
-        {{ $chungChis->links() }}
-
+    {{-- Phân trang --}}
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-4 flex justify-between items-center flex-wrap gap-2">
+        <div class="text-sm text-gray-500 dark:text-gray-400">
+            Hiển thị <b>{{ $chungChis->firstItem() }}</b> - <b>{{ $chungChis->lastItem() }}</b> / <b>{{ $chungChis->total() }}</b> kết quả
+        </div>
+        <div>
+            {{ $chungChis->links() }}
+        </div>
     </div>
 
 </div>
