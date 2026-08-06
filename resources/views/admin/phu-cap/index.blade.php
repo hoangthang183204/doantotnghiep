@@ -7,7 +7,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
-/* Chỉ giữ lại các định dạng cấu trúc khoảng cách, loại bỏ hoàn toàn các thuộc tính màu sắc tĩnh background/color */
 .breadcrumb-wrapper {
     font-size: 13px;
     margin-bottom: 1.25rem;
@@ -16,12 +15,10 @@
     gap: 8px;
 }
 
-/* Giữ hiệu ứng transition mượt mà khi đổi dòng */
 .modern-table tbody tr {
     transition: background-color 0.15s ease;
 }
 
-/* Định dạng cấu trúc nút thao tác dạng icon nhỏ gọn */
 .icon-action-btn {
     width: 32px;
     height: 32px;
@@ -34,7 +31,6 @@
     text-decoration: none !important;
 }
 
-/* Định dạng hộp thoại Toast Alert góc màn hình tự thích ứng */
 .custom-toast-layout {
     position: fixed;
     top: 24px;
@@ -53,11 +49,46 @@
     to { transform: translateX(0); opacity: 1; }
 }
 .toast-leave-active { opacity: 0; transform: translateX(40px); transition: all 0.4s ease; }
+
+/* Badge cho loại phụ cấp */
+.badge-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+.badge-type-co-dinh {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+}
+.badge-type-theo-cap-bac {
+    background-color: #fef3c7;
+    color: #b45309;
+}
+.badge-type-theo-hieu-suat {
+    background-color: #d1fae5;
+    color: #047857;
+}
+.dark .badge-type-co-dinh {
+    background-color: #1e3a5f;
+    color: #60a5fa;
+}
+.dark .badge-type-theo-cap-bac {
+    background-color: #5c3d1a;
+    color: #fbbf24;
+}
+.dark .badge-type-theo-hieu-suat {
+    background-color: #064e3b;
+    color: #34d399;
+}
 </style>
 
 @if(session('success'))
     <div class="custom-toast-layout bg-white dark:bg-slate-800 border-l-4 border-emerald-500 shadow-lg dark:shadow-black/30 text-gray-900 dark:text-white" id="globalToastAlert">
-        <div class="bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-full w-7 h-7 flex items-center justify-center text-sm flex-shrink: 0;">
+        <div class="bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-full w-7 h-7 flex items-center justify-center text-sm flex-shrink-0;">
             <i class="fa-solid fa-check"></i>
         </div>
         <div class="flex-grow">
@@ -110,6 +141,7 @@
                         <th class="text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-slate-300 py-4 px-5">Mã</th>
                         <th class="text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-slate-300 py-4 px-5">Tên phụ cấp</th>
                         <th class="text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-slate-300 py-4 px-5">Loại</th>
+                        <th class="text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-slate-300 py-4 px-5">Cách tính</th>
                         <th class="text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-slate-300 py-4 px-5">Số tiền</th>
                         <th class="text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-slate-300 py-4 px-5">Trạng thái</th>
                         <th class="text-center text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-slate-300 py-4 px-5" style="width: 150px;">Thao tác</th>
@@ -130,8 +162,27 @@
                             {{ $pc->ten }}
                         </td>
 
+                        <td class="py-4 px-5">
+                            @php
+                                $loaiLabels = [
+                                    'co_dinh' => ['label' => 'Cố định', 'class' => 'badge-type-co-dinh', 'icon' => 'fa-solid fa-check-circle'],
+                                    'theo_cap_bac' => ['label' => 'Theo cấp bậc', 'class' => 'badge-type-theo-cap-bac', 'icon' => 'fa-solid fa-layer-group'],
+                                    'theo_hieu_suat' => ['label' => 'Theo hiệu suất', 'class' => 'badge-type-theo-hieu-suat', 'icon' => 'fa-solid fa-chart-line'],
+                                ];
+                                $loaiInfo = $loaiLabels[$pc->loai_phu_cap] ?? ['label' => ucfirst(str_replace('_', ' ', $pc->loai_phu_cap)), 'class' => 'bg-gray-100 text-gray-600', 'icon' => 'fa-solid fa-tag'];
+                            @endphp
+                            <span class="badge-type {{ $loaiInfo['class'] }}">
+                                <i class="{{ $loaiInfo['icon'] }} text-xs"></i>
+                                {{ $loaiInfo['label'] }}
+                            </span>
+                        </td>
+
                         <td class="py-4 px-5 text-gray-600 dark:text-slate-300">
-                            {{ $pc->loai_phu_cap }}
+                            @if($pc->cach_tinh == 'so_tien_co_dinh')
+                                <span class="text-sm">Số tiền cố định</span>
+                            @else
+                                <span class="text-sm">% Lương cơ bản</span>
+                            @endif
                         </td>
 
                         <td class="py-4 px-5 font-bold text-emerald-600 dark:text-emerald-400">
@@ -141,10 +192,12 @@
                         <td class="py-4 px-5">
                             @if($pc->trang_thai)
                                 <span class="inline-block bg-green-100 dark:bg-emerald-950/60 text-green-700 dark:text-emerald-400 px-3 py-1 rounded-full text-xs font-semibold">
+                                    <i class="fa-solid fa-circle text-[6px] mr-1 align-middle"></i>
                                     Hoạt động
                                 </span>
                             @else
                                 <span class="inline-block bg-red-100 dark:bg-rose-950/60 text-red-700 dark:text-rose-400 px-3 py-1 rounded-full text-xs font-semibold">
+                                    <i class="fa-solid fa-circle text-[6px] mr-1 align-middle"></i>
                                     Ngừng hoạt động
                                 </span>
                             @endif
@@ -181,7 +234,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="py-12 text-center text-gray-400 dark:text-slate-500 font-medium">
+                        <td colspan="7" class="py-12 text-center text-gray-400 dark:text-slate-500 font-medium">
                             <i class="fa-regular fa-folder-open block text-3xl mb-2 text-gray-300 dark:text-slate-600"></i>
                             Chưa có dữ liệu phụ cấp nào được tìm thấy
                         </td>

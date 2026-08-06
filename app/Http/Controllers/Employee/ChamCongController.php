@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth; 
 
 class ChamCongController extends Controller
 {
@@ -259,20 +260,17 @@ class ChamCongController extends Controller
                 ], 400);
             }
 
-            // Tính trạng thái (giữ nguyên phần này)
+            // 🔥 SỬA Ở ĐÂY: XÓA LOGIC "ĐẾN SỚM", MẶC ĐỊNH LÀ ĐÚNG GIỜ
             $phutDiMuon = 0;
             $trangThai = ChamCong::TRANG_THAI_DUNG_GIO;
 
             $gioBatDau = Carbon::parse($ca->gio_bat_dau);
-            if ($now->lt($gioBatDau)) {
-                $trangThai = ChamCong::TRANG_THAI_DEN_SOM;
+            // Đã xóa if ($now->lt($gioBatDau)) gán den_som ở đây
+            $phutDiMuon = $gioBatDau->diffInMinutes($now);
+            if ($phutDiMuon > ($ca->so_phut_cho_phep_di_tre ?? 15)) {
+                $trangThai = ChamCong::TRANG_THAI_DI_MUON;
             } else {
-                $phutDiMuon = $gioBatDau->diffInMinutes($now);
-                if ($phutDiMuon > ($ca->so_phut_cho_phep_di_tre ?? 15)) {
-                    $trangThai = ChamCong::TRANG_THAI_DI_MUON;
-                } else {
-                    $phutDiMuon = 0;
-                }
+                $phutDiMuon = 0;
             }
 
             // Xác định phương thức (giữ nguyên)
@@ -724,82 +722,62 @@ class ChamCongController extends Controller
      */
     public function history(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
-        $thangLoc = $request->filled('thang') ? (int)$request->thang : Carbon::now('Asia/Ho_Chi_Minh')->month;
-        $namLoc = $request->filled('nam') ? (int)$request->nam : Carbon::now('Asia/Ho_Chi_Minh')->year;
+        // Lấy tháng/năm từ request hoặc mặc định tháng hiện tại
+        $thangLoc = $request->input('thang', Carbon::now('Asia/Ho_Chi_Minh')->month);
+        $namLoc = $request->input('nam', Carbon::now('Asia/Ho_Chi_Minh')->year);
 
-        $query = ChamCong::where('nguoi_dung_id', $user->id)
-            ->with('caLamViec');
-
-        if ($request->filled('thang')) {
-            $query->whereMonth('ngay_cham_cong', $request->thang);
-        }
-        if ($request->filled('nam')) {
-            $query->whereYear('ngay_cham_cong', $request->nam);
-        }
-
-        $lichSu = $query->orderBy('ngay_cham_cong', 'desc')
-            ->orderBy('id', 'desc')
-            ->paginate(20)
-            ->appends($request->query());
-
-        // Lấy tất cả bản ghi trong tháng để thống kê
+        // Lấy tất cả bản ghi chấm công trong tháng (cho lịch)
         $allRecords = ChamCong::where('nguoi_dung_id', $user->id)
             ->whereMonth('ngay_cham_cong', $thangLoc)
             ->whereYear('ngay_cham_cong', $namLoc)
-            ->whereNotNull('gio_vao') // Chỉ tính những ngày có check-in
+            ->with('caLamViec')
+            ->orderBy('ngay_cham_cong', 'asc')
             ->get();
 
-        // Thống kê chi tiết
+        // Lấy dữ liệu phân trang cho bảng (có thể lọc thêm nếu cần)
+        $lichSu = ChamCong::where('nguoi_dung_id', $user->id)
+            ->whereMonth('ngay_cham_cong', $thangLoc)
+            ->whereYear('ngay_cham_cong', $namLoc)
+            ->with('caLamViec')
+            ->orderBy('ngay_cham_cong', 'desc')
+            ->paginate(15);
+
+        // Format dữ liệu
+        foreach ($lichSu as $item) {
+            $item->ngay_cham_cong_format = Carbon::parse($item->ngay_cham_cong)
+                ->setTimezone('Asia/Ho_Chi_Minh')
+                ->format('d/m/Y');
+            $item->gio_vao_format = $item->gio_vao
+                ? Carbon::parse($item->gio_vao)->setTimezone('Asia/Ho_Chi_Minh')->format('H:i')
+                : '--';
+            $item->gio_ra_format = $item->gio_ra
+                ? Carbon::parse($item->gio_ra)->setTimezone('Asia/Ho_Chi_Minh')->format('H:i')
+                : '--';
+            $item->ten_ca = $item->caLamViec ? $item->caLamViec->ten : '--';
+        }
+
+        // ⭐ TÍNH TOÁN THỐNG KÊ
         $thongKe = [
             'tong_ngay' => $allRecords->count(),
-
-            // Đúng giờ (bao gồm đến sớm)
-            'dung_gio' => $allRecords->whereIn('trang_thai', [ChamCong::TRANG_THAI_DUNG_GIO, ChamCong::TRANG_THAI_DEN_SOM])->count(),
-
-            // Đi muộn
-            'di_muon' => $allRecords->where('trang_thai', ChamCong::TRANG_THAI_DI_MUON)->count(),
-
-            // Về sớm
-            've_som' => $allRecords->where('trang_thai', ChamCong::TRANG_THAI_VE_SOM)->count(),
-
-            // FULL CÔNG (>= 1 công)
             'full_cong' => $allRecords->filter(function ($item) {
-                return ($item->so_cong ?? 0) >= 1;
+                return floatval($item->so_cong ?? 0) >= 1;
             })->count(),
-
-            // NỬA CÔNG (0.5 - 0.99)
             'nua_cong' => $allRecords->filter(function ($item) {
-                $soCong = $item->so_cong ?? 0;
+                $soCong = floatval($item->so_cong ?? 0);
                 return $soCong >= 0.5 && $soCong < 1;
             })->count(),
-
-            // ÍT CÔNG (0 < công < 0.5)
-            'it_cong' => $allRecords->filter(function ($item) {
-                $soCong = $item->so_cong ?? 0;
-                return $soCong > 0 && $soCong < 0.5;
-            })->count(),
-
-            // 0 CÔNG (đã check-in nhưng không có công)
-            'khong_cong' => $allRecords->filter(function ($item) {
-                return ($item->so_cong ?? 0) == 0;
-            })->count(),
-
-            'tong_gio_lam' => $allRecords->sum('so_gio_lam') ?? 0,
-            'tong_tang_ca' => $allRecords->sum('gio_tang_ca') ?? 0,
+            'di_muon' => $allRecords->where('trang_thai', 'di_muon')->count(),
+            've_som' => $allRecords->where('trang_thai', 've_som')->count(),
+            'tong_gio_lam' => $allRecords->sum('so_gio_lam'),
+            'tong_tang_ca' => $allRecords->sum('gio_tang_ca'),
         ];
-
-        $thangNamList = ChamCong::where('nguoi_dung_id', $user->id)
-            ->selectRaw('DISTINCT YEAR(ngay_cham_cong) as nam, MONTH(ngay_cham_cong) as thang')
-            ->orderBy('nam', 'desc')
-            ->orderBy('thang', 'desc')
-            ->get();
 
         return view('employee.cham-cong.history', compact(
             'lichSu',
+            'allRecords',
             'thongKe',
-            'thangNamList',
             'thangLoc',
             'namLoc'
         ));

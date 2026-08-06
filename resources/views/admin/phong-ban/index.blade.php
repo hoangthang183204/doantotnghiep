@@ -71,7 +71,7 @@
                             <th class="p-3">TÊN PHÒNG BAN</th>
                             <th class="p-3 text-center">SỐ NV</th>
                             <th class="p-3 text-center">SỐ CV</th>
-                            <th class="p-3">NGÂN SÁCH</th>
+                            {{-- <th class="p-3">NGÂN SÁCH</th> --}}
                             <th class="p-3">TRƯỞNG PHÒNG</th>
                             <th class="p-3">TRẠNG THÁI</th>
                             <th class="p-3 text-center">HÀNH ĐỘNG</th>
@@ -107,9 +107,9 @@
                                     </span>
                                 </td>
 
-                                <td class="p-3">
+                                {{-- <td class="p-3">
                                     {{ number_format($pb->ngan_sach, 0, ',', '.') }} đ
-                                </td>
+                                </td> --}}
 
                                 <td class="p-3">
                                     @if ($pb->truongPhong)

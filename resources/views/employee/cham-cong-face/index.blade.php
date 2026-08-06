@@ -1,7 +1,8 @@
 @extends('layouts.employee')
 
 @section('content')
-    <div class="p-4 max-w-4xl mx-auto">
+    {{-- Thay đổi: bỏ max-w-4xl và thêm padding lớn hơn --}}
+    <div class="p-4 md:p-6 lg:p-8">
         <div
             class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div
@@ -56,9 +57,10 @@
                 @else
                     {{-- 🟢 HIỂN THỊ KHI CÓ KHUÔN MẶT --}}
                     <div>
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            {{-- Camera --}}
-                            <div class="lg:col-span-2">
+                        {{-- Thay đổi: grid từ lg:col-span-2 thành lg:col-span-8 và lg:col-span-4 để rộng hơn --}}
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                            {{-- Camera - chiếm 8/12 cột --}}
+                            <div class="lg:col-span-8">
                                 <div class="relative bg-gray-900 rounded-lg overflow-hidden aspect-video">
                                     <video id="video" class="w-full h-full object-cover" autoplay playsinline></video>
                                     <canvas id="canvas" class="hidden"></canvas>
@@ -140,10 +142,10 @@
                                     </span>
                                 </div>
 
-                                {{-- Controls --}}
+                                {{-- Controls - Bố cục rộng hơn --}}
                                 <div class="mt-3 flex flex-wrap gap-3">
                                     <button id="btnCheckIn"
-                                        class="flex-1 min-w-[100px] px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2"
+                                        class="flex-1 min-w-[120px] px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2"
                                         {{ $checkedIn ? 'disabled' : '' }}>
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -152,7 +154,7 @@
                                         Check-in
                                     </button>
                                     <button id="btnCheckOut"
-                                        class="flex-1 min-w-[100px] px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2"
+                                        class="flex-1 min-w-[120px] px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2"
                                         {{ $checkedOut || !$checkedIn ? 'disabled' : '' }}>
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -161,7 +163,7 @@
                                         Check-out
                                     </button>
                                     <button id="btnCapture"
-                                        class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium flex items-center justify-center gap-2">
+                                        class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium flex items-center justify-center gap-2">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -173,7 +175,7 @@
 
                                     {{-- Nút đơn xin về sớm --}}
                                     <button id="btnTaoDonVeSom"
-                                        class="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition font-medium flex items-center justify-center gap-2 {{ $checkedIn && !$checkedOut ? '' : 'opacity-50 cursor-not-allowed' }}"
+                                        class="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition font-medium flex items-center justify-center gap-2 {{ $checkedIn && !$checkedOut ? '' : 'opacity-50 cursor-not-allowed' }}"
                                         {{ $checkedIn && !$checkedOut ? '' : 'disabled' }}
                                         title="{{ $checkedIn && !$checkedOut ? 'Tạo đơn xin về sớm' : 'Chỉ khả dụng sau khi check-in' }}">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -206,39 +208,10 @@
                                 </div>
                             </div>
 
-                            {{-- Thông tin bên phải --}}
-                            <div class="lg:col-span-1 space-y-4">
+                            {{-- Thông tin bên phải - chiếm 4/12 cột --}}
+                            <div class="lg:col-span-4 space-y-4">
                                 {{-- Hướng dẫn --}}
-                                <div
-                                    class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                                    <h4
-                                        class="font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                                        <span>📋</span> Hướng dẫn
-                                    </h4>
-                                    <ol class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                                        <li class="flex items-start gap-2">
-                                            <span
-                                                class="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-xs font-bold flex-shrink-0">1</span>
-                                            <span>Cho phép truy cập camera</span>
-                                        </li>
-                                        <li class="flex items-start gap-2">
-                                            <span
-                                                class="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-xs font-bold flex-shrink-0">2</span>
-                                            <span>Đưa mặt vào giữa khung hình</span>
-                                        </li>
-                                        <li class="flex items-start gap-2">
-                                            <span
-                                                class="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-xs font-bold flex-shrink-0">3</span>
-                                            <span><strong class="text-green-600 dark:text-green-400">Tự động</strong> nhận
-                                                diện và chấm công</span>
-                                        </li>
-                                        <li class="flex items-start gap-2">
-                                            <span
-                                                class="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-xs font-bold flex-shrink-0">4</span>
-                                            <span>Đợi hệ thống xác thực khuôn mặt (3-5 giây)</span>
-                                        </li>
-                                    </ol>
-                                </div>
+
 
                                 {{-- Thông tin bảo mật --}}
                                 <div
@@ -284,76 +257,157 @@
                             </div>
                         </div>
 
-                        {{-- Lịch sử chấm công --}}
+                        {{-- Lịch sử chấm công 7 ngày gần nhất --}}
                         <div class="mt-6">
-                            <div class="flex items-center justify-between mb-3">
-                                <h4 class="font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                                    <span>📜</span> Lịch sử chấm công khuôn mặt
-                                </h4>
-                                <span
-                                    class="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">10
-                                    bản ghi gần nhất</span>
-                            </div>
                             <div
-                                class="bg-gray-50 dark:bg-gray-700/30 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                                class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                                <div
+                                    class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+                                    <h3 class="font-semibold text-gray-900 dark:text-white">
+                                        <i class="fas fa-history mr-2 text-blue-600 dark:text-blue-400"></i>
+                                        Lịch sử 7 ngày gần nhất
+                                    </h3>
+                                    <a href="{{ route('employee.cham-cong.history') }}"
+                                        class="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                                        Xem tất cả <i class="fas fa-arrow-right ml-1"></i>
+                                    </a>
+                                </div>
                                 <div class="overflow-x-auto">
-                                    <table class="min-w-full text-sm">
-                                        <thead class="bg-gray-100 dark:bg-gray-700">
-                                            <tr class="text-left text-gray-600 dark:text-gray-400">
-                                                <th class="px-4 py-2.5 font-medium">Thời gian</th>
-                                                <th class="px-4 py-2.5 font-medium">Loại</th>
-                                                <th class="px-4 py-2.5 font-medium">Trạng thái</th>
-                                                <th class="px-4 py-2.5 font-medium">Độ tin cậy</th>
+                                    <table class="w-full">
+                                        <thead class="bg-gray-50 dark:bg-gray-700/50">
+                                            <tr>
+                                                <th
+                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+                                                    Ngày</th>
+                                                <th
+                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+                                                    Ca</th>
+                                                <th
+                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+                                                    Check-in</th>
+                                                <th
+                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+                                                    Check-out</th>
+                                                <th
+                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+                                                    Công</th>
+                                                <th
+                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+                                                    Trạng thái</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="historyTable" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                                             @php
-                                                $histories = App\Models\ChamCongFace::where(
-                                                    'nguoi_dung_id',
-                                                    auth()->id(),
-                                                )
-                                                    ->orderBy('created_at', 'desc')
-                                                    ->limit(10)
-                                                    ->get();
+                                                $lichSu7Ngay = App\Models\ChamCong::where('nguoi_dung_id', auth()->id())
+                                                    ->whereBetween('ngay_cham_cong', [
+                                                        \Carbon\Carbon::now()->subDays(7)->startOfDay(),
+                                                        \Carbon\Carbon::now()->endOfDay(),
+                                                    ])
+                                                    ->orderBy('ngay_cham_cong', 'desc')
+                                                    ->get()
+                                                    ->groupBy('ngay_cham_cong')
+                                                    ->map(function ($items) {
+                                                        // Mỗi ngày chỉ lấy 1 bản ghi đầu tiên (check-in)
+                                                        return $items->first();
+                                                    })
+                                                    ->values();
                                             @endphp
-                                            @forelse($histories as $history)
-                                                <tr class="hover:bg-gray-100 dark:hover:bg-gray-600/50 transition">
+
+                                            @forelse($lichSu7Ngay as $item)
+                                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                                    <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                                                        {{ \Carbon\Carbon::parse($item->ngay_cham_cong)->format('d/m/Y') }}
+                                                    </td>
+                                                    <td class="px-6 py-4 text-sm">
+                                                        @php
+                                                            $tenCa = $item->caLamViec ? $item->caLamViec->ten : '--';
+                                                            $mauCa =
+                                                                'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
+                                                            if ($tenCa == 'Sáng') {
+                                                                $mauCa =
+                                                                    'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+                                                            } elseif ($tenCa == 'Chiều') {
+                                                                $mauCa =
+                                                                    'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400';
+                                                            } elseif ($tenCa == 'Hành chính') {
+                                                                $mauCa =
+                                                                    'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+                                                            }
+                                                        @endphp
+                                                        <span class="px-2 py-1 rounded text-xs {{ $mauCa }}">
+                                                            {{ $tenCa }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                                                        {{ $item->gio_vao ? \Carbon\Carbon::parse($item->gio_vao)->format('H:i') : '--' }}
+                                                    </td>
+                                                    <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                                                        {{ $item->gio_ra ? \Carbon\Carbon::parse($item->gio_ra)->format('H:i') : '--' }}
+                                                    </td>
                                                     <td
-                                                        class="px-4 py-2.5 text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                                                        {{ $history->created_at->format('d/m/Y H:i:s') }}</td>
-                                                    <td class="px-4 py-2.5">
-                                                        <span
-                                                            class="px-2 py-1 rounded-full text-xs font-medium {{ $history->loai == 'check_in' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' }}">
-                                                            {{ $history->loai == 'check_in' ? '✅ Check-in' : '🚪 Check-out' }}
-                                                        </span>
+                                                        class="px-6 py-4 text-sm font-medium text-blue-600 dark:text-blue-400">
+                                                        {{ number_format($item->so_cong ?? 0, 2) }}
                                                     </td>
-                                                    <td class="px-4 py-2.5">
+                                                    <td class="px-6 py-4">
+                                                        @php
+                                                            $soCong = $item->so_cong ?? 0;
+
+                                                            // 🟢 LOGIC MỚI: Cứ có giờ vào là Đúng giờ
+                                                            if ($item->gio_vao) {
+                                                                // Mặc định là Đúng giờ (dù chưa check-out hay đã check-out)
+                                                                $mau =
+                                                                    'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300';
+                                                                $icon = 'fas fa-check-circle';
+                                                                $text = '✅ Đúng giờ';
+
+                                                                // Chỉ đổi màu nếu bị Đi muộn hoặc Về sớm ghi đè
+                                                                if ($item->gio_ra && $item->trang_thai == 'di_muon') {
+                                                                    $mau =
+                                                                        'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300';
+                                                                    $icon = 'fas fa-exclamation-triangle';
+                                                                    $text = '⏰ Đi muộn';
+                                                                } elseif (
+                                                                    $item->gio_ra &&
+                                                                    $item->trang_thai == 've_som'
+                                                                ) {
+                                                                    $mau =
+                                                                        'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300';
+                                                                    $icon = 'fas fa-exclamation-triangle';
+                                                                    $text = '🏠 Về sớm';
+                                                                }
+                                                            } else {
+                                                                // Chưa check-in
+                                                                $mau =
+                                                                    'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400';
+                                                                $icon = 'fas fa-minus-circle';
+                                                                $text = '⏸️ Chưa chấm công';
+
+                                                                if ($item->trang_thai == 'nghi_phep') {
+                                                                    $mau =
+                                                                        'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300';
+                                                                    $icon = 'fas fa-calendar-check';
+                                                                    $text = '📋 Nghỉ phép';
+                                                                } elseif ($item->trang_thai == 'vang_mat') {
+                                                                    $mau =
+                                                                        'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
+                                                                    $icon = 'fas fa-times-circle';
+                                                                    $text = '❌ Vắng mặt';
+                                                                }
+                                                            }
+                                                        @endphp
                                                         <span
-                                                            class="px-2 py-1 rounded-full text-xs font-medium {{ $history->trang_thai == 'thanh_cong' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' }}">
-                                                            {{ $history->trang_thai == 'thanh_cong' ? '✅ Thành công' : '❌ Thất bại' }}
+                                                            class="px-2.5 py-1 rounded-full text-xs font-medium {{ $mau }}">
+                                                            <i class="{{ $icon }} mr-1"></i> {{ $text }}
                                                         </span>
-                                                    </td>
-                                                    <td class="px-4 py-2.5 text-gray-700 dark:text-gray-300">
-                                                        @if ($history->trang_thai == 'thanh_cong')
-                                                            <span
-                                                                class="text-green-600 dark:text-green-400 font-medium">{{ round($history->confidence * 100, 2) }}%</span>
-                                                        @else
-                                                            <span
-                                                                class="text-red-500">{{ round($history->confidence * 100, 2) }}%</span>
-                                                        @endif
                                                     </td>
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="4"
-                                                        class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
-                                                        <svg class="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-2"
-                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2"
-                                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                        </svg>
-                                                        Chưa có lịch sử chấm công khuôn mặt
+                                                    <td colspan="6"
+                                                        class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                                                        <i
+                                                            class="fas fa-inbox text-2xl block mb-2 text-gray-300 dark:text-gray-600"></i>
+                                                        Chưa có dữ liệu chấm công trong 7 ngày qua
                                                     </td>
                                                 </tr>
                                             @endforelse
@@ -388,8 +442,7 @@
             <div class="mb-4">
                 <label class="block font-medium mb-2 text-gray-700 dark:text-gray-300">Lý do về sớm</label>
                 <textarea id="ly-do-ve-som-modal" rows="3"
-                    class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
-                    placeholder="Nhập lý do..."></textarea>
+                    class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" placeholder="Nhập lý do..."></textarea>
             </div>
 
             <div class="flex gap-3 justify-end">
@@ -842,7 +895,7 @@
                                     document.getElementById('modal-tao-don-ve-som').classList.add('flex');
                                     const now = new Date();
                                     document.getElementById('gio-ra-du-kien').value = now.toTimeString().slice(0,
-                                    5);
+                                        5);
                                 }
                             );
                             faceDetectStatus.textContent = '⚠️ ' + data.message;

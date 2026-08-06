@@ -336,7 +336,7 @@ class BaoCaoController extends Controller
             ];
         }
 
-        
+
 
         return view('truong-phong.bao-cao.attendance', compact(
             'phongBan',
@@ -353,8 +353,8 @@ class BaoCaoController extends Controller
             'thuBatDau',
             'nhanViens',
             'weeks',
-            
-            
+
+
         ));
     }
 
@@ -588,7 +588,7 @@ class BaoCaoController extends Controller
         return redirect()->back()->with('error', 'Loại báo cáo không hợp lệ.');
     }
     /**
-     * 📊 BÁO CÁO LỊCH CHẤM CÔNG CHI TIẾT CỦA 1 NHÂN VIÊN
+     * 📊 BÁO CÁO LỊCH CHẤM CÔNG CHI TIẾT CỦA 1 NHÂN VIÊN (Đã thêm Phân trang)
      */
     public function attendanceDetail(Request $request)
     {
@@ -627,13 +627,21 @@ class BaoCaoController extends Controller
         $thuBatDau = $ngayDauThang->dayOfWeek; // 0 (CN) -> 6 (T7)
         $thuTrongTuan = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
-        // Lấy dữ liệu chấm công trong tháng của duy nhất nhân viên được chọn
+        // Lấy dữ liệu chấm công trong tháng của duy nhất nhân viên được chọn (CÓ PHÂN TRANG)
+        $danhSachChiTiet = ChamCong::where('nguoi_dung_id', $selectedNhanVien->id)
+            ->with(['caLamViec'])
+            ->whereMonth('ngay_cham_cong', $thang)
+            ->whereYear('ngay_cham_cong', $nam)
+            ->orderBy('ngay_cham_cong', 'asc')
+            ->paginate(15); // 🔴 CHỖ NÀY ĐÃ CHUYỂN THÀNH paginate
+
+        // Gom nhóm theo ngày để phục vụ vẽ lịch (Format lại key cho chuẩn với Blade)
+        // Lấy toàn bộ records (không phân trang) để vẽ lịch
         $chamCongList = ChamCong::where('nguoi_dung_id', $selectedNhanVien->id)
             ->whereMonth('ngay_cham_cong', $thang)
             ->whereYear('ngay_cham_cong', $nam)
             ->get();
 
-        // Gom nhóm theo ngày (format 2 chữ số hoặc số nguyên để dễ dùng bên view)
         $chamCongTrongThang = [
             $selectedNhanVien->id => $chamCongList->keyBy(function ($item) {
                 return (int) Carbon::parse($item->ngay_cham_cong)->day;
@@ -647,7 +655,8 @@ class BaoCaoController extends Controller
             'soNgayTrongThang',
             'thuBatDau',
             'thuTrongTuan',
-            'chamCongTrongThang'
+            'chamCongTrongThang',
+            'danhSachChiTiet'
         ));
     }
 }

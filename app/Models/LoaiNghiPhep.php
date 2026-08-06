@@ -25,7 +25,8 @@ class LoaiNghiPhep extends Model
         'co_luong',
         'trang_thai',
         'tinh_theo_ty_le',
-        'nghi_che_do'
+        'nghi_che_do',
+        'quy_tac', 
     ];
     
     protected $casts = [
@@ -33,6 +34,7 @@ class LoaiNghiPhep extends Model
         'yeu_cau_giay_to' => 'integer',
         'co_luong' => 'integer',
         'trang_thai' => 'integer',
+        'quy_tac' => 'string', 
     ];
     
     public function don_xin_nghis()

@@ -137,6 +137,9 @@
                             've_som' => ['bg-orange-100 text-orange-700', '🔻 Về sớm'],
                             'den_som' => ['bg-blue-100 text-blue-700', '📈 Đến sớm'],
                             'vang_mat' => ['bg-red-100 text-red-700', '❌ Vắng mặt'],
+                            'khong_cham_cong' => ['bg-gray-100 text-gray-700', '⏸️ Không chấm công'],
+                            'nghi_phep' => ['bg-indigo-100 text-indigo-700', '📅 Nghỉ phép'],
+                            'tang_ca' => ['bg-purple-100 text-purple-700', '🔄 Tăng ca'],
                         ];
                         $stt = $statusMap[$chamCong->trang_thai] ?? ['bg-gray-100 text-gray-700', $chamCong->trang_thai];
                     @endphp
@@ -150,22 +153,106 @@
                     <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Phương thức</p>
                     @php
                         $methodMap = [
-                            'ip' => '📡 IP',
-                            'wifi' => '📶 WiFi',
-                            'mac' => '💻 MAC',
-                            'manual' => '✍️ Nhập tay',
+                            'ip' => [
+                                'icon' => '📡',
+                                'label' => 'IP',
+                                'color' => 'text-blue-600 dark:text-blue-400'
+                            ],
+                            'wifi' => [
+                                'icon' => '📶',
+                                'label' => 'WiFi',
+                                'color' => 'text-green-600 dark:text-green-400'
+                            ],
+                            'mac' => [
+                                'icon' => '💻',
+                                'label' => 'MAC Address',
+                                'color' => 'text-purple-600 dark:text-purple-400'
+                            ],
+                            'manual' => [
+                                'icon' => '✍️',
+                                'label' => 'Nhập tay',
+                                'color' => 'text-gray-600 dark:text-gray-400'
+                            ],
+                            'face' => [
+                                'icon' => '😊',
+                                'label' => 'Nhận diện khuôn mặt',
+                                'color' => 'text-indigo-600 dark:text-indigo-400'
+                            ],
+                        ];
+                        $method = $methodMap[$chamCong->phuong_thuc_cham_cong] ?? [
+                            'icon' => '❓',
+                            'label' => 'Chưa xác định',
+                            'color' => 'text-gray-400'
                         ];
                     @endphp
-                    <p class="font-semibold text-gray-800 dark:text-white">
-                        {{ $methodMap[$chamCong->phuong_thuc_cham_cong] ?? 'Chưa xác định' }}
-                    </p>
-                    @if($chamCong->dia_chi_ip)
-                        <p class="text-xs text-gray-400">IP: {{ $chamCong->dia_chi_ip }}</p>
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">{{ $method['icon'] }}</span>
+                        <span class="font-semibold {{ $method['color'] }}">
+                            {{ $method['label'] }}
+                        </span>
+                    </div>
+                    
+                    {{-- Hiển thị thông tin chi tiết tùy theo phương thức --}}
+                    @if($chamCong->phuong_thuc_cham_cong == 'ip' && $chamCong->dia_chi_ip)
+                        <p class="text-xs text-gray-400 mt-1">IP: {{ $chamCong->dia_chi_ip }}</p>
+                    @elseif($chamCong->phuong_thuc_cham_cong == 'wifi' && $chamCong->ten_wifi)
+                        <p class="text-xs text-gray-400 mt-1">WiFi: {{ $chamCong->ten_wifi }}</p>
+                    @elseif($chamCong->phuong_thuc_cham_cong == 'mac' && $chamCong->dia_chi_mac)
+                        <p class="text-xs text-gray-400 mt-1">MAC: {{ $chamCong->dia_chi_mac }}</p>
+                    @elseif($chamCong->phuong_thuc_cham_cong == 'face')
+                        @php
+                            $faceRecord = $chamCong->faceRecords()->first();
+                        @endphp
+                        @if($faceRecord)
+                            <p class="text-xs text-gray-400 mt-1">
+                                Độ tin cậy: {{ number_format($faceRecord->confidence * 100, 1) }}%
+                            </p>
+                            @if($faceRecord->image_path)
+                                <p class="text-xs text-gray-400">Đã lưu ảnh</p>
+                            @endif
+                        @endif
                     @endif
                 </div>
             </div>
         </div>
     </div>
+
+    {{-- THÔNG TIN THIẾT BỊ --}}
+    @if($chamCong->ten_thiet_bi || $chamCong->dia_chi_ip || $chamCong->ten_wifi || $chamCong->dia_chi_mac)
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="px-6 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="font-medium text-gray-700 dark:text-gray-300">🖥️ Thông tin thiết bị</h2>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @if($chamCong->ten_thiet_bi)
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Tên thiết bị</p>
+                        <p class="text-gray-800 dark:text-white font-medium">{{ $chamCong->ten_thiet_bi }}</p>
+                    </div>
+                @endif
+                @if($chamCong->dia_chi_ip)
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Địa chỉ IP</p>
+                        <p class="text-gray-800 dark:text-white font-mono">{{ $chamCong->dia_chi_ip }}</p>
+                    </div>
+                @endif
+                @if($chamCong->ten_wifi)
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Tên WiFi</p>
+                        <p class="text-gray-800 dark:text-white font-medium">{{ $chamCong->ten_wifi }}</p>
+                    </div>
+                @endif
+                @if($chamCong->dia_chi_mac)
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Địa chỉ MAC</p>
+                        <p class="text-gray-800 dark:text-white font-mono">{{ $chamCong->dia_chi_mac }}</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
 
     {{-- GHI CHÚ --}}
     @if($chamCong->ghi_chu)

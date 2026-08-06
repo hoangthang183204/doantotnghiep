@@ -1,3 +1,5 @@
+[file name]: show.blade.php
+[file content begin]
 @extends('layouts.admin')
 
 @section('title', 'Chi tiết hồ sơ - ' . $hoSo->ho . ' ' . $hoSo->ten)
@@ -243,6 +245,133 @@
                 font-size: 0.875rem !important;
             }
         }
+
+        /* ========== DARK MODE TEXT COLOR OVERRIDES ========== */
+        .dark .text-gray-800 {
+            color: #f3f4f6 !important;
+        }
+
+        .dark .text-gray-700 {
+            color: #e5e7eb !important;
+        }
+
+        .dark .text-gray-600 {
+            color: #d1d5db !important;
+        }
+
+        .dark .text-gray-500 {
+            color: #9ca3af !important;
+        }
+
+        .dark .text-gray-400 {
+            color: #6b7280 !important;
+        }
+
+        .dark .text-gray-300 {
+            color: #d1d5db !important;
+        }
+
+        .dark .text-gray-200 {
+            color: #e5e7eb !important;
+        }
+
+        .dark .text-blue-600 {
+            color: #60a5fa !important;
+        }
+
+        .dark .text-blue-700 {
+            color: #93bbfc !important;
+        }
+
+        .dark .text-green-600 {
+            color: #34d399 !important;
+        }
+
+        .dark .text-green-700 {
+            color: #6ee7b7 !important;
+        }
+
+        .dark .text-red-600 {
+            color: #f87171 !important;
+        }
+
+        .dark .text-red-700 {
+            color: #fca5a5 !important;
+        }
+
+        .dark .text-yellow-600 {
+            color: #fbbf24 !important;
+        }
+
+        .dark .text-yellow-700 {
+            color: #fcd34d !important;
+        }
+
+        .dark .text-purple-600 {
+            color: #a78bfa !important;
+        }
+
+        .dark .text-orange-600 {
+            color: #fb923c !important;
+        }
+
+        .dark .text-indigo-600 {
+            color: #818cf8 !important;
+        }
+
+        .dark .text-white {
+            color: #ffffff !important;
+        }
+
+        .dark .text-black {
+            color: #f3f4f6 !important;
+        }
+
+        .dark .text-gray-900 {
+            color: #f3f4f6 !important;
+        }
+
+        .dark .text-gray-950 {
+            color: #f3f4f6 !important;
+        }
+
+        /* Dark mode cho toggle content */
+        .dark .toggle-content.hidden-content {
+            color: #4b5563 !important;
+            background: rgba(75, 85, 99, 0.3) !important;
+        }
+
+        .dark .toggle-content.visible-content {
+            color: #f3f4f6 !important;
+        }
+
+        /* Dark mode cho bảng */
+        .dark .table-cell {
+            color: #e5e7eb !important;
+        }
+
+        .dark .table-header {
+            color: #9ca3af !important;
+        }
+
+        /* Dark mode cho badges */
+        .dark .badge-text {
+            color: #f3f4f6 !important;
+        }
+
+        /* Dark mode cho tab buttons */
+        .dark .tab-btn:not(.active):hover {
+            background-color: #374151 !important;
+        }
+
+        /* Dark mode cho file preview */
+        .dark #filePreviewModal .bg-white {
+            background-color: #1f2937 !important;
+        }
+
+        .dark #filePreviewModal .text-gray-800 {
+            color: #f3f4f6 !important;
+        }
     </style>
 
     <div class="space-y-6 font-body">
@@ -279,15 +408,17 @@
                             </span>
                             @if (($hoSo->trang_thai ?? 1) == 1)
                                 <span
-                                    class="text-xs px-3 py-1 bg-green-100 text-green-700 rounded-full font-medium badge-text">
+                                    class="text-xs px-3 py-1 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded-full font-medium badge-text">
                                     ✅ Đang làm việc
                                 </span>
                             @else
-                                <span class="text-xs px-3 py-1 bg-red-100 text-red-700 rounded-full font-medium badge-text">
+                                <span
+                                    class="text-xs px-3 py-1 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 rounded-full font-medium badge-text">
                                     ⛔ Đã nghỉ việc
                                 </span>
                             @endif
-                            <span class="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-medium badge-text">
+                            <span
+                                class="text-xs px-3 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-full font-medium badge-text">
                                 🎯 {{ $hoSo->tham_nien }}
                             </span>
                         </div>
@@ -336,37 +467,51 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-2">
             <nav class="flex flex-wrap gap-1" id="tabNav">
                 @if ($canViewTab1)
-                    <button class="tab-btn active px-5 py-2.5 rounded-lg text-sm font-medium transition" data-tab="tab1">
+                    <button
+                        class="tab-btn active px-5 py-2.5 rounded-lg text-sm font-medium transition text-gray-700 dark:text-gray-300"
+                        data-tab="tab1">
                         📋 Thông tin
                     </button>
                 @endif
                 @if ($canViewTab2)
-                    <button class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium transition" data-tab="tab2">
+                    <button
+                        class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium transition text-gray-700 dark:text-gray-300"
+                        data-tab="tab2">
                         💼 Công việc & HĐ
                     </button>
                 @endif
                 @if ($canViewTab3)
-                    <button class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium transition" data-tab="tab3">
+                    <button
+                        class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium transition text-gray-700 dark:text-gray-300"
+                        data-tab="tab3">
                         📄 Năng lực & CV
                     </button>
                 @endif
                 @if ($canViewTab4)
-                    <button class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium transition" data-tab="tab4">
+                    <button
+                        class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium transition text-gray-700 dark:text-gray-300"
+                        data-tab="tab4">
                         💰 Lương thưởng
                     </button>
                 @endif
                 @if ($canViewTab5)
-                    <button class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium transition" data-tab="tab5">
+                    <button
+                        class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium transition text-gray-700 dark:text-gray-300"
+                        data-tab="tab5">
                         🛡️ Bảo hiểm & Thuế
                     </button>
                 @endif
                 @if ($canViewTab6)
-                    <button class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium transition" data-tab="tab6">
+                    <button
+                        class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium transition text-gray-700 dark:text-gray-300"
+                        data-tab="tab6">
                         🏆 Đào tạo & Kỷ luật
                     </button>
                 @endif
                 @if ($canViewTab7)
-                    <button class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium transition" data-tab="tab7">
+                    <button
+                        class="tab-btn px-5 py-2.5 rounded-lg text-sm font-medium transition text-gray-700 dark:text-gray-300"
+                        data-tab="tab7">
                         📝 Lịch sử đơn từ
                     </button>
                 @endif
@@ -396,7 +541,7 @@
                                 </h3>
                                 @if ($canViewSensitive)
                                     <button onclick="toggleAllSensitive()"
-                                        class="text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition flex items-center gap-1.5 font-medium">
+                                        class="text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition flex items-center gap-1.5 font-medium text-gray-700 dark:text-gray-300">
                                         <i class="fas fa-eye" id="toggleAllIcon"></i>
                                         <span id="toggleAllText">Hiện tất cả</span>
                                     </button>
@@ -407,13 +552,15 @@
                                 {{-- Họ và tên --}}
                                 <div class="flex justify-between py-1 border-b border-gray-100 dark:border-gray-700">
                                     <span class="text-gray-500 dark:text-gray-400 font-medium">Họ và tên</span>
-                                    <span class="font-medium font-body">{{ $hoSo->ho }} {{ $hoSo->ten }}</span>
+                                    <span class="font-medium font-body text-gray-800 dark:text-white">{{ $hoSo->ho }}
+                                        {{ $hoSo->ten }}</span>
                                 </div>
 
                                 {{-- Mã nhân viên --}}
                                 <div class="flex justify-between py-1 border-b border-gray-100 dark:border-gray-700">
                                     <span class="text-gray-500 dark:text-gray-400 font-medium">Mã nhân viên</span>
-                                    <span class="font-sensitive font-medium">{{ $hoSo->ma_nhan_vien ?? '---' }}</span>
+                                    <span
+                                        class="font-sensitive font-medium text-gray-800 dark:text-white">{{ $hoSo->ma_nhan_vien ?? '---' }}</span>
                                 </div>
 
                                 {{-- Email --}}
@@ -427,7 +574,9 @@
                                 <div class="flex justify-between py-1 border-b border-gray-100 dark:border-gray-700">
                                     <span class="text-gray-500 dark:text-gray-400 font-medium">Số điện thoại</span>
                                     <span class="sensitive-label">
-                                        <span class="toggle-content hidden-content font-sensitive" data-sensitive="phone">
+                                        <span
+                                            class="toggle-content hidden-content font-sensitive text-gray-800 dark:text-gray-300"
+                                            data-sensitive="phone">
                                             {{ $hoSo->so_dien_thoai ?? '---' }}
                                         </span>
                                         <button onclick="toggleSensitive(this, 'phone')" class="toggle-btn"
@@ -441,7 +590,8 @@
                                 <div class="flex justify-between py-1 border-b border-gray-100 dark:border-gray-700">
                                     <span class="text-gray-500 dark:text-gray-400 font-medium">Ngày sinh</span>
                                     <span class="sensitive-label">
-                                        <span class="toggle-content hidden-content" data-sensitive="birthday">
+                                        <span class="toggle-content hidden-content text-gray-800 dark:text-gray-300"
+                                            data-sensitive="birthday">
                                             {{ $hoSo->ngay_sinh ? $hoSo->ngay_sinh->format('d/m/Y') : '---' }}
                                         </span>
                                         <button onclick="toggleSensitive(this, 'birthday')" class="toggle-btn"
@@ -454,19 +604,22 @@
                                 {{-- Tuổi --}}
                                 <div class="flex justify-between py-1 border-b border-gray-100 dark:border-gray-700">
                                     <span class="text-gray-500 dark:text-gray-400 font-medium">Tuổi</span>
-                                    <span class="font-medium">{{ $hoSo->tuoi ?? '---' }} tuổi</span>
+                                    <span class="font-medium text-gray-800 dark:text-white">{{ $hoSo->tuoi ?? '---' }}
+                                        tuổi</span>
                                 </div>
 
                                 {{-- Giới tính --}}
                                 <div class="flex justify-between py-1 border-b border-gray-100 dark:border-gray-700">
                                     <span class="text-gray-500 dark:text-gray-400 font-medium">Giới tính</span>
-                                    <span class="font-medium">{{ $hoSo->gioi_tinh_text }}</span>
+                                    <span
+                                        class="font-medium text-gray-800 dark:text-white">{{ $hoSo->gioi_tinh_text }}</span>
                                 </div>
 
                                 {{-- Tình trạng hôn nhân --}}
                                 <div class="flex justify-between py-1">
                                     <span class="text-gray-500 dark:text-gray-400 font-medium">Tình trạng hôn nhân</span>
-                                    <span class="font-medium">{{ $hoSo->tinh_trang_hon_nhan_text }}</span>
+                                    <span
+                                        class="font-medium text-gray-800 dark:text-white">{{ $hoSo->tinh_trang_hon_nhan_text }}</span>
                                 </div>
                             </div>
 
@@ -484,20 +637,24 @@
                                 {{-- Địa chỉ hiện tại --}}
                                 <div class="flex justify-between py-1 border-b border-gray-100 dark:border-gray-700">
                                     <span class="text-gray-500 dark:text-gray-400 font-medium">Địa chỉ hiện tại</span>
-                                    <span class="font-medium text-right">{{ $hoSo->dia_chi_hien_tai ?? '---' }}</span>
+                                    <span
+                                        class="font-medium text-gray-800 dark:text-white text-right">{{ $hoSo->dia_chi_hien_tai ?? '---' }}</span>
                                 </div>
 
                                 {{-- Địa chỉ thường trú --}}
                                 <div class="flex justify-between py-1 border-b border-gray-100 dark:border-gray-700">
                                     <span class="text-gray-500 dark:text-gray-400 font-medium">Địa chỉ thường trú</span>
-                                    <span class="font-medium text-right">{{ $hoSo->dia_chi_thuong_tru ?? '---' }}</span>
+                                    <span
+                                        class="font-medium text-gray-800 dark:text-white text-right">{{ $hoSo->dia_chi_thuong_tru ?? '---' }}</span>
                                 </div>
 
                                 {{-- CMND/CCCD (NHẠY CẢM) --}}
                                 <div class="flex justify-between py-1 border-b border-gray-100 dark:border-gray-700">
                                     <span class="text-gray-500 dark:text-gray-400 font-medium">CMND/CCCD</span>
                                     <span class="sensitive-label">
-                                        <span class="toggle-content hidden-content font-sensitive" data-sensitive="cccd">
+                                        <span
+                                            class="toggle-content hidden-content font-sensitive text-gray-800 dark:text-gray-300"
+                                            data-sensitive="cccd">
                                             {{ $hoSo->cmnd_cccd ?? '---' }}
                                         </span>
                                         <button onclick="toggleSensitive(this, 'cccd')" class="toggle-btn"
@@ -511,7 +668,8 @@
                                 <div class="flex justify-between py-1">
                                     <span class="text-gray-500 dark:text-gray-400 font-medium">Số hộ chiếu</span>
                                     <span class="sensitive-label">
-                                        <span class="toggle-content hidden-content font-sensitive"
+                                        <span
+                                            class="toggle-content hidden-content font-sensitive text-gray-800 dark:text-gray-300"
                                             data-sensitive="passport">
                                             {{ $hoSo->so_ho_chieu ?? '---' }}
                                         </span>
@@ -530,7 +688,7 @@
                                         <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 font-heading">🪪
                                             Ảnh CCCD</h4>
                                         <button onclick="toggleCccdImages()"
-                                            class="text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition flex items-center gap-1.5 font-medium">
+                                            class="text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition flex items-center gap-1.5 font-medium text-gray-700 dark:text-gray-300">
                                             <i class="fas fa-eye" id="cccdToggleIcon"></i>
                                             <span id="cccdToggleText">Hiện ảnh</span>
                                         </button>
@@ -560,7 +718,8 @@
                                             @else
                                                 <div
                                                     class="w-full h-32 bg-gray-100 dark:bg-gray-700 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center">
-                                                    <span class="text-gray-400 text-sm">Chưa có ảnh</span>
+                                                    <span class="text-gray-400 dark:text-gray-500 text-sm">Chưa có
+                                                        ảnh</span>
                                                 </div>
                                                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">Mặt
                                                     trước</p>
@@ -591,14 +750,16 @@
                                             @else
                                                 <div
                                                     class="w-full h-32 bg-gray-100 dark:bg-gray-700 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center">
-                                                    <span class="text-gray-400 text-sm">Chưa có ảnh</span>
+                                                    <span class="text-gray-400 dark:text-gray-500 text-sm">Chưa có
+                                                        ảnh</span>
                                                 </div>
                                                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">Mặt
                                                     sau</p>
                                             @endif
                                         </div>
                                     </div>
-                                    <p class="text-xs text-gray-400 mt-2">💡 Click vào ảnh để xem phóng to (sau khi bỏ che)
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">💡 Click vào ảnh để xem phóng
+                                        to (sau khi bỏ che)
                                     </p>
                                 </div>
                             @else
@@ -606,17 +767,19 @@
                                     <div class="grid grid-cols-2 gap-4">
                                         <div
                                             class="w-full h-32 bg-gray-100 dark:bg-gray-700 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center">
-                                            <span class="text-gray-400 text-sm">Mặt trước<br><span class="text-xs">Chưa có
+                                            <span class="text-gray-400 dark:text-gray-500 text-sm">Mặt trước<br><span
+                                                    class="text-xs">Chưa có
                                                     ảnh</span></span>
                                         </div>
                                         <div
                                             class="w-full h-32 bg-gray-100 dark:bg-gray-700 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center">
-                                            <span class="text-gray-400 text-sm">Mặt sau<br><span class="text-xs">Chưa có
+                                            <span class="text-gray-400 dark:text-gray-500 text-sm">Mặt sau<br><span
+                                                    class="text-xs">Chưa có
                                                     ảnh</span></span>
                                         </div>
                                     </div>
-                                    <p class="text-xs text-gray-400 mt-2">💡 Cập nhật ảnh CCCD trong phần <a
-                                            href="{{ route('admin.ho-so.edit', $hoSo->id) }}"
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">💡 Cập nhật ảnh CCCD trong
+                                        phần <a href="{{ route('admin.ho-so.edit', $hoSo->id) }}"
                                             class="text-blue-600 hover:underline font-medium">Chỉnh sửa hồ sơ</a></p>
                                 </div>
                             @endif
@@ -640,7 +803,8 @@
                                 <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
                                     <span class="text-gray-500 dark:text-gray-400 text-sm font-medium block">Họ tên</span>
                                     <span class="sensitive-label">
-                                        <span class="toggle-content hidden-content font-medium text-lg font-body"
+                                        <span
+                                            class="toggle-content hidden-content font-medium text-lg font-body text-gray-800 dark:text-gray-300"
                                             data-sensitive="emergency_name">
                                             {{ $hoSo->lien_he_khan_cap ?? '---' }}
                                         </span>
@@ -656,7 +820,8 @@
                                     <span class="text-gray-500 dark:text-gray-400 text-sm font-medium block">Số điện
                                         thoại</span>
                                     <span class="sensitive-label">
-                                        <span class="toggle-content hidden-content font-medium text-lg font-body"
+                                        <span
+                                            class="toggle-content hidden-content font-medium text-lg font-body text-gray-800 dark:text-gray-300"
                                             data-sensitive="emergency_phone">
                                             {{ $hoSo->sdt_khan_cap ?? '---' }}
                                         </span>
@@ -672,7 +837,8 @@
                                     <span class="text-gray-500 dark:text-gray-400 text-sm font-medium block">Mối quan
                                         hệ</span>
                                     <span class="sensitive-label">
-                                        <span class="toggle-content hidden-content font-medium text-lg font-body"
+                                        <span
+                                            class="toggle-content hidden-content font-medium text-lg font-body text-gray-800 dark:text-gray-300"
                                             data-sensitive="emergency_relation">
                                             {{ $hoSo->quan_he_khan_cap ?? '---' }}
                                         </span>
@@ -709,33 +875,36 @@
                             <div class="space-y-3">
                                 <div class="flex justify-between py-1 border-b border-gray-100 dark:border-gray-700">
                                     <span class="text-gray-500 dark:text-gray-400 font-medium">Chức vụ</span>
-                                    <span class="font-medium">{{ $hoSo->nguoi_dung->chuc_vu->ten ?? '---' }}</span>
+                                    <span
+                                        class="font-medium text-gray-800 dark:text-white">{{ $hoSo->nguoi_dung->chuc_vu->ten ?? '---' }}</span>
                                 </div>
                                 <div class="flex justify-between py-1 border-b border-gray-100 dark:border-gray-700">
                                     <span class="text-gray-500 dark:text-gray-400 font-medium">Phòng ban</span>
                                     <span
-                                        class="font-medium">{{ $hoSo->nguoi_dung->phong_ban->ten_phong_ban ?? '---' }}</span>
+                                        class="font-medium text-gray-800 dark:text-white">{{ $hoSo->nguoi_dung->phong_ban->ten_phong_ban ?? '---' }}</span>
                                 </div>
                                 <div class="flex justify-between py-1 border-b border-gray-100 dark:border-gray-700">
                                     <span class="text-gray-500 dark:text-gray-400 font-medium">Ngày vào làm</span>
-                                    <span class="font-medium">
+                                    <span class="font-medium text-gray-800 dark:text-white">
                                         {{ $hoSo->nguoi_dung->created_at ? $hoSo->nguoi_dung->created_at->format('d/m/Y') : '---' }}
                                     </span>
                                 </div>
                                 <div class="flex justify-between py-1">
                                     <span class="text-gray-500 dark:text-gray-400 font-medium">Thâm niên</span>
-                                    <span class="font-medium text-green-600">{{ $hoSo->tham_nien }}</span>
+                                    <span
+                                        class="font-medium text-green-600 dark:text-green-400">{{ $hoSo->tham_nien }}</span>
                                 </div>
                             </div>
 
                             <div class="space-y-3">
                                 <div class="flex justify-between py-1 border-b border-gray-100 dark:border-gray-700">
                                     <span class="text-gray-500 dark:text-gray-400 font-medium">Loại hợp đồng</span>
-                                    <span class="font-medium">{{ $hopDongHieuLuc->ten_loai_hop_dong ?? '---' }}</span>
+                                    <span
+                                        class="font-medium text-gray-800 dark:text-white">{{ $hopDongHieuLuc->ten_loai_hop_dong ?? '---' }}</span>
                                 </div>
                                 <div class="flex justify-between py-1 border-b border-gray-100 dark:border-gray-700">
                                     <span class="text-gray-500 dark:text-gray-400 font-medium">Ngày ký HĐ</span>
-                                    <span class="font-medium">
+                                    <span class="font-medium text-gray-800 dark:text-white">
                                         {{ isset($hopDongHieuLuc) && $hopDongHieuLuc->ngay_bat_dau
                                             ? \Carbon\Carbon::parse($hopDongHieuLuc->ngay_bat_dau)->format('d/m/Y')
                                             : '---' }}
@@ -743,7 +912,7 @@
                                 </div>
                                 <div class="flex justify-between py-1">
                                     <span class="text-gray-500 dark:text-gray-400 font-medium">Ngày hết hạn HĐ</span>
-                                    <span class="font-medium">
+                                    <span class="font-medium text-gray-800 dark:text-white">
                                         {{ isset($hopDongHieuLuc) && $hopDongHieuLuc->ngay_ket_thuc
                                             ? \Carbon\Carbon::parse($hopDongHieuLuc->ngay_ket_thuc)->format('d/m/Y')
                                             : 'Không áp dụng' }}
@@ -820,7 +989,7 @@
                                             <div class="flex justify-between items-start">
                                                 <div>
                                                     <span
-                                                        class="font-medium font-heading">{{ $item->ten_loai_hop_dong ?? $item->loai_hop_dong }}</span>
+                                                        class="font-medium font-heading text-gray-800 dark:text-white">{{ $item->ten_loai_hop_dong ?? $item->loai_hop_dong }}</span>
                                                     <span
                                                         class="text-sm text-gray-500 dark:text-gray-400 ml-2">({{ $item->so_hop_dong }})</span>
 
@@ -833,7 +1002,8 @@
 
                                                     @if ($kyStatus)
                                                         <div class="text-sm mt-1">
-                                                            <span class="font-medium">✍️ Trạng thái ký:</span>
+                                                            <span class="font-medium text-gray-700 dark:text-gray-300">✍️
+                                                                Trạng thái ký:</span>
                                                             <span class="{{ $kyStatusColor }}">{{ $kyStatus }}</span>
                                                         </div>
                                                     @endif
@@ -842,7 +1012,7 @@
                                                         <div class="mt-3 flex flex-wrap gap-2">
                                                             <button
                                                                 onclick="openFilePreview('{{ route('admin.ho-so.view-contract', $item->id) }}', 'Hợp đồng {{ $item->so_hop_dong }}')"
-                                                                class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition flex items-center gap-1"
+                                                                class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition flex items-center gap-1"
                                                                 title="Xem hợp đồng">
                                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                                     viewBox="0 0 24 24">
@@ -856,7 +1026,7 @@
                                                             </button>
                                                             <a href="{{ asset('storage/' . $item->file_hop_dong_da_ky) }}"
                                                                 download
-                                                                class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition flex items-center gap-1"
+                                                                class="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition flex items-center gap-1"
                                                                 title="Tải xuống">
                                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                                     viewBox="0 0 24 24">
@@ -868,13 +1038,15 @@
                                                         </div>
                                                     @elseif ($item->file_hop_dong_da_ky && !$fileExists)
                                                         <div class="mt-3">
-                                                            <span class="text-sm text-red-500 flex items-center gap-2">
+                                                            <span
+                                                                class="text-sm text-red-500 dark:text-red-400 flex items-center gap-2">
                                                                 ⚠️ File hợp đồng không tồn tại trên server
                                                             </span>
                                                         </div>
                                                     @else
                                                         <div class="mt-3">
-                                                            <span class="text-sm text-gray-400 flex items-center gap-2">
+                                                            <span
+                                                                class="text-sm text-gray-400 dark:text-gray-500 flex items-center gap-2">
                                                                 📎 Chưa có file hợp đồng
                                                             </span>
                                                         </div>
@@ -892,7 +1064,7 @@
                                                     @endif
 
                                                     @if ($item->thoi_gian_gui)
-                                                        <div class="mt-1 text-xs text-gray-400">
+                                                        <div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
                                                             📨 Gửi lúc:
                                                             {{ \Carbon\Carbon::parse($item->thoi_gian_gui)->format('d/m/Y H:i') }}
                                                         </div>
@@ -948,7 +1120,8 @@
 
                             <div class="flex justify-between items-center">
                                 <div>
-                                    <span class="font-medium font-heading">📎 CV đính kèm</span>
+                                    <span class="font-medium font-heading text-gray-800 dark:text-white">📎 CV đính
+                                        kèm</span>
                                     @if ($hoSo->cv)
                                         <p class="text-sm text-gray-500 dark:text-gray-400 font-body">
                                             {{ $hoSo->cv->ten_file_goc }}
@@ -956,7 +1129,7 @@
                                         <p class="text-xs text-gray-400 dark:text-gray-500">{{ $hoSo->cv->kich_thuoc }} •
                                             {{ $hoSo->cv->loai_mime }}</p>
                                     @else
-                                        <p class="text-sm text-gray-400 font-body">Chưa có CV</p>
+                                        <p class="text-sm text-gray-400 dark:text-gray-500 font-body">Chưa có CV</p>
                                     @endif
                                 </div>
                                 <div class="flex gap-2">
@@ -964,7 +1137,7 @@
                                         <div class="flex gap-1.5">
                                             <button
                                                 onclick="openFilePreview('{{ route('admin.ho-so.view-cv', $hoSo->cv->id) }}', 'CV - {{ $hoSo->ho }} {{ $hoSo->ten }}')"
-                                                class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                                class="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition"
                                                 title="Xem trước CV">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
@@ -975,7 +1148,7 @@
                                                 </svg>
                                             </button>
                                             <a href="{{ asset('storage/' . $hoSo->cv->duong_dan_file) }}" download
-                                                class="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition"
+                                                class="p-1.5 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition"
                                                 title="Tải xuống CV">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
@@ -985,7 +1158,7 @@
                                             </a>
                                         </div>
                                     @else
-                                        <span class="text-gray-400 text-sm font-body">Chưa có CV</span>
+                                        <span class="text-gray-400 dark:text-gray-500 text-sm font-body">Chưa có CV</span>
                                     @endif
                                 </div>
                             </div>
@@ -1001,13 +1174,13 @@
                                 <div class="flex flex-wrap gap-2">
                                     @foreach ($hoSo->ky_nang as $item)
                                         <span
-                                            class="px-3 py-1.5 {{ $item->mau_cap_do }} rounded-full text-sm font-medium shadow-sm font-body">
+                                            class="px-3 py-1.5 {{ $item->mau_cap_do }} rounded-full text-sm font-medium shadow-sm font-body text-gray-800 dark:text-gray-200">
                                             {{ $item->ten_ky_nang }}
                                             <span class="text-xs opacity-70">({{ $item->cap_do }})</span>
                                         </span>
                                     @endforeach
                                 </div>
-                                <div class="mt-2 text-xs text-gray-400 font-body">
+                                <div class="mt-2 text-xs text-gray-400 dark:text-gray-500 font-body">
                                     📌 Tổng: {{ $hoSo->ky_nang->count() }} kỹ năng
                                 </div>
                             @else
@@ -1064,7 +1237,7 @@
                                                             {{-- Nút Xem (Con mắt) --}}
                                                             <button
                                                                 onclick="openFilePreview('{{ asset('storage/' . $item->file_dinh_kem) }}', 'Chứng chỉ - {{ $item->ten_chung_chi }}')"
-                                                                class="p-1.5 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-800 rounded-lg transition hover:scale-110"
+                                                                class="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-800 rounded-lg transition hover:scale-110"
                                                                 title="Xem chứng chỉ">
                                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                                     viewBox="0 0 24 24">
@@ -1080,7 +1253,7 @@
                                                             {{-- Nút Tải xuống --}}
                                                             <a href="{{ asset('storage/' . $item->file_dinh_kem) }}"
                                                                 download
-                                                                class="p-1.5 text-green-600 hover:bg-green-100 dark:hover:bg-green-800 rounded-lg transition hover:scale-110"
+                                                                class="p-1.5 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-800 rounded-lg transition hover:scale-110"
                                                                 title="Tải xuống chứng chỉ">
                                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                                     viewBox="0 0 24 24">
@@ -1175,12 +1348,12 @@
                                             {{-- Nút Previous --}}
                                             @if ($duAnPaginator->onFirstPage())
                                                 <button disabled
-                                                    class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-lg cursor-not-allowed font-body">
+                                                    class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 rounded-lg cursor-not-allowed font-body">
                                                     ←
                                                 </button>
                                             @else
                                                 <button onclick="changeDuAnPage({{ $currentPage - 1 }})"
-                                                    class="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition font-body">
+                                                    class="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition font-body text-gray-800 dark:text-gray-200">
                                                     ←
                                                 </button>
                                             @endif
@@ -1193,28 +1366,30 @@
 
                                             @if ($start > 1)
                                                 <button onclick="changeDuAnPage(1)"
-                                                    class="px-3 py-1.5 text-sm rounded-lg transition font-body bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">
+                                                    class="px-3 py-1.5 text-sm rounded-lg transition font-body bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200">
                                                     1
                                                 </button>
                                                 @if ($start > 2)
-                                                    <span class="px-2 py-1.5 text-sm text-gray-400 font-body">...</span>
+                                                    <span
+                                                        class="px-2 py-1.5 text-sm text-gray-400 dark:text-gray-500 font-body">...</span>
                                                 @endif
                                             @endif
 
                                             @for ($i = $start; $i <= $end; $i++)
                                                 <button onclick="changeDuAnPage({{ $i }})"
                                                     class="px-3 py-1.5 text-sm rounded-lg transition font-body
-                            {{ $i == $currentPage ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600' }}">
+                            {{ $i == $currentPage ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200' }}">
                                                     {{ $i }}
                                                 </button>
                                             @endfor
 
                                             @if ($end < $totalPages)
                                                 @if ($end < $totalPages - 1)
-                                                    <span class="px-2 py-1.5 text-sm text-gray-400 font-body">...</span>
+                                                    <span
+                                                        class="px-2 py-1.5 text-sm text-gray-400 dark:text-gray-500 font-body">...</span>
                                                 @endif
                                                 <button onclick="changeDuAnPage({{ $totalPages }})"
-                                                    class="px-3 py-1.5 text-sm rounded-lg transition font-body bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">
+                                                    class="px-3 py-1.5 text-sm rounded-lg transition font-body bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200">
                                                     {{ $totalPages }}
                                                 </button>
                                             @endif
@@ -1222,12 +1397,12 @@
                                             {{-- Nút Next --}}
                                             @if ($duAnPaginator->hasMorePages())
                                                 <button onclick="changeDuAnPage({{ $currentPage + 1 }})"
-                                                    class="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition font-body">
+                                                    class="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition font-body text-gray-800 dark:text-gray-200">
                                                     →
                                                 </button>
                                             @else
                                                 <button disabled
-                                                    class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-lg cursor-not-allowed font-body">
+                                                    class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 rounded-lg cursor-not-allowed font-body">
                                                     →
                                                 </button>
                                             @endif
@@ -1235,7 +1410,7 @@
                                     </div>
                                 @endif
 
-                                <div class="mt-2 text-xs text-gray-400 font-body">
+                                <div class="mt-2 text-xs text-gray-400 dark:text-gray-500 font-body">
                                     📌 Tổng: {{ $totalDuAn }} dự án đã tham gia
                                 </div>
                             @else
@@ -1264,7 +1439,7 @@
                                 💰 Thông tin lương thưởng
                             </h3>
                             <button onclick="toggleAllSensitive()"
-                                class="text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition flex items-center gap-1.5 font-medium">
+                                class="text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition flex items-center gap-1.5 font-medium text-gray-700 dark:text-gray-300">
                                 <i class="fas fa-eye" id="toggleAllIconTab4"></i>
                                 <span id="toggleAllTextTab4">Hiện tất cả</span>
                             </button>
@@ -1391,10 +1566,11 @@
                                     </button>
                                 </span>
                                 @if ($hopDongHieuLuc)
-                                    <p class="text-xs text-gray-400 font-body">📄 {{ $hopDongHieuLuc->so_hop_dong }}</p>
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 font-body">📄
+                                        {{ $hopDongHieuLuc->so_hop_dong }}</p>
                                 @endif
                                 @if ($soNgayCong > 0)
-                                    <p class="text-xs text-gray-400 font-body">📅 Công:
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 font-body">📅 Công:
                                         {{ $soNgayCong }}/{{ $soNgayCongChuan }}</p>
                                 @endif
                             </div>
@@ -1413,7 +1589,7 @@
                                         <i class="fas fa-eye-slash"></i>
                                     </button>
                                 </span>
-                                <p class="text-xs text-gray-400 font-body">
+                                <p class="text-xs text-gray-400 dark:text-gray-500 font-body">
                                     {{ $kyLuu }}
                                 </p>
                             </div>
@@ -1432,7 +1608,7 @@
                                         <i class="fas fa-eye-slash"></i>
                                     </button>
                                 </span>
-                                <p class="text-xs text-gray-400 font-body">
+                                <p class="text-xs text-gray-400 dark:text-gray-500 font-body">
                                     = {{ number_format($tongThuNhap, 0, ',', '.') }}
                                     @if ($tongBaoHiem > 0)
                                         - {{ number_format($tongBaoHiem, 0, ',', '.') }}
@@ -1452,9 +1628,10 @@
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 <div
                                     class="bg-white dark:bg-gray-800 rounded-lg p-2 text-center border border-gray-200 dark:border-gray-600">
-                                    <p class="text-xs text-gray-500 font-medium">BHXH (8%)</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">BHXH (8%)</p>
                                     <span class="sensitive-label">
-                                        <span class="toggle-content hidden-content font-bold text-blue-600 salary-amount"
+                                        <span
+                                            class="toggle-content hidden-content font-bold text-blue-600 dark:text-blue-400 salary-amount"
                                             data-sensitive="bhxh">
                                             {{ number_format($bhxh, 0, ',', '.') }} ₫
                                         </span>
@@ -1467,9 +1644,10 @@
 
                                 <div
                                     class="bg-white dark:bg-gray-800 rounded-lg p-2 text-center border border-gray-200 dark:border-gray-600">
-                                    <p class="text-xs text-gray-500 font-medium">BHYT (1.5%)</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">BHYT (1.5%)</p>
                                     <span class="sensitive-label">
-                                        <span class="toggle-content hidden-content font-bold text-blue-600 salary-amount"
+                                        <span
+                                            class="toggle-content hidden-content font-bold text-blue-600 dark:text-blue-400 salary-amount"
                                             data-sensitive="bhyt">
                                             {{ number_format($bhyt, 0, ',', '.') }} ₫
                                         </span>
@@ -1482,9 +1660,10 @@
 
                                 <div
                                     class="bg-white dark:bg-gray-800 rounded-lg p-2 text-center border border-gray-200 dark:border-gray-600">
-                                    <p class="text-xs text-gray-500 font-medium">BHTN (1%)</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">BHTN (1%)</p>
                                     <span class="sensitive-label">
-                                        <span class="toggle-content hidden-content font-bold text-blue-600 salary-amount"
+                                        <span
+                                            class="toggle-content hidden-content font-bold text-blue-600 dark:text-blue-400 salary-amount"
                                             data-sensitive="bhtn">
                                             {{ number_format($bhtn, 0, ',', '.') }} ₫
                                         </span>
@@ -1497,9 +1676,10 @@
 
                                 <div
                                     class="bg-white dark:bg-gray-800 rounded-lg p-2 text-center border-2 border-red-200 dark:border-red-700">
-                                    <p class="text-xs text-gray-500 font-medium">Tổng</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">Tổng</p>
                                     <span class="sensitive-label">
-                                        <span class="toggle-content hidden-content font-bold text-red-600 salary-amount"
+                                        <span
+                                            class="toggle-content hidden-content font-bold text-red-600 dark:text-red-400 salary-amount"
                                             data-sensitive="tong_bh">
                                             {{ number_format($tongBaoHiem, 0, ',', '.') }} ₫
                                         </span>
@@ -1510,7 +1690,7 @@
                                     </span>
                                 </div>
                             </div>
-                            <p class="text-xs text-gray-400 mt-2 font-body">📌 Tính trên lương cơ bản:
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-2 font-body">📌 Tính trên lương cơ bản:
                                 {{ number_format($luongCoBanHienTai, 0, ',', '.') }} ₫</p>
                         </div>
 
@@ -1531,10 +1711,11 @@
                                     @endphp
                                     @foreach ($phuCapChiTiets as $pc)
                                         <span
-                                            class="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-full text-sm border border-blue-200 dark:border-blue-800 font-body">
+                                            class="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-full text-sm border border-blue-200 dark:border-blue-800 font-body text-gray-700 dark:text-gray-300">
                                             {{ $pc->ten }}:
                                             <span class="sensitive-label">
-                                                <span class="toggle-content hidden-content salary-amount"
+                                                <span
+                                                    class="toggle-content hidden-content salary-amount text-gray-800 dark:text-gray-200"
                                                     data-sensitive="phu_cap_{{ $pc->id }}">
                                                     <strong>{{ number_format($pc->so_tien_mac_dinh, 0, ',', '.') }}
                                                         ₫</strong>
@@ -1547,10 +1728,11 @@
                                         </span>
                                     @endforeach
                                     <span
-                                        class="px-3 py-1.5 bg-green-50 dark:bg-green-900/20 rounded-full text-sm border border-green-200 dark:border-green-800 font-body">
+                                        class="px-3 py-1.5 bg-green-50 dark:bg-green-900/20 rounded-full text-sm border border-green-200 dark:border-green-800 font-body text-gray-700 dark:text-gray-300">
                                         <strong>Tổng phụ cấp:</strong>
                                         <span class="sensitive-label">
-                                            <span class="toggle-content hidden-content text-green-600 salary-amount"
+                                            <span
+                                                class="toggle-content hidden-content text-green-600 dark:text-green-400 salary-amount"
                                                 data-sensitive="tong_phu_cap">
                                                 <strong>{{ number_format($tongPhuCap, 0, ',', '.') }} ₫</strong>
                                             </span>
@@ -1570,7 +1752,7 @@
                                 <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2 font-heading">⏰ Tăng ca</h4>
                                 <div class="flex flex-wrap gap-2">
                                     <span
-                                        class="px-3 py-1.5 bg-yellow-50 dark:bg-yellow-900/20 rounded-full text-sm border border-yellow-200 dark:border-yellow-800 font-body">
+                                        class="px-3 py-1.5 bg-yellow-50 dark:bg-yellow-900/20 rounded-full text-sm border border-yellow-200 dark:border-yellow-800 font-body text-gray-700 dark:text-gray-300">
                                         Tiền tăng ca:
                                         <span class="sensitive-label">
                                             <span
@@ -1596,10 +1778,11 @@
                                 <div class="flex flex-wrap gap-2">
                                     @if ($bhxh > 0)
                                         <span
-                                            class="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 rounded-full text-sm border border-red-200 dark:border-red-800 font-body">
+                                            class="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 rounded-full text-sm border border-red-200 dark:border-red-800 font-body text-gray-700 dark:text-gray-300">
                                             BHXH:
                                             <span class="sensitive-label">
-                                                <span class="toggle-content hidden-content text-red-600 salary-amount"
+                                                <span
+                                                    class="toggle-content hidden-content text-red-600 dark:text-red-400 salary-amount"
                                                     data-sensitive="khau_tru_bhxh">
                                                     <strong>-{{ number_format($bhxh, 0, ',', '.') }} ₫</strong>
                                                 </span>
@@ -1612,10 +1795,11 @@
                                     @endif
                                     @if ($bhyt > 0)
                                         <span
-                                            class="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 rounded-full text-sm border border-red-200 dark:border-red-800 font-body">
+                                            class="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 rounded-full text-sm border border-red-200 dark:border-red-800 font-body text-gray-700 dark:text-gray-300">
                                             BHYT:
                                             <span class="sensitive-label">
-                                                <span class="toggle-content hidden-content text-red-600 salary-amount"
+                                                <span
+                                                    class="toggle-content hidden-content text-red-600 dark:text-red-400 salary-amount"
                                                     data-sensitive="khau_tru_bhyt">
                                                     <strong>-{{ number_format($bhyt, 0, ',', '.') }} ₫</strong>
                                                 </span>
@@ -1628,10 +1812,11 @@
                                     @endif
                                     @if ($bhtn > 0)
                                         <span
-                                            class="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 rounded-full text-sm border border-red-200 dark:border-red-800 font-body">
+                                            class="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 rounded-full text-sm border border-red-200 dark:border-red-800 font-body text-gray-700 dark:text-gray-300">
                                             BHTN:
                                             <span class="sensitive-label">
-                                                <span class="toggle-content hidden-content text-red-600 salary-amount"
+                                                <span
+                                                    class="toggle-content hidden-content text-red-600 dark:text-red-400 salary-amount"
                                                     data-sensitive="khau_tru_bhtn">
                                                     <strong>-{{ number_format($bhtn, 0, ',', '.') }} ₫</strong>
                                                 </span>
@@ -1644,10 +1829,11 @@
                                     @endif
                                     @if ($thueTncn > 0)
                                         <span
-                                            class="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 rounded-full text-sm border border-red-200 dark:border-red-800 font-body">
+                                            class="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 rounded-full text-sm border border-red-200 dark:border-red-800 font-body text-gray-700 dark:text-gray-300">
                                             Thuế TNCN:
                                             <span class="sensitive-label">
-                                                <span class="toggle-content hidden-content text-red-600 salary-amount"
+                                                <span
+                                                    class="toggle-content hidden-content text-red-600 dark:text-red-400 salary-amount"
                                                     data-sensitive="khau_tru_thue">
                                                     <strong>-{{ number_format($thueTncn, 0, ',', '.') }} ₫</strong>
                                                 </span>
@@ -1688,12 +1874,24 @@
                                         <thead>
                                             <tr
                                                 class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
-                                                <th class="text-left p-2 font-semibold table-header">Kỳ lương</th>
-                                                <th class="text-left p-2 font-semibold table-header">Ngày công</th>
-                                                <th class="text-left p-2 font-semibold table-header">Lương CB</th>
-                                                <th class="text-left p-2 font-semibold table-header">Phụ cấp</th>
-                                                <th class="text-left p-2 font-semibold table-header">Thực nhận</th>
-                                                <th class="text-left p-2 font-semibold table-header">Trạng thái</th>
+                                                <th
+                                                    class="text-left p-2 font-semibold table-header text-gray-700 dark:text-gray-300">
+                                                    Kỳ lương</th>
+                                                <th
+                                                    class="text-left p-2 font-semibold table-header text-gray-700 dark:text-gray-300">
+                                                    Ngày công</th>
+                                                <th
+                                                    class="text-left p-2 font-semibold table-header text-gray-700 dark:text-gray-300">
+                                                    Lương CB</th>
+                                                <th
+                                                    class="text-left p-2 font-semibold table-header text-gray-700 dark:text-gray-300">
+                                                    Phụ cấp</th>
+                                                <th
+                                                    class="text-left p-2 font-semibold table-header text-gray-700 dark:text-gray-300">
+                                                    Thực nhận</th>
+                                                <th
+                                                    class="text-left p-2 font-semibold table-header text-gray-700 dark:text-gray-300">
+                                                    Trạng thái</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -1723,21 +1921,23 @@
                                                 @endphp
                                                 <tr
                                                     class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                                                    <td class="p-2 font-medium table-cell">
+                                                    <td class="p-2 font-medium table-cell text-gray-800 dark:text-white">
                                                         @if ($bangLuong)
                                                             Tháng {{ $bangLuong->thang }}/{{ $bangLuong->nam }}
                                                             <br>
                                                             <span
-                                                                class="text-xs text-gray-400 font-sensitive">{{ $bangLuong->ma_bang_luong }}</span>
+                                                                class="text-xs text-gray-400 dark:text-gray-500 font-sensitive">{{ $bangLuong->ma_bang_luong }}</span>
                                                         @else
-                                                            <span class="text-gray-400">Không xác định</span>
+                                                            <span class="text-gray-400 dark:text-gray-500">Không xác
+                                                                định</span>
                                                         @endif
                                                     </td>
-                                                    <td class="p-2 table-cell">
+                                                    <td class="p-2 table-cell text-gray-800 dark:text-white">
                                                         {{ number_format($item->so_ngay_cong ?? 0, 2) }}</td>
                                                     <td class="p-2 table-cell">
                                                         <span class="sensitive-label">
-                                                            <span class="toggle-content hidden-content salary-amount"
+                                                            <span
+                                                                class="toggle-content hidden-content salary-amount text-gray-800 dark:text-gray-200"
                                                                 data-sensitive="ls_luong_cb_{{ $item->id }}">
                                                                 {{ number_format($item->luong_co_ban ?? 0, 0, ',', '.') }}
                                                             </span>
@@ -1750,7 +1950,8 @@
                                                     </td>
                                                     <td class="p-2 table-cell">
                                                         <span class="sensitive-label">
-                                                            <span class="toggle-content hidden-content salary-amount"
+                                                            <span
+                                                                class="toggle-content hidden-content salary-amount text-gray-800 dark:text-gray-200"
                                                                 data-sensitive="ls_phu_cap_{{ $item->id }}">
                                                                 {{ number_format($item->tong_phu_cap ?? 0, 0, ',', '.') }}
                                                             </span>
@@ -1761,7 +1962,8 @@
                                                             </button>
                                                         </span>
                                                     </td>
-                                                    <td class="p-2 font-bold text-green-600 table-cell">
+                                                    <td
+                                                        class="p-2 font-bold text-green-600 dark:text-green-400 table-cell">
                                                         <span class="sensitive-label">
                                                             <span class="toggle-content hidden-content salary-amount"
                                                                 data-sensitive="ls_thuc_nhan_{{ $item->id }}">
@@ -1776,7 +1978,7 @@
                                                     </td>
                                                     <td class="p-2 table-cell">
                                                         <span
-                                                            class="px-2 py-0.5 rounded-full text-xs font-medium badge-text {{ $statusClass[$trangThai] ?? 'bg-gray-100 text-gray-600' }}">
+                                                            class="px-2 py-0.5 rounded-full text-xs font-medium badge-text {{ $statusClass[$trangThai] ?? 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400' }}">
                                                             {{ $statusMap[$trangThai] ?? ($trangThai ?? 'Không xác định') }}
                                                         </span>
                                                     </td>
@@ -1786,7 +1988,7 @@
                                     </table>
                                 </div>
 
-                                <div class="mt-3 text-xs text-gray-400 font-body">
+                                <div class="mt-3 text-xs text-gray-400 dark:text-gray-500 font-body">
                                     📌 Hiển thị {{ $lichSuLuong->count() }} bản ghi lương gần nhất
                                 </div>
                             @else
@@ -1794,7 +1996,8 @@
                                 <div class="text-center py-8 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                                     <div class="text-4xl mb-2">📭</div>
                                     <p class="text-gray-500 dark:text-gray-400 text-sm font-body">Chưa có lịch sử lương</p>
-                                    <p class="text-xs text-gray-400 mt-1 font-body">Dữ liệu lương sẽ hiển thị sau khi chốt
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1 font-body">Dữ liệu lương sẽ
+                                        hiển thị sau khi chốt
                                         lương</p>
                                 </div>
                             @endif
@@ -1805,9 +2008,6 @@
                 </div>
             @endif
 
-            {{-- ========================================================== --}}
-            {{-- TAB 5: BẢO HIỂM & THUẾ (CHỈ ADMIN & HR) --}}
-            {{-- ========================================================== --}}
             {{-- ========================================================== --}}
             {{-- TAB 5: BẢO HIỂM & THUẾ (CHỈ ADMIN & HR) --}}
             {{-- ========================================================== --}}
@@ -1850,7 +2050,7 @@
                                 <h3 class="text-lg font-semibold text-gray-800 dark:text-white font-heading">🛡️ Bảo hiểm
                                     xã hội</h3>
                                 <button onclick="toggleAllSensitive()"
-                                    class="text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition flex items-center gap-1.5 font-medium">
+                                    class="text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition flex items-center gap-1.5 font-medium text-gray-700 dark:text-gray-300">
                                     <i class="fas fa-eye"></i>
                                     <span>Hiện tất cả</span>
                                 </button>
@@ -1889,7 +2089,7 @@
                                 <div class="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
                                     <span class="text-gray-500 dark:text-gray-400 font-medium">Nơi đăng ký KCB</span>
                                     <span
-                                        class="font-medium font-body">{{ $hoSo->noi_dang_ky_kcb ?? 'Chưa cập nhật' }}</span>
+                                        class="font-medium font-body text-gray-800 dark:text-white">{{ $hoSo->noi_dang_ky_kcb ?? 'Chưa cập nhật' }}</span>
                                 </div>
 
                                 <div class="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
@@ -1912,7 +2112,7 @@
                                         <span class="text-gray-500 dark:text-gray-400 font-medium">BHXH (8%)</span>
                                         <span class="sensitive-label">
                                             <span
-                                                class="toggle-content hidden-content font-medium text-blue-600 salary-amount"
+                                                class="toggle-content hidden-content font-medium text-blue-600 dark:text-blue-400 salary-amount"
                                                 data-sensitive="bhxh_detail">
                                                 {{ number_format($bhxh, 0, ',', '.') }} ₫
                                             </span>
@@ -1926,7 +2126,7 @@
                                         <span class="text-gray-500 dark:text-gray-400 font-medium">BHYT (1.5%)</span>
                                         <span class="sensitive-label">
                                             <span
-                                                class="toggle-content hidden-content font-medium text-blue-600 salary-amount"
+                                                class="toggle-content hidden-content font-medium text-blue-600 dark:text-blue-400 salary-amount"
                                                 data-sensitive="bhyt_detail">
                                                 {{ number_format($bhyt, 0, ',', '.') }} ₫
                                             </span>
@@ -1940,7 +2140,7 @@
                                         <span class="text-gray-500 dark:text-gray-400 font-medium">BHTN (1%)</span>
                                         <span class="sensitive-label">
                                             <span
-                                                class="toggle-content hidden-content font-medium text-blue-600 salary-amount"
+                                                class="toggle-content hidden-content font-medium text-blue-600 dark:text-blue-400 salary-amount"
                                                 data-sensitive="bhtn_detail">
                                                 {{ number_format($bhtn, 0, ',', '.') }} ₫
                                             </span>
@@ -1955,7 +2155,8 @@
                                         <span class="text-gray-700 dark:text-gray-300 font-heading">Tổng đóng
                                             (10.5%)</span>
                                         <span class="sensitive-label">
-                                            <span class="toggle-content hidden-content text-red-600 salary-amount"
+                                            <span
+                                                class="toggle-content hidden-content text-red-600 dark:text-red-400 salary-amount"
                                                 data-sensitive="tong_bh_detail">
                                                 {{ number_format($tongBaoHiem, 0, ',', '.') }} ₫
                                             </span>
@@ -1972,12 +2173,12 @@
                                         <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 font-heading">
                                             👨‍👩‍👧‍👦 Người phụ thuộc
                                             <span
-                                                class="text-xs font-normal text-gray-500 font-body">({{ $soNguoiPhuThuoc }}
+                                                class="text-xs font-normal text-gray-500 dark:text-gray-400 font-body">({{ $soNguoiPhuThuoc }}
                                                 người)</span>
                                         </h4>
                                         @if ($soNguoiPhuThuoc > 0)
                                             <span
-                                                class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full badge-text">
+                                                class="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-full badge-text">
                                                 Giảm trừ: {{ number_format(6200000 * $soNguoiPhuThuoc, 0, ',', '.') }}
                                                 ₫/tháng
                                             </span>
@@ -1990,17 +2191,28 @@
                                                 <thead>
                                                     <tr
                                                         class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
-                                                        <th class="text-left p-1.5 font-semibold text-xs table-header">Họ
+                                                        <th
+                                                            class="text-left p-1.5 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                            Họ
                                                             tên</th>
-                                                        <th class="text-left p-1.5 font-semibold text-xs table-header">Ngày
+                                                        <th
+                                                            class="text-left p-1.5 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                            Ngày
                                                             sinh</th>
-                                                        <th class="text-left p-1.5 font-semibold text-xs table-header">Quan
+                                                        <th
+                                                            class="text-left p-1.5 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                            Quan
                                                             hệ</th>
-                                                        <th class="text-left p-1.5 font-semibold text-xs table-header">Mã
+                                                        <th
+                                                            class="text-left p-1.5 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                            Mã
                                                             số thuế</th>
-                                                        <th class="text-left p-1.5 font-semibold text-xs table-header">Ngày
+                                                        <th
+                                                            class="text-left p-1.5 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                            Ngày
                                                             bắt đầu</th>
-                                                        <th class="text-left p-1.5 font-semibold text-xs table-header">
+                                                        <th
+                                                            class="text-left p-1.5 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
                                                             Trạng thái</th>
                                                     </tr>
                                                 </thead>
@@ -2011,29 +2223,33 @@
                                                                 is_null($npt->ngay_ket_thuc) ||
                                                                 $npt->ngay_ket_thuc >= now();
                                                             $statusColor = $isActive
-                                                                ? 'text-green-600 bg-green-100'
-                                                                : 'text-red-600 bg-red-100';
+                                                                ? 'text-green-600 bg-green-100 dark:text-green-300 dark:bg-green-900/50'
+                                                                : 'text-red-600 bg-red-100 dark:text-red-300 dark:bg-red-900/50';
                                                             $statusText = $isActive
                                                                 ? '✅ Đang áp dụng'
                                                                 : '⛔ Đã kết thúc';
                                                         @endphp
                                                         <tr
                                                             class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                                                            <td class="p-1.5 text-xs font-medium table-cell">
+                                                            <td
+                                                                class="p-1.5 text-xs font-medium table-cell text-gray-800 dark:text-white">
                                                                 {{ $npt->ho_ten }}
                                                             </td>
-                                                            <td class="p-1.5 text-xs table-cell">
+                                                            <td
+                                                                class="p-1.5 text-xs table-cell text-gray-800 dark:text-white">
                                                                 {{ $npt->ngay_sinh ? $npt->ngay_sinh->format('d/m/Y') : '---' }}
                                                             </td>
                                                             <td class="p-1.5 text-xs table-cell">
                                                                 <span
-                                                                    class="px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-700 badge-text">
+                                                                    class="px-1.5 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200 badge-text">
                                                                     {{ $npt->quan_he == 'con' ? '👶 Con' : ($npt->quan_he == 'vo' ? '👩 Vợ' : ($npt->quan_he == 'chong' ? '👨 Chồng' : ($npt->quan_he == 'cha' ? '👨 Cha' : ($npt->quan_he == 'me' ? '👩 Mẹ' : '👤 Khác')))) }}
                                                                 </span>
                                                             </td>
-                                                            <td class="p-1.5 text-xs font-sensitive">
+                                                            <td
+                                                                class="p-1.5 text-xs font-sensitive text-gray-800 dark:text-white">
                                                                 {{ $npt->ma_so_thue ?? '---' }}</td>
-                                                            <td class="p-1.5 text-xs table-cell">
+                                                            <td
+                                                                class="p-1.5 text-xs table-cell text-gray-800 dark:text-white">
                                                                 {{ $npt->ngay_bat_dau ? $npt->ngay_bat_dau->format('d/m/Y') : '---' }}
                                                             </td>
                                                             <td class="p-1.5 text-xs table-cell">
@@ -2047,7 +2263,7 @@
                                                 </tbody>
                                             </table>
                                         </div>
-                                        <div class="mt-2 text-xs text-gray-400 font-body">
+                                        <div class="mt-2 text-xs text-gray-400 dark:text-gray-500 font-body">
                                             📌 Tổng giảm trừ gia cảnh: {{ number_format($giamTruGiaCanh, 0, ',', '.') }}
                                             ₫/tháng
                                             (Bản thân: {{ number_format($giamTruBanThan, 0, ',', '.') }} ₫ +
@@ -2058,7 +2274,8 @@
                                             <p class="text-gray-500 dark:text-gray-400 text-sm font-body">📭 Chưa có người
                                                 phụ thuộc
                                                 đăng ký</p>
-                                            <p class="text-xs text-gray-400 mt-1 font-body">Thêm người phụ thuộc để được
+                                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1 font-body">Thêm người
+                                                phụ thuộc để được
                                                 giảm trừ gia
                                                 cảnh</p>
                                         </div>
@@ -2072,13 +2289,14 @@
                                             class="text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2 font-body">
                                             <span>⚠️</span> Thông tin bảo hiểm chưa được cập nhật.
                                             <a href="{{ route('admin.ho-so.edit', $hoSo->id) }}"
-                                                class="text-blue-600 hover:underline font-medium">Cập nhật ngay</a>
+                                                class="text-blue-600 dark:text-blue-400 hover:underline font-medium">Cập
+                                                nhật ngay</a>
                                         </p>
                                     </div>
                                 @endif
 
                                 @if ($bangLuongGanNhat)
-                                    <div class="text-xs text-gray-400 mt-2 font-body">
+                                    <div class="text-xs text-gray-400 dark:text-gray-500 mt-2 font-body">
                                         📋 Kỳ lương: {{ $kyLuu }}
                                     </div>
                                 @endif
@@ -2093,7 +2311,7 @@
                                     TNCN</span>
                                 <span class="sensitive-label">
                                     <span
-                                        class="toggle-content hidden-content font-bold {{ $thueTncn > 0 ? 'text-red-600' : 'text-green-600' }} text-lg salary-amount"
+                                        class="toggle-content hidden-content font-bold {{ $thueTncn > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400' }} text-lg salary-amount"
                                         data-sensitive="thue_tncn_tab5">
                                         {{ number_format($thueTncn, 0, ',', '.') }} ₫
                                     </span>
@@ -2119,7 +2337,7 @@
                                 </span>
                             </div>
 
-                            <div class="pl-4 text-xs text-gray-400 font-body">
+                            <div class="pl-4 text-xs text-gray-400 dark:text-gray-500 font-body">
                                 = {{ number_format($luongCoBanHienTai, 0, ',', '.') }}
                                 @if ($coPhuCap)
                                     + {{ number_format($tongPhuCap, 0, ',', '.') }}
@@ -2132,7 +2350,8 @@
                             <div class="flex justify-between py-1 text-sm border-t border-gray-200 dark:border-gray-600">
                                 <span class="text-gray-500 dark:text-gray-400 font-medium">🔻 Bảo hiểm (10.5%)</span>
                                 <span class="sensitive-label">
-                                    <span class="toggle-content hidden-content font-medium text-red-600 salary-amount"
+                                    <span
+                                        class="toggle-content hidden-content font-medium text-red-600 dark:text-red-400 salary-amount"
                                         data-sensitive="bao_hiem_tab5">
                                         -{{ number_format($tongBaoHiem, 0, ',', '.') }} ₫
                                     </span>
@@ -2147,7 +2366,8 @@
                                 <span class="text-gray-500 dark:text-gray-400 font-medium">👨‍👩‍👧‍👦 Giảm trừ gia
                                     cảnh</span>
                                 <span class="sensitive-label">
-                                    <span class="toggle-content hidden-content font-medium text-blue-600 salary-amount"
+                                    <span
+                                        class="toggle-content hidden-content font-medium text-blue-600 dark:text-blue-400 salary-amount"
                                         data-sensitive="giam_tru_gia_canh">
                                         -{{ number_format($giamTruGiaCanh, 0, ',', '.') }} ₫
                                     </span>
@@ -2157,7 +2377,7 @@
                                     </button>
                                 </span>
                             </div>
-                            <div class="text-xs text-gray-400 pl-4 font-body">
+                            <div class="text-xs text-gray-400 dark:text-gray-500 pl-4 font-body">
                                 Bản thân: {{ number_format($giamTruBanThan, 0, ',', '.') }} ₫
                                 @if ($soNguoiPhuThuoc > 0)
                                     + {{ $soNguoiPhuThuoc }} người PT × 6.200.000 ₫
@@ -2169,7 +2389,7 @@
                                 <span class="text-gray-600 dark:text-gray-300 font-medium">📝 Thu nhập chịu thuế</span>
                                 <span class="sensitive-label">
                                     <span
-                                        class="toggle-content hidden-content font-bold {{ $thuNhapChiuThue > 0 ? 'text-orange-600' : 'text-green-600' }} salary-amount"
+                                        class="toggle-content hidden-content font-bold {{ $thuNhapChiuThue > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-green-600 dark:text-green-400' }} salary-amount"
                                         data-sensitive="thu_nhap_chiu_thue">
                                         {{ number_format($thuNhapChiuThue, 0, ',', '.') }} ₫
                                     </span>
@@ -2179,7 +2399,7 @@
                                     </button>
                                 </span>
                             </div>
-                            <div class="text-xs text-gray-400 pl-4 font-body">
+                            <div class="text-xs text-gray-400 dark:text-gray-500 pl-4 font-body">
                                 = {{ number_format($tongThuNhap, 0, ',', '.') }} -
                                 {{ number_format($tongBaoHiem, 0, ',', '.') }}
                             </div>
@@ -2188,7 +2408,7 @@
                                 <span class="text-gray-500 dark:text-gray-400 font-medium">📊 Thu nhập tính thuế</span>
                                 <span class="sensitive-label">
                                     <span
-                                        class="toggle-content hidden-content font-medium {{ $thuNhapTinhThue > 0 ? 'text-orange-600' : 'text-green-600' }} salary-amount"
+                                        class="toggle-content hidden-content font-medium {{ $thuNhapTinhThue > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-green-600 dark:text-green-400' }} salary-amount"
                                         data-sensitive="thu_nhap_tinh_thue">
                                         {{ number_format(max(0, $thuNhapTinhThue), 0, ',', '.') }} ₫
                                     </span>
@@ -2198,7 +2418,7 @@
                                     </button>
                                 </span>
                             </div>
-                            <div class="text-xs text-gray-400 pl-4 font-body">
+                            <div class="text-xs text-gray-400 dark:text-gray-500 pl-4 font-body">
                                 = {{ number_format($thuNhapChiuThue, 0, ',', '.') }} -
                                 {{ number_format($giamTruGiaCanh, 0, ',', '.') }}
                             </div>
@@ -2208,7 +2428,7 @@
                                     TNCN</span>
                                 <span class="sensitive-label">
                                     <span
-                                        class="toggle-content hidden-content font-bold {{ $thueTncn > 0 ? 'text-red-600' : 'text-green-600' }} text-lg salary-amount"
+                                        class="toggle-content hidden-content font-bold {{ $thueTncn > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400' }} text-lg salary-amount"
                                         data-sensitive="thue_tncn_final">
                                         {{ number_format($thueTncn, 0, ',', '.') }} ₫
                                     </span>
@@ -2251,7 +2471,7 @@
                                     - {{ number_format($thueTncn, 0, ',', '.') }}
                                 </div>
                                 @if ($bangLuongGanNhat)
-                                    <div class="text-xs text-gray-400 mt-1 font-body">
+                                    <div class="text-xs text-gray-400 dark:text-gray-500 mt-1 font-body">
                                         📋 Kỳ lương: {{ $kyLuu }}
                                     </div>
                                 @endif
@@ -2264,25 +2484,27 @@
                                 </p>
                                 <div class="grid grid-cols-2 gap-1 text-xs">
                                     <div class="flex justify-between">
-                                        <span class="text-gray-500 font-body">Giảm trừ bản thân:</span>
+                                        <span class="text-gray-500 dark:text-gray-400 font-body">Giảm trừ bản thân:</span>
                                         <span
-                                            class="font-medium font-body">{{ number_format($giamTruBanThan, 0, ',', '.') }}
+                                            class="font-medium font-body text-gray-800 dark:text-white">{{ number_format($giamTruBanThan, 0, ',', '.') }}
                                             ₫</span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span class="text-gray-500 font-body">Người phụ thuộc:</span>
-                                        <span class="font-medium font-body">{{ $soNguoiPhuThuoc }} người</span>
+                                        <span class="text-gray-500 dark:text-gray-400 font-body">Người phụ thuộc:</span>
+                                        <span
+                                            class="font-medium font-body text-gray-800 dark:text-white">{{ $soNguoiPhuThuoc }}
+                                            người</span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span class="text-gray-500 font-body">Giảm trừ NPT:</span>
+                                        <span class="text-gray-500 dark:text-gray-400 font-body">Giảm trừ NPT:</span>
                                         <span
-                                            class="font-medium font-body">{{ number_format(6200000 * $soNguoiPhuThuoc, 0, ',', '.') }}
+                                            class="font-medium font-body text-gray-800 dark:text-white">{{ number_format(6200000 * $soNguoiPhuThuoc, 0, ',', '.') }}
                                             ₫</span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span class="text-gray-500 font-body">Tổng giảm trừ:</span>
+                                        <span class="text-gray-500 dark:text-gray-400 font-body">Tổng giảm trừ:</span>
                                         <span
-                                            class="font-medium text-blue-600 font-body">{{ number_format($giamTruGiaCanh, 0, ',', '.') }}
+                                            class="font-medium text-blue-600 dark:text-blue-400 font-body">{{ number_format($giamTruGiaCanh, 0, ',', '.') }}
                                             ₫</span>
                                     </div>
                                 </div>
@@ -2322,7 +2544,7 @@
                                                 </div>
                                                 @if ($item->co_chung_chi)
                                                     <span
-                                                        class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full badge-text">📜
+                                                        class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-full badge-text">📜
                                                         Có chứng chỉ</span>
                                                 @endif
                                             </div>
@@ -2365,7 +2587,7 @@
                                                     </span>
                                                     @if ($item->so_tien)
                                                         <span
-                                                            class="text-sm {{ $item->loai == 'khen_thuong' ? 'text-green-600' : 'text-red-600' }} ml-2 font-body">
+                                                            class="text-sm {{ $item->loai == 'khen_thuong' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }} ml-2 font-body">
                                                             ({{ $item->loai == 'khen_thuong' ? '+' : '-' }}{{ number_format($item->so_tien, 0, ',', '.') }}
                                                             ₫)
                                                         </span>
@@ -2379,15 +2601,16 @@
                                                     {{ $item->noi_dung }}</p>
                                             @endif
                                             @if ($item->hinh_thuc)
-                                                <span class="text-xs text-gray-500 font-body">📌 Hình thức:
+                                                <span class="text-xs text-gray-500 dark:text-gray-400 font-body">📌 Hình
+                                                    thức:
                                                     {{ $item->hinh_thuc }}</span>
                                             @endif
                                             @if ($item->quyet_dinh_so)
-                                                <span class="text-xs text-gray-500 ml-2 font-body">• QĐ:
+                                                <span class="text-xs text-gray-500 dark:text-gray-400 ml-2 font-body">• QĐ:
                                                     {{ $item->quyet_dinh_so }}</span>
                                             @endif
                                             @if ($item->nguoiKy)
-                                                <div class="text-xs text-gray-400 mt-1 font-body">
+                                                <div class="text-xs text-gray-400 dark:text-gray-500 mt-1 font-body">
                                                     ✍️ Ký bởi: {{ $item->nguoiKy->ho ?? '' }}
                                                     {{ $item->nguoiKy->ten ?? '' }}
                                                 </div>
@@ -2454,39 +2677,39 @@
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
                         <div
                             class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800 text-center">
-                            <p class="text-2xl font-bold text-blue-600 font-number">
+                            <p class="text-2xl font-bold text-blue-600 dark:text-blue-400 font-number">
                                 {{ $thongKeDonTu['tong_don_nghi'] ?? 0 }}</p>
                             <p class="text-xs text-gray-500 dark:text-gray-400 font-body">📋 Tổng đơn nghỉ</p>
                         </div>
                         <div
                             class="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-4 border border-yellow-200 dark:border-yellow-800 text-center">
-                            <p class="text-2xl font-bold text-yellow-600 font-number">
+                            <p class="text-2xl font-bold text-yellow-600 dark:text-yellow-400 font-number">
                                 {{ $thongKeDonTu['don_nghi_cho_duyet'] ?? 0 }}
                             </p>
                             <p class="text-xs text-gray-500 dark:text-gray-400 font-body">⏳ Chờ duyệt</p>
                         </div>
                         <div
                             class="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border border-green-200 dark:border-green-800 text-center">
-                            <p class="text-2xl font-bold text-green-600 font-number">
+                            <p class="text-2xl font-bold text-green-600 dark:text-green-400 font-number">
                                 {{ $thongKeDonTu['don_nghi_da_duyet'] ?? 0 }}
                             </p>
                             <p class="text-xs text-gray-500 dark:text-gray-400 font-body">✅ Đã duyệt</p>
                         </div>
                         <div
                             class="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 border border-red-200 dark:border-red-800 text-center">
-                            <p class="text-2xl font-bold text-red-600 font-number">
+                            <p class="text-2xl font-bold text-red-600 dark:text-red-400 font-number">
                                 {{ $thongKeDonTu['don_nghi_tu_choi'] ?? 0 }}</p>
                             <p class="text-xs text-gray-500 dark:text-gray-400 font-body">❌ Từ chối</p>
                         </div>
                         <div
                             class="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 border border-purple-200 dark:border-purple-800 text-center">
-                            <p class="text-2xl font-bold text-purple-600 font-number">
+                            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400 font-number">
                                 {{ $thongKeDonTu['tong_tang_ca'] ?? 0 }}</p>
                             <p class="text-xs text-gray-500 dark:text-gray-400 font-body">⏰ Tổng tăng ca</p>
                         </div>
                         <div
                             class="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-4 border border-orange-200 dark:border-orange-800 text-center">
-                            <p class="text-2xl font-bold text-orange-600 font-number">
+                            <p class="text-2xl font-bold text-orange-600 dark:text-orange-400 font-number">
                                 {{ $thongKeDonTu['tong_ve_som'] ?? 0 }}</p>
                             <p class="text-xs text-gray-500 dark:text-gray-400 font-body">🏠 Tổng về sớm</p>
                         </div>
@@ -2500,7 +2723,8 @@
                             <h3 class="text-lg font-semibold text-gray-800 dark:text-white font-heading">
                                 📋 Lịch sử nghỉ phép
                             </h3>
-                            <span class="text-xs text-gray-400 font-body">Tổng: {{ $lichSuNghiPhep->total() }} đơn</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500 font-body">Tổng:
+                                {{ $lichSuNghiPhep->total() }} đơn</span>
                         </div>
 
                         @if ($lichSuNghiPhep && $lichSuNghiPhep->count() > 0)
@@ -2509,16 +2733,36 @@
                                     <thead>
                                         <tr
                                             class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Ngày tạo</th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Loại</th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Từ ngày</th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Đến ngày</th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Số ngày</th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Đã dùng</th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Còn lại</th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Lý do</th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Trạng thái</th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Người duyệt</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Ngày tạo</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Loại</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Từ ngày</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Đến ngày</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Số ngày</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Đã dùng</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Còn lại</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Lý do</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Trạng thái</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Người duyệt</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -2552,49 +2796,51 @@
                                             @endphp
                                             <tr
                                                 class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                                                <td class="p-2 text-xs table-cell">
+                                                <td class="p-2 text-xs table-cell text-gray-800 dark:text-white">
                                                     {{ $item->created_at ? $item->created_at->format('d/m/Y') : '---' }}
                                                     <br><span
-                                                        class="text-gray-400 text-[10px]">{{ $item->created_at ? $item->created_at->format('H:i') : '' }}</span>
+                                                        class="text-gray-400 dark:text-gray-500 text-[10px]">{{ $item->created_at ? $item->created_at->format('H:i') : '' }}</span>
                                                 </td>
                                                 <td class="p-2 text-xs table-cell">
                                                     <span
-                                                        class="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 badge-text">
+                                                        class="px-2 py-0.5 rounded text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 badge-text">
                                                         {{ $item->loaiNghiPhep->ten ?? $item->loai_nghi_phep_id }}
                                                     </span>
                                                 </td>
-                                                <td class="p-2 text-xs table-cell">
+                                                <td class="p-2 text-xs table-cell text-gray-800 dark:text-white">
                                                     {{ $item->ngay_bat_dau ? $item->ngay_bat_dau->format('d/m/Y') : '---' }}
                                                 </td>
-                                                <td class="p-2 text-xs table-cell">
+                                                <td class="p-2 text-xs table-cell text-gray-800 dark:text-white">
                                                     {{ $item->ngay_ket_thuc ? $item->ngay_ket_thuc->format('d/m/Y') : '---' }}
                                                 </td>
-                                                <td class="p-2 text-xs text-center font-medium table-cell">
+                                                <td
+                                                    class="p-2 text-xs text-center font-medium table-cell text-gray-800 dark:text-white">
                                                     {{ $item->so_ngay_nghi }}
                                                 </td>
-                                                <td class="p-2 text-xs text-center font-medium text-orange-600 table-cell">
+                                                <td
+                                                    class="p-2 text-xs text-center font-medium text-orange-600 dark:text-orange-400 table-cell">
                                                     {{ number_format($soNgayDaDung, 1) }}
                                                 </td>
                                                 <td
-                                                    class="p-2 text-xs text-center font-bold {{ $conLai <= 0 ? 'text-red-600' : 'text-green-600' }} table-cell">
+                                                    class="p-2 text-xs text-center font-bold {{ $conLai <= 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400' }} table-cell">
                                                     {{ number_format($conLai, 1) }}
                                                 </td>
-                                                <td class="p-2 text-xs max-w-[150px] truncate table-cell"
+                                                <td class="p-2 text-xs max-w-[150px] truncate table-cell text-gray-800 dark:text-white"
                                                     title="{{ $item->ly_do }}">{{ $item->ly_do }}</td>
                                                 <td class="p-2 text-xs table-cell">
                                                     <span
-                                                        class="px-2 py-0.5 rounded-full text-xs font-medium badge-text {{ $statusColors[$item->trang_thai] ?? 'bg-gray-100 text-gray-700' }}">
+                                                        class="px-2 py-0.5 rounded-full text-xs font-medium badge-text {{ $statusColors[$item->trang_thai] ?? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400' }}">
                                                         {{ $statusTexts[$item->trang_thai] ?? $item->trang_thai }}
                                                     </span>
                                                 </td>
-                                                <td class="p-2 text-xs table-cell">
+                                                <td class="p-2 text-xs table-cell text-gray-800 dark:text-white">
                                                     @if ($item->nguoiDuyet)
                                                         {{ $item->nguoiDuyet->hoSo->ho ?? '' }}
                                                         {{ $item->nguoiDuyet->hoSo->ten ?? '' }}
                                                         <br><span
-                                                            class="text-gray-400 text-[10px]">{{ $item->thoi_gian_duyet ? $item->thoi_gian_duyet->format('d/m/Y H:i') : '' }}</span>
+                                                            class="text-gray-400 dark:text-gray-500 text-[10px]">{{ $item->thoi_gian_duyet ? $item->thoi_gian_duyet->format('d/m/Y H:i') : '' }}</span>
                                                     @else
-                                                        <span class="text-gray-400">---</span>
+                                                        <span class="text-gray-400 dark:text-gray-500">---</span>
                                                     @endif
                                                 </td>
                                             </tr>
@@ -2605,7 +2851,7 @@
 
                             @if ($lichSuNghiPhep->hasPages())
                                 <div class="mt-4 flex justify-between items-center">
-                                    <div class="text-xs text-gray-500 font-body">
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 font-body">
                                         Hiển thị {{ $lichSuNghiPhep->firstItem() }} - {{ $lichSuNghiPhep->lastItem() }}
                                         / {{ $lichSuNghiPhep->total() }} đơn
                                     </div>
@@ -2627,7 +2873,8 @@
                             <h3 class="text-lg font-semibold text-gray-800 dark:text-white font-heading">
                                 ⏰ Lịch sử tăng ca
                             </h3>
-                            <span class="text-xs text-gray-400 font-body">Tổng: {{ $lichSuTangCa->total() }} đơn</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500 font-body">Tổng:
+                                {{ $lichSuTangCa->total() }} đơn</span>
                         </div>
 
                         @if ($lichSuTangCa && $lichSuTangCa->count() > 0)
@@ -2636,13 +2883,27 @@
                                     <thead>
                                         <tr
                                             class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Ngày tạo</th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Ngày TC</th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Giờ</th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Số giờ</th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Lý do</th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Trạng thái</th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Người duyệt</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Ngày tạo</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Ngày TC</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Giờ</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Số giờ</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Lý do</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Trạng thái</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Người duyệt</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -2667,34 +2928,36 @@
                                             @endphp
                                             <tr
                                                 class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                                                <td class="p-2 text-xs table-cell">
+                                                <td class="p-2 text-xs table-cell text-gray-800 dark:text-white">
                                                     {{ $item->created_at ? $item->created_at->format('d/m/Y') : '---' }}
                                                     <br><span
-                                                        class="text-gray-400 text-[10px]">{{ $item->created_at ? $item->created_at->format('H:i') : '' }}</span>
+                                                        class="text-gray-400 dark:text-gray-500 text-[10px]">{{ $item->created_at ? $item->created_at->format('H:i') : '' }}</span>
                                                 </td>
-                                                <td class="p-2 text-xs table-cell">
+                                                <td class="p-2 text-xs table-cell text-gray-800 dark:text-white">
                                                     {{ $item->ngay_tang_ca ? $item->ngay_tang_ca->format('d/m/Y') : '---' }}
                                                 </td>
-                                                <td class="p-2 text-xs table-cell">{{ $item->gio_bat_dau }} -
+                                                <td class="p-2 text-xs table-cell text-gray-800 dark:text-white">
+                                                    {{ $item->gio_bat_dau }} -
                                                     {{ $item->gio_ket_thuc }}</td>
-                                                <td class="p-2 text-xs text-center font-medium table-cell">
+                                                <td
+                                                    class="p-2 text-xs text-center font-medium table-cell text-gray-800 dark:text-white">
                                                     {{ $item->so_gio_tang_ca }}h</td>
-                                                <td class="p-2 text-xs max-w-[150px] truncate table-cell"
+                                                <td class="p-2 text-xs max-w-[150px] truncate table-cell text-gray-800 dark:text-white"
                                                     title="{{ $item->ly_do_tang_ca }}">{{ $item->ly_do_tang_ca }}</td>
                                                 <td class="p-2 text-xs table-cell">
                                                     <span
-                                                        class="px-2 py-0.5 rounded-full text-xs font-medium badge-text {{ $statusColors[$item->trang_thai] ?? 'bg-gray-100 text-gray-700' }}">
+                                                        class="px-2 py-0.5 rounded-full text-xs font-medium badge-text {{ $statusColors[$item->trang_thai] ?? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400' }}">
                                                         {{ $statusTexts[$item->trang_thai] ?? $item->trang_thai }}
                                                     </span>
                                                 </td>
-                                                <td class="p-2 text-xs table-cell">
+                                                <td class="p-2 text-xs table-cell text-gray-800 dark:text-white">
                                                     @if ($item->nguoiDuyet)
                                                         {{ $item->nguoiDuyet->hoSo->ho ?? '' }}
                                                         {{ $item->nguoiDuyet->hoSo->ten ?? '' }}
                                                         <br><span
-                                                            class="text-gray-400 text-[10px]">{{ $item->thoi_gian_duyet ? $item->thoi_gian_duyet->format('d/m/Y H:i') : '' }}</span>
+                                                            class="text-gray-400 dark:text-gray-500 text-[10px]">{{ $item->thoi_gian_duyet ? $item->thoi_gian_duyet->format('d/m/Y H:i') : '' }}</span>
                                                     @else
-                                                        <span class="text-gray-400">---</span>
+                                                        <span class="text-gray-400 dark:text-gray-500">---</span>
                                                     @endif
                                                 </td>
                                             </tr>
@@ -2705,7 +2968,7 @@
 
                             @if ($lichSuTangCa->hasPages())
                                 <div class="mt-4 flex justify-between items-center">
-                                    <div class="text-xs text-gray-500 font-body">
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 font-body">
                                         Hiển thị {{ $lichSuTangCa->firstItem() }} - {{ $lichSuTangCa->lastItem() }} /
                                         {{ $lichSuTangCa->total() }} đơn
                                     </div>
@@ -2727,7 +2990,8 @@
                             <h3 class="text-lg font-semibold text-gray-800 dark:text-white font-heading">
                                 🏠 Lịch sử đơn xin về sớm
                             </h3>
-                            <span class="text-xs text-gray-400 font-body">Tổng: {{ $lichSuVeSom->total() }} đơn</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500 font-body">Tổng:
+                                {{ $lichSuVeSom->total() }} đơn</span>
                         </div>
 
                         @if ($lichSuVeSom && $lichSuVeSom->count() > 0)
@@ -2736,14 +3000,28 @@
                                     <thead>
                                         <tr
                                             class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Ngày tạo</th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Ngày về</th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Giờ ra dự kiến
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Ngày tạo</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Ngày về</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Giờ ra dự kiến
                                             </th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Số phút</th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Lý do</th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Trạng thái</th>
-                                            <th class="text-left p-2 font-semibold text-xs table-header">Người duyệt</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Số phút</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Lý do</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Trạng thái</th>
+                                            <th
+                                                class="text-left p-2 font-semibold text-xs table-header text-gray-700 dark:text-gray-300">
+                                                Người duyệt</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -2765,33 +3043,35 @@
                                             @endphp
                                             <tr
                                                 class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                                                <td class="p-2 text-xs table-cell">
+                                                <td class="p-2 text-xs table-cell text-gray-800 dark:text-white">
                                                     {{ $item->created_at ? $item->created_at->format('d/m/Y') : '---' }}
                                                     <br><span
-                                                        class="text-gray-400 text-[10px]">{{ $item->created_at ? $item->created_at->format('H:i') : '' }}</span>
+                                                        class="text-gray-400 dark:text-gray-500 text-[10px]">{{ $item->created_at ? $item->created_at->format('H:i') : '' }}</span>
                                                 </td>
-                                                <td class="p-2 text-xs table-cell">
+                                                <td class="p-2 text-xs table-cell text-gray-800 dark:text-white">
                                                     {{ $item->ngay ? $item->ngay->format('d/m/Y') : '---' }}
                                                 </td>
-                                                <td class="p-2 text-xs table-cell">{{ $item->gio_ra_du_kien }}</td>
-                                                <td class="p-2 text-xs text-center font-medium text-orange-600 table-cell">
+                                                <td class="p-2 text-xs table-cell text-gray-800 dark:text-white">
+                                                    {{ $item->gio_ra_du_kien }}</td>
+                                                <td
+                                                    class="p-2 text-xs text-center font-medium text-orange-600 dark:text-orange-400 table-cell">
                                                     {{ $item->so_phut_ve_som }}p</td>
-                                                <td class="p-2 text-xs max-w-[150px] truncate table-cell"
+                                                <td class="p-2 text-xs max-w-[150px] truncate table-cell text-gray-800 dark:text-white"
                                                     title="{{ $item->ly_do }}">{{ $item->ly_do }}</td>
                                                 <td class="p-2 text-xs table-cell">
                                                     <span
-                                                        class="px-2 py-0.5 rounded-full text-xs font-medium badge-text {{ $statusColors[$item->trang_thai] ?? 'bg-gray-100 text-gray-700' }}">
+                                                        class="px-2 py-0.5 rounded-full text-xs font-medium badge-text {{ $statusColors[$item->trang_thai] ?? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400' }}">
                                                         {{ $statusTexts[$item->trang_thai] ?? $item->trang_thai }}
                                                     </span>
                                                 </td>
-                                                <td class="p-2 text-xs table-cell">
+                                                <td class="p-2 text-xs table-cell text-gray-800 dark:text-white">
                                                     @if ($item->nguoiDuyet)
                                                         {{ $item->nguoiDuyet->hoSo->ho ?? '' }}
                                                         {{ $item->nguoiDuyet->hoSo->ten ?? '' }}
                                                         <br><span
-                                                            class="text-gray-400 text-[10px]">{{ $item->thoi_gian_duyet ? $item->thoi_gian_duyet->format('d/m/Y H:i') : '' }}</span>
+                                                            class="text-gray-400 dark:text-gray-500 text-[10px]">{{ $item->thoi_gian_duyet ? $item->thoi_gian_duyet->format('d/m/Y H:i') : '' }}</span>
                                                     @else
-                                                        <span class="text-gray-400">---</span>
+                                                        <span class="text-gray-400 dark:text-gray-500">---</span>
                                                     @endif
                                                 </td>
                                             </tr>
@@ -2802,7 +3082,7 @@
 
                             @if ($lichSuVeSom->hasPages())
                                 <div class="mt-4 flex justify-between items-center">
-                                    <div class="text-xs text-gray-500 font-body">
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 font-body">
                                         Hiển thị {{ $lichSuVeSom->firstItem() }} - {{ $lichSuVeSom->lastItem() }} /
                                         {{ $lichSuVeSom->total() }} đơn
                                     </div>
@@ -2961,13 +3241,13 @@
             function activateTab(tabId) {
                 tabs.forEach(t => {
                     t.classList.remove('active', 'bg-blue-700', 'text-white');
-                    t.classList.add('text-gray-600', 'hover:bg-gray-100');
+                    t.classList.add('text-gray-600', 'dark:text-gray-300', 'hover:bg-gray-100');
                 });
 
                 const activeTab = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
                 if (activeTab) {
                     activeTab.classList.add('active', 'bg-blue-700', 'text-white');
-                    activeTab.classList.remove('text-gray-600', 'hover:bg-gray-100');
+                    activeTab.classList.remove('text-gray-600', 'dark:text-gray-300', 'hover:bg-gray-100');
                 }
 
                 contents.forEach(c => c.classList.add('hidden'));
@@ -3068,7 +3348,7 @@
                                 const blobUrl = URL.createObjectURL(blob);
                                 content.innerHTML = `
                                     <iframe src="${blobUrl}#toolbar=0&navpanes=0&scrollbar=0" 
-                                        class="w-full h-[600px] border-0 rounded-lg bg-white" 
+                                        class="w-full h-[600px] border-0 rounded-lg bg-white dark:bg-gray-800" 
                                         style="min-height: 600px;">
                                     </iframe>
                                 `;
@@ -3090,10 +3370,10 @@
                                 `https://docs.google.com/viewer?embedded=true&url=${encodeURIComponent(url)}`;
                             content.innerHTML = `
                                 <iframe src="${viewerUrl}" 
-                                    class="w-full h-[600px] border-0 rounded-lg bg-white" 
+                                    class="w-full h-[600px] border-0 rounded-lg bg-white dark:bg-gray-800" 
                                     style="min-height: 600px;">
                                 </iframe>
-                                <p class="text-xs text-gray-400 text-center mt-2 font-body">⚡ Đang sử dụng Google Docs Viewer</p>
+                                <p class="text-xs text-gray-400 dark:text-gray-500 text-center mt-2 font-body">⚡ Đang sử dụng Google Docs Viewer</p>
                             `;
                         } else {
                             content.innerHTML = `
@@ -3101,7 +3381,7 @@
                                     <div class="text-6xl mb-4">📄</div>
                                     <p class="text-lg font-medium">Không thể xem trước file này</p>
                                     <p class="text-sm mt-2">Định dạng: ${contentType}</p>
-                                    <p class="text-sm">Vui lòng <a href="${url}" download class="text-blue-600 hover:underline font-medium">tải xuống</a> để xem</p>
+                                    <p class="text-sm">Vui lòng <a href="${url}" download class="text-blue-600 dark:text-blue-400 hover:underline font-medium">tải xuống</a> để xem</p>
                                 </div>
                             `;
                         }
@@ -3113,7 +3393,7 @@
                                 <div class="text-6xl mb-4">❌</div>
                                 <p class="text-lg font-medium text-red-600 dark:text-red-400">Không thể tải file</p>
                                 <p class="text-sm mt-2">${error.message}</p>
-                                <p class="text-xs text-gray-400 mt-1">Vui lòng kiểm tra file đã được tải lên chưa</p>
+                                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Vui lòng kiểm tra file đã được tải lên chưa</p>
                                 <div class="mt-4 flex justify-center gap-3 flex-wrap">
                                     <a href="${url}" download class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition font-medium">⬇️ Tải xuống</a>
                                     <button onclick="closeFilePreview()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition font-medium">Đóng</button>
@@ -3129,7 +3409,7 @@
             if (ext === 'pdf') {
                 content.innerHTML = `
                     <iframe src="${url}#toolbar=0&navpanes=0&scrollbar=0" 
-                        class="w-full h-[600px] border-0 rounded-lg bg-white" 
+                        class="w-full h-[600px] border-0 rounded-lg bg-white dark:bg-gray-800" 
                         style="min-height: 600px;">
                     </iframe>
                 `;
@@ -3142,9 +3422,9 @@
             } else if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) {
                 const viewerUrl = `https://docs.google.com/viewer?embedded=true&url=${encodeURIComponent(url)}`;
                 content.innerHTML = `
-                    <iframe src="${viewerUrl}" class="w-full h-[600px] border-0 rounded-lg bg-white" style="min-height: 600px;">
+                    <iframe src="${viewerUrl}" class="w-full h-[600px] border-0 rounded-lg bg-white dark:bg-gray-800" style="min-height: 600px;">
                     </iframe>
-                    <p class="text-xs text-gray-400 text-center mt-2 font-body">⚡ Đang sử dụng Google Docs Viewer</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 text-center mt-2 font-body">⚡ Đang sử dụng Google Docs Viewer</p>
                 `;
             } else {
                 content.innerHTML = `
@@ -3152,7 +3432,7 @@
                         <div class="text-6xl mb-4">📄</div>
                         <p class="text-lg font-medium">Không thể xem trước file này</p>
                         <p class="text-sm mt-2">Định dạng: .${ext}</p>
-                        <p class="text-sm">Vui lòng <a href="${url}" download class="text-blue-600 hover:underline font-medium">tải xuống</a> để xem</p>
+                        <p class="text-sm">Vui lòng <a href="${url}" download class="text-blue-600 dark:text-blue-400 hover:underline font-medium">tải xuống</a> để xem</p>
                     </div>
                 `;
             }
