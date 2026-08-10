@@ -567,6 +567,7 @@ class TinhLuongService
     $soNgayCong = $input['so_ngay_cong'] ?? $luong->so_ngay_cong;
     $gioTangCa  = $input['gio_tang_ca'] ?? $luong->gio_tang_ca;
     $tongPhuCap = $input['tong_phu_cap'] ?? $luong->tong_phu_cap;
+    $khauTruKhac = $input['khau_tru_khac'] ?? $luong->tong_khau_tru_khac;
 
     // ==========================
     // Đơn giá ngày / giờ
@@ -666,7 +667,7 @@ class TinhLuongService
     $tongKhauTru = round(
         $tongBaoHiem
         + $thue
-        + $luong->tong_khau_tru_khac,
+        + $khauTruKhac,
         2
     );
 
@@ -692,6 +693,8 @@ class TinhLuongService
         'tien_tang_ca'          => $tienTangCa,
 
         'tong_phu_cap'          => $tongPhuCap,
+
+        'tong_khau_tru_khac'    => $khauTruKhac,
 
         'tong_luong'            => $tongLuong,
 

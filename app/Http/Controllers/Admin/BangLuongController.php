@@ -6,12 +6,15 @@ use App\Exports\ChiTietBangLuongExport;
 use App\Http\Controllers\Controller;
 use App\Mail\PhieuLuongMail;
 use App\Models\BangLuong;
+use App\Models\KhauTruLuong;
+use App\Models\LichSuLuong;
 use App\Models\LuongNhanVien;
 use App\Models\NguoiDung;
 use App\Services\PdfService;
 use App\Services\TinhLuongService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -111,6 +114,142 @@ class BangLuongController extends Controller
         ])->where('bang_luong_id', $id)->findOrFail($luongId);
 
         return view('admin.bang-luong.chi-tiet-nhan-vien', compact('bangLuong', 'luong'));
+    }
+
+    /** Form sửa lương cho 1 nhân viên */
+    public function editNhanVien($id, $luongId)
+    {
+        $bangLuong = BangLuong::findOrFail($id);
+
+        if (!$bangLuong->la_nhap) {
+            return back()->with('error', 'Bảng lương đã chốt, không thể sửa thông tin lương.');
+        }
+
+        $luong = LuongNhanVien::with([
+            'nguoiDung.ho_so',
+            'nguoiDung.chuc_vu',
+            'phuCapLuongs.phuCap',
+        ])->where('bang_luong_id', $id)->findOrFail($luongId);
+
+        return view('admin.bang-luong.edit-nhan-vien', compact('bangLuong', 'luong'));
+    }
+
+    /** Cập nhật lại lương cho 1 nhân viên */
+    public function updateNhanVien(Request $request, $id, $luongId)
+    {
+        $bangLuong = BangLuong::findOrFail($id);
+
+        if (!$bangLuong->la_nhap) {
+            return back()->with('error', 'Bảng lương đã chốt, không thể sửa thông tin lương.');
+        }
+
+        $data = $request->validate([
+            'so_ngay_cong' => 'nullable|numeric|min:0|max:31',
+            'gio_tang_ca' => 'nullable|numeric|min:0',
+            'tong_phu_cap' => 'nullable|numeric|min:0',
+            'ghi_chu' => 'nullable|string|max:500',
+            'khau_tru_khac' => 'nullable|array',
+            'khau_tru_khac.tam_ung' => 'nullable|numeric|min:0',
+            'khau_tru_khac.phat' => 'nullable|numeric|min:0',
+            'khau_tru_khac.boi_thuong' => 'nullable|numeric|min:0',
+            'khau_tru_khac.khac' => 'nullable|numeric|min:0',
+        ]);
+
+        $luong = LuongNhanVien::where('bang_luong_id', $id)->findOrFail($luongId);
+
+        $khoanKhauTruKhac = [
+            'tam_ung' => (float) ($data['khau_tru_khac']['tam_ung'] ?? 0),
+            'phat' => (float) ($data['khau_tru_khac']['phat'] ?? 0),
+            'boi_thuong' => (float) ($data['khau_tru_khac']['boi_thuong'] ?? 0),
+            'khac' => (float) ($data['khau_tru_khac']['khac'] ?? 0),
+        ];
+
+        $tongKhauTruKhac = array_sum($khoanKhauTruKhac);
+        $ghiChu = trim((string) ($request->input('ghi_chu', '')));
+
+        $luongCu = [
+            'tong_luong' => (float) $luong->tong_luong,
+            'tong_khau_tru' => (float) $luong->tong_khau_tru,
+            'luong_thuc_nhan' => (float) $luong->luong_thuc_nhan,
+            'tong_phu_cap' => (float) $luong->tong_phu_cap,
+            'tong_khau_tru_khac' => (float) $luong->tong_khau_tru_khac,
+        ];
+
+        DB::transaction(function () use ($luong, $data, $tongKhauTruKhac, $ghiChu, $khoanKhauTruKhac, $luongCu) {
+            $ketQua = $this->tinhLuong->tinhLaiLuong($luong, [
+                'so_ngay_cong' => $data['so_ngay_cong'] ?? $luong->so_ngay_cong,
+                'gio_tang_ca' => $data['gio_tang_ca'] ?? $luong->gio_tang_ca,
+                'tong_phu_cap' => $data['tong_phu_cap'] ?? $luong->tong_phu_cap,
+                'khau_tru_khac' => $tongKhauTruKhac,
+            ]);
+
+            $luong->update(array_merge($ketQua, [
+                'ghi_chu' => $ghiChu,
+            ]));
+
+            KhauTruLuong::where('luong_nhan_vien_id', $luong->id)
+                ->whereIn('loai_khau_tru', ['bhxh', 'bhyt', 'bhtn', 'thue_tncn', 'khau_tru_khac'])
+                ->delete();
+
+            if (($ketQua['bhxh'] ?? 0) > 0) {
+                KhauTruLuong::create([
+                    'luong_nhan_vien_id' => $luong->id,
+                    'loai_khau_tru' => 'bhxh',
+                    'so_tien' => $ketQua['bhxh'],
+                    'ghi_chu' => 'BHXH',
+                ]);
+            }
+
+            if (($ketQua['bhyt'] ?? 0) > 0) {
+                KhauTruLuong::create([
+                    'luong_nhan_vien_id' => $luong->id,
+                    'loai_khau_tru' => 'bhyt',
+                    'so_tien' => $ketQua['bhyt'],
+                    'ghi_chu' => 'BHYT',
+                ]);
+            }
+
+            if (($ketQua['bhtn'] ?? 0) > 0) {
+                KhauTruLuong::create([
+                    'luong_nhan_vien_id' => $luong->id,
+                    'loai_khau_tru' => 'bhtn',
+                    'so_tien' => $ketQua['bhtn'],
+                    'ghi_chu' => 'BHTN',
+                ]);
+            }
+
+            if (($ketQua['thue_thu_nhap_ca_nhan'] ?? 0) > 0) {
+                KhauTruLuong::create([
+                    'luong_nhan_vien_id' => $luong->id,
+                    'loai_khau_tru' => 'thue_tncn',
+                    'so_tien' => $ketQua['thue_thu_nhap_ca_nhan'],
+                    'ghi_chu' => 'Thuế TNCN',
+                ]);
+            }
+
+            foreach ($khoanKhauTruKhac as $khoa => $soTien) {
+                if ($soTien <= 0) {
+                    continue;
+                }
+
+                $tenLoai = match ($khoa) {
+                    'tam_ung' => 'Tạm ứng',
+                    'phat' => 'Phạt',
+                    'boi_thuong' => 'Bồi thường',
+                    default => 'Khấu trừ khác',
+                };
+
+                KhauTruLuong::create([
+                    'luong_nhan_vien_id' => $luong->id,
+                    'loai_khau_tru' => 'khau_tru_khac',
+                    'so_tien' => $soTien,
+                    'ghi_chu' => $tenLoai,
+                ]);
+            }
+        });
+
+        return redirect()->route('admin.bang-luong.chi-tiet-nhan-vien', [$id, $luongId])
+            ->with('success', 'Đã cập nhật lại lương nhân viên.');
     }
 
     /** Chốt lương (khoá bảng lương) */
