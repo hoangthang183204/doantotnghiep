@@ -26,6 +26,10 @@
             </p>
         </div>
         <div class="flex gap-2">
+            <a href="{{ route('admin.bang-luong.edit-nhan-vien', [$bangLuong->id, $luong->id]) }}"
+               class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg shadow-sm">
+                <i class="fa-solid fa-pen-to-square mr-1"></i> Sửa lương
+            </a>
             <a href="{{ route('admin.bang-luong.phieu-luong-pdf', [$bangLuong->id, $luong->id]) }}"
                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm">
                 <i class="fa-solid fa-file-pdf mr-1"></i> Xuất PDF

@@ -281,6 +281,8 @@ Route::prefix('admin')
             Route::post('/tinh', [BangLuongController::class, 'tinhLuong'])->name('tinh')->middleware('CheckPermission:salary.calculate');
             Route::get('/{id}', [BangLuongController::class, 'show'])->whereNumber('id')->name('show');
             Route::get('/{id}/nhan-vien/{luongId}', [BangLuongController::class, 'chiTietNhanVien'])->whereNumber(['id', 'luongId'])->name('chi-tiet-nhan-vien');
+            Route::get('/{id}/nhan-vien/{luongId}/edit', [BangLuongController::class, 'editNhanVien'])->whereNumber(['id', 'luongId'])->name('edit-nhan-vien')->middleware('CheckPermission:salary.create');
+            Route::put('/{id}/nhan-vien/{luongId}', [BangLuongController::class, 'updateNhanVien'])->whereNumber(['id', 'luongId'])->name('update-nhan-vien')->middleware('CheckPermission:salary.create');
             Route::post('/{id}/gui-tat-ca-email', [BangLuongController::class, 'guiTatCaEmail'])->name('gui-tat-ca-email')->middleware('CheckPermission:salary.export');
             Route::post('/luong-nhan-vien/{luongId}/gui-email', [BangLuongController::class, 'guiEmailLuong'])->whereNumber('luongId')->name('gui-email')->middleware('CheckPermission:salary.export');
             Route::get('/{id}/export', [BangLuongController::class, 'export'])->whereNumber('id')->name('export')->middleware('CheckPermission:salary.export');
