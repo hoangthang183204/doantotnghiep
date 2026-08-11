@@ -1,5 +1,3 @@
-{{-- resources/views/truong-phong/tang-ca/show.blade.php --}}
-
 @extends('layouts.admin')
 
 @section('title', 'Chi tiết đơn tăng ca')
@@ -16,13 +14,14 @@
             </h1>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Mã đơn: <span class="font-medium">#{{ $tangCa->id }}</span></p>
         </div>
-        <a href="{{ route('duyet-tang-ca.index') }}" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition">
+        <a href="{{ route('truong-phong.tang-ca.index') }}" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition">
             <i class="fas fa-arrow-left mr-1"></i> Quay lại
         </a>
     </div>
 
     {{-- Nội dung --}}
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        
         {{-- Thông tin nhân viên --}}
         <div class="p-6 border-b border-gray-200 dark:border-gray-700">
             <h3 class="font-semibold text-gray-900 dark:text-white mb-4">
@@ -31,19 +30,19 @@
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Họ tên</p>
-                    <p class="font-medium">{{ $tangCa->nguoi_dung->hoSo->ho ?? '' }} {{ $tangCa->nguoi_dung->hoSo->ten ?? '' }}</p>
+                    <p class="font-medium">{{ optional($tangCa->nguoi_dung->hoSo)->ho ?? '' }} {{ optional($tangCa->nguoi_dung->hoSo)->ten ?? '' }}</p>
                 </div>
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Mã nhân viên</p>
-                    <p class="font-medium">{{ $tangCa->nguoi_dung->hoSo->ma_nhan_vien ?? 'N/A' }}</p>
+                    <p class="font-medium">{{ optional($tangCa->nguoi_dung->hoSo)->ma_nhan_vien ?? 'N/A' }}</p>
                 </div>
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Phòng ban</p>
-                    <p class="font-medium">{{ $tangCa->nguoi_dung->phongBan->ten_phong_ban ?? 'N/A' }}</p>
+                    <p class="font-medium">{{ optional($tangCa->nguoi_dung->phongBan)->ten_phong_ban ?? 'N/A' }}</p>
                 </div>
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Chức vụ</p>
-                    <p class="font-medium">{{ $tangCa->nguoi_dung->chucVu->ten ?? 'N/A' }}</p>
+                    <p class="font-medium">{{ optional($tangCa->nguoi_dung->chucVu)->ten ?? 'N/A' }}</p>
                 </div>
             </div>
         </div>
@@ -73,12 +72,17 @@
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Loại tăng ca</p>
                     <p class="font-medium">
-                        @if($tangCa->loai_tang_ca == 'ngay_thuong')
-                            Ngày thường
-                        @elseif($tangCa->loai_tang_ca == 'ngay_nghi')
-                            Ngày nghỉ
+                        @php $loaiLabels = ['ngay_thuong' => 'Ngày thường', 'ngay_nghi' => 'Ngày nghỉ']; @endphp
+                        {{ $loaiLabels[$tangCa->loai_tang_ca] ?? $tangCa->loai_tang_ca }}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Người tạo</p>
+                    <p class="font-medium">
+                        @if($tangCa->loai_tao == 'truong_phong')
+                            <span class="text-blue-600">👤 Trưởng phòng</span>
                         @else
-                            Lễ tết
+                            <span class="text-gray-600">👤 Nhân viên</span>
                         @endif
                     </p>
                 </div>
@@ -115,12 +119,12 @@
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Trạng thái</p>
                     <p class="font-medium">
-                        @if($tangCa->thuc_hien->trang_thai == 'hoan_thanh')
+                        @if($tangCa->thuc_hien->trang_thai == 'quan_ly_xac_nhan')
                             <span class="text-green-600">✅ Hoàn thành</span>
+                        @elseif($tangCa->thuc_hien->trang_thai == 'nhan_vien_xac_nhan')
+                            <span class="text-yellow-600">⏳ Chờ xác nhận</span>
                         @elseif($tangCa->thuc_hien->trang_thai == 'dang_lam')
-                            <span class="text-yellow-600">⏳ Đang làm</span>
-                        @elseif($tangCa->thuc_hien->trang_thai == 'khong_hoan_thanh')
-                            <span class="text-red-600">❌ Không hoàn thành</span>
+                            <span class="text-blue-600">🔄 Đang làm</span>
                         @else
                             <span class="text-gray-600">⏸ Chưa làm</span>
                         @endif
@@ -133,6 +137,12 @@
                 <p class="text-gray-700 dark:text-gray-300">{{ $tangCa->thuc_hien->cong_viec_da_thuc_hien }}</p>
             </div>
             @endif
+            @if($tangCa->luong_tang_ca)
+            <div class="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <p class="text-sm text-green-600 dark:text-green-400 font-medium">💰 Lương tăng ca</p>
+                <p class="text-lg font-bold text-green-700 dark:text-green-300">{{ number_format($tangCa->luong_tang_ca, 0) }}đ</p>
+            </div>
+            @endif
         </div>
         @endif
 
@@ -141,7 +151,7 @@
             <h3 class="font-semibold text-gray-900 dark:text-white mb-2">
                 <i class="fas fa-flag mr-2 text-blue-600"></i> Trạng thái
             </h3>
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 flex-wrap">
                 @if($tangCa->trang_thai == 'cho_duyet')
                     <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
                         <span class="w-2 h-2 bg-yellow-500 rounded-full mr-2 animate-pulse"></span>
@@ -162,7 +172,7 @@
                     </span>
                     @if($tangCa->nguoi_duyet)
                         <span class="text-sm text-gray-500">
-                            bởi {{ $tangCa->nguoi_duyet->hoSo->ho ?? '' }} {{ $tangCa->nguoi_duyet->hoSo->ten ?? '' }}
+                            bởi {{ optional($tangCa->nguoi_duyet->hoSo)->ho ?? '' }} {{ optional($tangCa->nguoi_duyet->hoSo)->ten ?? '' }}
                             lúc {{ \Carbon\Carbon::parse($tangCa->thoi_gian_duyet)->format('d/m/Y H:i') }}
                         </span>
                     @endif
@@ -174,6 +184,11 @@
                     @if($tangCa->ly_do_tu_choi)
                         <span class="text-sm text-red-600 dark:text-red-400">Lý do: {{ $tangCa->ly_do_tu_choi }}</span>
                     @endif
+                @elseif($tangCa->trang_thai == 'huy')
+                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                        <span class="w-2 h-2 bg-gray-500 rounded-full mr-2"></span>
+                        Đã hủy
+                    </span>
                 @endif
             </div>
         </div>
@@ -185,7 +200,7 @@
 function duyetTangCa(id) {
     if (!confirm('Bạn có chắc muốn duyệt đơn tăng ca này?')) return;
     
-    fetch(`/duyet-tang-ca/${id}/duyet`, {
+    fetch(`/truong-phong/tang-ca/${id}/duyet`, {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -202,9 +217,7 @@ function duyetTangCa(id) {
             showToast('❌ ' + data.message, 'error');
         }
     })
-    .catch(error => {
-        showToast('❌ Có lỗi xảy ra', 'error');
-    });
+    .catch(() => showToast('❌ Có lỗi xảy ra', 'error'));
 }
 
 function tuChoiTangCa(id) {
@@ -215,7 +228,7 @@ function tuChoiTangCa(id) {
         return;
     }
     
-    fetch(`/duyet-tang-ca/${id}/tu-choi`, {
+    fetch(`/truong-phong/tang-ca/${id}/tu-choi`, {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -233,19 +246,13 @@ function tuChoiTangCa(id) {
             showToast('❌ ' + data.message, 'error');
         }
     })
-    .catch(error => {
-        showToast('❌ Có lỗi xảy ra', 'error');
-    });
+    .catch(() => showToast('❌ Có lỗi xảy ra', 'error'));
 }
 
 function showToast(message, type = 'success') {
-    const colors = {
-        success: 'bg-green-500',
-        error: 'bg-red-500',
-        warning: 'bg-yellow-500'
-    };
+    const colors = { success: 'bg-green-500', error: 'bg-red-500', warning: 'bg-yellow-500' };
     const toast = document.createElement('div');
-    toast.className = `fixed top-4 right-4 ${colors[type] || 'bg-blue-500'} text-white px-6 py-3 rounded-xl shadow-lg z-50 transition-all duration-300`;
+    toast.className = `fixed top-4 right-4 ${colors[type] || 'bg-blue-500'} text-white px-6 py-3 rounded-xl shadow-lg z-50 transition-all duration-300 text-sm font-medium`;
     toast.innerHTML = message;
     document.body.appendChild(toast);
     setTimeout(() => {

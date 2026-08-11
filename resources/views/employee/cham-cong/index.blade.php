@@ -2,7 +2,6 @@
 
 @section('title', 'Chấm công')
 
-
 @section('content')
     <div class="space-y-6">
         <!-- Header -->
@@ -16,7 +15,6 @@
                 </p>
             </div>
             <div class="flex items-center gap-3">
-                <!-- ===== NÚT CHUYỂN SANG CHẤM CÔNG KHUÔN MẶT ===== -->
                 <a href="{{ route('employee.cham-cong-face.index') }}"
                     class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-sm font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-600/30 hover:shadow-purple-600/50">
                     <i class="fas fa-face-smile mr-2 text-lg"></i>
@@ -27,6 +25,87 @@
                 </span>
             </div>
         </div>
+
+        <!-- ===== THÔNG BÁO TĂNG CA ===== -->
+        @php
+            $showOvertime = false;
+            $overtimeData = null;
+            $overtimeStatus = '';
+
+            if (isset($overtimeToday) && $overtimeToday) {
+                $showOvertime = true;
+                $overtimeData = $overtimeToday;
+                $overtimeStatus = 'dang_trong_gio';
+            } elseif (isset($overtimeWaitInfo) && isset($overtimeWaitInfo['overtime'])) {
+                $showOvertime = true;
+                $overtimeData = $overtimeWaitInfo['overtime'];
+                $overtimeStatus = 'chua_den_gio';
+                $waitText = $overtimeWaitInfo['text'];
+            }
+        @endphp
+
+        @if($showOvertime && $overtimeData)
+            @if($overtimeStatus == 'dang_trong_gio')
+                {{-- ĐANG TRONG GIỜ TĂNG CA --}}
+                <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded-lg shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-blue-700 dark:text-blue-300 font-medium flex items-center gap-2">
+                                <i class="fas fa-clock text-blue-500 animate-pulse"></i>
+                                🔔 Bạn đang trong giờ tăng ca hôm nay!
+                            </p>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2 text-sm">
+                                <div>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">Giờ bắt đầu</span>
+                                    <p class="font-semibold text-blue-600 dark:text-blue-400">{{ $overtimeData->gio_bat_dau }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">Giờ kết thúc</span>
+                                    <p class="font-semibold text-blue-600 dark:text-blue-400">{{ $overtimeData->gio_ket_thuc }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">Số giờ</span>
+                                    <p class="font-semibold text-blue-600 dark:text-blue-400">{{ $overtimeData->so_gio_tang_ca }} giờ</p>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">Loại</span>
+                                    <p class="font-semibold text-blue-600 dark:text-blue-400">
+                                        @php
+                                            $loaiLabels = ['ngay_thuong' => 'Ngày thường', 'ngay_nghi' => 'Ngày nghỉ'];
+                                        @endphp
+                                        {{ $loaiLabels[$overtimeData->loai_tang_ca] ?? $overtimeData->loai_tang_ca }}
+                                    </p>
+                                </div>
+                            </div>
+                            <p class="text-xs text-blue-500 dark:text-blue-300 mt-2">
+                                ⚠️ Bạn KHÔNG cần check-out giờ hành chính. Check-out sau khi kết thúc tăng ca.
+                            </p>
+                        </div>
+                        <span class="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-medium">
+                            Đang tăng ca
+                        </span>
+                    </div>
+                </div>
+            @elseif($overtimeStatus == 'chua_den_gio')
+                {{-- CHƯA ĐẾN GIỜ TĂNG CA --}}
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 p-4 rounded-lg shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-clock text-yellow-500 text-xl"></i>
+                        <div>
+                            <p class="text-yellow-700 dark:text-yellow-300 font-medium">
+                                ⏳ {{ $waitText ?? 'Sắp đến giờ tăng ca' }}
+                            </p>
+                            <p class="text-xs text-yellow-600 dark:text-yellow-400">
+                                Bạn có đơn tăng ca hôm nay từ 
+                                <strong>{{ $overtimeData->gio_bat_dau }}</strong> 
+                                đến 
+                                <strong>{{ $overtimeData->gio_ket_thuc }}</strong>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+        @endif
 
         <!-- ===== THÔNG BÁO VỊ TRÍ ===== -->
         @if (!$isValidLocation)
@@ -78,15 +157,13 @@
         @endif
 
         <!-- ===== MAIN CHẤM CÔNG ===== -->
-        <div
-            class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
                 <h3 class="font-semibold text-gray-900 dark:text-white">
                     <i class="fas fa-fingerprint mr-2 text-blue-600 dark:text-blue-400"></i>
                     Trạng thái chấm công
                 </h3>
-                <span
-                    class="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2.5 py-1 rounded-full">
+                <span class="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2.5 py-1 rounded-full">
                     Hôm nay
                 </span>
             </div>
@@ -148,23 +225,17 @@
                     <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 text-center">
                         <p class="text-xs text-gray-500 dark:text-gray-400">Trạng thái</p>
                         @if ($daCheckIn && $daCheckOut)
-                            <span
-                                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
                                 <i class="fas fa-check-circle mr-1"></i> Hoàn thành
                             </span>
-                            <p class="text-xs text-gray-400 mt-1">{{ number_format($chamCongHomNay->so_gio_lam ?? 0, 1) }}h
-                                -
-                                {{ number_format($chamCongHomNay->so_cong ?? 0, 2) }} công</p>
+                            <p class="text-xs text-gray-400 mt-1">{{ number_format($chamCongHomNay->so_gio_lam ?? 0, 1) }}h - {{ number_format($chamCongHomNay->so_cong ?? 0, 2) }} công</p>
                         @elseif($daCheckIn)
-                            <span
-                                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-700">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-700">
                                 <i class="fas fa-clock mr-1"></i> Đang làm
                             </span>
-                            <p class="text-xs text-gray-400 mt-1">Đã làm
-                                {{ number_format($chamCongHomNay->so_gio_lam ?? 0, 1) }}h</p>
+                            <p class="text-xs text-gray-400 mt-1">Đã làm {{ number_format($chamCongHomNay->so_gio_lam ?? 0, 1) }}h</p>
                         @else
-                            <span
-                                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-500">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-500">
                                 <i class="fas fa-hourglass-start mr-1"></i> Chưa bắt đầu
                             </span>
                         @endif
@@ -204,20 +275,18 @@
                     @else
                         <!-- Đã hoàn thành -->
                         <div class="text-center">
-                            <div
-                                class="inline-flex items-center px-6 py-3 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-xl">
+                            <div class="inline-flex items-center px-6 py-3 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-xl">
                                 <i class="fas fa-check-circle text-2xl mr-3"></i>
                                 <div>
                                     <p class="font-bold">Đã hoàn thành chấm công hôm nay</p>
-                                    <p class="text-sm">Đã làm {{ number_format($chamCongHomNay->so_gio_lam ?? 0, 1) }} giờ
-                                    </p>
+                                    <p class="text-sm">Đã làm {{ number_format($chamCongHomNay->so_gio_lam ?? 0, 1) }} giờ</p>
                                 </div>
                             </div>
                         </div>
                     @endif
                 </div>
 
-                <!-- ===== NÚT CHUYỂN SANG CHẤM CÔNG KHUÔN MẶT (DƯỚI CÙNG) ===== -->
+                <!-- Nút chuyển sang chấm công khuôn mặt -->
                 <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 text-center">
                     <a href="{{ route('employee.cham-cong-face.index') }}"
                         class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-medium rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/30 hover:shadow-purple-600/50">
@@ -236,19 +305,16 @@
         <!-- ===== THÔNG TIN VỊ TRÍ ===== -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- IP -->
-            <div
-                class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border 
-                        {{ $ipStatus == 'valid' ? 'border-green-500 ring-2 ring-green-500/20' : ($ipStatus == 'invalid' ? 'border-red-300' : 'border-gray-100 dark:border-gray-700') }} 
-                        p-4 transition-all duration-300">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border 
+                    {{ $ipStatus == 'valid' ? 'border-green-500 ring-2 ring-green-500/20' : ($ipStatus == 'invalid' ? 'border-red-300' : 'border-gray-100 dark:border-gray-700') }} 
+                    p-4 transition-all duration-300">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
-                        <i
-                            class="fas fa-network-wired {{ $ipStatus == 'valid' ? 'text-green-600 dark:text-green-400' : ($ipStatus == 'invalid' ? 'text-red-500 dark:text-red-400' : 'text-gray-400') }} w-5"></i>
+                        <i class="fas fa-network-wired {{ $ipStatus == 'valid' ? 'text-green-600 dark:text-green-400' : ($ipStatus == 'invalid' ? 'text-red-500 dark:text-red-400' : 'text-gray-400') }} w-5"></i>
                         <span class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">IP hiện tại</span>
                     </div>
                     <div class="text-right">
-                        <span
-                            class="text-sm font-medium {{ $ipStatus == 'valid' ? 'text-green-600 dark:text-green-400 font-bold' : ($ipStatus == 'invalid' ? 'text-red-600 dark:text-red-400' : 'text-gray-400') }}">
+                        <span class="text-sm font-medium {{ $ipStatus == 'valid' ? 'text-green-600 dark:text-green-400 font-bold' : ($ipStatus == 'invalid' ? 'text-red-600 dark:text-red-400' : 'text-gray-400') }}">
                             {{ $currentIP }}
                         </span>
                         <span class="block text-xs">
@@ -270,20 +336,16 @@
             </div>
 
             <!-- WiFi -->
-            <div
-                class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border 
-                        {{ $wifiStatus == 'valid' ? 'border-green-500 ring-2 ring-green-500/20' : ($wifiStatus == 'invalid' ? 'border-red-300' : 'border-gray-100 dark:border-gray-700') }} 
-                        p-4 transition-all duration-300">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border 
+                    {{ $wifiStatus == 'valid' ? 'border-green-500 ring-2 ring-green-500/20' : ($wifiStatus == 'invalid' ? 'border-red-300' : 'border-gray-100 dark:border-gray-700') }} 
+                    p-4 transition-all duration-300">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
-                        <i
-                            class="fas fa-wifi {{ $wifiStatus == 'valid' ? 'text-green-600 dark:text-green-400' : ($wifiStatus == 'invalid' ? 'text-red-500 dark:text-red-400' : 'text-gray-400') }} w-5"></i>
+                        <i class="fas fa-wifi {{ $wifiStatus == 'valid' ? 'text-green-600 dark:text-green-400' : ($wifiStatus == 'invalid' ? 'text-red-500 dark:text-red-400' : 'text-gray-400') }} w-5"></i>
                         <span class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">WiFi hiện tại</span>
                     </div>
                     <div class="text-right">
-                        <span
-                            class="text-sm font-medium {{ $wifiStatus == 'valid' ? 'text-green-600 dark:text-green-400 font-bold' : ($wifiStatus == 'invalid' ? 'text-red-600 dark:text-red-400' : 'text-gray-400') }}"
-                            id="wifi-display">
+                        <span class="text-sm font-medium {{ $wifiStatus == 'valid' ? 'text-green-600 dark:text-green-400 font-bold' : ($wifiStatus == 'invalid' ? 'text-red-600 dark:text-red-400' : 'text-gray-400') }}" id="wifi-display">
                             {{ $currentWiFi ?: '📡 Chưa kết nối' }}
                         </span>
                         <span class="block text-xs" id="wifi-status-text">
@@ -303,8 +365,7 @@
                     <div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                         <p class="text-[10px] text-gray-400">📶 WiFi được phép: {{ implode(', ', $dsWiFi) }}</p>
                         @if ($wifiStatus == 'invalid' && $currentWiFi)
-                            <p class="text-[10px] text-red-500 mt-1">⚠️ WiFi "{{ $currentWiFi }}" không có trong danh
-                                sách được phép</p>
+                            <p class="text-[10px] text-red-500 mt-1">⚠️ WiFi "{{ $currentWiFi }}" không có trong danh sách được phép</p>
                         @endif
                     </div>
                 @endif
@@ -314,14 +375,12 @@
                     <div class="flex items-center justify-between">
                         <span class="text-xs text-gray-500 dark:text-gray-400">Trạng thái:</span>
                         @if ($wifiStatus == 'valid')
-                            <span
-                                class="inline-flex items-center gap-1.5 text-xs font-medium text-green-600 dark:text-green-400">
+                            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-green-600 dark:text-green-400">
                                 <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                                 ✅ Đã kết nối hợp lệ
                             </span>
                         @elseif($wifiStatus == 'invalid')
-                            <span
-                                class="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 dark:text-red-400">
+                            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 dark:text-red-400">
                                 <span class="w-2 h-2 bg-red-500 rounded-full"></span>
                                 ❌ Không hợp lệ
                             </span>
@@ -337,8 +396,7 @@
         </div>
 
         <!-- ===== LỊCH SỬ 7 NGÀY ===== -->
-        <div
-            class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
                 <h3 class="font-semibold text-gray-900 dark:text-white">
                     <i class="fas fa-history mr-2 text-blue-600 dark:text-blue-400"></i>
@@ -355,13 +413,10 @@
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Ngày</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Ca</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Check-in
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Check-out
-                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Check-in</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Check-out</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Công</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Trạng thái
-                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Trạng thái</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -375,7 +430,6 @@
                                 ->get()
                                 ->groupBy('ngay_cham_cong')
                                 ->map(function ($items) {
-                                    // Mỗi ngày chỉ lấy 1 bản ghi đầu tiên (check-in)
                                     return $items->first();
                                 })
                                 ->values();
@@ -391,11 +445,9 @@
                                         $tenCa = $item->caLamViec ? $item->caLamViec->ten : '--';
                                         $mauCa = 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
                                         if ($tenCa == 'Sáng') {
-                                            $mauCa =
-                                                'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+                                            $mauCa = 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
                                         } elseif ($tenCa == 'Chiều') {
-                                            $mauCa =
-                                                'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400';
+                                            $mauCa = 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400';
                                         } elseif ($tenCa == 'Hành chính') {
                                             $mauCa = 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
                                         }
@@ -417,35 +469,27 @@
                                     @php
                                         $soCong = $item->so_cong ?? 0;
 
-                                        // 🟢 LOGIC MỚI: Cứ có giờ vào là Đúng giờ
                                         if ($item->gio_vao) {
-                                            // Mặc định là Đúng giờ (dù chưa check-out hay đã check-out)
-                                            $mau =
-                                                'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300';
+                                            $mau = 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300';
                                             $icon = 'fas fa-check-circle';
                                             $text = '✅ Đúng giờ';
 
-                                            // Chỉ đổi màu nếu bị Đi muộn hoặc Về sớm ghi đè
                                             if ($item->gio_ra && $item->trang_thai == 'di_muon') {
-                                                $mau =
-                                                    'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300';
+                                                $mau = 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300';
                                                 $icon = 'fas fa-exclamation-triangle';
                                                 $text = '⏰ Đi muộn';
                                             } elseif ($item->gio_ra && $item->trang_thai == 've_som') {
-                                                $mau =
-                                                    'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300';
+                                                $mau = 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300';
                                                 $icon = 'fas fa-exclamation-triangle';
                                                 $text = '🏠 Về sớm';
                                             }
                                         } else {
-                                            // Chưa check-in
                                             $mau = 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400';
                                             $icon = 'fas fa-minus-circle';
                                             $text = '⏸️ Chưa chấm công';
 
                                             if ($item->trang_thai == 'nghi_phep') {
-                                                $mau =
-                                                    'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300';
+                                                $mau = 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300';
                                                 $icon = 'fas fa-calendar-check';
                                                 $text = '📋 Nghỉ phép';
                                             } elseif ($item->trang_thai == 'vang_mat') {
@@ -485,23 +529,17 @@
 
             <div class="mb-4">
                 <label class="block font-medium mb-2">Giờ ra dự kiến</label>
-                <input type="time" id="gio-ra-du-kien"
-                    class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                <input type="time" id="gio-ra-du-kien" class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
             </div>
 
             <div class="mb-4">
                 <label class="block font-medium mb-2">Lý do về sớm</label>
-                <textarea id="ly-do-ve-som-modal" rows="3"
-                    class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" placeholder="Nhập lý do..."></textarea>
+                <textarea id="ly-do-ve-som-modal" rows="3" class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" placeholder="Nhập lý do..."></textarea>
             </div>
 
             <div class="flex gap-3 justify-end">
-                <button onclick="closeModalTaoDonVeSom()" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">
-                    Hủy
-                </button>
-                <button onclick="guiDonVeSom()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Gửi đơn
-                </button>
+                <button onclick="closeModalTaoDonVeSom()" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Hủy</button>
+                <button onclick="guiDonVeSom()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Gửi đơn</button>
             </div>
         </div>
     </div>
@@ -512,16 +550,9 @@
             <div class="text-center">
                 <i class="fas fa-paper-plane text-6xl text-yellow-500 mb-4"></i>
                 <h3 class="text-xl font-bold mb-2">✅ Đã gửi đơn xin về sớm!</h3>
-                <p class="text-gray-600 dark:text-gray-300 mb-2">
-                    Đơn của bạn đang chờ HR duyệt.
-                </p>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                    Bạn sẽ nhận được thông báo khi đơn được duyệt.
-                </p>
-                <button onclick="closeModalDaGuiDon()"
-                    class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Đóng
-                </button>
+                <p class="text-gray-600 dark:text-gray-300 mb-2">Đơn của bạn đang chờ HR duyệt.</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Bạn sẽ nhận được thông báo khi đơn được duyệt.</p>
+                <button onclick="closeModalDaGuiDon()" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Đóng</button>
             </div>
         </div>
     </div>
@@ -532,16 +563,9 @@
             <div class="text-center">
                 <i class="fas fa-clock text-6xl text-yellow-500 mb-4 animate-pulse"></i>
                 <h3 class="text-xl font-bold mb-2">⏳ Đang chờ HR duyệt</h3>
-                <p class="text-gray-600 dark:text-gray-300 mb-2">
-                    Đơn xin về sớm của bạn đang được xử lý.
-                </p>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                    Vui lòng đợi HR phê duyệt để hoàn tất check-out.
-                </p>
-                <button onclick="closeModalChoDuyet()"
-                    class="mt-4 px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
-                    Đóng
-                </button>
+                <p class="text-gray-600 dark:text-gray-300 mb-2">Đơn xin về sớm của bạn đang được xử lý.</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Vui lòng đợi HR phê duyệt để hoàn tất check-out.</p>
+                <button onclick="closeModalChoDuyet()" class="mt-4 px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">Đóng</button>
             </div>
         </div>
     </div>
@@ -552,13 +576,8 @@
             <div class="text-center">
                 <i class="fas fa-times-circle text-6xl text-red-500 mb-4"></i>
                 <h3 class="text-xl font-bold mb-2">❌ Đơn xin về sớm bị từ chối</h3>
-                <p id="ly-do-tu-choi-text" class="text-gray-600 dark:text-gray-300 mb-4">
-                    Lý do: ...
-                </p>
-                <button onclick="closeModalTuChoi()"
-                    class="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-                    Đóng
-                </button>
+                <p id="ly-do-tu-choi-text" class="text-gray-600 dark:text-gray-300 mb-4">Lý do: ...</p>
+                <button onclick="closeModalTuChoi()" class="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Đóng</button>
             </div>
         </div>
     </div>
@@ -577,10 +596,6 @@
 
 @push('scripts')
     <script>
-        // =============================================
-        // ĐỒNG HỒ THỜI GIAN THỰC
-        // =============================================
-
         function updateClock() {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
@@ -597,10 +612,6 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        // =============================================
-        // THÔNG TIN THIẾT BỊ
-        // =============================================
-
         function getWiFiSSID() {
             let saved = localStorage.getItem('wifi_ssid');
             if (saved) return saved;
@@ -615,17 +626,9 @@
             return 'AA:BB:CC:DD:EE:01';
         }
 
-        // =============================================
-        // THỜI GIAN
-        // =============================================
-
         function getCurrentTimeISO() {
             return new Date().toISOString();
         }
-
-        // =============================================
-        // CHECK-IN
-        // =============================================
 
         function handleCheckIn() {
             const btn = document.getElementById('btnCheckIn');
@@ -666,29 +669,21 @@
                 });
         }
 
-        // =============================================
-        // CHECK-OUT
-        // =============================================
-
         function handleCheckOut() {
             const btn = document.getElementById('btnCheckOut');
             if (!btn) return;
 
-            // Kiểm tra trạng thái đơn xin về sớm
             fetch('{{ route('employee.cham-cong.kiem-tra-don-ve-som') }}')
                 .then(res => res.json())
                 .then(data => {
                     if (data.has_don) {
                         if (data.trang_thai === 'da_duyet') {
-                            // Đã duyệt -> cho checkout
                             thucHienCheckOut();
                         } else if (data.trang_thai === 'cho_duyet') {
-                            // Đang chờ duyệt
                             document.getElementById('modal-cho-duyet').classList.remove('hidden');
                             document.getElementById('modal-cho-duyet').classList.add('flex');
                             btn.disabled = false;
                         } else if (data.trang_thai === 'tu_choi') {
-                            // Bị từ chối
                             document.getElementById('ly-do-tu-choi-text').textContent = 'Lý do: ' + (data
                                 .ly_do_tu_choi || 'Không có lý do');
                             document.getElementById('modal-tu-choi').classList.remove('hidden');
@@ -698,7 +693,6 @@
                         return;
                     }
 
-                    // Kiểm tra xem có về sớm không
                     fetch('{{ route('employee.cham-cong.trang-thai') }}')
                         .then(res => res.json())
                         .then(status => {
@@ -722,16 +716,13 @@
                             }
 
                             if (isVeSom) {
-                                // Hiển thị modal tạo đơn
                                 document.getElementById('modal-tao-don-ve-som').classList.remove('hidden');
                                 document.getElementById('modal-tao-don-ve-som').classList.add('flex');
-                                // Set giờ ra dự kiến mặc định là hiện tại
                                 const nowTime = new Date();
                                 document.getElementById('gio-ra-du-kien').value = nowTime.toTimeString().slice(0,
                                     5);
                                 btn.disabled = false;
                             } else {
-                                // Không về sớm -> checkout bình thường
                                 thucHienCheckOut();
                             }
                         })
@@ -743,10 +734,6 @@
                     thucHienCheckOut();
                 });
         }
-
-        // =============================================
-        // TẠO ĐƠN XIN VỀ SỚM
-        // =============================================
 
         function guiDonVeSom() {
             const lyDo = document.getElementById('ly-do-ve-som-modal').value.trim();
@@ -858,10 +845,6 @@
                 });
         }
 
-        // =============================================
-        // THÔNG BÁO
-        // =============================================
-
         function showNotification(type, message) {
             const colors = {
                 success: 'bg-green-50 dark:bg-green-900/30 border-green-200 text-green-800',
@@ -880,14 +863,14 @@
             el.className =
                 `fixed top-4 right-4 z-50 max-w-md w-full ${colors[type]} border rounded-xl p-4 shadow-lg transform transition-all duration-300 translate-x-full opacity-0`;
             el.innerHTML = `
-        <div class="flex items-start">
-            <i class="fas ${icons[type]} text-lg mt-0.5"></i>
-            <div class="ml-3"><p class="text-sm font-medium">${message}</p></div>
-            <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    `;
+            <div class="flex items-start">
+                <i class="fas ${icons[type]} text-lg mt-0.5"></i>
+                <div class="ml-3"><p class="text-sm font-medium">${message}</p></div>
+                <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
             document.body.appendChild(el);
             setTimeout(() => el.classList.remove('translate-x-full', 'opacity-0'), 100);
             setTimeout(() => {
