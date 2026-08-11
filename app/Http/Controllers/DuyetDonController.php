@@ -129,6 +129,43 @@ class DuyetDonController extends Controller
                 $query->whereRaw('1 = 0');
             }
         }
+        // 🟢 BỔ SUNG CÁC FILTER VÀO ĐÂY:
+        
+        // 1. Lọc theo từ khóa (Mã đơn hoặc Tên nhân viên)
+        if ($request->filled('keyword')) {
+            $keyword = $request->keyword;
+            $query->where(function ($q) use ($keyword) {
+                $q->where('ma_don_nghi', 'like', "%{$keyword}%")
+                  ->orWhereHas('nguoiDung.hoSo', function ($qHoSo) use ($keyword) {
+                      $qHoSo->where('ten', 'like', "%{$keyword}%")
+                            ->orWhere('ho', 'like', "%{$keyword}%");
+                  });
+            });
+        }
+
+        // 2. Lọc theo Trạng thái
+        if ($request->filled('tu_ngay') && $request->filled('den_ngay')) {
+            $query->where(function ($q) use ($request) {
+                $q->whereDate('ngay_bat_dau', '<=', $request->den_ngay)
+                  ->whereDate('ngay_ket_thuc', '>=', $request->tu_ngay);
+            });
+        }
+
+        // 3. Lọc theo khoảng ngày (Kiểm tra xem ngày nghỉ có giao với khoảng từ ngày - đến ngày hay không)
+        if ($request->filled('tu_ngay') && $request->filled('den_ngay')) {
+            $query->where(function ($q) use ($request) {
+                $q->whereDate('ngay_bat_dau', '<=', $request->den_ngay)
+                  ->whereDate('ngay_ket_thuc', '>=', $request->tu_ngay);
+            });
+        } elseif ($request->filled('tu_ngay')) {
+            $query->whereDate('ngay_ket_thuc', '>=', $request->tu_ngay);
+        } elseif ($request->filled('den_ngay')) {
+            $query->whereDate('ngay_bat_dau', '<=', $request->den_ngay);
+        }
+
+        $danhSach = $query->orderBy('created_at', 'desc')
+                  ->paginate(10)
+                  ->withQueryString();
 
         // ... [GIỮ NGUYÊN CÁC FILTER TRẠNG THÁI, LOẠI NGHỈ, TỪ NGÀY, ĐẾN NGÀY, KEYWORD] ...
 
