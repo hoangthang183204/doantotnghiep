@@ -1,19 +1,20 @@
 <?php
-// app/Models/DangKyTangCa.php
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Carbon\Carbon;
 
 class DangKyTangCa extends Model
 {
-    use HasFactory;
-
     protected $table = 'dang_ky_tang_ca';
 
     protected $fillable = [
         'nguoi_dung_id',
+        'nguoi_tao_id',
+        'loai_tao',
         'ngay_tang_ca',
         'gio_bat_dau',
         'gio_ket_thuc',
@@ -21,136 +22,183 @@ class DangKyTangCa extends Model
         'loai_tang_ca',
         'ly_do_tang_ca',
         'trang_thai',
+        'don_tang_ca_id',
         'nguoi_duyet_id',
         'thoi_gian_duyet',
         'ly_do_tu_choi',
-        'da_hoan_thanh',
-        'thoi_gian_hoan_thanh',
         'luong_tang_ca',
+        'da_hoan_thanh',
+        'da_checkout_thay_the',
+        'thoi_gian_hoan_thanh',
     ];
 
     protected $casts = [
         'ngay_tang_ca' => 'date',
         'thoi_gian_duyet' => 'datetime',
         'thoi_gian_hoan_thanh' => 'datetime',
-        'so_gio_tang_ca' => 'float',
-        'luong_tang_ca' => 'float',
         'da_hoan_thanh' => 'boolean',
+        'da_checkout_thay_the' => 'boolean',
     ];
 
-    // Nhãn trạng thái
-    public static array $trangThaiLabels = [
+    // Trạng thái đơn
+    public static $trangThaiLabels = [
         'cho_duyet' => 'Chờ duyệt',
         'da_duyet' => 'Đã duyệt',
         'tu_choi' => 'Từ chối',
-        'huy' => 'Đã huỷ',
+        'huy' => 'Đã hủy',
     ];
 
-    // Nhãn loại tăng ca
-    public static array $loaiLabels = [
-        'ngay_thuong' => 'Ngày thường',
-        'ngay_nghi'   => 'Ngày nghỉ',
+    // Loại tăng ca
+    public static $loaiLabels = [
+        'ngay_thuong' => 'Ngày thường (150%)',
+        'ngay_nghi' => 'Ngày nghỉ (200%)',
+        'le_tet' => 'Lễ, Tết (400%)',
     ];
 
-    // Hệ số lương tăng ca
-    public static array $heSoLuong = [
-        'ngay_thuong' => 1.5,
-        'ngay_nghi'   => 2.0,
+    // Loại tạo đơn
+    public static $loaiTaoLabels = [
+        'nhan_vien' => 'Nhân viên tự tạo',
+        'truong_phong' => 'Trưởng phòng tạo',
     ];
 
-    // ============================================================
-    // ⭐ RELATIONSHIPS - SỬA TÊN CHO ĐÚNG
-    // ============================================================
-
-    /**
-     * Quan hệ với bảng nguoi_dung (người tạo đơn)
-     * Tên: nguoi_dung (không phải nguoiDung)
-     */
-    public function nguoi_dung()
+    // Relations
+    public function nguoi_dung(): BelongsTo
     {
         return $this->belongsTo(NguoiDung::class, 'nguoi_dung_id');
     }
 
-    /**
-     * Quan hệ với bảng nguoi_dung (người duyệt)
-     */
-    public function nguoi_duyet()
+    public function nguoi_duyet(): BelongsTo
     {
         return $this->belongsTo(NguoiDung::class, 'nguoi_duyet_id');
     }
 
-    /**
-     * Quan hệ với bảng thuc_hien_tang_ca
-     */
-    public function thuc_hien()
+    public function nguoi_tao(): BelongsTo
+    {
+        return $this->belongsTo(NguoiDung::class, 'nguoi_tao_id');
+    }
+
+    public function thuc_hien(): HasOne
     {
         return $this->hasOne(ThucHienTangCa::class, 'dang_ky_tang_ca_id');
     }
 
-    public function nguoiDung()
-    {
-        return $this->belongsTo(NguoiDung::class, 'nguoi_dung_id');
-    }
-
-    public function nguoiDuyet()
-    {
-        return $this->belongsTo(NguoiDung::class, 'nguoi_duyet_id');
-    }
-
-    // ============================================================
-    // ⭐ SCOPES
-    // ============================================================
-
-    public function scopeChoDuyet($query)
-    {
-        return $query->where('trang_thai', 'cho_duyet');
-    }
-
-    public function scopeDaDuyet($query)
-    {
-        return $query->where('trang_thai', 'da_duyet');
-    }
-
-    public function scopeChuaHoanThanh($query)
-    {
-        return $query->where('trang_thai', 'da_duyet')
-            ->where('da_hoan_thanh', false);
-    }
-
-    public function scopeDaHoanThanh($query)
-    {
-        return $query->where('trang_thai', 'da_duyet')
-            ->where('da_hoan_thanh', true);
-    }
-
-    // ============================================================
-    // ⭐ METHODS
-    // ============================================================
-
     /**
-     * Tính lương tăng ca
+     * Kiểm tra đơn tăng ca có hiệu lực cho ngày hôm nay không
      */
-    public function tinhLuongTangCa($luongCoBan)
+    public function isActiveToday(): bool
     {
-        $heSo = self::$heSoLuong[$this->loai_tang_ca] ?? 1.5;
-        $this->luong_tang_ca = $this->so_gio_tang_ca * $luongCoBan * $heSo;
-        return $this->luong_tang_ca;
+        $today = now()->format('Y-m-d');
+        return $this->ngay_tang_ca && $this->ngay_tang_ca->format('Y-m-d') === $today
+            && $this->trang_thai === 'da_duyet'
+            && !$this->da_hoan_thanh;
     }
 
     /**
-     * Đánh dấu hoàn thành
+     * Kiểm tra nhân viên có đơn tăng ca đang hoạt động hôm nay không
      */
-    public function hoanThanh()
+    public static function hasActiveOvertimeToday($userId): bool
     {
-        $this->da_hoan_thanh = true;
-        $this->thoi_gian_hoan_thanh = now();
+        return self::where('nguoi_dung_id', $userId)
+            ->whereDate('ngay_tang_ca', now()->format('Y-m-d'))
+            ->where('trang_thai', 'da_duyet')
+            ->where('da_hoan_thanh', false)
+            ->exists();
+    }
 
-        if (!$this->luong_tang_ca) {
-            $luongCoBan = $this->nguoi_dung->luong_co_ban ?? 0;
-            $this->tinhLuongTangCa($luongCoBan);
+    /**
+     * Lấy đơn tăng ca đang hoạt động hôm nay của nhân viên
+     */
+    public static function getActiveOvertimeToday($userId)
+    {
+        return self::where('nguoi_dung_id', $userId)
+            ->whereDate('ngay_tang_ca', now()->format('Y-m-d'))
+            ->where('trang_thai', 'da_duyet')
+            ->where('da_hoan_thanh', false)
+            ->first();
+    }
+
+    /**
+     * ⭐ KIỂM TRA NHÂN VIÊN CÓ ĐANG TRONG GIỜ TĂNG CA KHÔNG
+     */
+    public static function isInOvertimePeriod($userId): bool
+    {
+        $overtime = self::getActiveOvertimeToday($userId);
+        if (!$overtime) return false;
+
+        $now = Carbon::now();
+        $start = Carbon::parse($overtime->gio_bat_dau);
+        $end = Carbon::parse($overtime->gio_ket_thuc);
+
+        // Cho phép từ 30 phút trước giờ bắt đầu
+        $checkinStart = $start->copy()->subMinutes(30);
+
+        return $now->between($checkinStart, $end);
+    }
+
+    /**
+     * ⭐ LẤY ĐƠN TĂNG CA ĐANG HOẠT ĐỘNG (KIỂM TRA CẢ THỜI GIAN)
+     */
+    public static function getActiveOvertimeNow($userId)
+    {
+        $overtime = self::getActiveOvertimeToday($userId);
+        if (!$overtime) return null;
+
+        $now = Carbon::now();
+        $start = Carbon::parse($overtime->gio_bat_dau);
+        $end = Carbon::parse($overtime->gio_ket_thuc);
+
+        // Cho phép từ 30 phút trước giờ bắt đầu đến 2 giờ sau giờ kết thúc
+        $checkinStart = $start->copy()->subMinutes(30);
+        $checkoutEnd = $end->copy()->addHours(2);
+
+        if ($now->between($checkinStart, $checkoutEnd)) {
+            return $overtime;
         }
 
-        $this->save();
-        return $this;
+        return null;
     }
-}
+
+    /**
+     * ⭐ KIỂM TRA NHÂN VIÊN ĐÃ ĐẾN GIỜ TĂNG CA CHƯA
+     */
+    public static function isOvertimeStarted($userId): bool
+    {
+        $overtime = self::getActiveOvertimeToday($userId);
+        if (!$overtime) return false;
+
+        $now = Carbon::now();
+        $start = Carbon::parse($overtime->gio_bat_dau);
+        $checkinStart = $start->copy()->subMinutes(30);
+
+        return $now->gte($checkinStart);
+    }
+
+    /**
+     * ⭐ TÍNH THỜI GIAN CÒN LẠI ĐẾN GIỜ TĂNG CA
+     */
+    public static function getTimeUntilOvertimeStart($userId): ?array
+    {
+        $overtime = self::getActiveOvertimeToday($userId);
+        if (!$overtime) return null;
+
+        $now = Carbon::now();
+        $start = Carbon::parse($overtime->gio_bat_dau);
+        $checkinStart = $start->copy()->subMinutes(30);
+
+        if ($now->gte($checkinStart)) {
+            return null;
+        }
+
+        $diffInMinutes = $now->diffInMinutes($checkinStart);
+        $hours = floor($diffInMinutes / 60);
+        $minutes = $diffInMinutes % 60;
+
+        return [
+            'hours' => $hours,
+            'minutes' => $minutes,
+            'total_minutes' => $diffInMinutes,
+            'overtime' => $overtime,
+            'text' => $hours > 0 ? "Còn {$hours} giờ {$minutes} phút nữa đến giờ tăng ca" : "Còn {$minutes} phút nữa đến giờ tăng ca"
+        ];
+    }
+}   

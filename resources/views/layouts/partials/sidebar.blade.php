@@ -408,42 +408,7 @@
                                 </li>
                             @endif
 
-                            {{-- DUYỆT TĂNG CA --}}
-                            @if (Route::has('duyet-tang-ca.index'))
-                                <li>
-                                    <a href="{{ route('duyet-tang-ca.index') }}"
-                                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors 
-                                        {{ str_starts_with($currentRoute, 'duyet-tang-ca.')
-                                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                                        <svg class="w-4 h-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg"
-                                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                            stroke-width="1.5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        <span class="menu-text">Duyệt tăng ca</span>
-                                        @php
-                                            $tangCaChoDuyet = \App\Models\DangKyTangCa::whereIn(
-                                                'nguoi_dung_id',
-                                                function ($q) use ($phongBanInfo) {
-                                                    $q->select('id')
-                                                        ->from('nguoi_dung')
-                                                        ->where('phong_ban_id', $phongBanInfo->id);
-                                                },
-                                            )
-                                                ->where('trang_thai', 'cho_duyet')
-                                                ->count();
-                                        @endphp
-                                        @if ($tangCaChoDuyet > 0)
-                                            <span
-                                                class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                                                {{ $tangCaChoDuyet }}
-                                            </span>
-                                        @endif
-                                    </a>
-                                </li>
-                            @endif
+                            
                             {{-- DUYỆT ĐƠN VỀ SỚM (Dành cho Trưởng phòng) --}}
                             @if (Route::has('truong-phong.duyet-ve-som.index'))
                                 <li>
@@ -532,7 +497,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        <span class="menu-text">Tăng ca</span>
+                                        <span class="menu-text"> Duyệt tăng ca</span>
                                     </a>
                                 </li>
                             @endif
