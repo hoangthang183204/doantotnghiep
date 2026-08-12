@@ -32,10 +32,16 @@ class LeaveRequestNotification extends Notification
             $employeeName = $this->donNghi->nguoiDung->hoSo->ho . ' ' . $this->donNghi->nguoiDung->hoSo->ten;
         }
 
+        // Lấy tên phòng ban của nhân viên
+        $phongBanName = '';
+        if ($this->donNghi->nguoiDung && $this->donNghi->nguoiDung->phongBan) {
+            $phongBanName = $this->donNghi->nguoiDung->phongBan->ten_phong_ban;
+        }
+
         $config = [
             'created' => [
                 'title' => '📝 Đơn nghỉ phép mới',
-                'message' => "Nhân viên {$employeeName} đã tạo đơn nghỉ phép mới.",
+                'message' => "Nhân viên {$employeeName} đã tạo đơn nghỉ phép mới." . ($phongBanName ? " (Phòng: {$phongBanName})" : ""),
                 'icon' => 'file-text',
                 'color' => 'info'
             ],
@@ -53,7 +59,7 @@ class LeaveRequestNotification extends Notification
             ],
             'cancelled' => [
                 'title' => '🔄 Đơn nghỉ phép đã hủy',
-                'message' => "Đơn nghỉ phép đã được hủy bỏ.",
+                'message' => "Nhân viên {$employeeName} đã hủy đơn nghỉ phép.",
                 'icon' => 'minus-circle',
                 'color' => 'warning'
             ]
@@ -61,16 +67,30 @@ class LeaveRequestNotification extends Notification
 
         $data = $config[$this->action] ?? $config['created'];
 
-        // ⭐ Xác định user là admin/hay nhân viên dựa trên vai trò
+        // Xác định user là admin, trưởng phòng hay nhân viên
         $isAdmin = false;
+        $isTruongPhong = false;
         if ($notifiable && method_exists($notifiable, 'vaiTros')) {
             $roles = $notifiable->vaiTros->pluck('name')->toArray();
             $isAdmin = array_intersect($roles, ['admin', 'Super Admin']);
+            $isTruongPhong = array_intersect($roles, ['truong_phong', 'quan_ly']);
         }
 
-        // ⭐ Tạo URL đúng theo role
-        $prefix = $isAdmin ? 'admin' : 'employee';
+        // Tạo URL đúng theo role
+        $prefix = 'employee';
+        if ($isAdmin) {
+            $prefix = 'admin';
+        } elseif ($isTruongPhong) {
+            $prefix = 'truong-phong';
+        }
+        
         $url = url('/' . $prefix . '/don-nghi/' . $this->donNghi->id);
+
+        // Thêm thông tin phòng ban và người tạo
+        $data['phong_ban'] = $phongBanName;
+        $data['nhan_vien'] = $employeeName;
+        $data['so_ngay_nghi'] = $this->donNghi->so_ngay_nghi;
+        $data['loai_nghi'] = $this->donNghi->loaiNghiPhep ? $this->donNghi->loaiNghiPhep->ten : 'N/A';
 
         return array_merge($data, [
             'don_nghi_id' => $this->donNghi->id,

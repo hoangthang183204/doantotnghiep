@@ -1,7 +1,6 @@
 @extends('layouts.employee')
 
 @section('content')
-    {{-- Thay đổi: bỏ max-w-4xl và thêm padding lớn hơn --}}
     <div class="p-4 md:p-6 lg:p-8">
         <div
             class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -29,17 +28,85 @@
             <div class="p-6">
 
                 @if (!$hasFace)
-                    {{-- ⚠️ HIỂN THỊ KHI CHƯA CÓ KHUÔN MẶT --}}
-                    <div
-                        class="p-8 text-center bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                        <div class="text-6xl mb-4">⚠️</div>
-                        <p class="text-xl font-semibold text-yellow-700 dark:text-yellow-300">
-                            {{ $message ?? 'Bạn chưa đăng ký khuôn mặt' }}</p>
-                        <p class="text-sm text-yellow-600 dark:text-yellow-400 mt-3">
-                            <i class="fas fa-phone-alt mr-2"></i>
-                            Vui lòng liên hệ bộ phận <strong>Nhân sự (HR)</strong> để đăng ký khuôn mặt.
+                    {{-- ⚠️ HIỂN THỊ KHI CHƯA CÓ KHUÔN MẶT - HIỂN THỊ FORM ĐĂNG KÝ --}}
+                    <div class="text-center">
+                        <div class="text-6xl mb-4">📸</div>
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Đăng ký khuôn mặt</h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-6">
+                            Vui lòng chụp ảnh khuôn mặt của bạn để đăng ký sử dụng chấm công bằng khuôn mặt.
+                            <br>
+                            <span class="text-sm text-yellow-600 dark:text-yellow-400">⚠️ Đảm bảo ánh sáng đủ và khuôn mặt rõ ràng</span>
                         </p>
-                        <div class="mt-6 flex justify-center gap-4 flex-wrap">
+
+                        {{-- Camera đăng ký --}}
+                        <div class="max-w-md mx-auto">
+                            <div class="relative bg-gray-900 rounded-lg overflow-hidden aspect-video">
+                                <video id="registerVideo" class="w-full h-full object-cover" autoplay playsinline></video>
+                                <canvas id="registerCanvas" class="hidden"></canvas>
+
+                                {{-- Khung hướng dẫn --}}
+                                <div id="registerGuide"
+                                    class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <div class="w-48 h-48 border-2 border-dashed border-white/50 rounded-full animate-pulse">
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <svg class="w-16 h-16 text-white/30" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white/60 text-xs bg-black/30 px-3 py-1 rounded-full">
+                                        Đưa mặt vào giữa khung
+                                    </div>
+                                </div>
+
+                                <div id="registerOverlay"
+                                    class="absolute inset-0 flex items-center justify-center bg-black/70 hidden">
+                                    <div class="text-center text-white">
+                                        <div
+                                            class="loader ease-linear rounded-full border-4 border-t-4 border-blue-500 h-12 w-12 mb-4 mx-auto animate-spin">
+                                        </div>
+                                        <p class="text-sm font-medium">Đang xử lý...</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Nút điều khiển đăng ký --}}
+                            <div class="mt-4 flex flex-wrap gap-3 justify-center">
+                                <button id="btnRegister"
+                                    class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-medium flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    📸 Đăng ký khuôn mặt
+                                </button>
+                                <button id="btnFlipRegister"
+                                    class="px-4 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition">
+                                    🔄 Lật camera
+                                </button>
+                            </div>
+
+                            <div id="registerStatus" class="mt-3 p-3 rounded-lg text-sm text-center hidden">
+                            </div>
+
+                            <div class="mt-4 text-left text-sm text-gray-500 dark:text-gray-400">
+                                <p class="font-medium text-gray-700 dark:text-gray-300">📋 Lưu ý:</p>
+                                <ul class="list-disc list-inside space-y-1 mt-1">
+                                    <li>Đảm bảo khuôn mặt ở giữa khung hình</li>
+                                    <li>Ánh sáng đủ và không bị chói</li>
+                                    <li>Không đeo khẩu trang hoặc kính râm</li>
+                                    <li>Ảnh sẽ được lưu để xác thực chấm công</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {{-- Nút quay lại --}}
+                        <div class="mt-6">
                             <a href="{{ route('employee.cham-cong.index') }}"
                                 class="inline-flex items-center px-5 py-2.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition font-medium">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,16 +115,11 @@
                                 </svg>
                                 Quay lại chấm công
                             </a>
-                            <a href="mailto:hr@company.com"
-                                class="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium">
-                                📧 Liên hệ HR
-                            </a>
                         </div>
                     </div>
                 @else
-                    {{-- 🟢 HIỂN THỊ KHI CÓ KHUÔN MẶT --}}
+                    {{-- 🟢 HIỂN THỊ KHI CÓ KHUÔN MẶT - GIAO DIỆN CHẤM CÔNG --}}
                     <div>
-                        {{-- Thay đổi: grid từ lg:col-span-2 thành lg:col-span-8 và lg:col-span-4 để rộng hơn --}}
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                             {{-- Camera - chiếm 8/12 cột --}}
                             <div class="lg:col-span-8">
@@ -142,7 +204,7 @@
                                     </span>
                                 </div>
 
-                                {{-- Controls - Bố cục rộng hơn --}}
+                                {{-- Controls --}}
                                 <div class="mt-3 flex flex-wrap gap-3">
                                     <button id="btnCheckIn"
                                         class="flex-1 min-w-[120px] px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2"
@@ -176,8 +238,7 @@
                                     {{-- Nút đơn xin về sớm --}}
                                     <button id="btnTaoDonVeSom"
                                         class="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition font-medium flex items-center justify-center gap-2 {{ $checkedIn && !$checkedOut ? '' : 'opacity-50 cursor-not-allowed' }}"
-                                        {{ $checkedIn && !$checkedOut ? '' : 'disabled' }}
-                                        title="{{ $checkedIn && !$checkedOut ? 'Tạo đơn xin về sớm' : 'Chỉ khả dụng sau khi check-in' }}">
+                                        {{ $checkedIn && !$checkedOut ? '' : 'disabled' }}>
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -208,11 +269,8 @@
                                 </div>
                             </div>
 
-                            {{-- Thông tin bên phải - chiếm 4/12 cột --}}
+                            {{-- Thông tin bên phải --}}
                             <div class="lg:col-span-4 space-y-4">
-                                {{-- Hướng dẫn --}}
-
-
                                 {{-- Thông tin bảo mật --}}
                                 <div
                                     class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
@@ -298,7 +356,7 @@
                                         </thead>
                                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                                             @php
-                                                $lichSu7Ngay = App\Models\ChamCong::where('nguoi_dung_id', auth()->id())
+                                                $lichSu7Ngay = \App\Models\ChamCong::where('nguoi_dung_id', auth()->id())
                                                     ->whereBetween('ngay_cham_cong', [
                                                         \Carbon\Carbon::now()->subDays(7)->startOfDay(),
                                                         \Carbon\Carbon::now()->endOfDay(),
@@ -307,7 +365,6 @@
                                                     ->get()
                                                     ->groupBy('ngay_cham_cong')
                                                     ->map(function ($items) {
-                                                        // Mỗi ngày chỉ lấy 1 bản ghi đầu tiên (check-in)
                                                         return $items->first();
                                                     })
                                                     ->values();
@@ -352,15 +409,12 @@
                                                         @php
                                                             $soCong = $item->so_cong ?? 0;
 
-                                                            // 🟢 LOGIC MỚI: Cứ có giờ vào là Đúng giờ
                                                             if ($item->gio_vao) {
-                                                                // Mặc định là Đúng giờ (dù chưa check-out hay đã check-out)
                                                                 $mau =
                                                                     'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300';
                                                                 $icon = 'fas fa-check-circle';
                                                                 $text = '✅ Đúng giờ';
 
-                                                                // Chỉ đổi màu nếu bị Đi muộn hoặc Về sớm ghi đè
                                                                 if ($item->gio_ra && $item->trang_thai == 'di_muon') {
                                                                     $mau =
                                                                         'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300';
@@ -376,7 +430,6 @@
                                                                     $text = '🏠 Về sớm';
                                                                 }
                                                             } else {
-                                                                // Chưa check-in
                                                                 $mau =
                                                                     'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400';
                                                                 $icon = 'fas fa-minus-circle';
@@ -518,7 +571,7 @@
     {{-- 🔥 SCRIPT ĐỒNG HỒ - LUÔN CHẠY DÙ CÓ HAY KHÔNG CÓ KHUÔN MẶT --}}
     <script>
         // =============================================
-        // ĐỒNG HỒ THỜI GIAN THỰC - CHẠY MỌI LÚC
+        // ĐỒNG HỒ THỜI GIAN THỰC
         // =============================================
         function updateClock() {
             const now = new Date();
@@ -533,116 +586,222 @@
             }
         }
 
-        // Cập nhật đồng hồ mỗi giây
         setInterval(updateClock, 1000);
         updateClock();
 
         // =============================================
-        // TẠO ĐƠN XIN VỀ SỚM
+        // ĐĂNG KÝ KHUÔN MẶT
         // =============================================
+        @if (!$hasFace)
+            let registerStream = null;
+            let registerFacingMode = 'user';
+            let isRegisterProcessing = false;
 
-        function guiDonVeSom() {
-            const lyDo = document.getElementById('ly-do-ve-som-modal').value.trim();
-            const gioRa = document.getElementById('gio-ra-du-kien').value;
+            async function initRegisterCamera(facing = 'user') {
+                try {
+                    if (registerStream) {
+                        registerStream.getTracks().forEach(track => track.stop());
+                    }
 
-            if (!lyDo) {
-                showResult('⚠️ Vui lòng nhập lý do về sớm!', false);
-                return;
+                    registerStream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: facing,
+                            width: {
+                                ideal: 640
+                            },
+                            height: {
+                                ideal: 480
+                            }
+                        }
+                    });
+                    const video = document.getElementById('registerVideo');
+                    video.srcObject = registerStream;
+                    video.onloadedmetadata = () => {
+                        video.play();
+                    };
+                } catch (err) {
+                    console.error('Camera error:', err);
+                    document.getElementById('registerStatus').textContent = '❌ Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.';
+                    document.getElementById('registerStatus').className =
+                        'mt-3 p-3 rounded-lg text-sm text-center bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400';
+                    document.getElementById('registerStatus').classList.remove('hidden');
+                }
             }
 
-            if (!gioRa) {
-                showResult('⚠️ Vui lòng chọn giờ ra dự kiến!', false);
-                return;
+            function captureRegisterImage() {
+                const video = document.getElementById('registerVideo');
+                const canvas = document.getElementById('registerCanvas');
+                const context = canvas.getContext('2d');
+                canvas.width = video.videoWidth || 320;
+                canvas.height = video.videoHeight || 240;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                return canvas.toDataURL('image/jpeg', 0.7);
             }
 
-            const btn = document.querySelector('#modal-tao-don-ve-som button:last-child');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang gửi...';
+            document.getElementById('btnRegister').addEventListener('click', async function() {
+                if (isRegisterProcessing) return;
 
-            fetch('{{ route('employee.cham-cong-face.tao-don-ve-som') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        ly_do: lyDo,
-                        gio_ra_du_kien: gioRa
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Gửi đơn';
+                const status = document.getElementById('registerStatus');
+                const overlay = document.getElementById('registerOverlay');
+
+                isRegisterProcessing = true;
+                overlay.classList.remove('hidden');
+                status.classList.add('hidden');
+
+                try {
+                    const imageData = captureRegisterImage();
+
+                    const response = await fetch('{{ route('employee.cham-cong-face.register') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            image: imageData
+                        })
+                    });
+
+                    const data = await response.json();
 
                     if (data.success) {
-                        closeModalTaoDonVeSom();
-                        document.getElementById('modal-da-gui-don').classList.remove('hidden');
-                        document.getElementById('modal-da-gui-don').classList.add('flex');
-                        showResult('✅ ' + data.message, true);
+                        status.textContent = '✅ ' + data.message;
+                        status.className =
+                            'mt-3 p-3 rounded-lg text-sm text-center bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 border border-green-200 dark:border-green-800';
+                        status.classList.remove('hidden');
+
+                        // Reload trang sau 2 giây
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
                     } else {
-                        showResult('❌ ' + data.message, false);
+                        status.textContent = '❌ ' + data.message;
+                        status.className =
+                            'mt-3 p-3 rounded-lg text-sm text-center bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 border border-red-200 dark:border-red-800';
+                        status.classList.remove('hidden');
                     }
-                })
-                .catch(error => {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Gửi đơn';
-                    showResult('❌ Lỗi: ' + error.message, false);
-                });
-        }
+                } catch (error) {
+                    console.error('Register error:', error);
+                    status.textContent = '❌ Lỗi hệ thống: ' + error.message;
+                    status.className =
+                        'mt-3 p-3 rounded-lg text-sm text-center bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 border border-red-200 dark:border-red-800';
+                    status.classList.remove('hidden');
+                } finally {
+                    isRegisterProcessing = false;
+                    overlay.classList.add('hidden');
+                }
+            });
 
-        function closeModalTaoDonVeSom() {
-            document.getElementById('modal-tao-don-ve-som').classList.add('hidden');
-            document.getElementById('modal-tao-don-ve-som').classList.remove('flex');
-            document.getElementById('ly-do-ve-som-modal').value = '';
-        }
+            document.getElementById('btnFlipRegister').addEventListener('click', function() {
+                registerFacingMode = (registerFacingMode === 'user') ? 'environment' : 'user';
+                initRegisterCamera(registerFacingMode);
+            });
 
-        function closeModalDaGuiDon() {
-            document.getElementById('modal-da-gui-don').classList.add('hidden');
-            document.getElementById('modal-da-gui-don').classList.remove('flex');
-        }
-
-        function closeModalChoDuyet() {
-            document.getElementById('modal-cho-duyet').classList.add('hidden');
-            document.getElementById('modal-cho-duyet').classList.remove('flex');
-        }
-
-        function closeModalTuChoi() {
-            document.getElementById('modal-tu-choi').classList.add('hidden');
-            document.getElementById('modal-tu-choi').classList.remove('flex');
-        }
+            // Khởi tạo camera đăng ký
+            initRegisterCamera('user');
+        @endif
 
         // =============================================
-        // NÚT ĐƠN XIN VỀ SỚM
+        // TẠO ĐƠN XIN VỀ SỚM
         // =============================================
-        document.getElementById('btnTaoDonVeSom').addEventListener('click', function() {
-            // Kiểm tra đã check-in chưa
-            if (!checkInStatus.checkedIn) {
-                showResult('⚠️ Bạn cần Check-in trước!', false);
-                return;
-            }
-            if (checkInStatus.checkedOut) {
-                showResult('⚠️ Bạn đã Check-out hôm nay rồi!', false);
-                return;
+        @if ($hasFace)
+            function guiDonVeSom() {
+                const lyDo = document.getElementById('ly-do-ve-som-modal').value.trim();
+                const gioRa = document.getElementById('gio-ra-du-kien').value;
+
+                if (!lyDo) {
+                    showResult('⚠️ Vui lòng nhập lý do về sớm!', false);
+                    return;
+                }
+
+                if (!gioRa) {
+                    showResult('⚠️ Vui lòng chọn giờ ra dự kiến!', false);
+                    return;
+                }
+
+                const btn = document.querySelector('#modal-tao-don-ve-som button:last-child');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang gửi...';
+
+                fetch('{{ route('employee.cham-cong-face.tao-don-ve-som') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            ly_do: lyDo,
+                            gio_ra_du_kien: gioRa
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Gửi đơn';
+
+                        if (data.success) {
+                            closeModalTaoDonVeSom();
+                            document.getElementById('modal-da-gui-don').classList.remove('hidden');
+                            document.getElementById('modal-da-gui-don').classList.add('flex');
+                            showResult('✅ ' + data.message, true);
+                        } else {
+                            showResult('❌ ' + data.message, false);
+                        }
+                    })
+                    .catch(error => {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Gửi đơn';
+                        showResult('❌ Lỗi: ' + error.message, false);
+                    });
             }
 
-            // Mở modal tạo đơn
-            document.getElementById('modal-tao-don-ve-som').classList.remove('hidden');
-            document.getElementById('modal-tao-don-ve-som').classList.add('flex');
-            const now = new Date();
-            document.getElementById('gio-ra-du-kien').value = now.toTimeString().slice(0, 5);
+            function closeModalTaoDonVeSom() {
+                document.getElementById('modal-tao-don-ve-som').classList.add('hidden');
+                document.getElementById('modal-tao-don-ve-som').classList.remove('flex');
+                document.getElementById('ly-do-ve-som-modal').value = '';
+            }
 
-            // Kiểm tra xem có đang về sớm không để hiển thị số phút
-            fetch('{{ route('employee.cham-cong-face.kiem-tra-ve-som') }}')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.so_phut_ve_som > 0) {
-                        document.getElementById('phut-ve-som-text-modal').textContent = Math.round(data
-                            .so_phut_ve_som);
-                    }
-                })
-                .catch(() => {});
-        });
+            function closeModalDaGuiDon() {
+                document.getElementById('modal-da-gui-don').classList.add('hidden');
+                document.getElementById('modal-da-gui-don').classList.remove('flex');
+            }
+
+            function closeModalChoDuyet() {
+                document.getElementById('modal-cho-duyet').classList.add('hidden');
+                document.getElementById('modal-cho-duyet').classList.remove('flex');
+            }
+
+            function closeModalTuChoi() {
+                document.getElementById('modal-tu-choi').classList.add('hidden');
+                document.getElementById('modal-tu-choi').classList.remove('flex');
+            }
+
+            document.getElementById('btnTaoDonVeSom').addEventListener('click', function() {
+                if (!checkInStatus.checkedIn) {
+                    showResult('⚠️ Bạn cần Check-in trước!', false);
+                    return;
+                }
+                if (checkInStatus.checkedOut) {
+                    showResult('⚠️ Bạn đã Check-out hôm nay rồi!', false);
+                    return;
+                }
+
+                document.getElementById('modal-tao-don-ve-som').classList.remove('hidden');
+                document.getElementById('modal-tao-don-ve-som').classList.add('flex');
+                const now = new Date();
+                document.getElementById('gio-ra-du-kien').value = now.toTimeString().slice(0, 5);
+
+                fetch('{{ route('employee.cham-cong-face.kiem-tra-ve-som') }}')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.so_phut_ve_som > 0) {
+                            document.getElementById('phut-ve-som-text-modal').textContent = Math.round(data
+                                .so_phut_ve_som);
+                        }
+                    })
+                    .catch(() => {});
+            });
+        @endif
     </script>
 
     {{-- 🔥 CHỈ LOAD SCRIPT CAMERA KHI CÓ KHUÔN MẶT --}}
@@ -674,7 +833,6 @@
                 checkedOut: {{ $checkedOut ? 'true' : 'false' }}
             };
 
-            // Khởi tạo camera
             async function initCamera(facing = 'user') {
                 try {
                     if (stream) {
@@ -695,7 +853,6 @@
                     video.srcObject = stream;
                     video.onloadedmetadata = () => {
                         video.play();
-                        // Bắt đầu auto scan sau 1 giây
                         setTimeout(() => {
                             if (isAutoMode) startAutoScan();
                         }, 1000);
@@ -719,7 +876,6 @@
                 }
             }
 
-            // Auto scan - nhận diện khuôn mặt liên tục
             let scanInterval = null;
 
             function startAutoScan() {
@@ -728,19 +884,16 @@
                 scanLine.classList.remove('hidden');
                 scanLine.style.display = 'block';
 
-                // Animation scan line
                 let scanPosition = 20;
                 let scanDirection = 1;
 
                 scanInterval = setInterval(() => {
-                    // Di chuyển scan line
                     scanPosition += scanDirection * 2;
                     if (scanPosition > 80 || scanPosition < 20) {
                         scanDirection *= -1;
                     }
                     scanLine.style.top = scanPosition + '%';
 
-                    // Check face mỗi 3 giây
                     const now = Date.now();
                     if (now - lastProcessedTime > 3000 && !isProcessing) {
                         lastProcessedTime = now;
@@ -758,24 +911,20 @@
                 scanLine.style.display = 'none';
             }
 
-            // Phát hiện và xử lý khuôn mặt
             async function detectAndProcessFace() {
                 if (isProcessing) return;
 
-                // Nếu đã check-in và check-out rồi thì dừng
                 if (checkInStatus.checkedIn && checkInStatus.checkedOut) {
                     faceDetectStatus.textContent = '✅ Đã hoàn thành chấm công hôm nay';
                     return;
                 }
 
-                // Nếu đã check-in và chưa check-out → auto checkout
                 if (checkInStatus.checkedIn && !checkInStatus.checkedOut) {
                     faceDetectStatus.textContent = '🚪 Phát hiện khuôn mặt - Tự động Check-out...';
                     await authenticateFace('check_out');
                     return;
                 }
 
-                // Chưa check-in → auto checkin
                 if (!checkInStatus.checkedIn) {
                     faceDetectStatus.textContent = '✅ Phát hiện khuôn mặt - Tự động Check-in...';
                     await authenticateFace('check_in');
@@ -783,7 +932,6 @@
                 }
             }
 
-            // Lật camera
             function flipCamera() {
                 facingMode = (facingMode === 'user') ? 'environment' : 'user';
                 initCamera(facingMode);
@@ -793,7 +941,6 @@
                 showResult(`🔄 Đã chuyển sang ${facingMode === 'user' ? 'camera trước' : 'camera sau'}`, true);
             }
 
-            // Chụp ảnh
             function captureImage() {
                 const context = canvas.getContext('2d');
                 canvas.width = video.videoWidth || 320;
@@ -802,7 +949,6 @@
                 return canvas.toDataURL('image/jpeg', 0.7);
             }
 
-            // Hiển thị thông báo
             function showResult(message, isSuccess) {
                 result.classList.remove('hidden');
                 result.className =
@@ -814,7 +960,27 @@
                 }, 4000);
             }
 
-            // Xác thực khuôn mặt
+            function showResultWithButton(message, buttonText, onButtonClick) {
+                result.classList.remove('hidden');
+                result.className =
+                    'absolute bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded-lg text-sm font-semibold z-10 bg-yellow-500 text-white shadow-lg';
+                result.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span>${message}</span>
+                            <button onclick="(${onButtonClick.toString()})()" 
+                                    class="px-3 py-1 bg-white text-yellow-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition">
+                                ${buttonText}
+                            </button>
+                        </div>
+                    `;
+
+                setTimeout(() => {
+                    if (!result.classList.contains('hidden')) {
+                        result.classList.add('hidden');
+                    }
+                }, 10000);
+            }
+
             async function authenticateFace(loai) {
                 if (isProcessing) {
                     showResult('⏳ Đang xử lý, vui lòng đợi...', false);
@@ -873,7 +1039,6 @@
                                 `✅ Đã check-in và check-out hôm nay<br><span class="text-xs opacity-70">Check-out lúc: ${data.time || '...'}</span>`;
                             status.className =
                                 'mt-3 p-3 rounded-lg text-sm text-center bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 border border-green-200 dark:border-green-800';
-                            // Dừng auto scan
                             stopAutoScan();
                         }
 
@@ -882,9 +1047,7 @@
                         }, 2000);
 
                     } else {
-                        // ✅ KIỂM TRA LỖI VỀ SỚM
                         if (data.yeu_cau_tao_don) {
-                            // Hiển thị thông báo với nút tạo đơn
                             const phutVeSom = Math.round(data.so_phut_ve_som);
                             showResultWithButton(
                                 `⚠️ Bạn đang về sớm ${phutVeSom} phút!`,
@@ -936,30 +1099,6 @@
                 }
             }
 
-            // =============================================
-            // HIỂN THỊ THÔNG BÁO CÓ NÚT
-            // =============================================
-            function showResultWithButton(message, buttonText, onButtonClick) {
-                result.classList.remove('hidden');
-                result.className =
-                    'absolute bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded-lg text-sm font-semibold z-10 bg-yellow-500 text-white shadow-lg';
-                result.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <span>${message}</span>
-                            <button onclick="(${onButtonClick.toString()})()" 
-                                    class="px-3 py-1 bg-white text-yellow-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition">
-                                ${buttonText}
-                            </button>
-                        </div>
-                    `;
-
-                setTimeout(() => {
-                    if (!result.classList.contains('hidden')) {
-                        result.classList.add('hidden');
-                    }
-                }, 10000);
-            }
-
             // Sự kiện
             btnCheckIn.addEventListener('click', () => {
                 if (isAutoMode) {
@@ -986,7 +1125,6 @@
                 showResult('📸 Đã lưu ảnh chụp', true);
             });
 
-            // Auto mode toggle
             autoModeToggle.addEventListener('change', function() {
                 isAutoMode = this.checked;
                 if (isAutoMode) {
@@ -1003,10 +1141,8 @@
                 }
             });
 
-            // Khởi tạo
             initCamera('user');
 
-            // Kiểm tra trạng thái định kỳ
             setInterval(async () => {
                 try {
                     const response = await fetch('{{ route('employee.cham-cong-face.status') }}');
@@ -1034,12 +1170,14 @@
             }
         }
 
-        #video {
+        #video,
+        #registerVideo {
             background: #1a1a2e;
             min-height: 300px;
         }
 
-        #faceGuide {
+        #faceGuide,
+        #registerGuide {
             transition: opacity 0.5s ease;
         }
 
@@ -1072,7 +1210,8 @@
             }
         }
 
-        #btnFlipCamera:hover {
+        #btnFlipCamera:hover,
+        #btnFlipRegister:hover {
             transform: scale(1.1);
             background: rgba(0, 0, 0, 0.8);
         }
@@ -1081,7 +1220,6 @@
             backdrop-filter: blur(8px);
         }
 
-        /* Scan line animation */
         #scanLine {
             transition: top 0.1s ease;
             box-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
@@ -1100,12 +1238,10 @@
             }
         }
 
-        /* Toggle switch */
         .peer:checked~.peer-checked\:bg-blue-600 {
             background-color: #2563eb;
         }
 
-        /* Nút đơn về sớm */
         #btnTaoDonVeSom:disabled {
             opacity: 0.5;
             cursor: not-allowed;

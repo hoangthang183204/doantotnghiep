@@ -143,21 +143,19 @@
         </form>
     </div>
 
-    {{-- THỐNG KÊ NHANH --}}
+    {{-- THỐNG KÊ NHANH - CÓ LINK CLICK ĐỂ LỌC --}}
     @php
         $hopDongTaoMoi = $hopDongs->where('trang_thai_hop_dong', 'tao_moi')->count();
-        $hopDongSapHetHan = $hopDongs->where('trang_thai_hop_dong', 'hieu_luc')
-            ->where('ngay_ket_thuc', '<=', now()->addDays(30))
-            ->where('ngay_ket_thuc', '>=', now())
-            ->count();
         $hopDongChoDuyet = $hopDongs->where('trang_thai_duyet', 'cho_duyet')->count();
         $hopDongChoKy = $hopDongs->where('trang_thai_ky', 'cho_ky')->where('trang_thai_duyet', 'da_duyet')->count();
     @endphp
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {{-- Chờ duyệt --}}
         @if ($hopDongChoDuyet > 0)
-            <div class="p-4 rounded-xl bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-700 flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-800 flex items-center justify-center">
+            <a href="{{ route('admin.hop-dong.index', ['trang_thai_duyet' => 'cho_duyet']) }}" 
+               class="block p-4 rounded-xl bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-700 flex items-center gap-3 hover:shadow-md transition hover:scale-[1.02] cursor-pointer">
+                <div class="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-800 flex items-center justify-center flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
@@ -165,12 +163,14 @@
                 <div>
                     <span class="font-semibold">{{ $hopDongChoDuyet }}</span> hợp đồng <strong>chờ duyệt</strong>
                 </div>
-            </div>
+            </a>
         @endif
 
+        {{-- Chờ ký (đã duyệt) --}}
         @if ($hopDongChoKy > 0)
-            <div class="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center">
+            <a href="{{ route('admin.hop-dong.index', ['trang_thai_ky' => 'cho_ky', 'trang_thai_duyet' => 'da_duyet']) }}" 
+               class="block p-4 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 flex items-center gap-3 hover:shadow-md transition hover:scale-[1.02] cursor-pointer">
+                <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                     </svg>
@@ -178,12 +178,14 @@
                 <div>
                     <span class="font-semibold">{{ $hopDongChoKy }}</span> hợp đồng <strong>chờ ký</strong> (đã duyệt)
                 </div>
-            </div>
+            </a>
         @endif
 
+        {{-- Tạo mới --}}
         @if ($hopDongTaoMoi > 0)
-            <div class="p-4 rounded-xl bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-700 flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-800 flex items-center justify-center">
+            <a href="{{ route('admin.hop-dong.index', ['trang_thai_hop_dong' => 'tao_moi']) }}" 
+               class="block p-4 rounded-xl bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-700 flex items-center gap-3 hover:shadow-md transition hover:scale-[1.02] cursor-pointer">
+                <div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-800 flex items-center justify-center flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
@@ -191,20 +193,23 @@
                 <div>
                     <span class="font-semibold">{{ $hopDongTaoMoi }}</span> hợp đồng <strong>tạo mới</strong> cần gửi duyệt
                 </div>
-            </div>
+            </a>
         @endif
 
-        @if ($hopDongSapHetHan > 0)
-            <div class="p-4 rounded-xl bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700 flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-800 flex items-center justify-center">
+        {{-- Sắp hết hạn (còn <= 3 ngày) - CÓ THỂ TÁI KÝ NGAY --}}
+        @if ($sapHetHan > 0)
+            <a href="{{ route('admin.hop-dong.index', ['trang_thai_hop_dong' => 'hieu_luc', 'sap_het_han' => 1]) }}" 
+               class="block p-4 rounded-xl bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700 flex items-center gap-3 hover:shadow-md transition hover:scale-[1.02] cursor-pointer">
+                <div class="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-800 flex items-center justify-center flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
                 <div>
-                    <span class="font-semibold">{{ $hopDongSapHetHan }}</span> hợp đồng sắp <strong>hết hạn</strong> trong 30 ngày
+                    <span class="font-semibold">{{ $sapHetHan }}</span> hợp đồng sắp <strong>hết hạn</strong> (còn <= 3 ngày) 
+                    <span class="text-xs font-bold text-purple-600 dark:text-purple-400 block">🔄 Có thể tái ký ngay</span>
                 </div>
-            </div>
+            </a>
         @endif
     </div>
 
@@ -236,6 +241,17 @@
                             $roleName = $user->vaiTros->first()->name ?? '';
                             $isAdmin = $roleName === 'admin';
                             $isHr = $roleName === 'hr';
+                            
+                            // Kiểm tra ngày còn lại để hiển thị cảnh báo
+                            $canTaiKyNow = false;
+                            $ngayConLai = null;
+                            if ($hd->trang_thai_hop_dong == 'hieu_luc' && $hd->ngay_ket_thuc && $hd->trang_thai_tai_ky != 'da_tai_ky') {
+                                $ngayConLai = \Carbon\Carbon::now()->diffInDays($hd->ngay_ket_thuc, false);
+                                $soNgayTruoc = \Illuminate\Support\Facades\Config::get('contract.tai_ky_so_ngay_truoc', 3);
+                                if ($ngayConLai <= $soNgayTruoc && $ngayConLai >= 0) {
+                                    $canTaiKyNow = true;
+                                }
+                            }
                         @endphp
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition duration-150">
                             <td class="px-4 py-3 text-gray-500">{{ $loop->iteration }}</td>
@@ -318,6 +334,12 @@
                                         default => $hd->trang_thai_hop_dong,
                                     } }}
                                 </span>
+                                {{-- Hiển thị cảnh báo sắp hết hạn --}}
+                                @if($canTaiKyNow)
+                                    <span class="block text-xs text-red-600 dark:text-red-400 font-semibold mt-1">
+                                        ⚠️ Sắp hết hạn ({{ $ngayConLai }} ngày)
+                                    </span>
+                                @endif
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex justify-center gap-1.5 flex-wrap">
@@ -331,7 +353,7 @@
                                     </a>
 
                                     {{-- Nút Sửa - Chỉ hiện khi chưa duyệt --}}
-                                    @if($hd->trang_thai_duyet === 'cho_duyet' && $hd->trang_thai_hop_dong !== 'huy_bo')
+                                    @if($hd->trang_thai_duyet === 'cho_duyet' && $hd->trang_thai_hop_dong !== 'huy_bo' && $hd->trang_thai_ky !== 'tu_choi_ky')
                                         <a href="{{ route('admin.hop-dong.edit', $hd->id) }}"
                                             class="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded-lg transition" title="Sửa">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -340,7 +362,7 @@
                                         </a>
                                     @endif
 
-                                    {{-- 🔥 Nút Duyệt - Chỉ hiện cho Admin khi đang chờ duyệt --}}
+                                    {{-- Nút Duyệt - Chỉ hiện cho Admin khi đang chờ duyệt --}}
                                     @if($hd->trang_thai_duyet === 'cho_duyet' && $isAdmin)
                                         <form action="{{ route('admin.hop-dong.duyet', $hd->id) }}" method="POST" class="inline">
                                             @csrf
@@ -355,8 +377,8 @@
                                         </form>
                                     @endif
 
-                                    {{-- 🔥 Nút Gửi cho nhân viên - Chỉ hiện cho HR/Admin khi đã duyệt và chưa gửi --}}
-                                    @if($hd->trang_thai_duyet === 'da_duyet' && $hd->trang_thai_ky === 'cho_ky' && ($isAdmin || $isHr))
+                                    {{-- Nút Gửi cho nhân viên - Chỉ hiện cho HR/Admin khi đã duyệt và chưa gửi --}}
+                                    @if($hd->trang_thai_duyet === 'da_duyet' && $hd->trang_thai_ky === 'cho_ky' && ($isAdmin || $isHr) && !$hd->thoi_gian_gui)
                                         <form action="{{ route('admin.hop-dong.gui-ky', $hd->id) }}" method="POST" class="inline">
                                             @csrf
                                             <button type="submit"
@@ -380,14 +402,14 @@
                                         </a>
                                     @endif
 
-                                    {{-- Nút Tái ký - Chỉ hiện khi hợp đồng hết hạn --}}
-                                    @if($hd->trang_thai_hop_dong == 'het_han' && $hd->trang_thai_tai_ky != 'da_tai_ky')
+                                    {{-- Nút Tái ký - Hiện khi hết hạn HOẶC còn <= 3 ngày --}}
+                                    @if(($hd->trang_thai_hop_dong == 'het_han' || $canTaiKyNow) && $hd->trang_thai_tai_ky != 'da_tai_ky')
                                         <form action="{{ route('admin.hop-dong.tai-ky', $hd->id) }}" method="POST" class="inline">
                                             @csrf
                                             <button type="submit"
                                                 class="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition" 
                                                 title="🔄 Tái ký hợp đồng"
-                                                onclick="return confirm('🔄 Tái ký hợp đồng {{ $hd->so_hop_dong }}?')">
+                                                onclick="return confirm('🔄 Tái ký (gia hạn) hợp đồng {{ $hd->so_hop_dong }}?\n\n{{ $hd->trang_thai_hop_dong == 'het_han' ? 'Hợp đồng đã hết hạn.' : 'Hợp đồng sắp hết hạn (còn '.$ngayConLai.' ngày).' }}')">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                                 </svg>
