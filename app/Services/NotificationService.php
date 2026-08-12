@@ -5,6 +5,7 @@ namespace App\Services;
 
 use App\Models\DonXinNghi;
 use App\Models\DangKyTangCa;
+use App\Models\KienNghiTangCa;
 use App\Models\YeuCauDieuChinhCong;
 use App\Models\NguoiDung;
 use App\Notifications\LeaveRequestNotification;
@@ -50,7 +51,7 @@ class NotificationService
     {
         try {
             $employee = $tangCa->nguoiDung;
-            
+
             // Lấy tên nhân viên
             $tenNhanVien = optional($employee->hoSo)
                 ? $employee->hoSo->ho . ' ' . $employee->hoSo->ten
@@ -96,7 +97,7 @@ class NotificationService
                 Log::info('📧 Gửi thông báo hủy đơn tăng ca đến Admin');
             }
 
-            // ⭐ THÊM MỚI: Xác nhận đã làm tăng ca (nhân viên)
+            // Xác nhận đã làm tăng ca (nhân viên)
             if ($action === 'employee_confirmed') {
                 // Gửi cho Admin và Quản lý khi nhân viên xác nhận đã làm tăng ca
                 $admins = NguoiDung::whereHas('vaiTros', function ($q) {
@@ -109,7 +110,27 @@ class NotificationService
                 Log::info('📧 Gửi thông báo nhân viên đã xác nhận làm tăng ca đến Admin/Quản lý');
             }
 
-            // ⭐ THÊM MỚI: Quản lý xác nhận hoàn thành
+            // ⭐ NHÂN VIÊN TỪ CHỐI ĐƠN TĂNG CA
+            if ($action === 'employee_rejected') {
+                // Gửi cho trưởng phòng (người tạo đơn) khi nhân viên từ chối
+                $truongPhong = $tangCa->nguoi_tao; // Người tạo đơn (trưởng phòng)
+                if ($truongPhong) {
+                    $truongPhong->notify(new OvertimeNotification($tangCa, $action));
+                    Log::info('📧 Gửi thông báo nhân viên từ chối đơn tăng ca đến trưởng phòng: ' . $truongPhong->email);
+                } else {
+                    // Nếu không có người tạo, gửi cho Admin
+                    $admins = NguoiDung::whereHas('vaiTros', function ($q) {
+                        $q->whereIn('name', ['admin', 'Super Admin', 'Admin']);
+                    })->get();
+
+                    foreach ($admins as $admin) {
+                        $admin->notify(new OvertimeNotification($tangCa, $action));
+                    }
+                    Log::info('📧 Gửi thông báo nhân viên từ chối đơn tăng ca đến Admin');
+                }
+            }
+
+            // Quản lý xác nhận hoàn thành
             if ($action === 'manager_approved') {
                 // Gửi cho nhân viên khi quản lý xác nhận hoàn thành
                 if ($employee) {
@@ -132,6 +153,40 @@ class NotificationService
         } catch (\Exception $e) {
             Log::error('❌ Lỗi gửi thông báo tăng ca: ' . $e->getMessage());
             Log::error('❌ Stack trace: ' . $e->getTraceAsString());
+        }
+    }
+
+    /**
+     * Gửi thông báo kiến nghị tăng ca
+     */
+    public function notifyKienNghiTangCa($kienNghi, $truongPhong, $action = 'created'): void
+    {
+        try {
+            $hoTen = optional($kienNghi->nguoi_dung->hoSo)
+                ? $kienNghi->nguoi_dung->hoSo->ho . ' ' . $kienNghi->nguoi_dung->hoSo->ten
+                : $kienNghi->nguoi_dung->ten_dang_nhap ?? 'N/A';
+
+            $messages = [
+                'created' => "📢 Nhân viên {$hoTen} vừa gửi kiến nghị tăng ca",
+                'approved' => "✅ Kiến nghị tăng ca của bạn đã được duyệt",
+                'rejected' => "❌ Kiến nghị tăng ca của bạn đã bị từ chối",
+            ];
+
+            $data = [
+                'title' => $messages[$action] ?? 'Thông báo kiến nghị tăng ca',
+                'message' => "Lý do: {$kienNghi->ly_do_tang_ca}",
+                'type' => 'kien_nghi_tang_ca',
+                'kien_nghi_id' => $kienNghi->id,
+                'action' => $action,
+                'link' => $action == 'created'
+                    ? route('truong-phong.kien-nghi-tang-ca.show', $kienNghi->id)
+                    : route('employee.tang-ca.show', $kienNghi->id),
+            ];
+
+            $truongPhong->notify(new \App\Notifications\CustomNotification($data));
+            Log::info("📧 Kien nghi tang ca notification sent to: " . $truongPhong->email);
+        } catch (\Exception $e) {
+            Log::error("❌ Failed to send kien nghi tang ca notification: " . $e->getMessage());
         }
     }
 
@@ -159,7 +214,7 @@ class NotificationService
     }
 
     /**
-     * ⭐ GỬI THÔNG BÁO ĐẾN MỘT USER CỤ THỂ
+     * GỬI THÔNG BÁO ĐẾN MỘT USER CỤ THỂ
      */
     public function sendToUser(NguoiDung $user, $notification): void
     {
@@ -172,7 +227,7 @@ class NotificationService
     }
 
     /**
-     * ⭐ GỬI THÔNG BÁO ĐẾN NHIỀU USER
+     * GỬI THÔNG BÁO ĐẾN NHIỀU USER
      */
     public function sendToUsers($users, $notification): void
     {

@@ -58,6 +58,8 @@ use App\Http\Controllers\TruongPhong\DuyetVeSomController;
 use App\Http\Controllers\DuyetDonController as DuyetDonChungController;
 use App\Http\Controllers\TruongPhong\BaoCaoController;
 use App\Http\Controllers\TruongPhong\NhanVienController;
+use App\Http\Controllers\TruongPhong\TangCaController as TruongPhongTangCaController;
+use App\Http\Controllers\TruongPhong\KienNghiTangCaController as TruongPhongKienNghiTangCaController;
 
 // =============================================
 // ROUTE GỐC
@@ -106,7 +108,6 @@ Route::prefix('admin')
     ->name('admin.')
     ->middleware(['auth'])
     ->group(function () {
-
 
         Route::prefix('cham-cong-face')->name('cham-cong-face.')->group(function () {
             Route::get('/', [ChamCongFaceController::class, 'index'])->name('index');
@@ -559,7 +560,6 @@ Route::prefix('admin')
         });
 
         // ========== TĂNG CA - CHỈ HR VÀ ADMIN ==========
-        // ========== TĂNG CA - CHỈ HR VÀ ADMIN ==========
         Route::prefix('tang-ca')->name('tang-ca.')->middleware(['CheckPermission:attendance.overtime_approve'])->group(function () {
             Route::get('/', [TangCaController::class, 'index'])->name('index');
             Route::get('/{id}', [TangCaController::class, 'show'])->name('show');
@@ -580,16 +580,6 @@ Route::prefix('admin')
             Route::put('/{id}', [ThucHienTangCaController::class, 'update'])->name('update');
         });
 
-        // ========== DUYỆT ĐƠN TUYỂN DỤNG - CHỈ HR VÀ ADMIN ==========
-        // Route::prefix('duyetdon')->name('duyetdon.')->group(function () {
-        //     Route::prefix('tuyendung')->name('tuyendung.')->middleware(['CheckPermission:recruitment.index'])->group(function () {
-        //         Route::get('/', [DuyetDonController::class, 'index'])->name('index');
-        //         Route::get('/{id}', [DuyetDonController::class, 'show'])->name('show');
-        //         Route::post('/{id}/duyet', [DuyetDonController::class, 'duyet'])->name('duyet');
-        //         Route::post('/{id}/tuchoi', [DuyetDonController::class, 'tuChoi'])->name('tuchoi');
-        //     });
-        // });
-
         // ========== TEST ROUTE ==========
         Route::get('/test-mail', function () {
             Mail::raw('Test gửi mail HRFlow', function ($message) {
@@ -602,14 +592,10 @@ Route::prefix('admin')
 // =============================================
 // EMPLOYEE ROUTES
 // =============================================
-// =============================================
-// EMPLOYEE ROUTES
-// =============================================
 Route::prefix('employee')
     ->name('employee.')
     ->middleware(['auth'])
     ->group(function () {
-
 
         Route::get('/employee/cham-cong-face/logs', function () {
             $user = auth()->user();
@@ -661,8 +647,6 @@ Route::prefix('employee')
             Route::get('/kiem-tra-don-ve-som', [EmployeeChamCongController::class, 'kiemTraDonVeSom'])->name('kiem-tra-don-ve-som');
         });
 
-
-
         // ========== TĂNG CA ==========
         Route::prefix('tang-ca')->name('tang-ca.')->group(function () {
             Route::get('/', [EmployeeTangCaController::class, 'index'])->name('index');
@@ -674,6 +658,8 @@ Route::prefix('employee')
             Route::delete('/{id}', [EmployeeTangCaController::class, 'destroy'])->name('destroy');
             Route::post('/{id}/huy', [EmployeeTangCaController::class, 'huy'])->name('huy');
             Route::post('/{id}/confirm-thuc-hien', [EmployeeTangCaController::class, 'confirmThucHien'])->name('confirm-thuc-hien');
+            // ⭐ THÊM ROUTE TỪ CHỐI ĐƠN TĂNG CA DO TRƯỞNG PHÒNG TẠO
+            Route::post('/{id}/tu-choi-don', [EmployeeTangCaController::class, 'tuChoiDon'])->name('tu-choi-don'); // ⭐ THÊM
         });
 
         // ========== YÊU CẦU CHỈNH CÔNG ==========
@@ -810,7 +796,7 @@ Route::middleware(['auth', 'truong_phong'])
 
         Route::prefix('duyet-ve-som')->name('duyet-ve-som.')->group(function () {
             Route::get('/', [DuyetVeSomController::class, 'index'])->name('index');
-            Route::get('/{id}', [DuyetVeSomController::class, 'show'])->name('show'); // 🔴 Thêm trang xem chi tiết
+            Route::get('/{id}', [DuyetVeSomController::class, 'show'])->name('show');
             Route::post('/{id}/duyet', [DuyetVeSomController::class, 'duyet'])->name('duyet');
             Route::post('/{id}/tu-choi', [DuyetVeSomController::class, 'tuChoi'])->name('tu-choi');
         });
@@ -821,5 +807,26 @@ Route::middleware(['auth', 'truong_phong'])
             Route::get('/{id}', [\App\Http\Controllers\TruongPhong\DonNghiController::class, 'show'])->name('show');
             Route::post('/{id}/duyet', [\App\Http\Controllers\TruongPhong\DonNghiController::class, 'duyet'])->name('duyet');
             Route::post('/{id}/tu-choi', [\App\Http\Controllers\TruongPhong\DonNghiController::class, 'tuChoi'])->name('tu-choi');
+        // ⭐⭐⭐ TĂNG CA - TRƯỞNG PHÒNG QUẢN LÝ ⭐⭐⭐
+        Route::prefix('tang-ca')->name('tang-ca.')->group(function () {
+            Route::get('/', [TruongPhongTangCaController::class, 'index'])->name('index');
+            Route::get('/create', [TruongPhongTangCaController::class, 'create'])->name('create');
+            Route::post('/', [TruongPhongTangCaController::class, 'store'])->name('store');
+            Route::get('/{id}', [TruongPhongTangCaController::class, 'show'])->name('show');
+            Route::post('/{id}/duyet', [TruongPhongTangCaController::class, 'duyet'])->name('duyet');
+            Route::post('/{id}/tu-choi', [TruongPhongTangCaController::class, 'tuChoi'])->name('tu-choi');
+            // ⭐ THÊM ROUTE CHO KIẾN NGHỊ
+            Route::post('/{id}/duyet-kien-nghi', [App\Http\Controllers\TruongPhong\TangCaController::class, 'duyetKienNghi'])->name('duyet-kien-nghi');
+            Route::post('/{id}/tu-choi-kien-nghi', [App\Http\Controllers\TruongPhong\TangCaController::class, 'tuChoiKienNghi'])->name('tu-choi-kien-nghi');
+        });
+
+        // ⭐⭐⭐ KIẾN NGHỊ TĂNG CA - TRƯỞNG PHÒNG ⭐⭐⭐
+        Route::prefix('kien-nghi-tang-ca')->name('kien-nghi-tang-ca.')->group(function () {
+            Route::get('/', [TruongPhongKienNghiTangCaController::class, 'index'])->name('index');
+            Route::get('/{id}', [TruongPhongKienNghiTangCaController::class, 'show'])->name('show');
+            Route::post('/{id}/dong-y', [TruongPhongKienNghiTangCaController::class, 'dongY'])->name('dong-y');
+            Route::post('/{id}/tu-choi', [TruongPhongKienNghiTangCaController::class, 'tuChoi'])->name('tu-choi');
+            Route::get('/{id}/create-don', [TruongPhongKienNghiTangCaController::class, 'createDon'])->name('create-don');
+            Route::post('/{id}/store-don', [TruongPhongKienNghiTangCaController::class, 'storeDon'])->name('store-don');
         });
     });

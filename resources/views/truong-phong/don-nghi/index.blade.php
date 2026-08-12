@@ -78,9 +78,18 @@
                 <input type="date" name="den_ngay" value="{{ request('den_ngay') }}" 
                     class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
             </div>
+            
             <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition">
                 <i class="fas fa-search mr-1"></i> Lọc
             </button>
+    
+            <!-- 🟢 NÚT LỌC NHANH: NGHỈ HÔM NAY -->
+            <a href="{{ route('duyet-don.index', ['tu_ngay' => now()->format('Y-m-d'), 'den_ngay' => now()->format('Y-m-d'), 'trang_thai' => 'da_duyet']) }}" 
+               class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 rounded-lg text-sm font-medium transition flex items-center gap-1.5">
+                <i class="fas fa-calendar-day"></i>
+                <span>Nghỉ hôm nay</span>
+            </a>
+    
             <a href="{{ route('duyet-don.index') }}" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition">
                 <i class="fas fa-redo mr-1"></i> Reset
             </a>

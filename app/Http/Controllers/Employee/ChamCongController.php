@@ -8,12 +8,13 @@ use App\Models\ChamCong;
 use App\Models\CaLamViec;
 use App\Models\CauHinhChamCong;
 use App\Models\DonXinVeSom;
+use App\Models\DangKyTangCa;
 use App\Models\GioLamViec;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth; 
+use Illuminate\Support\Facades\Auth;
 
 class ChamCongController extends Controller
 {
@@ -27,6 +28,7 @@ class ChamCongController extends Controller
 
         // Lấy bản ghi chấm công hôm nay
         $chamCongHomNay = ChamCong::layChamCongHomNay($user->id);
+        $trangThaiChamCong = $chamCongHomNay;
 
         // Xác định ca hiện tại
         $now = Carbon::now('Asia/Ho_Chi_Minh');
@@ -73,7 +75,7 @@ class ChamCongController extends Controller
         // ===== THÔNG TIN VỊ TRÍ =====
         $gioLamViec = GioLamViec::first();
 
-        // ⭐ Lấy danh sách IP và WiFi từ database
+        // Lấy danh sách IP và WiFi từ database
         $dsIP = CauHinhChamCong::where('loai', 'ip')
             ->where('trang_thai', 1)
             ->pluck('gia_tri')
@@ -84,16 +86,15 @@ class ChamCongController extends Controller
             ->pluck('gia_tri')
             ->toArray();
 
-        // ⭐ Lấy IP và WiFi từ request
+        // Lấy IP và WiFi từ request
         $currentIP = request()->ip();
         $currentWiFi = request()->header('X-WiFi-SSID');
 
-        // ⭐ Nếu không có WiFi từ header, thử lấy từ chấm công hôm nay
         if (!$currentWiFi && $chamCongHomNay && $chamCongHomNay->ten_wifi) {
             $currentWiFi = $chamCongHomNay->ten_wifi;
         }
 
-        // ⭐ KIỂM TRA IP
+        // Kiểm tra IP
         $ipStatus = 'unknown';
         $ipMessage = 'Chưa xác định';
 
@@ -107,7 +108,7 @@ class ChamCongController extends Controller
             }
         }
 
-        // ⭐ KIỂM TRA WIFI
+        // Kiểm tra WIFI
         $wifiStatus = 'unknown';
         $wifiMessage = 'Chưa xác định';
 
@@ -123,10 +124,8 @@ class ChamCongController extends Controller
             $wifiMessage = '📡 Chưa kết nối WiFi';
         }
 
-        // ⭐ Vị trí hợp lệ khi IP hoặc WiFi hợp lệ
         $isValidLocation = ($ipStatus == 'valid' || $wifiStatus == 'valid');
 
-        // ⭐ Phương thức chấm công
         $phuongThucText = 'Chưa chấm công';
         if ($chamCongHomNay) {
             $phuongThucMap = [
@@ -138,12 +137,21 @@ class ChamCongController extends Controller
             $phuongThucText = $phuongThucMap[$chamCongHomNay->phuong_thuc_cham_cong] ?? $chamCongHomNay->phuong_thuc_cham_cong;
         }
 
-        // ⭐ TÍNH TỔNG CÔNG VÀ TỔNG GIỜ LÀM TRONG NGÀY
         $tongCong = $chamCongHomNay ? $chamCongHomNay->so_cong : 0;
         $tongGioLam = $chamCongHomNay ? $chamCongHomNay->so_gio_lam : 0;
 
+        // ⭐ LẤY THÔNG TIN TĂNG CA - CHỈ LẤY KHI ĐANG TRONG GIỜ TĂNG CA
+        $overtimeToday = DangKyTangCa::getActiveOvertimeNow($user->id);
+
+        // ⭐ LẤY THÔNG TIN THỜI GIAN CHỜ TĂNG CA (nếu có đơn nhưng chưa đến giờ)
+        $overtimeWaitInfo = null;
+        if (!$overtimeToday) {
+            $overtimeWaitInfo = DangKyTangCa::getTimeUntilOvertimeStart($user->id);
+        }
+
         return view('employee.cham-cong.index', compact(
             'chamCongHomNay',
+            'trangThaiChamCong',
             'daCheckIn',
             'daCheckOut',
             'caHienTai',
@@ -161,7 +169,9 @@ class ChamCongController extends Controller
             'ipMessage',
             'phuongThucText',
             'tongCong',
-            'tongGioLam'
+            'tongGioLam',
+            'overtimeToday',
+            'overtimeWaitInfo'
         ));
     }
 
@@ -220,8 +230,7 @@ class ChamCongController extends Controller
 
             $gioVaoStr = $now->format('H:i:s');
 
-            // ===== SỬA LẠI LOGIC XÁC ĐỊNH CA =====
-            // Xác định ca làm việc dựa vào giờ check-in
+            // ===== XÁC ĐỊNH CA =====
             $ca = null;
 
             // Ca Sáng: 06:00 - 08:30
@@ -244,7 +253,6 @@ class ChamCongController extends Controller
             elseif ($gioVaoStr >= '13:30:00' && $gioVaoStr < '17:00:00') {
                 $ca = CaLamViec::getChieu();
             }
-            // BỎ PHẦN CHECK-IN SAU 17:30 -> TĂNG CA
             // Không cho check-in nếu không xác định được ca
             else {
                 return response()->json([
@@ -260,12 +268,10 @@ class ChamCongController extends Controller
                 ], 400);
             }
 
-            // 🔥 SỬA Ở ĐÂY: XÓA LOGIC "ĐẾN SỚM", MẶC ĐỊNH LÀ ĐÚNG GIỜ
             $phutDiMuon = 0;
             $trangThai = ChamCong::TRANG_THAI_DUNG_GIO;
 
             $gioBatDau = Carbon::parse($ca->gio_bat_dau);
-            // Đã xóa if ($now->lt($gioBatDau)) gán den_som ở đây
             $phutDiMuon = $gioBatDau->diffInMinutes($now);
             if ($phutDiMuon > ($ca->so_phut_cho_phep_di_tre ?? 15)) {
                 $trangThai = ChamCong::TRANG_THAI_DI_MUON;
@@ -273,7 +279,7 @@ class ChamCongController extends Controller
                 $phutDiMuon = 0;
             }
 
-            // Xác định phương thức (giữ nguyên)
+            // Xác định phương thức
             $method = 'manual';
             if ($ipAllowed) $method = 'ip';
             if ($wifiAllowed) $method = 'wifi';
@@ -345,6 +351,40 @@ class ChamCongController extends Controller
                 ], 400);
             }
 
+            // ⭐ KIỂM TRA TĂNG CA HÔM NAY
+            $overtimeToday = DangKyTangCa::getActiveOvertimeToday($user->id);
+
+            if ($overtimeToday) {
+                $gioKetThucTangCa = Carbon::parse($overtimeToday->gio_ket_thuc);
+                $now = Carbon::now('Asia/Ho_Chi_Minh');
+
+                // Cho phép check-out sau giờ kết thúc tăng ca (có thể sớm hơn 15 phút)
+                $thoiGianChoPhepCheckout = $gioKetThucTangCa->copy()->subMinutes(15);
+
+                if ($now->lt($thoiGianChoPhepCheckout)) {
+                    $thoiGianConLai = $now->diffInMinutes($gioKetThucTangCa);
+                    $gioConLai = floor($thoiGianConLai / 60);
+                    $phutConLai = $thoiGianConLai % 60;
+
+                    return response()->json([
+                        'success' => false,
+                        'message' => "⏳ Bạn đang trong giờ tăng ca (đến {$overtimeToday->gio_ket_thuc}). Còn {$gioConLai} giờ {$phutConLai} phút nữa mới được check-out!",
+                        'overtime' => [
+                            'id' => $overtimeToday->id,
+                            'gio_ket_thuc' => $overtimeToday->gio_ket_thuc,
+                            'con_lai' => $now->diffInMinutes($gioKetThucTangCa)
+                        ]
+                    ], 400);
+                }
+
+                // Đánh dấu đã checkout thay thế cho giờ hành chính
+                $overtimeToday->update([
+                    'da_checkout_thay_the' => true,
+                    'da_hoan_thanh' => true,
+                    'thoi_gian_hoan_thanh' => now(),
+                ]);
+            }
+
             // ⭐ Kiểm tra vị trí (IP hoặc WiFi hợp lệ)
             $ip = $request->ip();
             $wifi = $request->header('X-WiFi-SSID');
@@ -381,7 +421,6 @@ class ChamCongController extends Controller
                 $ca = ChamCong::xacDinhCaLamViec($chamCong->gio_vao);
             }
 
-            // Nếu vẫn không có ca, lấy ca mặc định
             if (!$ca) {
                 $ca = CaLamViec::where('is_default', 1)->first();
             }
@@ -396,87 +435,82 @@ class ChamCongController extends Controller
             $gioKetThuc = Carbon::parse($ca->gio_ket_thuc);
 
             // ===== KIỂM TRA VỀ SỚM =====
-            $isVeSom = $now->lt($gioKetThuc);
+            $isVeSom = false;
             $soPhutVeSom = 0;
             $lyDoVeSom = null;
             $daCoDonDuyet = false;
 
-            // ⭐ NẾU VỀ SỚM, KIỂM TRA ĐƠN XIN VỀ SỚM
-            if ($isVeSom) {
-                $soPhutVeSom = $now->diffInMinutes($gioKetThuc);
-                $soPhutChoPhep = $ca->so_phut_cho_phep_ve_som ?? 15;
+            // Nếu KHÔNG có tăng ca, kiểm tra về sớm
+            if (!$overtimeToday) {
+                $isVeSom = $now->lt($gioKetThuc);
 
-                // Kiểm tra đơn xin về sớm
-                $donVeSom = DonXinVeSom::where('nguoi_dung_id', $user->id)
-                    ->where('ngay', $today)
-                    ->where('cham_cong_id', $chamCong->id)
-                    ->first();
+                if ($isVeSom) {
+                    $soPhutVeSom = $now->diffInMinutes($gioKetThuc);
+                    $soPhutChoPhep = $ca->so_phut_cho_phep_ve_som ?? 15;
 
-                // Nếu đã có đơn và được duyệt
-                if ($donVeSom && $donVeSom->trang_thai == 'da_duyet') {
-                    $daCoDonDuyet = true;
-                    $lyDoVeSom = $donVeSom->ly_do;
-                    // ⭐ KHÔNG TRỪ LƯƠNG -> để phutVeSom = 0
-                    $soPhutVeSom = 0;
-                }
-                // Nếu có đơn nhưng chưa duyệt
-                elseif ($donVeSom && $donVeSom->trang_thai == 'cho_duyet') {
-                    return response()->json([
-                        'success' => false,
-                        'message' => '⏳ Đơn xin về sớm đang chờ HR duyệt. Vui lòng đợi!',
-                        'trang_thai_don' => 'cho_duyet'
-                    ], 400);
-                }
-                // Nếu có đơn bị từ chối
-                elseif ($donVeSom && $donVeSom->trang_thai == 'tu_choi') {
-                    return response()->json([
-                        'success' => false,
-                        'message' => '❌ Đơn xin về sớm đã bị từ chối! Lý do: ' . ($donVeSom->ly_do_tu_choi ?? 'Không có lý do'),
-                        'trang_thai_don' => 'tu_choi'
-                    ], 400);
-                }
-                // Nếu chưa có đơn và về sớm quá số phút cho phép
-                elseif ($soPhutVeSom > $soPhutChoPhep) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => '⚠️ Bạn đang về sớm! Vui lòng tạo đơn xin về sớm.',
-                        'yeu_cau_tao_don' => true,
-                        'so_phut_ve_som' => $soPhutVeSom
-                    ], 400);
-                }
-                // Về sớm trong phạm vi cho phép
-                else {
-                    $soPhutVeSom = 0;
+                    // Kiểm tra đơn xin về sớm
+                    $donVeSom = DonXinVeSom::where('nguoi_dung_id', $user->id)
+                        ->where('ngay', $today)
+                        ->where('cham_cong_id', $chamCong->id)
+                        ->first();
+
+                    if ($donVeSom && $donVeSom->trang_thai == 'da_duyet') {
+                        $daCoDonDuyet = true;
+                        $lyDoVeSom = $donVeSom->ly_do;
+                        $soPhutVeSom = 0;
+                    } elseif ($donVeSom && $donVeSom->trang_thai == 'cho_duyet') {
+                        return response()->json([
+                            'success' => false,
+                            'message' => '⏳ Đơn xin về sớm đang chờ HR duyệt. Vui lòng đợi!',
+                            'trang_thai_don' => 'cho_duyet'
+                        ], 400);
+                    } elseif ($donVeSom && $donVeSom->trang_thai == 'tu_choi') {
+                        return response()->json([
+                            'success' => false,
+                            'message' => '❌ Đơn xin về sớm đã bị từ chối! Lý do: ' . ($donVeSom->ly_do_tu_choi ?? 'Không có lý do'),
+                            'trang_thai_don' => 'tu_choi'
+                        ], 400);
+                    } elseif ($soPhutVeSom > $soPhutChoPhep) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => '⚠️ Bạn đang về sớm! Vui lòng tạo đơn xin về sớm.',
+                            'yeu_cau_tao_don' => true,
+                            'so_phut_ve_som' => $soPhutVeSom
+                        ], 400);
+                    } else {
+                        $soPhutVeSom = 0;
+                    }
                 }
             }
 
             // ===== TÍNH TOÁN =====
             $trangThai = $chamCong->trang_thai;
 
-            // Tính số giờ làm (dựa trên giờ vào và giờ ra thực tế)
+            // Tính số giờ làm
             $gioVao = Carbon::parse($chamCong->gio_vao);
             $soPhutLam = $gioVao->diffInMinutes($now);
             $soGioLam = round($soPhutLam / 60, 2);
 
-            // ⭐ TÍNH SỐ CÔNG (KHÔNG TRỪ NẾU CÓ ĐƠN DUYỆT)
+            // TÍNH SỐ CÔNG
             $soCong = round($soGioLam / 8, 2);
             if ($soCong > 1) $soCong = 1;
 
-            // Nếu có đơn về sớm được duyệt, giữ nguyên số công theo giờ làm thực tế
-            // Không cần giảm công vì đã được phép về sớm
-
-            // Tính tăng ca
+            // TÍNH TĂNG CA (chỉ tính khi có đơn tăng ca)
             $gioTangCa = 0;
-            if ($now->gt($gioKetThuc)) {
-                $gioTangCa = round($gioKetThuc->diffInHours($now), 1);
+            if ($overtimeToday) {
+                $gioKetThucCa = Carbon::parse($ca->gio_ket_thuc);
+                if ($now->gt($gioKetThucCa)) {
+                    $gioTangCa = round($gioKetThucCa->diffInHours($now), 1);
+                }
             }
 
             // Xác định trạng thái
-            if ($isVeSom) {
+            if ($overtimeToday) {
+                $trangThai = 'tang_ca';
+            } elseif ($isVeSom) {
                 if ($daCoDonDuyet) {
-                    $trangThai = ChamCong::TRANG_THAI_VE_SOM; // Vẫn hiển thị về sớm nhưng không trừ công
+                    $trangThai = ChamCong::TRANG_THAI_VE_SOM;
                 } else {
-                    // Về sớm trong phạm vi cho phép
                     $trangThai = ChamCong::TRANG_THAI_VE_SOM;
                 }
             } elseif ($now->gt($gioKetThuc)) {
@@ -501,15 +535,21 @@ class ChamCongController extends Controller
                 'ly_do_ve_som' => $lyDoVeSom,
                 'da_xac_nhan_ve_som' => $isVeSom && !empty($lyDoVeSom),
                 'ghi_chu' => $lyDoVeSom,
+                'co_tang_ca' => !is_null($overtimeToday),
+                'tang_ca_id' => $overtimeToday ? $overtimeToday->id : null,
             ]);
 
             DB::commit();
 
+            $message = $overtimeToday
+                ? "✅ Check-out thành công sau giờ tăng ca lúc {$gioRaStr}!"
+                : "✅ Check-out thành công lúc {$gioRaStr}" .
+                ($isVeSom && !$daCoDonDuyet ? " (về sớm {$soPhutVeSom} phút)" : "") .
+                ($isVeSom && $daCoDonDuyet ? " (đã có đơn về sớm được duyệt)" : "");
+
             return response()->json([
                 'success' => true,
-                'message' => "✅ Check-out thành công lúc {$gioRaStr}" .
-                    ($isVeSom && !$daCoDonDuyet ? " (về sớm {$soPhutVeSom} phút)" : "") .
-                    ($isVeSom && $daCoDonDuyet ? " (đã có đơn về sớm được duyệt)" : ""),
+                'message' => $message,
                 'data' => [
                     'gio_ra' => $gioRaStr,
                     'so_gio_lam' => $soGioLam,
@@ -519,6 +559,8 @@ class ChamCongController extends Controller
                     'trang_thai' => $trangThai,
                     'is_ve_som' => $isVeSom,
                     'da_co_don_duyet' => $daCoDonDuyet,
+                    'co_tang_ca' => !is_null($overtimeToday),
+                    'overtime_id' => $overtimeToday ? $overtimeToday->id : null,
                 ]
             ]);
         } catch (\Exception $e) {
@@ -570,19 +612,14 @@ class ChamCongController extends Controller
 
             // Lấy ca làm việc từ bản ghi chấm công
             $ca = $chamCong->caLamViec;
-
-            // Nếu không có ca, xác định lại dựa vào giờ check-in
             if (!$ca) {
-                $gioVao = $chamCong->gio_vao;
-                $ca = ChamCong::xacDinhCaLamViec($gioVao);
+                $ca = ChamCong::xacDinhCaLamViec($chamCong->gio_vao);
             }
 
-            // Nếu vẫn không có ca, lấy ca mặc định
             if (!$ca) {
                 $ca = CaLamViec::where('is_default', 1)->first();
             }
 
-            // Nếu vẫn không có ca, báo lỗi
             if (!$ca) {
                 return response()->json([
                     'success' => false,
@@ -594,7 +631,6 @@ class ChamCongController extends Controller
             $gioKetThuc = Carbon::parse($ca->gio_ket_thuc);
             $gioRaDuKien = Carbon::parse($request->gio_ra_du_kien);
 
-            // Kiểm tra giờ ra dự kiến hợp lệ
             if ($gioRaDuKien->gt($gioKetThuc)) {
                 return response()->json([
                     'success' => false,
@@ -686,9 +722,14 @@ class ChamCongController extends Controller
             'so_cong' => $chamCong ? $chamCong->so_cong : 0,
             'trang_thai' => $chamCong ? $chamCong->trang_thai : null,
             'ly_do_ve_som' => $chamCong ? $chamCong->ly_do_ve_som : null,
+            'co_tang_ca' => $chamCong ? $chamCong->co_tang_ca : false,
+            'tang_ca_id' => $chamCong ? $chamCong->tang_ca_id : null,
         ]);
     }
 
+    /**
+     * Kiểm tra thời gian cho phép chấm công
+     */
     private function isTimeAllowedForAttendance($type = 'checkin')
     {
         $now = Carbon::now('Asia/Ho_Chi_Minh');
