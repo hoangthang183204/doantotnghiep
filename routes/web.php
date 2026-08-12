@@ -801,26 +801,28 @@ Route::middleware(['auth', 'truong_phong'])
             Route::post('/{id}/tu-choi', [DuyetVeSomController::class, 'tuChoi'])->name('tu-choi');
         });
 
-        // Trong group truong-phong
+        // ✅ ĐÓNG NGOẶC ĐÚNG CHO GROUP DON-NGHI
         Route::prefix('don-nghi')->name('don-nghi.')->group(function () {
             Route::get('/', [\App\Http\Controllers\TruongPhong\DonNghiController::class, 'index'])->name('index');
             Route::get('/{id}', [\App\Http\Controllers\TruongPhong\DonNghiController::class, 'show'])->name('show');
             Route::post('/{id}/duyet', [\App\Http\Controllers\TruongPhong\DonNghiController::class, 'duyet'])->name('duyet');
             Route::post('/{id}/tu-choi', [\App\Http\Controllers\TruongPhong\DonNghiController::class, 'tuChoi'])->name('tu-choi');
-        // ⭐⭐⭐ TĂNG CA - TRƯỞNG PHÒNG QUẢN LÝ ⭐⭐⭐
+        }); // ✅ ĐÃ ĐÓNG NGOẶC
+
+        // ✅ TANG-CA ĐƯỢC ĐẶT RIÊNG, KHÔNG NẰM TRONG DON-NGHI
         Route::prefix('tang-ca')->name('tang-ca.')->group(function () {
             Route::get('/', [TruongPhongTangCaController::class, 'index'])->name('index');
             Route::get('/create', [TruongPhongTangCaController::class, 'create'])->name('create');
             Route::post('/', [TruongPhongTangCaController::class, 'store'])->name('store');
-            Route::get('/{id}', [TruongPhongTangCaController::class, 'show'])->name('show');
+Route::get('/{id}', [TruongPhongTangCaController::class, 'show'])->name('show');
             Route::post('/{id}/duyet', [TruongPhongTangCaController::class, 'duyet'])->name('duyet');
             Route::post('/{id}/tu-choi', [TruongPhongTangCaController::class, 'tuChoi'])->name('tu-choi');
-            // ⭐ THÊM ROUTE CHO KIẾN NGHỊ
+            // KIẾN NGHỊ TĂNG CA
             Route::post('/{id}/duyet-kien-nghi', [App\Http\Controllers\TruongPhong\TangCaController::class, 'duyetKienNghi'])->name('duyet-kien-nghi');
             Route::post('/{id}/tu-choi-kien-nghi', [App\Http\Controllers\TruongPhong\TangCaController::class, 'tuChoiKienNghi'])->name('tu-choi-kien-nghi');
         });
 
-        // ⭐⭐⭐ KIẾN NGHỊ TĂNG CA - TRƯỞNG PHÒNG ⭐⭐⭐
+        // KIẾN NGHỊ TĂNG CA - TRƯỞNG PHÒNG
         Route::prefix('kien-nghi-tang-ca')->name('kien-nghi-tang-ca.')->group(function () {
             Route::get('/', [TruongPhongKienNghiTangCaController::class, 'index'])->name('index');
             Route::get('/{id}', [TruongPhongKienNghiTangCaController::class, 'show'])->name('show');
