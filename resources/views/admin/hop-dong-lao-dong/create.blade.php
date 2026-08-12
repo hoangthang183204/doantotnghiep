@@ -135,8 +135,7 @@
                                 required>
                         </div>
 
-                        {{-- ===== PHỤ CẤP - LẤY TỪ BẢNG PHU_CAP ===== --}}
-                        {{-- PHỤ CẤP - LẤY TỪ BẢNG PHU_CAP --}}
+                        {{-- Phụ cấp --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Phụ cấp
@@ -154,7 +153,7 @@
                             <p class="text-xs text-gray-500 mt-1">Giữ Ctrl để chọn nhiều phụ cấp</p>
                         </div>
 
-                        {{-- Danh sách phụ cấp đã chọn (hiển thị) --}}
+                        {{-- Danh sách phụ cấp đã chọn --}}
                         <div id="selected_phu_caps" class="col-span-2">
                             <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4">
                                 <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">📋 Phụ cấp đã chọn:</p>
@@ -182,18 +181,23 @@
                             </label>
                             <textarea name="dieu_khoan" rows="5"
                                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                required>{{ old('dieu_khoan') }}</textarea>
+                                required>{{ old('dieu_khoan', 'Bảo mật') }}</textarea>
                         </div>
 
-                        {{-- File hợp đồng --}}
+                        {{-- 🔥 THÔNG BÁO TỰ ĐỘNG TẠO PDF --}}
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                File hợp đồng <span class="text-red-500">*</span>
-                            </label>
-                            <input type="file" name="file_hop_dong[]" multiple
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                accept=".pdf,.doc,.docx" required>
-                            <p class="text-xs text-gray-500 mt-1">Chấp nhận file PDF, DOC, DOCX. Tối đa 5MB mỗi file.</p>
+                            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-start gap-3">
+                                <svg class="w-6 h-6 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                <div>
+                                    <p class="font-medium text-blue-700 dark:text-blue-300">📄 File PDF hợp đồng sẽ được tạo tự động</p>
+                                    <p class="text-sm text-blue-600 dark:text-blue-400 mt-1">
+                                        Sau khi lưu hợp đồng, hệ thống sẽ tự động sinh file PDF từ dữ liệu bạn nhập.
+                                        Bạn không cần upload file hợp đồng thủ công.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Ghi chú --}}
@@ -246,7 +250,7 @@
             loaiHopDong?.addEventListener('change', toggleNgayKetThuc);
             toggleNgayKetThuc();
 
-            // ===== XỬ LÝ PHỤ CẤP - HIỂN THỊ DANH SÁCH ĐÃ CHỌN =====
+            // ===== XỬ LÝ PHỤ CẤP =====
             const phuCapSelect = document.getElementById('phu_cap_ids');
             const phuCapList = document.getElementById('phu_cap_list');
 
@@ -264,8 +268,8 @@
                 } else {
                     phuCapList.innerHTML = phuCapItems.map(item =>
                         `<span class="inline-flex items-center px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm">
-                    ${item}
-                </span>`
+                            ${item}
+                        </span>`
                     ).join(' ');
                 }
             }
@@ -284,19 +288,14 @@
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                // Tự động điền lương cơ bản từ chức vụ
                                 if (data.luong_co_ban) {
                                     luongCoBanInput.value = data.luong_co_ban;
                                 }
 
-                                // ✅ RESET phụ cấp (xóa hết chọn cũ)
                                 const options = phuCapSelect.options;
                                 for (let i = 0; i < options.length; i++) {
                                     options[i].selected = false;
                                 }
-
-                                // ✅ KHÔNG tự động chọn phụ cấp cũ nữa
-                                // (Người dùng sẽ tự chọn phụ cấp mới cho hợp đồng mới)
                                 updatePhuCapList();
                             }
                         })

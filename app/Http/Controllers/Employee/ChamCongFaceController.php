@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class ChamCongFaceController extends Controller
@@ -38,7 +39,7 @@ class ChamCongFaceController extends Controller
         if (!$faceData) {
             return view('employee.cham-cong-face.index', [
                 'hasFace' => false,
-                'message' => 'Bạn chưa đăng ký khuôn mặt. Vui lòng liên hệ HR để đăng ký.'
+                'message' => 'Bạn chưa đăng ký khuôn mặt. Vui lòng đăng ký để sử dụng chấm công bằng khuôn mặt.'
             ]);
         }
 
@@ -75,6 +76,112 @@ class ChamCongFaceController extends Controller
             'donVeSom' => $donVeSom,
             'history' => $history,
         ]);
+    }
+
+    /**
+     * Đăng ký khuôn mặt cho nhân viên
+     */
+    public function registerFace(Request $request)
+    {
+        $user = Auth::user();
+
+        // Kiểm tra đã đăng ký chưa
+        $existingFace = FaceData::where('nguoi_dung_id', $user->id)
+            ->where('is_active', true)
+            ->first();
+
+        if ($existingFace) {
+            return response()->json([
+                'success' => false,
+                'message' => '❌ Bạn đã đăng ký khuôn mặt rồi! Vui lòng liên hệ HR nếu muốn cập nhật.'
+            ], 400);
+        }
+
+        $request->validate([
+            'image' => 'required|string',
+        ]);
+
+        $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->image));
+        $tempPath = storage_path('app/temp_face_register_' . time() . '_' . $user->id . '.jpg');
+        file_put_contents($tempPath, $imageData);
+
+        try {
+            // Kiểm tra ảnh có khuôn mặt không
+            if (!$this->faceService->isValidFaceImage($tempPath)) {
+                unlink($tempPath);
+                return response()->json([
+                    'success' => false,
+                    'message' => '❌ Không phát hiện khuôn mặt hoặc chất lượng ảnh kém. Vui lòng thử lại với ảnh rõ hơn.'
+                ], 400);
+            }
+
+            // Trích xuất embedding
+            $embedding = $this->faceService->getFaceEmbedding($tempPath);
+            if (!$embedding) {
+                unlink($tempPath);
+                return response()->json([
+                    'success' => false,
+                    'message' => '❌ Không thể trích xuất đặc trưng khuôn mặt. Vui lòng thử lại.'
+                ], 400);
+            }
+
+            // Lưu embedding
+            $faceId = 'face_' . Str::random(16);
+            $embeddingPath = 'face_encodings/' . $faceId . '.npy';
+            $fullEmbeddingPath = storage_path('app/public/' . $embeddingPath);
+
+            $dir = dirname($fullEmbeddingPath);
+            if (!is_dir($dir)) {
+                mkdir($dir, 0755, true);
+            }
+
+            $this->faceService->saveEmbedding($embedding, $fullEmbeddingPath);
+
+            // Di chuyển ảnh từ temp sang face_images
+            $newImagePath = 'face_images/' . $faceId . '.jpg';
+            $newFullPath = storage_path('app/public/' . $newImagePath);
+            rename($tempPath, $newFullPath);
+
+            // Lưu vào database
+            FaceData::create([
+                'nguoi_dung_id' => $user->id,
+                'embedding_path' => $embeddingPath,
+                'image_path' => $newImagePath,
+                'face_id' => $faceId,
+                'metadata' => [
+                    'created_by' => $user->id,
+                    'created_at' => now(),
+                    'registered_by_employee' => true,
+                ],
+                'is_active' => true,
+            ]);
+
+            Log::info('Nhân viên đăng ký khuôn mặt thành công', [
+                'user_id' => $user->id,
+                'face_id' => $faceId
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => '✅ Đăng ký khuôn mặt thành công! Bạn có thể sử dụng chấm công bằng khuôn mặt ngay bây giờ.',
+                'face_id' => $faceId
+            ]);
+
+        } catch (\Exception $e) {
+            if (file_exists($tempPath)) {
+                unlink($tempPath);
+            }
+
+            Log::error('Đăng ký khuôn mặt thất bại: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => '❌ Lỗi hệ thống: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -160,9 +267,6 @@ class ChamCongFaceController extends Controller
         ]);
     }
 
-    /**
-     * Xác thực khuôn mặt và chấm công
-     */
     /**
      * Xác thực khuôn mặt và chấm công
      */
@@ -390,7 +494,7 @@ class ChamCongFaceController extends Controller
             if (!$faceData) {
                 return response()->json([
                     'success' => false,
-                    'message' => '❌ Bạn chưa đăng ký khuôn mặt. Vui lòng liên hệ HR.'
+                    'message' => '❌ Bạn chưa đăng ký khuôn mặt. Vui lòng đăng ký trước khi chấm công.'
                 ], 400);
             }
 

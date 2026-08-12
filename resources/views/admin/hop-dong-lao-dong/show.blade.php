@@ -13,14 +13,34 @@
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">📄 Chi tiết hợp đồng lao động</h1>
                     <p class="text-gray-500 dark:text-gray-400 mt-1">Thông tin chi tiết của hợp đồng</p>
                 </div>
-                <a href="{{ route('admin.hop-dong.index') }}"
-                    class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-xl transition flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
-                    Quay lại
-                </a>
+                <div class="flex items-center gap-3">
+                    {{-- 🔥 NÚT TẢI PDF --}}
+                    @if($hopDong->duong_dan_file)
+                        <a href="{{ asset('storage/' . $hopDong->duong_dan_file) }}" target="_blank"
+                            class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition flex items-center gap-2 shadow-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            📄 Tải PDF
+                        </a>
+                    @else
+                        <a href="{{ route('admin.hop-dong.pdf.generate', $hopDong->id) }}"
+                            class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition flex items-center gap-2 shadow-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            📄 Tạo PDF
+                        </a>
+                    @endif
+                    <a href="{{ route('admin.hop-dong.index') }}"
+                        class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-xl transition flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Quay lại
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -561,7 +581,6 @@
 
             {{-- Nút Xóa - Chỉ hiện cho Admin khi chưa gửi cho nhân viên --}}
             @if (in_array($hopDong->trang_thai_hop_dong, ['tao_moi', 'het_han', 'huy_bo']) && $isAdmin && !$hopDong->thoi_gian_gui)
-                {{-- 🔥 THÊM ĐIỀU KIỆN: CHƯA GỬI --}}
                 <form action="{{ route('admin.hop-dong.destroy', $hopDong->id) }}" method="POST"
                     onsubmit="return confirm('🗑️ Bạn có chắc muốn xóa hợp đồng {{ $hopDong->so_hop_dong }}?')">
                     @csrf
@@ -883,6 +902,7 @@
                 </div>
             </div>
         @endif
+
         {{-- LỊCH SỬ TÁI KÝ --}}
         @if (class_exists(\App\Models\LichSuTaiKy::class))
             @php

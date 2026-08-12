@@ -92,7 +92,7 @@
     $canViewOvertime = $user->hasPermission('overtime.index');
     $canCreateAdjustment = $user->hasPermission('adjustment.create');
     $canViewAdjustment = $user->hasPermission('adjustment.index');
-    $canViewPayroll = $user->hasPermission('payroll.index');
+    $canViewPayroll = $user->hasPermission('payroll.index') || $isHR;
     $canViewContractPersonal = $user->hasPermission('contract.personal');
     $canViewLeaveHistory = $user->hasPermission('leave.history');
     $canRequestLeave = $user->hasPermission('leave.request');
@@ -879,22 +879,60 @@
                 </li>
             @endif
 
-            {{-- BẢNG LƯƠNG CỦA TÔI --}}
+            {{-- LƯƠNG --}}
             @if ($canViewPayroll)
                 <li>
-                    <a href="{{ route('employee.bang-luong.index') }}"
-                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.bang-luong.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </span>
-                        <span class="font-medium menu-text">Bảng lương của tôi</span>
-                    </a>
+                    <button onclick="togglePayrollMenu()"
+                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <div class="flex items-center">
+                            <span class="w-5 h-5 mr-3 flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </span>
+                            <span class="font-medium menu-text">Lương của tôi</span>
+                        </div>
+                        <svg id="payrollArrow" class="w-4 h-4 transition-transform duration-200" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div id="payrollMenu" class="ml-6 mt-1 space-y-1 hidden">
+
+                        {{-- Bảng lương của tôi --}}
+                        <a href="{{ route('employee.bang-luong.index') }}"
+                            class="flex items-center px-3 py-2 rounded-lg transition-colors {{ in_array($currentRoute, ['employee.bang-luong.index', 'employee.bang-luong.year']) ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                            <span class="w-4 h-4 mr-3 flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </span>
+                            <span class="text-sm font-medium">Bảng lương của tôi</span>
+                        </a>
+
+                        {{-- Ứng lương --}}
+                        <a href="{{ url('/employee/ung-luong') }}"
+                            class="flex items-center px-3 py-2 rounded-lg transition-colors {{ str_contains(request()->path(), 'ung-luong') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                            <span class="w-4 h-4 mr-3 flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                            </span>
+                            <span class="text-sm font-medium">Ứng lương</span>
+                        </a>
+                    </div>
                 </li>
             @endif
+
+
 
             {{-- HỢP ĐỒNG --}}
             @if ($canViewContract)
@@ -1247,3 +1285,13 @@
         display: block;
     }
 </style>
+
+
+<script>
+    function togglePayrollMenu() {
+        const menu = document.getElementById('payrollMenu');
+        const arrow = document.getElementById('payrollArrow');
+        menu.classList.toggle('hidden');
+        arrow.classList.toggle('rotate-180');
+    }
+</script>

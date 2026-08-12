@@ -244,6 +244,8 @@ Route::prefix('admin')
             Route::post('/don-ve-som/{id}/duyet', [ChamCongController::class, 'duyetDonVeSom'])->name('duyet-don-ve-som')->middleware('CheckPermission:attendance.index');
             Route::post('/don-ve-som/{id}/tu-choi', [ChamCongController::class, 'tuChoiDonVeSom'])->name('tu-choi-don-ve-som')->middleware('CheckPermission:attendance.index');
 
+            Route::get('/export', [ChamCongController::class, 'export'])->name('export');
+            Route::get('/get-by-nhan-vien', [ChamCongController::class, 'getByNhanVien'])->name('get-by-nhan-vien');
             Route::get('/', [ChamCongController::class, 'index'])->name('index')->middleware('CheckPermission:attendance.index');
             Route::get('/{id}', [ChamCongController::class, 'show'])->name('show')->middleware('CheckPermission:attendance.index');
             Route::get('/export', [ChamCongController::class, 'export'])->name('export')->middleware('CheckPermission:attendance.export');
@@ -503,6 +505,12 @@ Route::prefix('admin')
             Route::post('/tai-ky/{id}', [HopDongLaoDongController::class, 'taiKy'])->name('tai-ky')->middleware('CheckPermission:contract.sign');
             Route::post('/an-khoi-danh-sach', [HopDongLaoDongController::class, 'anKhoiDanhSach'])->name('an-khoi-danh-sach');
 
+            Route::get('/{id}/pdf', [\App\Http\Controllers\Admin\HopDongPdfController::class, 'generate'])
+                ->name('pdf.generate');
+            Route::get('/{id}/pdf/download', [\App\Http\Controllers\Admin\HopDongPdfController::class, 'download'])
+                ->name('pdf.download');
+            Route::get('/{id}/pdf/preview', [\App\Http\Controllers\Admin\HopDongPdfController::class, 'preview'])
+                ->name('pdf.preview');
 
             Route::post('/{id}/duyet', [HopDongLaoDongController::class, 'duyet'])->name('duyet')->middleware('CheckPermission:contract.sign');
             Route::post('/{id}/tu-choi-duyet', [HopDongLaoDongController::class, 'tuChoiDuyet'])->name('tu-choi-duyet')->middleware('CheckPermission:contract.sign');
@@ -622,6 +630,7 @@ Route::prefix('employee')
             Route::get('/', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'index'])->name('index');
             Route::post('/authenticate', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'authenticate'])->name('authenticate');
             Route::get('/status', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'status'])->name('status');
+            Route::post('/register', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'registerFace'])->name('register');
 
             Route::post('/tao-don-ve-som', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'taoDonVeSom'])->name('tao-don-ve-som');
             Route::get('/kiem-tra-don-ve-som', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'kiemTraDonVeSom'])->name('kiem-tra-don-ve-som');
@@ -804,5 +813,13 @@ Route::middleware(['auth', 'truong_phong'])
             Route::get('/{id}', [DuyetVeSomController::class, 'show'])->name('show'); // 🔴 Thêm trang xem chi tiết
             Route::post('/{id}/duyet', [DuyetVeSomController::class, 'duyet'])->name('duyet');
             Route::post('/{id}/tu-choi', [DuyetVeSomController::class, 'tuChoi'])->name('tu-choi');
+        });
+
+        // Trong group truong-phong
+        Route::prefix('don-nghi')->name('don-nghi.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\TruongPhong\DonNghiController::class, 'index'])->name('index');
+            Route::get('/{id}', [\App\Http\Controllers\TruongPhong\DonNghiController::class, 'show'])->name('show');
+            Route::post('/{id}/duyet', [\App\Http\Controllers\TruongPhong\DonNghiController::class, 'duyet'])->name('duyet');
+            Route::post('/{id}/tu-choi', [\App\Http\Controllers\TruongPhong\DonNghiController::class, 'tuChoi'])->name('tu-choi');
         });
     });
