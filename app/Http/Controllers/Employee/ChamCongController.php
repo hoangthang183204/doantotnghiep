@@ -18,166 +18,210 @@ use Illuminate\Support\Facades\Auth;
 
 class ChamCongController extends Controller
 {
-    /**
-     * Trang chấm công nhân viên
-     */
-    public function index()
-    {
-        $user = auth()->user();
-        $today = Carbon::today('Asia/Ho_Chi_Minh');
+   public function index()
+{
+    $user = auth()->user();
+    $today = Carbon::today('Asia/Ho_Chi_Minh');
 
-        // Lấy bản ghi chấm công hôm nay
-        $chamCongHomNay = ChamCong::layChamCongHomNay($user->id);
-        $trangThaiChamCong = $chamCongHomNay;
+    // Lấy bản ghi chấm công hôm nay
+    $chamCongHomNay = ChamCong::layChamCongHomNay($user->id);
+    $trangThaiChamCong = $chamCongHomNay;
 
-        // Xác định ca hiện tại
-        $now = Carbon::now('Asia/Ho_Chi_Minh');
-        $gioHienTai = $now->format('H:i:s');
+    // Xác định ca hiện tại
+    $now = Carbon::now('Asia/Ho_Chi_Minh');
+    $gioHienTai = $now->format('H:i:s');
 
-        // Lấy tất cả ca làm việc
-        $caLamViec = CaLamViec::where('trang_thai', 1)->get();
-        $caHienTai = null;
+    // Lấy tất cả ca làm việc
+    $caLamViec = CaLamViec::where('trang_thai', 1)->get();
+    $caHienTai = null;
 
-        foreach ($caLamViec as $ca) {
-            $gioBatDau = Carbon::parse($ca->gio_bat_dau);
-            $gioKetThuc = Carbon::parse($ca->gio_ket_thuc);
+    foreach ($caLamViec as $ca) {
+        $gioBatDau = Carbon::parse($ca->gio_bat_dau);
+        $gioKetThuc = Carbon::parse($ca->gio_ket_thuc);
 
-            if ($now->between($gioBatDau, $gioKetThuc)) {
-                $caHienTai = $ca;
-                break;
-            }
-
-            if ($ca->ma == 'SANG' && $now->between(
-                Carbon::parse($ca->gio_bat_dau),
-                Carbon::parse('13:00:00')
-            )) {
-                $caHienTai = $ca;
-                break;
-            }
+        if ($now->between($gioBatDau, $gioKetThuc)) {
+            $caHienTai = $ca;
+            break;
         }
 
-        if (!$caHienTai) {
-            $caHienTai = CaLamViec::where('is_default', 1)->first();
+        if ($ca->ma == 'SANG' && $now->between(
+            Carbon::parse($ca->gio_bat_dau),
+            Carbon::parse('13:00:00')
+        )) {
+            $caHienTai = $ca;
+            break;
         }
-
-        // Kiểm tra trạng thái
-        $daCheckIn = $chamCongHomNay && $chamCongHomNay->gio_vao;
-        $daCheckOut = $chamCongHomNay && $chamCongHomNay->gio_ra;
-        $caDaCham = $chamCongHomNay ? $chamCongHomNay->caLamViec : null;
-
-        // Lịch sử 7 ngày
-        $lichSu = ChamCong::where('nguoi_dung_id', $user->id)
-            ->whereDate('ngay_cham_cong', '>=', Carbon::now('Asia/Ho_Chi_Minh')->subDays(7))
-            ->with('caLamViec')
-            ->orderBy('ngay_cham_cong', 'desc')
-            ->get();
-
-        // ===== THÔNG TIN VỊ TRÍ =====
-        $gioLamViec = GioLamViec::first();
-
-        // Lấy danh sách IP và WiFi từ database
-        $dsIP = CauHinhChamCong::where('loai', 'ip')
-            ->where('trang_thai', 1)
-            ->pluck('gia_tri')
-            ->toArray();
-
-        $dsWiFi = CauHinhChamCong::where('loai', 'wifi')
-            ->where('trang_thai', 1)
-            ->pluck('gia_tri')
-            ->toArray();
-
-        // Lấy IP và WiFi từ request
-        $currentIP = request()->ip();
-        $currentWiFi = request()->header('X-WiFi-SSID');
-
-        if (!$currentWiFi && $chamCongHomNay && $chamCongHomNay->ten_wifi) {
-            $currentWiFi = $chamCongHomNay->ten_wifi;
-        }
-
-        // Kiểm tra IP
-        $ipStatus = 'unknown';
-        $ipMessage = 'Chưa xác định';
-
-        if ($currentIP) {
-            if (in_array($currentIP, $dsIP)) {
-                $ipStatus = 'valid';
-                $ipMessage = '✅ Hợp lệ';
-            } else {
-                $ipStatus = 'invalid';
-                $ipMessage = '❌ Không hợp lệ';
-            }
-        }
-
-        // Kiểm tra WIFI
-        $wifiStatus = 'unknown';
-        $wifiMessage = 'Chưa xác định';
-
-        if ($currentWiFi) {
-            if (in_array($currentWiFi, $dsWiFi)) {
-                $wifiStatus = 'valid';
-                $wifiMessage = '✅ Hợp lệ';
-            } else {
-                $wifiStatus = 'invalid';
-                $wifiMessage = '❌ Không hợp lệ';
-            }
-        } else {
-            $wifiMessage = '📡 Chưa kết nối WiFi';
-        }
-
-        $isValidLocation = ($ipStatus == 'valid' || $wifiStatus == 'valid');
-
-        $phuongThucText = 'Chưa chấm công';
-        if ($chamCongHomNay) {
-            $phuongThucMap = [
-                'ip' => '📡 IP',
-                'wifi' => '📶 WiFi',
-                'mac' => '💻 MAC',
-                'manual' => '✍️ Nhập tay',
-            ];
-            $phuongThucText = $phuongThucMap[$chamCongHomNay->phuong_thuc_cham_cong] ?? $chamCongHomNay->phuong_thuc_cham_cong;
-        }
-
-        $tongCong = $chamCongHomNay ? $chamCongHomNay->so_cong : 0;
-        $tongGioLam = $chamCongHomNay ? $chamCongHomNay->so_gio_lam : 0;
-
-        // ⭐ LẤY THÔNG TIN TĂNG CA - CHỈ LẤY KHI ĐANG TRONG GIỜ TĂNG CA
-        $overtimeToday = DangKyTangCa::getActiveOvertimeNow($user->id);
-
-        // ⭐ LẤY THÔNG TIN THỜI GIAN CHỜ TĂNG CA (nếu có đơn nhưng chưa đến giờ)
-        $overtimeWaitInfo = null;
-        if (!$overtimeToday) {
-            $overtimeWaitInfo = DangKyTangCa::getTimeUntilOvertimeStart($user->id);
-        }
-
-        return view('employee.cham-cong.index', compact(
-            'chamCongHomNay',
-            'trangThaiChamCong',
-            'daCheckIn',
-            'daCheckOut',
-            'caHienTai',
-            'caDaCham',
-            'lichSu',
-            'gioLamViec',
-            'dsIP',
-            'dsWiFi',
-            'currentIP',
-            'currentWiFi',
-            'isValidLocation',
-            'wifiStatus',
-            'wifiMessage',
-            'ipStatus',
-            'ipMessage',
-            'phuongThucText',
-            'tongCong',
-            'tongGioLam',
-            'overtimeToday',
-            'overtimeWaitInfo'
-        ));
     }
 
-    /**
-     * Xử lý check-in
-     */
+    if (!$caHienTai) {
+        $caHienTai = CaLamViec::where('is_default', 1)->first();
+    }
+
+    // Kiểm tra trạng thái
+    $daCheckIn = $chamCongHomNay && $chamCongHomNay->gio_vao;
+    $daCheckOut = $chamCongHomNay && $chamCongHomNay->gio_ra;
+    $caDaCham = $chamCongHomNay ? $chamCongHomNay->caLamViec : null;
+
+    // Lịch sử 7 ngày
+    $lichSu = ChamCong::where('nguoi_dung_id', $user->id)
+        ->whereDate('ngay_cham_cong', '>=', Carbon::now('Asia/Ho_Chi_Minh')->subDays(7))
+        ->with('caLamViec')
+        ->orderBy('ngay_cham_cong', 'desc')
+        ->get();
+
+    // ===== THÔNG TIN VỊ TRÍ =====
+    $gioLamViec = GioLamViec::first();
+
+    // Lấy danh sách IP và WiFi từ database
+    $dsIP = CauHinhChamCong::where('loai', 'ip')
+        ->where('trang_thai', 1)
+        ->pluck('gia_tri')
+        ->toArray();
+
+    $dsWiFi = CauHinhChamCong::where('loai', 'wifi')
+        ->where('trang_thai', 1)
+        ->pluck('gia_tri')
+        ->toArray();
+
+    // Lấy IP và WiFi từ request
+    $currentIP = request()->ip();
+    $currentWiFi = request()->header('X-WiFi-SSID');
+
+    if (!$currentWiFi && $chamCongHomNay && $chamCongHomNay->ten_wifi) {
+        $currentWiFi = $chamCongHomNay->ten_wifi;
+    }
+
+    // Kiểm tra IP
+    $ipStatus = 'unknown';
+    $ipMessage = 'Chưa xác định';
+
+    if ($currentIP) {
+        if (in_array($currentIP, $dsIP)) {
+            $ipStatus = 'valid';
+            $ipMessage = '✅ Hợp lệ';
+        } else {
+            $ipStatus = 'invalid';
+            $ipMessage = '❌ Không hợp lệ';
+        }
+    }
+
+    // Kiểm tra WIFI
+    $wifiStatus = 'unknown';
+    $wifiMessage = 'Chưa xác định';
+
+    if ($currentWiFi) {
+        if (in_array($currentWiFi, $dsWiFi)) {
+            $wifiStatus = 'valid';
+            $wifiMessage = '✅ Hợp lệ';
+        } else {
+            $wifiStatus = 'invalid';
+            $wifiMessage = '❌ Không hợp lệ';
+        }
+    } else {
+        $wifiMessage = '📡 Chưa kết nối WiFi';
+    }
+
+    $isValidLocation = ($ipStatus == 'valid' || $wifiStatus == 'valid');
+
+    $phuongThucText = 'Chưa chấm công';
+    if ($chamCongHomNay) {
+        $phuongThucMap = [
+            'ip' => '📡 IP',
+            'wifi' => '📶 WiFi',
+            'mac' => '💻 MAC',
+            'manual' => '✍️ Nhập tay',
+        ];
+        $phuongThucText = $phuongThucMap[$chamCongHomNay->phuong_thuc_cham_cong] ?? $chamCongHomNay->phuong_thuc_cham_cong;
+    }
+
+    $tongCong = $chamCongHomNay ? $chamCongHomNay->so_cong : 0;
+    $tongGioLam = $chamCongHomNay ? $chamCongHomNay->so_gio_lam : 0;
+
+    // ⭐ LẤY THÔNG TIN TĂNG CA - SỬA LẠI LOGIC
+    $overtimeToday = null;
+    $overtimeWaitInfo = null;
+
+    // Lấy đơn tăng ca hôm nay đã duyệt và chưa hoàn thành
+    $overtime = DangKyTangCa::where('nguoi_dung_id', $user->id)
+        ->whereDate('ngay_tang_ca', Carbon::today('Asia/Ho_Chi_Minh'))
+        ->where('trang_thai', 'da_duyet')
+        ->where('da_hoan_thanh', false)
+        ->first();
+
+    if ($overtime) {
+        $ngayTangCa = Carbon::parse($overtime->ngay_tang_ca);
+        $gioBatDau = Carbon::parse($overtime->gio_bat_dau);
+        $gioKetThuc = Carbon::parse($overtime->gio_ket_thuc);
+        
+        // ⭐ GỘP NGÀY VÀ GIỜ
+        $thoiGianBatDau = Carbon::parse(
+            $ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s')
+        );
+        $thoiGianKetThuc = Carbon::parse(
+            $ngayTangCa->format('Y-m-d') . ' ' . $gioKetThuc->format('H:i:s')
+        );
+
+        // ⭐ KIỂM TRA CHÍNH XÁC TRẠNG THÁI TĂNG CA
+        if ($now->between($thoiGianBatDau, $thoiGianKetThuc)) {
+            // ✅ ĐANG TRONG GIỜ TĂNG CA
+            $overtimeToday = $overtime;
+        } elseif ($now->lt($thoiGianBatDau)) {
+            // ⏳ CHƯA ĐẾN GIỜ TĂNG CA
+            $diffToStart = $now->diffInMinutes($thoiGianBatDau);
+            $hours = floor($diffToStart / 60);
+            $minutes = $diffToStart % 60;
+            
+            $text = $hours > 0 
+                ? "Còn {$hours} giờ {$minutes} phút nữa đến giờ tăng ca" 
+                : "Còn {$minutes} phút nữa đến giờ tăng ca";
+            
+            $overtimeWaitInfo = [
+                'overtime' => $overtime,
+                'text' => $text,
+                'can_checkin' => false, // ⭐ KHÔNG CHO CHECK-IN TRƯỚC GIỜ
+                'remaining_minutes' => $diffToStart,
+                'hours' => $hours,
+                'minutes' => $minutes,
+                'start_time' => $thoiGianBatDau->format('H:i:s'),
+            ];
+        } elseif ($now->gt($thoiGianKetThuc)) {
+            // ⏰ ĐÃ QUÁ GIỜ TĂNG CA
+            $overtimeWaitInfo = [
+                'overtime' => $overtime,
+                'text' => 'Đã kết thúc giờ tăng ca',
+                'can_checkin' => false,
+            ];
+        }
+    }
+
+    return view('employee.cham-cong.index', compact(
+        'chamCongHomNay',
+        'trangThaiChamCong',
+        'daCheckIn',
+        'daCheckOut',
+        'caHienTai',
+        'caDaCham',
+        'lichSu',
+        'gioLamViec',
+        'dsIP',
+        'dsWiFi',
+        'currentIP',
+        'currentWiFi',
+        'isValidLocation',
+        'wifiStatus',
+        'wifiMessage',
+        'ipStatus',
+        'ipMessage',
+        'phuongThucText',
+        'tongCong',
+        'tongGioLam',
+        'overtimeToday',
+        'overtimeWaitInfo'
+    ));
+}   
+    // //*
+    //  * Xử lý check-in
+    //  */
     public function checkIn(Request $request)
     {
         try {
@@ -328,241 +372,73 @@ class ChamCongController extends Controller
     /**
      * Xử lý check-out
      */
-    public function checkOut(Request $request)
-    {
-        try {
-            $user = auth()->user();
-            $today = Carbon::today('Asia/Ho_Chi_Minh');
+   public function checkOut(Request $request)
+{
+    try {
+        $user = auth()->user();
+        $today = Carbon::today('Asia/Ho_Chi_Minh');
 
-            // Kiểm tra đã check-in chưa
-            $chamCong = ChamCong::layChamCongHomNay($user->id);
-            if (!$chamCong || !$chamCong->gio_vao) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Bạn chưa check-in hôm nay!'
-                ], 400);
-            }
-
-            // Kiểm tra đã check-out chưa
-            if ($chamCong->gio_ra) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Bạn đã check-out hôm nay rồi!'
-                ], 400);
-            }
-
-            // ⭐ KIỂM TRA TĂNG CA HÔM NAY
-            $overtimeToday = DangKyTangCa::getActiveOvertimeToday($user->id);
-
-            if ($overtimeToday) {
-                $gioKetThucTangCa = Carbon::parse($overtimeToday->gio_ket_thuc);
-                $now = Carbon::now('Asia/Ho_Chi_Minh');
-
-                // Cho phép check-out sau giờ kết thúc tăng ca (có thể sớm hơn 15 phút)
-                $thoiGianChoPhepCheckout = $gioKetThucTangCa->copy()->subMinutes(15);
-
-                if ($now->lt($thoiGianChoPhepCheckout)) {
-                    $thoiGianConLai = $now->diffInMinutes($gioKetThucTangCa);
-                    $gioConLai = floor($thoiGianConLai / 60);
-                    $phutConLai = $thoiGianConLai % 60;
-
-                    return response()->json([
-                        'success' => false,
-                        'message' => "⏳ Bạn đang trong giờ tăng ca (đến {$overtimeToday->gio_ket_thuc}). Còn {$gioConLai} giờ {$phutConLai} phút nữa mới được check-out!",
-                        'overtime' => [
-                            'id' => $overtimeToday->id,
-                            'gio_ket_thuc' => $overtimeToday->gio_ket_thuc,
-                            'con_lai' => $now->diffInMinutes($gioKetThucTangCa)
-                        ]
-                    ], 400);
-                }
-
-                // Đánh dấu đã checkout thay thế cho giờ hành chính
-                $overtimeToday->update([
-                    'da_checkout_thay_the' => true,
-                    'da_hoan_thanh' => true,
-                    'thoi_gian_hoan_thanh' => now(),
-                ]);
-            }
-
-            // ⭐ Kiểm tra vị trí (IP hoặc WiFi hợp lệ)
-            $ip = $request->ip();
-            $wifi = $request->header('X-WiFi-SSID');
-            $mac = $request->header('X-MAC-Address');
-
-            $ipAllowed = CauHinhChamCong::isIPAllowed($ip);
-            $wifiAllowed = CauHinhChamCong::isWiFiAllowed($wifi);
-            $macAllowed = CauHinhChamCong::isMACAllowed($mac);
-
-            if (!$ipAllowed && !$wifiAllowed && !$macAllowed) {
-                return response()->json([
-                    'success' => false,
-                    'message' => '❌ Vị trí không hợp lệ! Vui lòng ở trong công ty để check-out.'
-                ], 403);
-            }
-
-            // Lấy thời gian từ client
-            $clientTime = $request->input('client_time');
-            if ($clientTime) {
-                try {
-                    $now = Carbon::parse($clientTime)->setTimezone('Asia/Ho_Chi_Minh');
-                } catch (\Exception $e) {
-                    $now = Carbon::now('Asia/Ho_Chi_Minh');
-                }
-            } else {
-                $now = Carbon::now('Asia/Ho_Chi_Minh');
-            }
-
-            $gioRaStr = $now->format('H:i:s');
-
-            // Lấy ca làm việc từ bản ghi check-in
-            $ca = $chamCong->caLamViec;
-            if (!$ca) {
-                $ca = ChamCong::xacDinhCaLamViec($chamCong->gio_vao);
-            }
-
-            if (!$ca) {
-                $ca = CaLamViec::where('is_default', 1)->first();
-            }
-
-            if (!$ca) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Không xác định được ca làm việc!'
-                ], 400);
-            }
-
-            $gioKetThuc = Carbon::parse($ca->gio_ket_thuc);
-
-            // ===== KIỂM TRA VỀ SỚM =====
-            $isVeSom = false;
-            $soPhutVeSom = 0;
-            $lyDoVeSom = null;
-            $daCoDonDuyet = false;
-
-            // Nếu KHÔNG có tăng ca, kiểm tra về sớm
-            if (!$overtimeToday) {
-                $isVeSom = $now->lt($gioKetThuc);
-
-                if ($isVeSom) {
-                    $soPhutVeSom = $now->diffInMinutes($gioKetThuc);
-                    $soPhutChoPhep = $ca->so_phut_cho_phep_ve_som ?? 15;
-
-                    // Kiểm tra đơn xin về sớm
-                    $donVeSom = DonXinVeSom::where('nguoi_dung_id', $user->id)
-                        ->where('ngay', $today)
-                        ->where('cham_cong_id', $chamCong->id)
-                        ->first();
-
-                    if ($donVeSom && $donVeSom->trang_thai == 'da_duyet') {
-                        $daCoDonDuyet = true;
-                        $lyDoVeSom = $donVeSom->ly_do;
-                        $soPhutVeSom = 0;
-                    } elseif ($donVeSom && $donVeSom->trang_thai == 'cho_duyet') {
-                        return response()->json([
-                            'success' => false,
-                            'message' => '⏳ Đơn xin về sớm đang chờ HR duyệt. Vui lòng đợi!',
-                            'trang_thai_don' => 'cho_duyet'
-                        ], 400);
-                    } elseif ($donVeSom && $donVeSom->trang_thai == 'tu_choi') {
-                        return response()->json([
-                            'success' => false,
-                            'message' => '❌ Đơn xin về sớm đã bị từ chối! Lý do: ' . ($donVeSom->ly_do_tu_choi ?? 'Không có lý do'),
-                            'trang_thai_don' => 'tu_choi'
-                        ], 400);
-                    } elseif ($soPhutVeSom > $soPhutChoPhep) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => '⚠️ Bạn đang về sớm! Vui lòng tạo đơn xin về sớm.',
-                            'yeu_cau_tao_don' => true,
-                            'so_phut_ve_som' => $soPhutVeSom
-                        ], 400);
-                    } else {
-                        $soPhutVeSom = 0;
-                    }
-                }
-            }
-
-            // ===== TÍNH TOÁN =====
-            $trangThai = $chamCong->trang_thai;
-
-            // Tính số giờ làm
-            $gioVao = Carbon::parse($chamCong->gio_vao);
-            $soPhutLam = $gioVao->diffInMinutes($now);
-            $soGioLam = round($soPhutLam / 60, 2);
-
-            // TÍNH SỐ CÔNG
-            $soCong = round($soGioLam / 8, 2);
-            if ($soCong > 1) $soCong = 1;
-
-            // TÍNH TĂNG CA (chỉ tính khi có đơn tăng ca)
-            $gioTangCa = 0;
-            if ($overtimeToday) {
-                $gioKetThucCa = Carbon::parse($ca->gio_ket_thuc);
-                if ($now->gt($gioKetThucCa)) {
-                    $gioTangCa = round($gioKetThucCa->diffInHours($now), 1);
-                }
-            }
-
-            // Xác định trạng thái
-            if ($overtimeToday) {
-                $trangThai = 'tang_ca';
-            } elseif ($isVeSom) {
-                if ($daCoDonDuyet) {
-                    $trangThai = ChamCong::TRANG_THAI_VE_SOM;
-                } else {
-                    $trangThai = ChamCong::TRANG_THAI_VE_SOM;
-                }
-            } elseif ($now->gt($gioKetThuc)) {
-                $trangThai = ChamCong::TRANG_THAI_TANG_CA;
-            }
-
-            // Giữ trạng thái đi muộn nếu có
-            if ($trangThai != 'tang_ca' && $chamCong->trang_thai == 'di_muon') {
-                $trangThai = 'di_muon';
-            }
-
-            DB::beginTransaction();
-
-            // Cập nhật bản ghi check-in
-            $chamCong->update([
-                'gio_ra' => $gioRaStr,
-                'so_gio_lam' => $soGioLam,
-                'so_cong' => $soCong,
-                'phut_ve_som' => $soPhutVeSom,
-                'gio_tang_ca' => $gioTangCa,
-                'trang_thai' => $trangThai,
-                'ly_do_ve_som' => $lyDoVeSom,
-                'da_xac_nhan_ve_som' => $isVeSom && !empty($lyDoVeSom),
-                'ghi_chu' => $lyDoVeSom,
-                'co_tang_ca' => !is_null($overtimeToday),
-                'tang_ca_id' => $overtimeToday ? $overtimeToday->id : null,
-            ]);
-
-            DB::commit();
-
-            $message = $overtimeToday
-                ? "✅ Check-out thành công sau giờ tăng ca lúc {$gioRaStr}!"
-                : "✅ Check-out thành công lúc {$gioRaStr}" .
-                ($isVeSom && !$daCoDonDuyet ? " (về sớm {$soPhutVeSom} phút)" : "") .
-                ($isVeSom && $daCoDonDuyet ? " (đã có đơn về sớm được duyệt)" : "");
-
+        // Kiểm tra đã check-in chưa
+        $chamCong = ChamCong::layChamCongHomNay($user->id);
+        if (!$chamCong || !$chamCong->gio_vao) {
             return response()->json([
-                'success' => true,
-                'message' => $message,
-                'data' => [
-                    'gio_ra' => $gioRaStr,
-                    'so_gio_lam' => $soGioLam,
-                    'so_cong' => $soCong,
-                    'phut_ve_som' => $soPhutVeSom,
-                    'gio_tang_ca' => $gioTangCa,
-                    'trang_thai' => $trangThai,
-                    'is_ve_som' => $isVeSom,
-                    'da_co_don_duyet' => $daCoDonDuyet,
-                    'co_tang_ca' => !is_null($overtimeToday),
-                    'overtime_id' => $overtimeToday ? $overtimeToday->id : null,
-                ]
+                'success' => false,
+                'message' => 'Bạn chưa check-in hôm nay!'
+            ], 400);
+        }
+
+        // Kiểm tra đã check-out chưa
+        if ($chamCong->gio_ra) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bạn đã check-out hôm nay rồi!'
+            ], 400);
+        }
+
+        // ⭐ KIỂM TRA TĂNG CA HÔM NAY
+        $overtimeToday = DangKyTangCa::where('nguoi_dung_id', $user->id)
+            ->whereDate('ngay_tang_ca', $today)
+            ->where('trang_thai', 'da_duyet')
+            ->where('da_hoan_thanh', false)
+            ->first();
+
+        if ($overtimeToday) {
+            $ngayTangCa = Carbon::parse($overtimeToday->ngay_tang_ca);
+            $gioKetThuc = Carbon::parse($overtimeToday->gio_ket_thuc);
+            $thoiGianKetThuc = Carbon::parse($ngayTangCa->format('Y-m-d') . ' ' . $gioKetThuc->format('H:i:s'));
+            $now = Carbon::now('Asia/Ho_Chi_Minh');
+
+            // ⭐ TỰ ĐỘNG ĐÁNH DẤU HOÀN THÀNH KHI CHECK-OUT
+            // Cập nhật đơn tăng ca thành hoàn thành
+            $overtimeToday->update([
+                'da_hoan_thanh' => true,
+                'thoi_gian_hoan_thanh' => $now,
             ]);
+
+            // Cập nhật bản ghi thực hiện nếu có
+            $thucHien = $overtimeToday->thuc_hien;
+            if ($thucHien && !$thucHien->thoi_gian_ket_thuc) {
+                $checkinTime = Carbon::parse($thucHien->thoi_gian_bat_dau);
+                $soGioThucTe = $checkinTime->diffInHours($now);
+                $soGioThucTe = min($soGioThucTe, $overtimeToday->so_gio_tang_ca);
+                
+                $thucHien->update([
+                    'thoi_gian_ket_thuc' => $now,
+                    'so_gio_tang_ca_thuc_te' => $soGioThucTe,
+                    'trang_thai' => 'nhan_vien_xac_nhan',
+                ]);
+
+                // ⭐ TÍNH LƯƠNG
+                $luongTangCa = OvertimeHelper::tinhLuongTangCa(
+                    $user->id, 
+                    $soGioThucTe, 
+                    $overtimeToday->loai_tang_ca
+                );
+                $overtimeToday->luong_tang_ca = $luongTangCa;
+                $overtimeToday->save();
+            }
+        }
+
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Check-out error: ' . $e->getMessage());

@@ -1,3 +1,4 @@
+{{-- resources/views/employee/cham-cong/index.blade.php --}}
 @extends('layouts.employee')
 
 @section('title', 'Chấm công')
@@ -26,87 +27,6 @@
             </div>
         </div>
 
-        <!-- ===== THÔNG BÁO TĂNG CA ===== -->
-        @php
-            $showOvertime = false;
-            $overtimeData = null;
-            $overtimeStatus = '';
-
-            if (isset($overtimeToday) && $overtimeToday) {
-                $showOvertime = true;
-                $overtimeData = $overtimeToday;
-                $overtimeStatus = 'dang_trong_gio';
-            } elseif (isset($overtimeWaitInfo) && isset($overtimeWaitInfo['overtime'])) {
-                $showOvertime = true;
-                $overtimeData = $overtimeWaitInfo['overtime'];
-                $overtimeStatus = 'chua_den_gio';
-                $waitText = $overtimeWaitInfo['text'];
-            }
-        @endphp
-
-        @if($showOvertime && $overtimeData)
-            @if($overtimeStatus == 'dang_trong_gio')
-                {{-- ĐANG TRONG GIỜ TĂNG CA --}}
-                <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded-lg shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-blue-700 dark:text-blue-300 font-medium flex items-center gap-2">
-                                <i class="fas fa-clock text-blue-500 animate-pulse"></i>
-                                🔔 Bạn đang trong giờ tăng ca hôm nay!
-                            </p>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2 text-sm">
-                                <div>
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">Giờ bắt đầu</span>
-                                    <p class="font-semibold text-blue-600 dark:text-blue-400">{{ $overtimeData->gio_bat_dau }}</p>
-                                </div>
-                                <div>
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">Giờ kết thúc</span>
-                                    <p class="font-semibold text-blue-600 dark:text-blue-400">{{ $overtimeData->gio_ket_thuc }}</p>
-                                </div>
-                                <div>
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">Số giờ</span>
-                                    <p class="font-semibold text-blue-600 dark:text-blue-400">{{ $overtimeData->so_gio_tang_ca }} giờ</p>
-                                </div>
-                                <div>
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">Loại</span>
-                                    <p class="font-semibold text-blue-600 dark:text-blue-400">
-                                        @php
-                                            $loaiLabels = ['ngay_thuong' => 'Ngày thường', 'ngay_nghi' => 'Ngày nghỉ'];
-                                        @endphp
-                                        {{ $loaiLabels[$overtimeData->loai_tang_ca] ?? $overtimeData->loai_tang_ca }}
-                                    </p>
-                                </div>
-                            </div>
-                            <p class="text-xs text-blue-500 dark:text-blue-300 mt-2">
-                                ⚠️ Bạn KHÔNG cần check-out giờ hành chính. Check-out sau khi kết thúc tăng ca.
-                            </p>
-                        </div>
-                        <span class="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-medium">
-                            Đang tăng ca
-                        </span>
-                    </div>
-                </div>
-            @elseif($overtimeStatus == 'chua_den_gio')
-                {{-- CHƯA ĐẾN GIỜ TĂNG CA --}}
-                <div class="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 p-4 rounded-lg shadow-sm">
-                    <div class="flex items-center gap-3">
-                        <i class="fas fa-clock text-yellow-500 text-xl"></i>
-                        <div>
-                            <p class="text-yellow-700 dark:text-yellow-300 font-medium">
-                                ⏳ {{ $waitText ?? 'Sắp đến giờ tăng ca' }}
-                            </p>
-                            <p class="text-xs text-yellow-600 dark:text-yellow-400">
-                                Bạn có đơn tăng ca hôm nay từ 
-                                <strong>{{ $overtimeData->gio_bat_dau }}</strong> 
-                                đến 
-                                <strong>{{ $overtimeData->gio_ket_thuc }}</strong>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            @endif
-        @endif
-
         <!-- ===== THÔNG BÁO VỊ TRÍ ===== -->
         @if (!$isValidLocation)
             <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
@@ -128,12 +48,16 @@
                             <i class="fas fa-info-circle mr-1"></i>
                             Vui lòng kết nối WiFi công ty hoặc sử dụng IP được phép.
                         </p>
-                        <p class="text-xs text-green-600 dark:text-green-400 mt-1">
-                            📡 IP được phép: <strong>{{ implode(', ', $dsIP) }}</strong>
-                        </p>
-                        <p class="text-xs text-green-600 dark:text-green-400 mt-1">
-                            📶 WiFi được phép: <strong>{{ implode(', ', $dsWiFi) }}</strong>
-                        </p>
+                        @if(!empty($dsIP))
+                            <p class="text-xs text-green-600 dark:text-green-400 mt-1">
+                                📡 IP được phép: <strong>{{ implode(', ', $dsIP) }}</strong>
+                            </p>
+                        @endif
+                        @if(!empty($dsWiFi))
+                            <p class="text-xs text-green-600 dark:text-green-400 mt-1">
+                                📶 WiFi được phép: <strong>{{ implode(', ', $dsWiFi) }}</strong>
+                            </p>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -328,7 +252,7 @@
                         </span>
                     </div>
                 </div>
-                @if (count($dsIP) > 0)
+                @if (!empty($dsIP))
                     <div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                         <p class="text-[10px] text-gray-400">📡 IP được phép: {{ implode(', ', $dsIP) }}</p>
                     </div>
@@ -360,8 +284,7 @@
                     </div>
                 </div>
 
-                <!-- Danh sách WiFi được phép -->
-                @if (count($dsWiFi) > 0)
+                @if (!empty($dsWiFi))
                     <div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                         <p class="text-[10px] text-gray-400">📶 WiFi được phép: {{ implode(', ', $dsWiFi) }}</p>
                         @if ($wifiStatus == 'invalid' && $currentWiFi)
@@ -370,7 +293,6 @@
                     </div>
                 @endif
 
-                <!-- Trạng thái kết nối -->
                 <div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                     <div class="flex items-center justify-between">
                         <span class="text-xs text-gray-500 dark:text-gray-400">Trạng thái:</span>

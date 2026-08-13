@@ -22,6 +22,168 @@
             </a>
         </div>
 
+        {{-- ⭐ THÔNG BÁO TĂNG CA HÔM NAY --}}
+        @php
+            $today = Carbon\Carbon::now('Asia/Ho_Chi_Minh');
+            $overtimeToday = \App\Models\DangKyTangCa::where('nguoi_dung_id', auth()->id())
+                ->whereDate('ngay_tang_ca', $today)
+                ->where('trang_thai', 'da_duyet')
+                ->where('da_hoan_thanh', false)
+                ->first();
+                
+            $canCheckout = false;
+            $checkoutMessage = '';
+            $showOvertimeAlert = false;
+            $thucHien = null;
+            $daCheckout = false;
+            $canXinVeSom = false;
+            $xinVeSom = null;
+            $daDenGioTangCa = false;
+            
+            if ($overtimeToday) {
+                $showOvertimeAlert = true;
+                $thucHien = $overtimeToday->thuc_hien;
+                $daCheckout = $thucHien && $thucHien->thoi_gian_ket_thuc;
+                
+                $now = Carbon\Carbon::now('Asia/Ho_Chi_Minh');
+                $ngayTangCa = Carbon\Carbon::parse($overtimeToday->ngay_tang_ca)->startOfDay();
+                $gioBatDau = Carbon\Carbon::parse($overtimeToday->gio_bat_dau);
+                $thoiGianBatDau = Carbon\Carbon::parse(
+                    $ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s')
+                );
+                $daDenGioTangCa = $now->gte($thoiGianBatDau->copy()->subMinutes(30));
+                
+                if (!$daCheckout && $daDenGioTangCa) {
+                    $xinVeSom = $overtimeToday->xin_ve_som;
+                    if (!$xinVeSom || $xinVeSom->trang_thai == 'tu_choi' || $xinVeSom->trang_thai == 'huy') {
+                        $canXinVeSom = true;
+                    }
+                }
+                
+                if (!$daCheckout && $daDenGioTangCa) {
+                    $canCheckoutResult = \App\Models\DangKyTangCa::canCheckout($overtimeToday->id);
+                    if ($canCheckoutResult['valid']) {
+                        $canCheckout = true;
+                        if ($canCheckoutResult['is_early'] ?? false) {
+                            $checkoutMessage = "Sớm " . ($canCheckoutResult['early_minutes'] ?? 0) . " phút";
+                        }
+                    } else {
+                        $checkoutMessage = $canCheckoutResult['message'];
+                    }
+                }
+            }
+        @endphp
+
+        @if($showOvertimeAlert)
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+            <div class="flex items-start gap-3">
+                <i class="fas fa-clock text-blue-500 text-xl mt-0.5"></i>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-blue-700 dark:text-blue-300">
+                        📋 Đơn tăng ca hôm nay: {{ $today->format('d/m/Y') }}
+                    </p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 text-sm">
+                        <div>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Giờ bắt đầu</span>
+                            <p class="font-semibold text-blue-600 dark:text-blue-400">{{ \Carbon\Carbon::parse($overtimeToday->gio_bat_dau)->format('H:i') }}</p>
+                        </div>
+                        <div>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Giờ kết thúc</span>
+                            <p class="font-semibold text-blue-600 dark:text-blue-400">{{ \Carbon\Carbon::parse($overtimeToday->gio_ket_thuc)->format('H:i') }}</p>
+                        </div>
+                        <div>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Số giờ</span>
+                            <p class="font-semibold text-blue-600 dark:text-blue-400">{{ number_format($overtimeToday->so_gio_tang_ca, 1, ',', '') }} giờ</p>
+                        </div>
+                        <div>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Trạng thái</span>
+                            @if($daCheckout)
+                                <p class="font-semibold text-purple-600 dark:text-purple-400">✅ Đã check-out</p>
+                            @elseif($daDenGioTangCa)
+                                <p class="font-semibold text-green-600 dark:text-green-400">🔄 Đang diễn ra</p>
+                            @else
+                                <p class="font-semibold text-yellow-600 dark:text-yellow-400">⏳ Chưa đến giờ</p>
+                            @endif
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        @if($canCheckout)
+                            <form action="{{ route('employee.tang-ca.confirm-thuc-hien', $overtimeToday->id) }}" method="POST">
+                                @csrf
+                                <button type="submit"
+                                    class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition text-sm font-medium"
+                                    onclick="return confirm('Xác nhận check-out tăng ca?')">
+                                    <i class="fas fa-sign-out-alt mr-1"></i> Check-out
+                                    @if($checkoutMessage)
+                                        <span class="text-xs opacity-80">({{ $checkoutMessage }})</span>
+                                    @endif
+                                </button>
+                            </form>
+                            <span class="text-xs text-gray-500 dark:text-gray-400 self-center">
+                                ⏰ Check-out sớm tối đa 1 tiếng
+                            </span>
+                        @elseif(!empty($checkoutMessage))
+                            <span class="inline-flex items-center px-3 py-1.5 bg-gray-200 text-gray-600 rounded-lg text-sm">
+                                <i class="fas fa-clock mr-1"></i> {{ $checkoutMessage }}
+                            </span>
+                        @elseif($daCheckout)
+                            <span class="inline-flex items-center px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-sm">
+                                <i class="fas fa-check-circle mr-1"></i> Đã hoàn thành
+                            </span>
+                        @endif
+
+                        @if($canXinVeSom && !$daCheckout)
+                            <a href="{{ route('employee.tang-ca.xin-ve-som', $overtimeToday->id) }}"
+                                class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition text-sm font-medium">
+                                <i class="fas fa-clock mr-1"></i> Xin về sớm
+                            </a>
+                        @endif
+
+                        @if($xinVeSom && !$daCheckout)
+                            <span class="inline-flex items-center px-3 py-1.5 
+                                @if($xinVeSom->trang_thai == 'cho_duyet') bg-yellow-100 text-yellow-700
+                                @elseif($xinVeSom->trang_thai == 'da_duyet') bg-green-100 text-green-700
+                                @elseif($xinVeSom->trang_thai == 'tu_choi') bg-red-100 text-red-700
+                                @else bg-gray-100 text-gray-700 @endif
+                                rounded-lg text-sm">
+                                <i class="fas 
+                                    @if($xinVeSom->trang_thai == 'cho_duyet') fa-clock
+                                    @elseif($xinVeSom->trang_thai == 'da_duyet') fa-check-circle
+                                    @elseif($xinVeSom->trang_thai == 'tu_choi') fa-times-circle
+                                    @else fa-info-circle @endif
+                                    mr-1"></i>
+                                {{ \App\Models\XinVeSomTangCa::$trangThaiLabels[$xinVeSom->trang_thai] ?? $xinVeSom->trang_thai }}
+                                @if($xinVeSom->trang_thai == 'da_duyet')
+                                    (về lúc {{ $xinVeSom->gio_ve_som_du_kien }})
+                                @endif
+                            </span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        {{-- THÔNG BÁO --}}
+        @if(session('success'))
+            <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-check-circle text-green-600 dark:text-green-400 text-xl"></i>
+                    <p class="text-green-700 dark:text-green-300">{{ session('success') }}</p>
+                </div>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-xl"></i>
+                    <p class="text-red-700 dark:text-red-300">{{ session('error') }}</p>
+                </div>
+            </div>
+        @endif
+
         {{-- THỐNG KÊ --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 text-center border border-gray-100 dark:border-gray-700">
@@ -77,10 +239,31 @@
                                 $isKienNghi = is_null($don->ngay_tang_ca);
                                 $thucHien = $don->thuc_hien;
                                 $daXacNhan = $thucHien && $thucHien->trang_thai === 'quan_ly_xac_nhan';
-                                $daNhanVienXacNhan = $thucHien && $thucHien->trang_thai === 'nhan_vien_xac_nhan';
+                                $daCheckout = $thucHien && $thucHien->thoi_gian_ket_thuc;
+                                $daDenGioTangCaItem = false;
+                                $canXinVeSomItem = false;
+                                $xinVeSomItem = null;
+                                
+                                if (!$isKienNghi && $don->trang_thai == 'da_duyet' && !$daXacNhan && !$daCheckout) {
+                                    $now = Carbon\Carbon::now('Asia/Ho_Chi_Minh');
+                                    $ngayTangCa = Carbon\Carbon::parse($don->ngay_tang_ca)->startOfDay();
+                                    $gioBatDau = Carbon\Carbon::parse($don->gio_bat_dau);
+                                    $thoiGianBatDauItem = Carbon\Carbon::parse(
+                                        $ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s')
+                                    );
+                                    $daDenGioTangCaItem = $now->gte($thoiGianBatDauItem->copy()->subMinutes(30));
+                                    
+                                    if ($daDenGioTangCaItem) {
+                                        $xinVeSomItem = $don->xin_ve_som;
+                                        if (!$xinVeSomItem || $xinVeSomItem->trang_thai == 'tu_choi' || $xinVeSomItem->trang_thai == 'huy') {
+                                            $canXinVeSomItem = true;
+                                        }
+                                    }
+                                }
+                                
                                 $loaiLabels = [
                                     'ngay_thuong' => 'Ngày thường',
-                                    'ngay_nghi' => 'Ngày nghỉ',
+                                    'ngay_nghi' => 'Ngày cuối tuần',
                                     'le_tet' => 'Lễ, Tết',
                                 ];
                                 $badgeClasses = [
@@ -95,17 +278,41 @@
                                     'tu_choi' => '❌ Từ chối',
                                     'huy' => '🗑️ Đã hủy',
                                 ];
+                                
+                                $now = Carbon\Carbon::now('Asia/Ho_Chi_Minh');
+                                $coTheCheckout = false;
+                                $thongBaoThoiGian = '';
+                                $checkoutMessage = '';
+                                
+                                if (!$isKienNghi && $don->trang_thai == 'da_duyet' && !$daXacNhan && !$daCheckout) {
+                                    $ngayTangCa = Carbon\Carbon::parse($don->ngay_tang_ca)->startOfDay();
+                                    $gioBatDau = Carbon\Carbon::parse($don->gio_bat_dau);
+                                    $thoiGianBatDau = Carbon\Carbon::parse(
+                                        $ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s')
+                                    );
+                                    $daDenGioTangCa = $now->gte($thoiGianBatDau->copy()->subMinutes(30));
+                                    
+                                    if ($daDenGioTangCa) {
+                                        $canCheckoutResult = \App\Models\DangKyTangCa::canCheckout($don->id);
+                                        if ($canCheckoutResult['valid']) {
+                                            $coTheCheckout = true;
+                                            if ($canCheckoutResult['is_early'] ?? false) {
+                                                $checkoutMessage = "Sớm " . ($canCheckoutResult['early_minutes'] ?? 0) . " phút";
+                                            }
+                                        } else {
+                                            $thongBaoThoiGian = $canCheckoutResult['message'];
+                                        }
+                                    } else {
+                                        $thongBaoThoiGian = "⏳ Chưa đến giờ tăng ca";
+                                    }
+                                }
                             @endphp
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors" id="row-{{ $don->id }}">
                                 <td class="px-4 py-3">
                                     @if($isKienNghi)
-                                        <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                                            📝 Kiến nghị
-                                        </span>
+                                        <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">📝 Kiến nghị</span>
                                     @else
-                                        <span class="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
-                                            📄 Đơn tăng ca
-                                        </span>
+                                        <span class="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">📄 Đơn tăng ca</span>
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
@@ -119,11 +326,11 @@
                                     @if($isKienNghi)
                                         <span class="text-gray-400">---</span>
                                     @else
-                                        {{ $don->gio_bat_dau }} - {{ $don->gio_ket_thuc }}
+                                        {{ Carbon\Carbon::parse($don->gio_bat_dau)->format('H:i') }} - {{ Carbon\Carbon::parse($don->gio_ket_thuc)->format('H:i') }}
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium {{ $isKienNghi ? 'text-gray-400' : 'text-blue-600 dark:text-blue-400' }}">
-                                    {{ $don->so_gio_tang_ca }} giờ
+                                    {{ number_format($don->so_gio_tang_ca ?? 0, 1, ',', '') }} giờ
                                 </td>
                                 <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
                                     {{ $loaiLabels[$don->loai_tang_ca] ?? $don->loai_tang_ca }}
@@ -132,20 +339,30 @@
                                     <span class="px-2 py-1 rounded-full text-xs font-medium {{ $badgeClasses[$don->trang_thai] ?? 'bg-gray-100 text-gray-800' }}">
                                         {{ $trangThaiLabels[$don->trang_thai] ?? $don->trang_thai }}
                                     </span>
-                                    @if ($don->trang_thai == 'da_duyet')
+                                    @if ($don->trang_thai == 'da_duyet' && !$isKienNghi)
                                         @if ($daXacNhan)
-                                            <span class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
-                                                ✅ Hoàn thành
-                                            </span>
-                                        @elseif($daNhanVienXacNhan)
-                                            <span class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                                                ⏳ Chờ xác nhận
-                                            </span>
+                                            <span class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">✅ Hoàn thành</span>
+                                        @elseif($daCheckout)
+                                            <span class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">⏳ Chờ xác nhận</span>
+                                        @elseif($daDenGioTangCaItem)
+                                            <span class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">🔄 Đang diễn ra</span>
+                                        @else
+                                            <span class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">⏳ Chờ đến giờ</span>
                                         @endif
+                                    @endif
+                                    @if($xinVeSomItem && !$daCheckout && !$isKienNghi)
+                                        <span class="ml-1 px-2 py-1 rounded-full text-xs font-medium 
+                                            @if($xinVeSomItem->trang_thai == 'cho_duyet') bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300
+                                            @elseif($xinVeSomItem->trang_thai == 'da_duyet') bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300
+                                            @elseif($xinVeSomItem->trang_thai == 'tu_choi') bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300
+                                            @else bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 @endif
+                                        ">
+                                            {{ \App\Models\XinVeSomTangCa::$trangThaiLabels[$xinVeSomItem->trang_thai] ?? $xinVeSomItem->trang_thai }}
+                                        </span>
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 text-center">
-                                    <div class="flex items-center justify-center gap-2">
+                                    <div class="flex items-center justify-center gap-2 flex-wrap">
                                         {{-- Nút Xem chi tiết --}}
                                         <a href="{{ route('employee.tang-ca.show', $don->id) }}"
                                             class="inline-flex items-center justify-center w-8 h-8 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 rounded-lg transition"
@@ -153,57 +370,56 @@
                                             <i class="fas fa-eye text-sm"></i>
                                         </a>
 
-                                        {{-- Nút xác nhận đã làm tăng ca (chỉ cho đơn tăng ca đã duyệt) --}}
-                                        @if (!$isKienNghi && $don->trang_thai == 'da_duyet' && !$thucHien)
-                                            @php
-                                                $now = Carbon\Carbon::now();
-                                                $ngayTangCa = Carbon\Carbon::parse($don->ngay_tang_ca);
-                                                $gioBatDau = Carbon\Carbon::parse($don->gio_bat_dau);
-                                                $thoiGianBatDau = Carbon\Carbon::parse(
-                                                    $ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s'),
-                                                );
-                                                $thoiGianChoPhepSom = $thoiGianBatDau->copy()->subMinutes(30);
-                                                $coTheXacNhan = $now->gte($thoiGianChoPhepSom);
-                                            @endphp
-
-                                            @if ($coTheXacNhan)
-                                                <form action="{{ route('employee.tang-ca.confirm-thuc-hien', $don->id) }}" method="POST">
+                                        {{-- ⭐ NÚT CHECK-OUT TRONG DANH SÁCH --}}
+                                        @if (!$isKienNghi && $don->trang_thai == 'da_duyet' && !$daXacNhan && !$daCheckout)
+                                            @if ($coTheCheckout)
+                                                <form action="{{ route('employee.tang-ca.confirm-thuc-hien', $don->id) }}" method="POST" class="inline">
                                                     @csrf
                                                     <button type="submit"
-                                                        class="inline-flex items-center justify-center w-8 h-8 bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 rounded-lg transition"
-                                                        onclick="return confirm('Bạn đã hoàn thành giờ tăng ca này?')"
-                                                        title="Xác nhận đã làm tăng ca">
-                                                        <i class="fas fa-check-circle text-sm"></i>
+                                                        class="inline-flex items-center justify-center px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition text-sm font-medium"
+                                                        onclick="return confirm('Check-out tăng ca?')">
+                                                        <i class="fas fa-sign-out-alt mr-1"></i> Check-out
+                                                        @if($checkoutMessage)
+                                                            <span class="text-xs opacity-80">({{ $checkoutMessage }})</span>
+                                                        @endif
                                                     </button>
                                                 </form>
                                             @else
-                                                <span class="inline-flex items-center justify-center w-8 h-8 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed" title="Chưa đến giờ tăng ca">
-                                                    <i class="fas fa-clock text-sm"></i>
+                                                <span class="inline-flex items-center px-3 py-1.5 bg-gray-200 text-gray-500 rounded-lg text-sm cursor-not-allowed"
+                                                      title="{{ $thongBaoThoiGian ?: 'Chưa đến giờ check-out' }}">
+                                                    <i class="fas fa-clock mr-1"></i>
+                                                    {{ $thongBaoThoiGian ?: 'Chờ check-out' }}
                                                 </span>
                                             @endif
                                         @endif
 
-                                        {{-- Chỉnh sửa kiến nghị (chỉ khi chờ duyệt và là kiến nghị) --}}
+                                        {{-- ⭐ NÚT XIN VỀ SỚM --}}
+                                        @if($canXinVeSomItem && !$daCheckout && !$isKienNghi)
+                                            <a href="{{ route('employee.tang-ca.xin-ve-som', $don->id) }}"
+                                                class="inline-flex items-center justify-center px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition text-sm font-medium">
+                                                <i class="fas fa-clock mr-1"></i> Xin về sớm
+                                            </a>
+                                        @endif
+
+                                        {{-- Chỉnh sửa kiến nghị --}}
                                         @if ($isKienNghi && $don->trang_thai == 'cho_duyet')
                                             <a href="{{ route('employee.tang-ca.edit', $don->id) }}"
-                                                class="inline-flex items-center justify-center w-8 h-8 bg-yellow-50 text-yellow-600 hover:bg-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400 dark:hover:bg-yellow-900/50 rounded-lg transition"
-                                                title="Chỉnh sửa">
+                                                class="inline-flex items-center justify-center w-8 h-8 bg-yellow-50 text-yellow-600 hover:bg-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400 dark:hover:bg-yellow-900/50 rounded-lg transition">
                                                 <i class="fas fa-edit text-sm"></i>
                                             </a>
                                             <form action="{{ route('employee.tang-ca.huy', $don->id) }}" method="POST"
-                                                onsubmit="return confirm('Bạn có chắc muốn hủy kiến nghị này?')">
+                                                onsubmit="return confirm('Hủy kiến nghị này?')">
                                                 @csrf
                                                 <button type="submit"
-                                                    class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg transition"
-                                                    title="Hủy kiến nghị">
+                                                    class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg transition">
                                                     <i class="fas fa-times text-sm"></i>
                                                 </button>
                                             </form>
                                         @endif
 
-                                        {{-- ⭐ TỪ CHỐI ĐƠN TĂNG CA - MỞ MODAL --}}
-                                        @if (!$isKienNghi && $don->loai_tao == 'truong_phong' && $don->trang_thai == 'da_duyet' && !$thucHien)
-                                            <button onclick="showTuChoiModalIndex({{ $don->id }}, '{{ $don->ly_do_tang_ca }}')"
+                                        {{-- ⭐ TỪ CHỐI ĐƠN TĂNG CA (DO TRƯỞNG PHÒNG TẠO) --}}
+                                        @if (!$isKienNghi && $don->loai_tao == 'truong_phong' && $don->trang_thai == 'da_duyet' && !$daCheckout && !$daXacNhan)
+                                            <button onclick="showTuChoiModalIndex({{ $don->id }})"
                                                 class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg transition"
                                                 title="Từ chối đơn tăng ca">
                                                 <i class="fas fa-times text-sm"></i>
@@ -231,7 +447,7 @@
         </div>
     </div>
 
-    {{-- ⭐ MODAL TỪ CHỐI (CHO INDEX) --}}
+    {{-- ⭐ MODAL TỪ CHỐI ĐƠN TĂNG CA --}}
     <div id="tuChoiModalIndex" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 mx-4 animate-scale-up">
             <div class="flex items-center gap-3 mb-4">
@@ -252,21 +468,16 @@
                     </label>
                     <textarea name="ly_do_tu_choi" id="lyDoTuChoiIndex" rows="4"
                         class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none transition"
-                        placeholder="Nhập lý do từ chối (tối thiểu 10 ký tự)..." required></textarea>
+                        placeholder="Nhập lý do từ chối..." required></textarea>
                     <div class="flex justify-between mt-2">
                         <span class="text-xs text-gray-400">Tối thiểu 10 ký tự</span>
                         <span id="lyDoTuChoiCountIndex" class="text-xs text-gray-400">0/500</span>
                     </div>
                 </div>
                 <div class="flex gap-3 justify-end">
-                    <button type="button" onclick="closeTuChoiModalIndex()"
-                        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition">
-                        Hủy
-                    </button>
-                    <button type="submit"
-                        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition flex items-center gap-2">
-                        <i class="fas fa-check"></i>
-                        Xác nhận từ chối
+                    <button type="button" onclick="closeTuChoiModalIndex()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition">Hủy</button>
+                    <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition flex items-center gap-2">
+                        <i class="fas fa-check"></i> Xác nhận từ chối
                     </button>
                 </div>
             </form>
@@ -278,31 +489,21 @@
             animation: scaleUp 0.25s ease-out;
         }
         @keyframes scaleUp {
-            from {
-                transform: scale(0.9);
-                opacity: 0;
-            }
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
     </style>
 @endsection
 
 @push('scripts')
 <script>
-    // ⭐ MODAL TỪ CHỐI TỪ INDEX
     let currentDonId = null;
 
-    function showTuChoiModalIndex(id, lyDo) {
+    function showTuChoiModalIndex(id) {
         currentDonId = id;
         const modal = document.getElementById('tuChoiModalIndex');
         const form = document.getElementById('tuChoiFormIndex');
-        
-        // Cập nhật action cho form
         form.action = `/employee/tang-ca/${id}/tu-choi-don`;
-        
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         document.getElementById('lyDoTuChoiIndex').value = '';
@@ -315,13 +516,10 @@
         currentDonId = null;
     }
 
-    // Đếm số ký tự lý do từ chối (Index)
     document.getElementById('lyDoTuChoiIndex').addEventListener('input', function() {
-        const count = this.value.length;
-        document.getElementById('lyDoTuChoiCountIndex').textContent = count + '/500';
+        document.getElementById('lyDoTuChoiCountIndex').textContent = this.value.length + '/500';
     });
 
-    // Kiểm tra trước khi submit form từ chối (Index)
     document.getElementById('tuChoiFormIndex').addEventListener('submit', function(e) {
         const lyDo = document.getElementById('lyDoTuChoiIndex').value.trim();
         if (lyDo.length < 10) {
@@ -335,17 +533,12 @@
         }
     });
 
-    // Click outside to close
     document.getElementById('tuChoiModalIndex').addEventListener('click', function(e) {
         if (e.target === this) closeTuChoiModalIndex();
     });
 
-    // ESC to close
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeTuChoiModalIndex();
-            closeTuChoiModal();
-        }
+        if (e.key === 'Escape') closeTuChoiModalIndex();
     });
 </script>
 @endpush

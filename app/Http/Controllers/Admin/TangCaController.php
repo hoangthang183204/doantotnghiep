@@ -452,7 +452,7 @@ class TangCaController extends Controller
                 'ghi_chu' => 'nullable|string',
             ]);
 
-            $tangCa = DangKyTangCa::findOrFail($id);
+            $tangCa = DangKyTangCa::with(['nguoi_dung'])->findOrFail($id);
             $thucHien = ThucHienTangCa::where('dang_ky_tang_ca_id', $tangCa->id)->firstOrFail();
 
             DB::beginTransaction();
@@ -465,26 +465,22 @@ class TangCaController extends Controller
                 'trang_thai' => 'quan_ly_xac_nhan',
             ]);
 
-            // Tính lương tăng ca
+            // ⭐ TÍNH LƯƠNG TĂNG CA
             $userId = $tangCa->nguoi_dung_id;
             $hours = $request->so_gio_tang_ca_thuc_te;
             $type = $tangCa->loai_tang_ca;
 
-            $luongTangCa = SalaryHelper::calculateOvertimeSalary($userId, $hours, $type);
-
-            // Log để debug
-            Log::info('💰 Overtime salary calculation:', [
-                'user_id' => $userId,
-                'hours' => $hours,
-                'type' => $type,
-                'overtime_salary' => $luongTangCa,
-            ]);
+            // Tính lương chi tiết
+            $luongTangCa = OvertimeHelper::tinhLuongTangCa($userId, $hours, $type);
 
             // Lưu lương vào đơn tăng ca
             $tangCa->luong_tang_ca = $luongTangCa;
             $tangCa->da_hoan_thanh = true;
             $tangCa->thoi_gian_hoan_thanh = now();
             $tangCa->save();
+
+            // Gửi thông báo cho nhân viên
+            $this->notificationService->notifyOvertime($tangCa, 'manager_approved');
 
             DB::commit();
 

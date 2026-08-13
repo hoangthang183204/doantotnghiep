@@ -1,3 +1,4 @@
+{{-- resources/views/truong-phong/tang-ca/create.blade.php --}}
 @extends('layouts.admin')
 
 @section('title', 'Tạo đơn tăng ca cho nhân viên')
@@ -150,7 +151,7 @@
                             Ngày tăng ca <span class="text-red-500">*</span>
                         </label>
                         <input type="date" name="ngay_tang_ca" id="ngayTangCa" 
-                            value="{{ old('ngay_tang_ca', date('Y-m-d')) }}"
+                            value="{{ old('ngay_tang_ca', isset($kienNghi) && $kienNghi ? $kienNghi->ngay_tang_ca : date('Y-m-d')) }}"
                             class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             min="{{ date('Y-m-d') }}" required>
                         @error('ngay_tang_ca')
@@ -166,16 +167,20 @@
                         </label>
                         <select name="loai_tang_ca" id="loaiTangCa"
                             class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
-                            <option value="ngay_thuong" {{ old('loai_tang_ca') == 'ngay_thuong' ? 'selected' : '' }}>
-                                📅 Ngày thường (150% - Tổng 250%)
+                            <option value="ngay_thuong" {{ old('loai_tang_ca', isset($kienNghi) ? $kienNghi->loai_tang_ca : '') == 'ngay_thuong' ? 'selected' : '' }}>
+                                📅 Ngày thường (150%)
                             </option>
                             <option value="ngay_nghi" {{ old('loai_tang_ca') == 'ngay_nghi' ? 'selected' : '' }}>
-                                🎉 Ngày nghỉ / Cuối tuần (200% - Tổng 200%)
+                                🎉 Ngày nghỉ hằng tuần (200%)
                             </option>
                             <option value="le_tet" {{ old('loai_tang_ca') == 'le_tet' ? 'selected' : '' }}>
-                                🎊 Lễ, Tết (300% - Tổng 400%)
+                                🎊 Lễ, Tết (400%)
                             </option>
                         </select>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Ngày thường: 150% tiền tăng ca | Ngày nghỉ: 200% tiền tăng ca | Lễ, Tết: 300% tiền tăng ca + 100% lương ngày lễ
+                        </p>
                         @error('loai_tang_ca')
                             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                         @enderror
@@ -191,6 +196,10 @@
                             value="{{ old('gio_bat_dau', isset($kienNghi) && $kienNghi ? $kienNghi->gio_bat_dau : '17:00') }}"
                             class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             required>
+                        <p class="text-xs text-red-500 dark:text-red-400 mt-1">
+                            <i class="fas fa-exclamation-circle mr-1"></i>
+                            ⚠️ Giờ tăng ca phải trong tương lai (sau thời điểm hiện tại)
+                        </p>
                         @error('gio_bat_dau')
                             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                         @enderror
@@ -258,6 +267,7 @@
                                 📌 Lưu ý khi tạo đơn tăng ca
                             </p>
                             <ul class="text-xs text-yellow-600 dark:text-yellow-300 mt-1 space-y-1 list-disc list-inside">
+                                <li>⚠️ Giờ tăng ca phải <strong>bắt đầu sau 17:00</strong> và <strong>trong tương lai</strong></li>
                                 <li>Đơn sẽ được <strong>tự động duyệt</strong> vì trưởng phòng tạo</li>
                                 <li>Tối đa <strong>8 giờ</strong> tăng ca/ngày</li>
                                 <li>Giới hạn <strong>40 giờ/tháng</strong> và <strong>200 giờ/năm</strong></li>
@@ -321,6 +331,24 @@
     </div>
     @endif
 </div>
+
+<style>
+#nhanVienSelect {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    padding-right: 2.5rem;
+}
+.dark #nhanVienSelect {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+}
+</style>
+
+@endsection
 
 @push('scripts')
 <script>
@@ -393,9 +421,14 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('lyDoCount').textContent = this.value.length + '/500';
     });
 
-    // Kiểm tra trước khi submit
+    // ⭐ KIỂM TRA TRƯỚC KHI SUBMIT
     document.getElementById('tangCaForm').addEventListener('submit', function(e) {
         const soGio = parseFloat(document.getElementById('soGioHienThi').textContent);
+        const ngayTangCa = document.getElementById('ngayTangCa').value;
+        const gioBatDau = document.getElementById('gioBatDau').value;
+        const gioKetThuc = document.getElementById('gioKetThuc').value;
+        
+        // 1️⃣ Kiểm tra số giờ
         if (soGio > 8) {
             e.preventDefault();
             alert('⚠️ Số giờ tăng ca không được vượt quá 8 giờ/ngày!');
@@ -406,28 +439,92 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('⚠️ Số giờ tăng ca tối thiểu là 0.5 giờ!');
             return false;
         }
+
+        // 2️⃣ ⭐ KIỂM TRA THỜI GIAN BẮT ĐẦU TRONG TƯƠNG LAI
+        if (ngayTangCa && gioBatDau) {
+            const now = new Date();
+            const dateParts = ngayTangCa.split('-');
+            const timeParts = gioBatDau.split(':');
+            
+            const startTime = new Date(
+                parseInt(dateParts[0]),
+                parseInt(dateParts[1]) - 1,
+                parseInt(dateParts[2]),
+                parseInt(timeParts[0]),
+                parseInt(timeParts[1])
+            );
+            
+            // Nếu thời gian bắt đầu nhỏ hơn thời gian hiện tại
+            if (startTime < now) {
+                e.preventDefault();
+                alert('⛔ Không thể tạo đơn tăng ca cho thời gian đã qua! Vui lòng chọn giờ bắt đầu trong tương lai.');
+                document.getElementById('gioBatDau').focus();
+                return false;
+            }
+        }
+
+        // 3️⃣ Kiểm tra giờ kết thúc sau giờ bắt đầu
+        if (gioBatDau && gioKetThuc) {
+            const start = new Date('2000-01-01T' + gioBatDau + ':00');
+            const end = new Date('2000-01-01T' + gioKetThuc + ':00');
+            if (end <= start) {
+                e.preventDefault();
+                alert('⛔ Giờ kết thúc phải sau giờ bắt đầu!');
+                document.getElementById('gioKetThuc').focus();
+                return false;
+            }
+        }
+
+        // 4️⃣ Kiểm tra giờ bắt đầu sau 17:00 (giờ hành chính)
+        if (gioBatDau) {
+            const gio = parseInt(gioBatDau.split(':')[0]);
+            const phut = parseInt(gioBatDau.split(':')[1]);
+            if (gio < 17 || (gio === 17 && phut === 0)) {
+                // Cho phép 17:00
+            }
+            // Nếu trước 17:00 thì báo lỗi
+            if (gio < 17) {
+                e.preventDefault();
+                alert('⚠️ Giờ tăng ca phải bắt đầu sau 17:00 (sau giờ làm hành chính)!');
+                document.getElementById('gioBatDau').focus();
+                return false;
+            }
+        }
+
         if (!confirm('Xác nhận tạo đơn tăng ca cho nhân viên này?')) {
             e.preventDefault();
             return false;
         }
     });
+
+    // ⭐ KIỂM TRA REAL-TIME KHI CHỌN GIỜ
+    document.getElementById('gioBatDau').addEventListener('change', function() {
+        const ngayTangCa = document.getElementById('ngayTangCa').value;
+        const gioBatDau = this.value;
+        
+        if (ngayTangCa && gioBatDau) {
+            const now = new Date();
+            const dateParts = ngayTangCa.split('-');
+            const timeParts = gioBatDau.split(':');
+            
+            const startTime = new Date(
+                parseInt(dateParts[0]),
+                parseInt(dateParts[1]) - 1,
+                parseInt(dateParts[2]),
+                parseInt(timeParts[0]),
+                parseInt(timeParts[1])
+            );
+            
+            if (startTime < now) {
+                // Không tự động sửa, chỉ hiển thị cảnh báo nhẹ
+                this.style.borderColor = '#ef4444';
+                this.style.backgroundColor = '#fef2f2';
+            } else {
+                this.style.borderColor = '';
+                this.style.backgroundColor = '';
+            }
+        }
+    });
 });
 </script>
 @endpush
-
-<style>
-#nhanVienSelect {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 0.5rem center;
-    background-repeat: no-repeat;
-    background-size: 1.5em 1.5em;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    padding-right: 2.5rem;
-}
-.dark #nhanVienSelect {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-}
-</style>
-@endsection

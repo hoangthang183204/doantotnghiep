@@ -9,15 +9,16 @@ return new class extends Migration
     public function up()
     {
         Schema::table('hop_dong_lao_dong', function (Blueprint $table) {
-            // Kiểm tra cột đã tồn tại chưa
+            // ⭐ SỬA: Bỏ after('trang_thai') vì cột không tồn tại
+            // Hoặc thay bằng cột có sẵn như 'id', 'nguoi_ky_id', 'created_at'
             if (!Schema::hasColumn('hop_dong_lao_dong', 'nguoi_duyet_id')) {
-                $table->unsignedBigInteger('nguoi_duyet_id')->nullable()->after('trang_thai');
+                $table->unsignedBigInteger('nguoi_duyet_id')->nullable();
             }
         });
 
         // Thêm foreign key riêng để tránh lỗi
         Schema::table('hop_dong_lao_dong', function (Blueprint $table) {
-            if (!Schema::hasColumn('hop_dong_lao_dong', 'nguoi_duyet_id')) {
+            if (Schema::hasColumn('hop_dong_lao_dong', 'nguoi_duyet_id')) {
                 $table->foreign('nguoi_duyet_id')->references('id')->on('nguoi_dung')->onDelete('set null');
             }
         });

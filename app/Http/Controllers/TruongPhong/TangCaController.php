@@ -5,7 +5,9 @@ namespace App\Http\Controllers\TruongPhong;
 use App\Http\Controllers\Controller;
 use App\Models\DangKyTangCa;
 use App\Models\NguoiDung;
+use App\Models\XinVeSomTangCa;
 use App\Models\PhongBan;
+use App\Models\ThucHienTangCa;
 use App\Helpers\OvertimeHelper;
 use App\Services\NotificationService;
 use Carbon\Carbon;
@@ -173,6 +175,36 @@ class TangCaController extends Controller
                 ->withErrors(['nguoi_dung_id' => 'Nhân viên không thuộc phòng ban của bạn']);
         }
 
+        // ⭐ KIỂM TRA GIỜ TĂNG CA HỢP LỆ (PHẢI SAU GIỜ HÀNH CHÍNH)
+        $kiemTraGioHopLe = OvertimeHelper::kiemTraGioTangCaHopLe(
+            $request->gio_bat_dau,
+            $request->gio_ket_thuc
+        );
+
+        if (!$kiemTraGioHopLe['valid']) {
+            return back()
+                ->withInput()
+                ->withErrors(['gio_bat_dau' => $kiemTraGioHopLe['message']]);
+        }
+
+        // ⭐ KIỂM TRA KHÔNG ĐƯỢC TẠO ĐƠN CHO THỜI GIAN ĐÃ QUA
+        $ngayTangCa = Carbon::parse($request->ngay_tang_ca);
+        $gioBatDau = Carbon::parse($request->gio_bat_dau);
+
+        // Gộp ngày và giờ để kiểm tra
+        $thoiGianBatDau = Carbon::parse(
+            $ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s')
+        );
+
+        $now = Carbon::now('Asia/Ho_Chi_Minh');
+
+        // ⭐ NẾU THỜI GIAN BẮT ĐẦU NHỎ HƠN THỜI GIAN HIỆN TẠI -> KHÔNG CHO PHÉP
+        if ($thoiGianBatDau->lt($now)) {
+            return back()
+                ->withInput()
+                ->withErrors(['gio_bat_dau' => '⛔ Không thể tạo đơn tăng ca cho thời gian đã qua! Vui lòng chọn giờ bắt đầu trong tương lai.']);
+        }
+
         $gioBatDau = Carbon::parse($request->gio_bat_dau);
         $gioKetThuc = Carbon::parse($request->gio_ket_thuc);
         $soGioTangCa = $gioBatDau->diffInHours($gioKetThuc);
@@ -313,7 +345,7 @@ class TangCaController extends Controller
             $nhanVienIds = $this->getNhanVienIdsTrongPhong();
 
             $dangKy = DangKyTangCa::where('trang_thai', 'cho_duyet')
-                ->whereNotNull('ngay_tang_ca') // ⭐ Chỉ duyệt đơn tăng ca (không phải kiến nghị)
+                ->whereNotNull('ngay_tang_ca')
                 ->whereIn('nguoi_dung_id', $nhanVienIds)
                 ->findOrFail($id);
 
@@ -326,16 +358,12 @@ class TangCaController extends Controller
 
             $this->notificationService->notifyOvertime($dangKy, 'approved');
 
-            return response()->json([
-                'success' => true,
-                'message' => '✅ Đã duyệt đơn tăng ca thành công!'
-            ]);
+            return redirect()
+                ->route('truong-phong.tang-ca.index')
+                ->with('success', '✅ Đã duyệt đơn tăng ca thành công!');
         } catch (\Exception $e) {
             Log::error('❌ Duyet tang ca error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => '❌ Có lỗi xảy ra: ' . $e->getMessage()
-            ], 500);
+            return back()->with('error', '❌ Có lỗi xảy ra: ' . $e->getMessage());
         }
     }
 
@@ -353,7 +381,7 @@ class TangCaController extends Controller
             $nhanVienIds = $this->getNhanVienIdsTrongPhong();
 
             $dangKy = DangKyTangCa::where('trang_thai', 'cho_duyet')
-                ->whereNotNull('ngay_tang_ca') // ⭐ Chỉ từ chối đơn tăng ca (không phải kiến nghị)
+                ->whereNotNull('ngay_tang_ca')
                 ->whereIn('nguoi_dung_id', $nhanVienIds)
                 ->findOrFail($id);
 
@@ -381,7 +409,6 @@ class TangCaController extends Controller
 
     /**
      * ⭐ DUYỆT KIẾN NGHỊ TĂNG CA
-     * (Dành cho kiến nghị có ngay_tang_ca = NULL)
      */
     public function duyetKienNghi(Request $request, $id)
     {
@@ -389,13 +416,12 @@ class TangCaController extends Controller
             $user = Auth::user();
             $nhanVienIds = $this->getNhanVienIdsTrongPhong();
 
-            // Tìm kiến nghị (ngay_tang_ca = null) trong phòng ban
             $kienNghi = DangKyTangCa::where('trang_thai', 'cho_duyet')
                 ->whereNull('ngay_tang_ca')
                 ->whereIn('nguoi_dung_id', $nhanVienIds)
+                ->with('nguoi_dung')
                 ->findOrFail($id);
 
-            // Cập nhật trạng thái kiến nghị thành đã duyệt
             $kienNghi->update([
                 'trang_thai' => 'da_duyet',
                 'nguoi_duyet_id' => $user->id,
@@ -403,21 +429,21 @@ class TangCaController extends Controller
                 'ly_do_tu_choi' => null,
             ]);
 
-            // Gửi thông báo cho nhân viên
-            $this->notificationService->notifyKienNghiTangCa($kienNghi, $kienNghi->nguoi_dung, 'approved');
+            try {
+                $this->notificationService->notifyOvertime($kienNghi, 'kien_nghi_approved');
+            } catch (\Exception $e) {
+                Log::error('⚠️ Failed to send notification: ' . $e->getMessage());
+            }
 
             Log::info('✅ Truong phong duyet kien nghi: ID ' . $kienNghi->id);
 
-            return response()->json([
-                'success' => true,
-                'message' => '✅ Đã duyệt kiến nghị tăng ca! Vui lòng tạo đơn tăng ca.'
-            ]);
+            // ⭐ REDIRECT VỀ TRANG DANH SÁCH KÈM THEO THÔNG BÁO
+            return redirect()
+                ->route('truong-phong.tang-ca.index')
+                ->with('success', '✅ Đã duyệt kiến nghị tăng ca! Vui lòng tạo đơn tăng ca.');
         } catch (\Exception $e) {
             Log::error('❌ Duyet kien nghi error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => '❌ Có lỗi xảy ra: ' . $e->getMessage()
-            ], 500);
+            return back()->with('error', '❌ Có lỗi xảy ra: ' . $e->getMessage());
         }
     }
 
@@ -428,7 +454,7 @@ class TangCaController extends Controller
     {
         try {
             $request->validate([
-                'ly_do_tu_choi' => 'required|string|max:500',
+                'ly_do_tu_choi' => 'required|string|min:10|max:500',
             ]);
 
             $user = Auth::user();
@@ -437,6 +463,7 @@ class TangCaController extends Controller
             $kienNghi = DangKyTangCa::where('trang_thai', 'cho_duyet')
                 ->whereNull('ngay_tang_ca')
                 ->whereIn('nguoi_dung_id', $nhanVienIds)
+                ->with('nguoi_dung')
                 ->findOrFail($id);
 
             $kienNghi->update([
@@ -446,18 +473,25 @@ class TangCaController extends Controller
                 'ly_do_tu_choi' => $request->ly_do_tu_choi,
             ]);
 
-            $this->notificationService->notifyKienNghiTangCa($kienNghi, $kienNghi->nguoi_dung, 'rejected');
+            try {
+                $this->notificationService->notifyOvertime($kienNghi, 'kien_nghi_rejected');
+            } catch (\Exception $e) {
+                Log::error('⚠️ Failed to send notification: ' . $e->getMessage());
+            }
 
-            return response()->json([
-                'success' => true,
-                'message' => '✅ Đã từ chối kiến nghị tăng ca!'
-            ]);
+            Log::info('✅ Truong phong tu choi kien nghi: ID ' . $kienNghi->id);
+
+            // ⭐ REDIRECT VỀ TRANG DANH SÁCH
+            return redirect()
+                ->route('truong-phong.tang-ca.index')
+                ->with('success', '✅ Đã từ chối kiến nghị tăng ca!');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()
+                ->withInput()
+                ->with('error', '⚠️ Vui lòng nhập lý do từ chối (tối thiểu 10 ký tự)');
         } catch (\Exception $e) {
             Log::error('❌ Tu choi kien nghi error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => '❌ Có lỗi xảy ra: ' . $e->getMessage()
-            ], 500);
+            return back()->with('error', '❌ Có lỗi xảy ra: ' . $e->getMessage());
         }
     }
 
@@ -500,5 +534,157 @@ class TangCaController extends Controller
         }
 
         return ['valid' => true, 'message' => 'Đơn hợp lệ'];
+    }
+
+    /**
+     * ✅ TRƯỞNG PHÒNG XÁC NHẬN HOÀN THÀNH TĂNG CA (TÍNH LƯƠNG CHÍNH THỨC)
+     */
+    public function approveThucHien(Request $request, $id)
+    {
+        try {
+            $user = Auth::user();
+            $nhanVienIds = $this->getNhanVienIdsTrongPhong();
+
+            $tangCa = DangKyTangCa::with(['nguoi_dung', 'thuc_hien'])
+                ->whereIn('nguoi_dung_id', $nhanVienIds)
+                ->findOrFail($id);
+
+            $thucHien = ThucHienTangCa::where('dang_ky_tang_ca_id', $tangCa->id)->firstOrFail();
+
+            // Chỉ cho phép xác nhận khi nhân viên đã xác nhận
+            if ($thucHien->trang_thai !== 'nhan_vien_xac_nhan') {
+                return back()->with('error', 'Nhân viên chưa xác nhận đã làm tăng ca');
+            }
+
+            // Lấy số giờ thực tế
+            $soGioThucTe = $thucHien->so_gio_tang_ca_thuc_te ?? $tangCa->so_gio_tang_ca;
+
+            // Đảm bảo số giờ thực tế không vượt quá số giờ đăng ký
+            $soGioThucTe = min($soGioThucTe, $tangCa->so_gio_tang_ca);
+
+            DB::beginTransaction();
+
+            // Cập nhật thực hiện tăng ca
+            $thucHien->update([
+                'trang_thai' => 'quan_ly_xac_nhan',
+            ]);
+
+            // ⭐ TÍNH LƯƠNG TĂNG CA CHÍNH THỨC
+            $userId = $tangCa->nguoi_dung_id;
+            $type = $tangCa->loai_tang_ca;
+            $luongTangCa = OvertimeHelper::tinhLuongTangCa($userId, $soGioThucTe, $type);
+
+            // Cập nhật lương vào đơn tăng ca
+            $tangCa->luong_tang_ca = $luongTangCa;
+            $tangCa->da_hoan_thanh = true;
+            $tangCa->thoi_gian_hoan_thanh = now();
+            $tangCa->save();
+
+            Log::info('✅ Truong phong approved overtime: ID ' . $tangCa->id .
+                ' - So gio thuc te: ' . $soGioThucTe .
+                ' - Luong chinh thuc: ' . $luongTangCa);
+
+            // Gửi thông báo cho nhân viên
+            try {
+                $this->notificationService->notifyOvertime($tangCa, 'manager_approved');
+                Log::info('📧 Đã gửi thông báo xác nhận hoàn thành đến nhân viên');
+            } catch (\Exception $e) {
+                Log::error('⚠️ Failed to send notification: ' . $e->getMessage());
+            }
+
+            DB::commit();
+
+            return redirect()
+                ->route('truong-phong.tang-ca.show', $tangCa->id)
+                ->with('success', '✅ Xác nhận hoàn thành tăng ca thành công. Lương: ' . number_format($luongTangCa) . 'đ');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('❌ approveThucHien error: ' . $e->getMessage());
+            return redirect()
+                ->route('truong-phong.tang-ca.show', $id)
+                ->with('error', '❌ Có lỗi xảy ra: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * ✅ Duyệt đơn xin về sớm
+     */
+    public function duyetXinVeSom(Request $request, $id)
+    {
+        try {
+            $user = Auth::user();
+            $nhanVienIds = $this->getNhanVienIdsTrongPhong();
+
+            $xinVeSom = XinVeSomTangCa::with(['dang_ky_tang_ca', 'nguoi_dung'])
+                ->where('trang_thai', 'cho_duyet')
+                ->whereHas('dang_ky_tang_ca', function ($q) use ($nhanVienIds) {
+                    $q->whereIn('nguoi_dung_id', $nhanVienIds);
+                })
+                ->findOrFail($id);
+
+            $xinVeSom->update([
+                'trang_thai' => 'da_duyet',
+                'nguoi_duyet_id' => $user->id,
+                'thoi_gian_duyet' => now(),
+                'ly_do_tu_choi' => null,
+            ]);
+
+            // Gửi thông báo cho nhân viên
+            try {
+                // $this->notificationService->notifyXinVeSomTangCa($xinVeSom, $xinVeSom->nguoi_dung, 'approved');
+            } catch (\Exception $e) {
+                Log::error('⚠️ Failed to send notification: ' . $e->getMessage());
+            }
+
+            return redirect()
+                ->route('truong-phong.tang-ca.index')
+                ->with('success', '✅ Đã duyệt đơn xin về sớm! Nhân viên có thể về sớm lúc ' . $xinVeSom->gio_ve_som_du_kien);
+        } catch (\Exception $e) {
+            Log::error('❌ Duyet xin ve som error: ' . $e->getMessage());
+            return back()->with('error', '❌ Có lỗi xảy ra: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * ❌ Từ chối đơn xin về sớm
+     */
+    public function tuChoiXinVeSom(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'ly_do_tu_choi' => 'required|string|max:500',
+            ]);
+
+            $user = Auth::user();
+            $nhanVienIds = $this->getNhanVienIdsTrongPhong();
+
+            $xinVeSom = XinVeSomTangCa::with(['dang_ky_tang_ca', 'nguoi_dung'])
+                ->where('trang_thai', 'cho_duyet')
+                ->whereHas('dang_ky_tang_ca', function ($q) use ($nhanVienIds) {
+                    $q->whereIn('nguoi_dung_id', $nhanVienIds);
+                })
+                ->findOrFail($id);
+
+            $xinVeSom->update([
+                'trang_thai' => 'tu_choi',
+                'nguoi_duyet_id' => $user->id,
+                'thoi_gian_duyet' => now(),
+                'ly_do_tu_choi' => $request->ly_do_tu_choi,
+            ]);
+
+            // Gửi thông báo cho nhân viên
+            try {
+                // $this->notificationService->notifyXinVeSomTangCa($xinVeSom, $xinVeSom->nguoi_dung, 'rejected');
+            } catch (\Exception $e) {
+                Log::error('⚠️ Failed to send notification: ' . $e->getMessage());
+            }
+
+            return redirect()
+                ->route('truong-phong.tang-ca.index')
+                ->with('success', '✅ Đã từ chối đơn xin về sớm!');
+        } catch (\Exception $e) {
+            Log::error('❌ Tu choi xin ve som error: ' . $e->getMessage());
+            return back()->with('error', '❌ Có lỗi xảy ra: ' . $e->getMessage());
+        }
     }
 }
