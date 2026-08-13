@@ -159,6 +159,14 @@
                         @enderror
                     </div>
 
+                    {{-- ⭐ THÔNG BÁO LOẠI NGÀY --}}
+                    <div id="thongBaoNgay" class="hidden col-span-1 md:col-span-2 p-3 rounded-lg border mb-2">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-info-circle text-blue-500"></i>
+                            <span id="thongBaoNgayText" class="text-sm"></span>
+                        </div>
+                    </div>
+
                     {{-- Loại tăng ca --}}
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -177,10 +185,7 @@
                                 🎊 Lễ, Tết (400%)
                             </option>
                         </select>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            <i class="fas fa-info-circle mr-1"></i>
-                            Ngày thường: 150% tiền tăng ca | Ngày nghỉ: 200% tiền tăng ca | Lễ, Tết: 300% tiền tăng ca + 100% lương ngày lễ
-                        </p>
+                        <div id="loaiTangCaNote" class="text-xs mt-1"></div>
                         @error('loai_tang_ca')
                             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                         @enderror
@@ -196,7 +201,7 @@
                             value="{{ old('gio_bat_dau', isset($kienNghi) && $kienNghi ? $kienNghi->gio_bat_dau : '17:00') }}"
                             class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             required>
-                        <p class="text-xs text-red-500 dark:text-red-400 mt-1">
+                        <p class="text-xs text-red-500 dark:text-red-400 mt-1" id="gioBatDauNote">
                             <i class="fas fa-exclamation-circle mr-1"></i>
                             ⚠️ Giờ tăng ca phải trong tương lai (sau thời điểm hiện tại)
                         </p>
@@ -267,7 +272,8 @@
                                 📌 Lưu ý khi tạo đơn tăng ca
                             </p>
                             <ul class="text-xs text-yellow-600 dark:text-yellow-300 mt-1 space-y-1 list-disc list-inside">
-                                <li>⚠️ Giờ tăng ca phải <strong>bắt đầu sau 17:00</strong> và <strong>trong tương lai</strong></li>
+                                <li>⚠️ <strong>Ngày thường:</strong> Tăng ca chỉ áp dụng sau giờ hành chính (17:30)</li>
+                                <li>🎉 <strong>Ngày cuối tuần:</strong> Tất cả giờ làm đều được tính là tăng ca (200%)</li>
                                 <li>Đơn sẽ được <strong>tự động duyệt</strong> vì trưởng phòng tạo</li>
                                 <li>Tối đa <strong>8 giờ</strong> tăng ca/ngày</li>
                                 <li>Giới hạn <strong>40 giờ/tháng</strong> và <strong>200 giờ/năm</strong></li>
@@ -346,6 +352,9 @@
 .dark #nhanVienSelect {
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
 }
+#thongBaoNgay.hidden {
+    display: none !important;
+}
 </style>
 
 @endsection
@@ -353,6 +362,10 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ⭐ CẤU HÌNH GIỜ HÀNH CHÍNH
+    const GIO_HANH_CHINH = 17;
+    const PHUT_HANH_CHINH = 30;
+
     // Chọn nhân viên từ danh sách
     window.chonNhanVien = function(id, ten, ma, chucVu) {
         const select = document.getElementById('nhanVienSelect');
@@ -388,6 +401,90 @@ document.addEventListener('DOMContentLoaded', function() {
     const select = document.getElementById('nhanVienSelect');
     if (select.value) {
         select.dispatchEvent(new Event('change'));
+    }
+
+    // ⭐ KIỂM TRA NGÀY CUỐI TUẦN VÀ GỢI Ý LOẠI TĂNG CA
+    function kiemTraNgay() {
+        const ngayInput = document.getElementById('ngayTangCa');
+        const loaiSelect = document.getElementById('loaiTangCa');
+        const thongBaoDiv = document.getElementById('thongBaoNgay');
+        const thongBaoText = document.getElementById('thongBaoNgayText');
+        const loaiNote = document.getElementById('loaiTangCaNote');
+        
+        if (!ngayInput || !ngayInput.value) {
+            if (thongBaoDiv) thongBaoDiv.classList.add('hidden');
+            return;
+        }
+        
+        const ngay = new Date(ngayInput.value + 'T00:00:00');
+        const thu = ngay.getDay(); // 0 = Chủ Nhật, 6 = Thứ 7
+        const isWeekend = thu === 0 || thu === 6;
+        
+        const thuNames = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+        const tenThu = thuNames[thu];
+        
+        if (!thongBaoDiv) return;
+        
+        thongBaoDiv.classList.remove('hidden');
+        
+        if (isWeekend) {
+            // 🎉 NGÀY CUỐI TUẦN
+            thongBaoDiv.className = 'col-span-1 md:col-span-2 p-3 rounded-lg border border-orange-200 bg-orange-50 dark:bg-orange-900/20 dark:border-orange-800 mb-2';
+            thongBaoText.innerHTML = `
+                <span class="font-medium text-orange-700 dark:text-orange-400">
+                    🎉 Ngày ${tenThu} (${ngayInput.value.split('-').reverse().join('/')}) là ngày cuối tuần
+                </span>
+                <span class="text-sm text-orange-600 dark:text-orange-300 ml-2">
+                    → Tất cả giờ làm đều được tính là tăng ca (200%)
+                </span>
+            `;
+            
+            // Tự động chọn ngày cuối tuần nếu đang chọn ngày thường
+            if (loaiSelect && loaiSelect.value === 'ngay_thuong') {
+                loaiSelect.value = 'ngay_nghi';
+            }
+            
+            // Cập nhật ghi chú
+            if (loaiNote) {
+                loaiNote.innerHTML = '<span class="text-orange-600 dark:text-orange-400">✅ Ngày cuối tuần - Tất cả giờ làm đều là tăng ca (200%)</span>';
+            }
+            
+            // Cập nhật ghi chú giờ bắt đầu
+            const gioNote = document.getElementById('gioBatDauNote');
+            if (gioNote) {
+                gioNote.innerHTML = '<i class="fas fa-info-circle mr-1 text-green-500"></i> ✅ Ngày cuối tuần - Không giới hạn giờ hành chính';
+                gioNote.className = 'text-xs text-green-600 dark:text-green-400 mt-1';
+            }
+            
+        } else {
+            // 📅 NGÀY THƯỜNG
+            thongBaoDiv.className = 'col-span-1 md:col-span-2 p-3 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 mb-2';
+            thongBaoText.innerHTML = `
+                <span class="font-medium text-blue-700 dark:text-blue-400">
+                    📅 Ngày ${tenThu} (${ngayInput.value.split('-').reverse().join('/')}) là ngày thường
+                </span>
+                <span class="text-sm text-blue-600 dark:text-blue-300 ml-2">
+                    → Tăng ca chỉ áp dụng sau giờ hành chính (${GIO_HANH_CHINH}:${String(PHUT_HANH_CHINH).padStart(2, '0')})
+                </span>
+            `;
+            
+            // Tự động chọn ngày thường nếu đang chọn ngày cuối tuần
+            if (loaiSelect && loaiSelect.value === 'ngay_nghi') {
+                loaiSelect.value = 'ngay_thuong';
+            }
+            
+            // Cập nhật ghi chú
+            if (loaiNote) {
+                loaiNote.innerHTML = `<span class="text-blue-600 dark:text-blue-400">⚠️ Ngày thường - Tăng ca chỉ áp dụng sau ${GIO_HANH_CHINH}:${String(PHUT_HANH_CHINH).padStart(2, '0')}</span>`;
+            }
+            
+            // Cập nhật ghi chú giờ bắt đầu
+            const gioNote = document.getElementById('gioBatDauNote');
+            if (gioNote) {
+                gioNote.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i> ⚠️ Giờ tăng ca phải sau ${GIO_HANH_CHINH}:${String(PHUT_HANH_CHINH).padStart(2, '0')} (giờ hành chính) và trong tương lai`;
+                gioNote.className = 'text-xs text-red-500 dark:text-red-400 mt-1';
+            }
+        }
     }
 
     // ⭐ TÍNH SỐ GIỜ TĂNG CA TỰ ĐỘNG
@@ -427,6 +524,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const ngayTangCa = document.getElementById('ngayTangCa').value;
         const gioBatDau = document.getElementById('gioBatDau').value;
         const gioKetThuc = document.getElementById('gioKetThuc').value;
+        const loaiTangCa = document.getElementById('loaiTangCa').value;
         
         // 1️⃣ Kiểm tra số giờ
         if (soGio > 8) {
@@ -440,7 +538,50 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
 
-        // 2️⃣ ⭐ KIỂM TRA THỜI GIAN BẮT ĐẦU TRONG TƯƠNG LAI
+        // 2️⃣ ⭐ KIỂM TRA LOẠI TĂNG CA PHÙ HỢP VỚI NGÀY
+        if (ngayTangCa) {
+            const ngay = new Date(ngayTangCa + 'T00:00:00');
+            const thu = ngay.getDay();
+            const isWeekend = thu === 0 || thu === 6;
+            
+            if (isWeekend && loaiTangCa === 'ngay_thuong') {
+                e.preventDefault();
+                alert('⚠️ Ngày ' + ngayTangCa.split('-').reverse().join('/') + ' là ngày cuối tuần! Vui lòng chọn loại "Ngày cuối tuần (200%)"');
+                document.getElementById('loaiTangCa').focus();
+                return false;
+            }
+            
+            if (!isWeekend && loaiTangCa === 'ngay_nghi') {
+                e.preventDefault();
+                alert('⚠️ Ngày ' + ngayTangCa.split('-').reverse().join('/') + ' không phải ngày cuối tuần! Vui lòng chọn loại "Ngày thường (150%)"');
+                document.getElementById('loaiTangCa').focus();
+                return false;
+            }
+        }
+
+        // 3️⃣ ⭐ KIỂM TRA GIỜ HÀNH CHÍNH CHO NGÀY THƯỜNG
+        if (ngayTangCa && loaiTangCa !== 'le_tet') {
+            const ngay = new Date(ngayTangCa + 'T00:00:00');
+            const thu = ngay.getDay();
+            const isWeekend = thu === 0 || thu === 6;
+            
+            // Chỉ kiểm tra giờ hành chính cho ngày thường
+            if (!isWeekend) {
+                if (gioBatDau) {
+                    const gio = parseInt(gioBatDau.split(':')[0]);
+                    const phut = parseInt(gioBatDau.split(':')[1]);
+                    
+                    if (gio < GIO_HANH_CHINH || (gio === GIO_HANH_CHINH && phut < PHUT_HANH_CHINH)) {
+                        e.preventDefault();
+                        alert('⚠️ Giờ tăng ca phải bắt đầu sau giờ hành chính (' + GIO_HANH_CHINH + ':' + String(PHUT_HANH_CHINH).padStart(2, '0') + ')!');
+                        document.getElementById('gioBatDau').focus();
+                        return false;
+                    }
+                }
+            }
+        }
+
+        // 4️⃣ ⭐ KIỂM TRA THỜI GIAN BẮT ĐẦU TRONG TƯƠNG LAI
         if (ngayTangCa && gioBatDau) {
             const now = new Date();
             const dateParts = ngayTangCa.split('-');
@@ -454,7 +595,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 parseInt(timeParts[1])
             );
             
-            // Nếu thời gian bắt đầu nhỏ hơn thời gian hiện tại
             if (startTime < now) {
                 e.preventDefault();
                 alert('⛔ Không thể tạo đơn tăng ca cho thời gian đã qua! Vui lòng chọn giờ bắt đầu trong tương lai.');
@@ -463,7 +603,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // 3️⃣ Kiểm tra giờ kết thúc sau giờ bắt đầu
+        // 5️⃣ Kiểm tra giờ kết thúc sau giờ bắt đầu
         if (gioBatDau && gioKetThuc) {
             const start = new Date('2000-01-01T' + gioBatDau + ':00');
             const end = new Date('2000-01-01T' + gioKetThuc + ':00');
@@ -471,22 +611,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.preventDefault();
                 alert('⛔ Giờ kết thúc phải sau giờ bắt đầu!');
                 document.getElementById('gioKetThuc').focus();
-                return false;
-            }
-        }
-
-        // 4️⃣ Kiểm tra giờ bắt đầu sau 17:00 (giờ hành chính)
-        if (gioBatDau) {
-            const gio = parseInt(gioBatDau.split(':')[0]);
-            const phut = parseInt(gioBatDau.split(':')[1]);
-            if (gio < 17 || (gio === 17 && phut === 0)) {
-                // Cho phép 17:00
-            }
-            // Nếu trước 17:00 thì báo lỗi
-            if (gio < 17) {
-                e.preventDefault();
-                alert('⚠️ Giờ tăng ca phải bắt đầu sau 17:00 (sau giờ làm hành chính)!');
-                document.getElementById('gioBatDau').focus();
                 return false;
             }
         }
@@ -516,7 +640,6 @@ document.addEventListener('DOMContentLoaded', function() {
             );
             
             if (startTime < now) {
-                // Không tự động sửa, chỉ hiển thị cảnh báo nhẹ
                 this.style.borderColor = '#ef4444';
                 this.style.backgroundColor = '#fef2f2';
             } else {
@@ -524,6 +647,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.style.backgroundColor = '';
             }
         }
+    });
+
+    // ⭐ GẮN SỰ KIỆN CHO NGÀY
+    const ngayInput = document.getElementById('ngayTangCa');
+    if (ngayInput) {
+        ngayInput.addEventListener('change', kiemTraNgay);
+        ngayInput.addEventListener('input', kiemTraNgay);
+        setTimeout(kiemTraNgay, 200);
+    }
+
+    // ⭐ GẮN SỰ KIỆN CHO LOẠI TĂNG CA
+    document.getElementById('loaiTangCa').addEventListener('change', function() {
+        // Kiểm tra lại khi người dùng thay đổi loại tăng ca
+        kiemTraNgay();
     });
 });
 </script>

@@ -175,10 +175,30 @@ class TangCaController extends Controller
                 ->withErrors(['nguoi_dung_id' => 'Nhân viên không thuộc phòng ban của bạn']);
         }
 
-        // ⭐ KIỂM TRA GIỜ TĂNG CA HỢP LỆ (PHẢI SAU GIỜ HÀNH CHÍNH)
+        // ⭐⭐ KIỂM TRA NGÀY CUỐI TUẦN ⭐⭐
+        $ngayTangCa = Carbon::parse($request->ngay_tang_ca);
+        $isWeekend = $ngayTangCa->isWeekend(); // Thứ 7 hoặc Chủ Nhật
+
+        // Nếu là cuối tuần nhưng loại_tang_ca là 'ngay_thuong' thì báo lỗi
+        if ($isWeekend && $request->loai_tang_ca == 'ngay_thuong') {
+            return back()
+                ->withInput()
+                ->withErrors(['loai_tang_ca' => '⚠️ Ngày ' . $ngayTangCa->format('d/m/Y') . ' là ngày cuối tuần, vui lòng chọn loại "Ngày cuối tuần (200%)"']);
+        }
+
+        // Nếu không phải cuối tuần nhưng loại_tang_ca là 'ngay_nghi' thì báo lỗi
+        if (!$isWeekend && $request->loai_tang_ca == 'ngay_nghi') {
+            return back()
+                ->withInput()
+                ->withErrors(['loai_tang_ca' => '⚠️ Ngày ' . $ngayTangCa->format('d/m/Y') . ' không phải ngày cuối tuần, vui lòng chọn loại "Ngày thường (150%)"']);
+        }
+
+        // ⭐ KIỂM TRA GIỜ TĂNG CA HỢP LỆ
+        // Nếu là ngày cuối tuần, bỏ qua kiểm tra giờ hành chính
         $kiemTraGioHopLe = OvertimeHelper::kiemTraGioTangCaHopLe(
             $request->gio_bat_dau,
-            $request->gio_ket_thuc
+            $request->gio_ket_thuc,
+            $isWeekend
         );
 
         if (!$kiemTraGioHopLe['valid']) {
@@ -188,17 +208,11 @@ class TangCaController extends Controller
         }
 
         // ⭐ KIỂM TRA KHÔNG ĐƯỢC TẠO ĐƠN CHO THỜI GIAN ĐÃ QUA
-        $ngayTangCa = Carbon::parse($request->ngay_tang_ca);
-        $gioBatDau = Carbon::parse($request->gio_bat_dau);
-
-        // Gộp ngày và giờ để kiểm tra
         $thoiGianBatDau = Carbon::parse(
-            $ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s')
+            $ngayTangCa->format('Y-m-d') . ' ' . Carbon::parse($request->gio_bat_dau)->format('H:i:s')
         );
-
         $now = Carbon::now('Asia/Ho_Chi_Minh');
 
-        // ⭐ NẾU THỜI GIAN BẮT ĐẦU NHỎ HƠN THỜI GIAN HIỆN TẠI -> KHÔNG CHO PHÉP
         if ($thoiGianBatDau->lt($now)) {
             return back()
                 ->withInput()
