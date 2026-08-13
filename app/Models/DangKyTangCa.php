@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\XinVeSomTangCa;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -51,7 +53,7 @@ class DangKyTangCa extends Model
     // Loại tăng ca
     public static $loaiLabels = [
         'ngay_thuong' => 'Ngày thường (150%)',
-        'ngay_nghi' => 'Ngày nghỉ (200%)',
+        'ngay_nghi' => 'Ngày cuối tuần (200%)',
         'le_tet' => 'Lễ, Tết (400%)',
     ];
 
@@ -118,59 +120,145 @@ class DangKyTangCa extends Model
     }
 
     /**
-     * ⭐ KIỂM TRA NHÂN VIÊN CÓ ĐANG TRONG GIỜ TĂNG CA KHÔNG
+     * ⭐ KIỂM TRA CÓ THỂ CHECK-OUT KHÔNG
      */
-    public static function isInOvertimePeriod($userId): bool
+    public static function canCheckout($overtimeId)
     {
-        $overtime = self::getActiveOvertimeToday($userId);
-        if (!$overtime) return false;
+        $overtime = self::with(['thuc_hien', 'xin_ve_som' => function ($q) {
+            $q->where('trang_thai', 'da_duyet');
+        }])->find($overtimeId);
 
-        $now = Carbon::now();
-        $start = Carbon::parse($overtime->gio_bat_dau);
-        $end = Carbon::parse($overtime->gio_ket_thuc);
-
-        // Cho phép từ 30 phút trước giờ bắt đầu
-        $checkinStart = $start->copy()->subMinutes(30);
-
-        return $now->between($checkinStart, $end);
-    }
-
-    /**
-     * ⭐ LẤY ĐƠN TĂNG CA ĐANG HOẠT ĐỘNG (KIỂM TRA CẢ THỜI GIAN)
-     */
-    public static function getActiveOvertimeNow($userId)
-    {
-        $overtime = self::getActiveOvertimeToday($userId);
-        if (!$overtime) return null;
-
-        $now = Carbon::now();
-        $start = Carbon::parse($overtime->gio_bat_dau);
-        $end = Carbon::parse($overtime->gio_ket_thuc);
-
-        // Cho phép từ 30 phút trước giờ bắt đầu đến 2 giờ sau giờ kết thúc
-        $checkinStart = $start->copy()->subMinutes(30);
-        $checkoutEnd = $end->copy()->addHours(2);
-
-        if ($now->between($checkinStart, $checkoutEnd)) {
-            return $overtime;
+        if (!$overtime) {
+            return [
+                'valid' => false,
+                'message' => 'Không tìm thấy đơn tăng ca'
+            ];
         }
 
-        return null;
-    }
+        if ($overtime->trang_thai !== 'da_duyet') {
+            return [
+                'valid' => false,
+                'message' => 'Đơn tăng ca chưa được duyệt'
+            ];
+        }
 
-    /**
-     * ⭐ KIỂM TRA NHÂN VIÊN ĐÃ ĐẾN GIỜ TĂNG CA CHƯA
-     */
-    public static function isOvertimeStarted($userId): bool
-    {
-        $overtime = self::getActiveOvertimeToday($userId);
-        if (!$overtime) return false;
+        if ($overtime->da_hoan_thanh) {
+            return [
+                'valid' => false,
+                'message' => 'Đơn tăng ca đã hoàn thành'
+            ];
+        }
 
-        $now = Carbon::now();
-        $start = Carbon::parse($overtime->gio_bat_dau);
-        $checkinStart = $start->copy()->subMinutes(30);
+        $now = Carbon::now('Asia/Ho_Chi_Minh');
+        $ngayTangCa = Carbon::parse($overtime->ngay_tang_ca)->startOfDay();
+        $gioBatDau = Carbon::parse($overtime->gio_bat_dau);
+        $gioKetThuc = Carbon::parse($overtime->gio_ket_thuc);
 
-        return $now->gte($checkinStart);
+        $thoiGianBatDau = Carbon::parse(
+            $ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s')
+        );
+        $thoiGianKetThuc = Carbon::parse(
+            $ngayTangCa->format('Y-m-d') . ' ' . $gioKetThuc->format('H:i:s')
+        );
+
+        // Kiểm tra đã đến giờ bắt đầu chưa
+        if ($now->lt($thoiGianBatDau)) {
+            $diffMinutes = $now->diffInMinutes($thoiGianBatDau);
+            $hours = floor($diffMinutes / 60);
+            $minutes = $diffMinutes % 60;
+            $timeText = $hours > 0 ? "Còn {$hours} giờ {$minutes} phút" : "Còn {$minutes} phút";
+            return [
+                'valid' => false,
+                'message' => "⏳ Chưa đến giờ tăng ca. {$timeText} nữa."
+            ];
+        }
+
+        // ⭐⭐ KIỂM TRA XIN VỀ SỚM ⭐⭐
+        $xinVeSom = $overtime->xin_ve_som;
+        $isEarly = $now->lt($thoiGianKetThuc);
+
+        // Nếu về sớm (trước giờ kết thúc)
+        if ($isEarly) {
+            // Nếu CÓ đơn xin về sớm được duyệt
+            if ($xinVeSom && $xinVeSom->isValid()) {
+                $soPhutVeSom = $xinVeSom->so_phut_ve_som;
+                $gioVeSom = Carbon::parse($xinVeSom->gio_ve_som_du_kien);
+
+                // Kiểm tra đã đến giờ được phép về sớm chưa
+                if ($now->lt($gioVeSom)) {
+                    $diffMinutes = $now->diffInMinutes($gioVeSom);
+                    $hours = floor($diffMinutes / 60);
+                    $minutes = $diffMinutes % 60;
+                    $timeText = $hours > 0 ? "Còn {$hours} giờ {$minutes} phút" : "Còn {$minutes} phút";
+                    return [
+                        'valid' => false,
+                        'message' => "⏳ Chưa đến giờ về sớm đã được duyệt ({$xinVeSom->gio_ve_som_du_kien}). {$timeText} nữa."
+                    ];
+                }
+
+                // Được phép về sớm
+                $soGioThucTe = $thoiGianBatDau->diffInHours($now);
+                $soGioThucTe = min($soGioThucTe, $overtime->so_gio_tang_ca);
+
+                return [
+                    'valid' => true,
+                    'message' => '✅ Đã được duyệt về sớm',
+                    'is_early' => true,
+                    'early_minutes' => $soPhutVeSom,
+                    'so_gio_thuc_te' => $soGioThucTe,
+                    'has_xin_ve_som' => true,
+                    'so_phut_ve_som' => $soPhutVeSom,
+                ];
+            }
+
+            // Nếu KHÔNG có đơn xin về sớm
+            // Kiểm tra xem có đang trong khoảng cho phép check-out sớm tối đa 1 tiếng không
+            $checkoutWindow = $thoiGianKetThuc->copy()->subHours(1);
+
+            if ($now->lt($checkoutWindow)) {
+                $diffMinutes = $now->diffInMinutes($checkoutWindow);
+                $hours = floor($diffMinutes / 60);
+                $minutes = $diffMinutes % 60;
+                $timeText = $hours > 0 ? "Còn {$hours} giờ {$minutes} phút" : "Còn {$minutes} phút";
+                return [
+                    'valid' => false,
+                    'message' => "⏳ Chưa đến giờ check-out. {$timeText} nữa. Để về sớm hơn, bạn cần gửi đơn xin về sớm."
+                ];
+            }
+
+            // Check-out sớm trong 1 tiếng cuối (không cần xin)
+            $soGioThucTe = $thoiGianBatDau->diffInHours($now);
+            $soGioThucTe = min($soGioThucTe, $overtime->so_gio_tang_ca);
+
+            return [
+                'valid' => true,
+                'message' => '✅ Check-out sớm (trong 1 tiếng cuối)',
+                'is_early' => true,
+                'early_minutes' => $now->diffInMinutes($thoiGianKetThuc),
+                'so_gio_thuc_te' => $soGioThucTe,
+                'has_xin_ve_som' => false,
+            ];
+        }
+
+        // Check-out đúng giờ hoặc sau giờ kết thúc
+        $soGioThucTe = $thoiGianBatDau->diffInHours($now);
+        $soGioThucTe = min($soGioThucTe, $overtime->so_gio_tang_ca);
+
+        if ($soGioThucTe < 0.5) {
+            return [
+                'valid' => false,
+                'message' => '⛔ Thời gian làm tăng ca quá ngắn (tối thiểu 0.5 giờ).'
+            ];
+        }
+
+        return [
+            'valid' => true,
+            'message' => '✅ Có thể check-out',
+            'is_early' => false,
+            'early_minutes' => 0,
+            'so_gio_thuc_te' => $soGioThucTe,
+            'has_xin_ve_som' => false,
+        ];
     }
 
     /**
@@ -181,24 +269,50 @@ class DangKyTangCa extends Model
         $overtime = self::getActiveOvertimeToday($userId);
         if (!$overtime) return null;
 
-        $now = Carbon::now();
+        $now = Carbon::now('Asia/Ho_Chi_Minh');
+        $ngayTangCa = Carbon::parse($overtime->ngay_tang_ca)->startOfDay();
         $start = Carbon::parse($overtime->gio_bat_dau);
-        $checkinStart = $start->copy()->subMinutes(30);
 
-        if ($now->gte($checkinStart)) {
+        $thoiGianBatDau = Carbon::parse(
+            $ngayTangCa->format('Y-m-d') . ' ' . $start->format('H:i:s')
+        );
+
+        if ($now->gte($thoiGianBatDau)) {
             return null;
         }
 
-        $diffInMinutes = $now->diffInMinutes($checkinStart);
+        $diffInMinutes = $now->diffInMinutes($thoiGianBatDau);
         $hours = floor($diffInMinutes / 60);
         $minutes = $diffInMinutes % 60;
 
+        if ($diffInMinutes < 60) {
+            $text = "Còn {$diffInMinutes} phút nữa đến giờ tăng ca";
+        } elseif ($hours > 0 && $minutes > 0) {
+            $text = "Còn {$hours} giờ {$minutes} phút nữa đến giờ tăng ca";
+        } elseif ($hours > 0) {
+            $text = "Còn {$hours} giờ nữa đến giờ tăng ca";
+        } else {
+            $text = "Còn {$minutes} phút nữa đến giờ tăng ca";
+        }
+
         return [
+            'overtime' => $overtime,
+            'text' => $text,
+            'remaining_minutes' => $diffInMinutes,
             'hours' => $hours,
             'minutes' => $minutes,
-            'total_minutes' => $diffInMinutes,
-            'overtime' => $overtime,
-            'text' => $hours > 0 ? "Còn {$hours} giờ {$minutes} phút nữa đến giờ tăng ca" : "Còn {$minutes} phút nữa đến giờ tăng ca"
+            'start_time' => $thoiGianBatDau->format('H:i:s'),
         ];
     }
-}   
+
+    public function xin_ve_som(): HasOne
+    {
+        return $this->hasOne(XinVeSomTangCa::class, 'dang_ky_tang_ca_id');
+    }
+
+    public function xin_ve_som_da_duyet(): HasOne
+    {
+        return $this->hasOne(XinVeSomTangCa::class, 'dang_ky_tang_ca_id')
+            ->where('trang_thai', 'da_duyet');
+    }
+}
