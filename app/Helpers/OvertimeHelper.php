@@ -48,13 +48,39 @@ class OvertimeHelper
     }
 
     /**
-     * ⭐ KIỂM TRA GIỜ TĂNG CA HỢP LỆ (PHẢI SAU GIỜ HÀNH CHÍNH)
+     * ⭐ KIỂM TRA GIỜ TĂNG CA HỢP LỆ
+     * @param string $gioBatDau
+     * @param string $gioKetThuc
+     * @param bool $isWeekend - true nếu là ngày cuối tuần (bỏ qua kiểm tra giờ hành chính)
      */
-    public static function kiemTraGioTangCaHopLe($gioBatDau, $gioKetThuc)
+    public static function kiemTraGioTangCaHopLe($gioBatDau, $gioKetThuc, $isWeekend = false)
     {
         $start = Carbon::parse($gioBatDau);
         $end = Carbon::parse($gioKetThuc);
         
+        $hours = $start->diffInHours($end);
+        
+        // Kiểm tra tối đa 8 giờ/ngày
+        if ($hours > 8) {
+            return [
+                'valid' => false,
+                'message' => "❌ Thời gian tăng ca tối đa 8 giờ/ngày. Hiện tại: {$hours} giờ"
+            ];
+        }
+        
+        if ($hours < 0.5) {
+            return [
+                'valid' => false,
+                'message' => "❌ Thời gian tăng ca tối thiểu 0.5 giờ. Hiện tại: {$hours} giờ"
+            ];
+        }
+        
+        // ⭐ NẾU LÀ NGÀY CUỐI TUẦN, KHÔNG CẦN KIỂM TRA GIỜ HÀNH CHÍNH
+        if ($isWeekend) {
+            return ['valid' => true, 'message' => '✅ Giờ tăng ca hợp lệ (ngày cuối tuần)'];
+        }
+        
+        // ⭐ CHỈ KIỂM TRA GIỜ HÀNH CHÍNH CHO NGÀY THƯỜNG
         $gioHanhChinhBD = self::$gioLamHanhChinhBatDau;
         $gioHanhChinhKT = self::$gioLamHanhChinhKetThuc;
         
@@ -72,21 +98,6 @@ class OvertimeHelper
             return [
                 'valid' => false,
                 'message' => "❌ Giờ tăng ca phải kết thúc sau giờ làm hành chính ({$gioHanhChinhKT}). Hiện tại: {$endTime}"
-            ];
-        }
-        
-        $hours = $start->diffInHours($end);
-        if ($hours > 8) {
-            return [
-                'valid' => false,
-                'message' => "❌ Thời gian tăng ca tối đa 8 giờ/ngày. Hiện tại: {$hours} giờ"
-            ];
-        }
-        
-        if ($hours < 0.5) {
-            return [
-                'valid' => false,
-                'message' => "❌ Thời gian tăng ca tối thiểu 0.5 giờ. Hiện tại: {$hours} giờ"
             ];
         }
         
