@@ -5,128 +5,199 @@
     <title>Payslip</title>
 
     <style>
-        body{
-            font-family: Arial, sans-serif;
-            background:#eef2f7;
-            padding:30px;
+        body {
+            margin: 0;
+            padding: 32px 16px;
+            background: linear-gradient(180deg, #eef4ff 0%, #f8fafc 100%);
+            font-family: Arial, Helvetica, sans-serif;
+            color: #111827;
         }
 
-        .a4{
-            width:800px;
-            margin:auto;
-            background:white;
-            padding:30px;
-            border-radius:10px;
-            box-shadow:0 10px 25px rgba(0,0,0,0.08);
+        .a4 {
+            max-width: 760px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+            overflow: hidden;
         }
 
-        /* HEADER */
-        .header{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            border-bottom:2px solid #1e40af;
-            padding-bottom:15px;
-            margin-bottom:20px;
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%);
+            padding: 26px 30px 22px;
         }
 
-        .company{
-            font-size:18px;
-            font-weight:700;
-            color:#1e40af;
+        .company {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            color: #ffffff;
         }
 
-        .title{
-            text-align:right;
+        .title {
+            text-align: right;
         }
 
-        .title h2{
-            margin:0;
-            font-size:20px;
-            color:#111827;
+        .title h2 {
+            margin: 0;
+            font-size: 28px;
+            line-height: 1.2;
+            color: #ffffff;
+            letter-spacing: 1px;
         }
 
-        .title small{
-            color:#6b7280;
+        .title small {
+            display: inline-block;
+            margin-top: 6px;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 12px;
+            letter-spacing: 0.4px;
         }
 
-        /* INFO GRID */
-        .grid{
-            display:grid;
-            grid-template-columns:1fr 1fr;
-            gap:10px 30px;
-            margin-bottom:20px;
+        .content {
+            padding: 24px 30px 10px;
         }
 
-        .box{
-            background:#f9fafb;
-            padding:10px 12px;
-            border-radius:6px;
-            font-size:14px;
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px 18px;
+            margin-bottom: 22px;
         }
 
-        .label{
-            color:#6b7280;
-            font-size:12px;
+        .box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #3b82f6;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 14px;
         }
 
-        .value{
-            font-weight:600;
-            margin-top:3px;
+        .label {
+            display: block;
+            color: #64748b;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 6px;
         }
 
-        /* TABLE */
-        table{
-            width:100%;
-            border-collapse:collapse;
-            margin-top:10px;
+        .value {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0f172a;
         }
 
-        th{
-            background:#1e40af;
-            color:white;
-            padding:10px;
-            font-size:13px;
-            text-align:left;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 10px;
+            background: #ffffff;
         }
 
-        td{
-            padding:10px;
-            border-bottom:1px solid #e5e7eb;
-            font-size:14px;
+        th {
+            background: #1d4ed8;
+            color: #ffffff;
+            padding: 14px 16px;
+            font-size: 13px;
+            text-align: left;
+            letter-spacing: 0.4px;
         }
 
-        .right{
-            text-align:right;
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+            color: #1f2937;
         }
 
-        .income{
-            color:#059669;
-            font-weight:600;
+        tbody tr:nth-child(even) {
+            background: #f8fafc;
         }
 
-        .deduct{
-            color:#dc2626;
-            font-weight:600;
+        .right {
+            text-align: right;
         }
 
-        /* TOTAL */
-        .total{
-            margin-top:20px;
-            padding:15px;
-            background:#ecfeff;
-            border-left:5px solid #0891b2;
-            display:flex;
-            justify-content:space-between;
-            font-size:18px;
-            font-weight:700;
+        .income {
+            color: #059669;
+            font-weight: 700;
         }
 
-        .footer{
-            margin-top:20px;
-            font-size:12px;
-            color:#6b7280;
-            text-align:center;
+        .deduct {
+            color: #dc2626;
+            font-weight: 700;
+        }
+
+        .total {
+            margin: 22px 0 18px;
+            padding: 16px 18px;
+            background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+            border: 1px solid #a7f3d0;
+            border-left: 6px solid #10b981;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 18px;
+            font-weight: 800;
+            color: #065f46;
+        }
+
+        .footer {
+            padding: 0 30px 24px;
+            font-size: 12px;
+            color: #64748b;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        @media only screen and (max-width: 640px) {
+            body {
+                padding: 20px 12px;
+            }
+
+            .header,
+            .content,
+            .footer {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+
+            .header {
+                display: block;
+                text-align: left;
+            }
+
+            .title {
+                text-align: left;
+                margin-top: 12px;
+            }
+
+            .title h2 {
+                font-size: 24px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .total {
+                display: block;
+                text-align: center;
+            }
+
+            .total span + span {
+                display: block;
+                margin-top: 6px;
+            }
         }
     </style>
 </head>
@@ -138,7 +209,7 @@
     <!-- HEADER -->
     <div class="header">
         <div class="company">
-            🏢 CÔNG TY ABC
+            🏢 CÔNG TY HRFLOW
         </div>
 
         <div class="title">
@@ -147,6 +218,7 @@
         </div>
     </div>
 
+    <div class="content">
     <!-- EMPLOYEE INFO -->
     <div class="grid">
 
@@ -212,6 +284,8 @@
     <div class="total">
         <span>THỰC NHẬN</span>
         <span>{{ number_format($luong->luong_thuc_nhan) }} VNĐ</span>
+    </div>
+
     </div>
 
     <div class="footer">
