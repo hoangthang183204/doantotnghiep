@@ -108,6 +108,7 @@
     $canApproveAdjustment = $user->hasPermission('attendance.adjustment_approve');
     $canViewSalary = $user->hasPermission('salary.index');
     $canViewAllowance = $user->hasPermission('allowance.index');
+    $canManageBonus = $user->hasPermission('salary.bonus');
     $canViewReward = $user->hasPermission('khen_thuong.view');
     $canViewRecruitment = $user->hasPermission('recruitment.index');
     $canViewCandidate = $user->hasPermission('recruitment.candidate');
@@ -132,6 +133,7 @@
         $canApproveAdjustment ||
         $canViewSalary ||
         $canViewAllowance ||
+        $canManageBonus ||
         $canViewReward ||
         $canViewRecruitment ||
         $canViewCandidate ||
@@ -793,6 +795,12 @@
                 }
                 if ($canViewAllowance && Route::has('admin.phu-cap.index')) {
                     $submenuLuong[] = ['title' => 'Phụ cấp', 'route' => 'admin.phu-cap.index'];
+                }
+                if ($canManageBonus && Route::has('admin.thuong.index')) {
+                    $submenuLuong[] = ['title' => 'Thưởng nhân viên', 'route' => 'admin.thuong.index'];
+                }
+                if ($canManageBonus && Route::has('admin.loai-thuong.index')) {
+                    $submenuLuong[] = ['title' => 'Loại thưởng', 'route' => 'admin.loai-thuong.index'];
                 }
                 if ($canViewSalary && Route::has('admin.tong-luong.index')) {
                     $submenuLuong[] = ['title' => 'Tổng lương theo năm', 'route' => 'admin.tong-luong.index'];

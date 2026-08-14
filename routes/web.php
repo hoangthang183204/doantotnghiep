@@ -10,6 +10,8 @@ use App\Http\Controllers\Admin\DonNghiController;
 use App\Http\Controllers\Admin\BangLuongController;
 use App\Http\Controllers\Admin\ChamCongFaceController;
 use App\Http\Controllers\Admin\KhauTruKhacController;
+use App\Http\Controllers\Admin\LoaiThuongController;
+use App\Http\Controllers\Admin\ThuongNhanVienController;
 use App\Http\Controllers\Admin\ThongKeLuongController;
 use App\Http\Controllers\Admin\ChungChiNhanVienController;
 use App\Http\Controllers\Admin\DaoTaoController;
@@ -350,6 +352,31 @@ Route::prefix('admin')
             Route::post('/{id}/approve', [KhauTruKhacController::class, 'approve'])->whereNumber('id')->middleware(['CheckPermission:salary.approve'])->name('approve');
             Route::post('/{id}/reject', [KhauTruKhacController::class, 'reject'])->whereNumber('id')->middleware(['CheckPermission:salary.reject'])->name('reject');
             Route::post('/{id}/undo', [KhauTruKhacController::class, 'undo'])->whereNumber('id')->name('undo');
+        });
+
+        // ========== DANH MỤC LOẠI THƯỞNG (tuỳ chỉnh) - CHỈ HR VÀ ADMIN ==========
+        Route::prefix('loai-thuong')->name('loai-thuong.')->middleware(['CheckPermission:salary.bonus'])->group(function () {
+            Route::get('/', [LoaiThuongController::class, 'index'])->name('index');
+            Route::get('/create', [LoaiThuongController::class, 'create'])->name('create');
+            Route::post('/', [LoaiThuongController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [LoaiThuongController::class, 'edit'])->whereNumber('id')->name('edit');
+            Route::put('/{id}', [LoaiThuongController::class, 'update'])->whereNumber('id')->name('update');
+            Route::delete('/{id}', [LoaiThuongController::class, 'destroy'])->whereNumber('id')->name('destroy');
+        });
+
+        // ========== THƯỞNG NHÂN VIÊN (định kỳ + 1 lần) - CHỈ HR VÀ ADMIN ==========
+        Route::prefix('thuong')->name('thuong.')->middleware(['CheckPermission:salary.bonus'])->group(function () {
+            Route::get('/', [ThuongNhanVienController::class, 'index'])->name('index');
+            // Route tĩnh đặt TRƯỚC route /{id} để "/create" không khớp nhầm vào show()
+            Route::get('/create', [ThuongNhanVienController::class, 'create'])->name('create');
+            Route::post('/', [ThuongNhanVienController::class, 'store'])->name('store');
+            Route::get('/{id}', [ThuongNhanVienController::class, 'show'])->whereNumber('id')->name('show');
+            Route::get('/{id}/edit', [ThuongNhanVienController::class, 'edit'])->whereNumber('id')->name('edit');
+            Route::put('/{id}', [ThuongNhanVienController::class, 'update'])->whereNumber('id')->name('update');
+            Route::delete('/{id}', [ThuongNhanVienController::class, 'destroy'])->whereNumber('id')->name('destroy');
+            Route::post('/{id}/kich-hoat', [ThuongNhanVienController::class, 'kichHoat'])->whereNumber('id')->name('kich-hoat');
+            Route::post('/{id}/tam-dung', [ThuongNhanVienController::class, 'tamDung'])->whereNumber('id')->name('tam-dung');
+            Route::post('/{id}/huy', [ThuongNhanVienController::class, 'huy'])->whereNumber('id')->name('huy');
         });
 
         // ========== THỐNG KÊ QUỸ LƯƠNG THEO PHÒNG BAN - CHỈ HR VÀ ADMIN ==========

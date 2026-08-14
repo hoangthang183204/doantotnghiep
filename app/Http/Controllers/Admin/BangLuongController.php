@@ -109,6 +109,7 @@ class BangLuongController extends Controller
             'nguoiDung.chuc_vu',
             'nguoiDung.phong_ban',
             'phuCapLuongs.phuCap',
+            'thuongLuongs',
             'khauTruLuongs',
             'khauTrus',
         ])->where('bang_luong_id', $id)->findOrFail($luongId);
@@ -129,6 +130,7 @@ class BangLuongController extends Controller
             'nguoiDung.ho_so',
             'nguoiDung.chuc_vu',
             'phuCapLuongs.phuCap',
+            'thuongLuongs',
         ])->where('bang_luong_id', $id)->findOrFail($luongId);
 
         return view('admin.bang-luong.edit-nhan-vien', compact('bangLuong', 'luong'));
@@ -147,6 +149,7 @@ class BangLuongController extends Controller
             'so_ngay_cong' => 'nullable|numeric|min:0|max:31',
             'gio_tang_ca' => 'nullable|numeric|min:0',
             'tong_phu_cap' => 'nullable|numeric|min:0',
+            'tong_thuong' => 'nullable|numeric|min:0',
             'ghi_chu' => 'nullable|string|max:500',
             'khau_tru_khac' => 'nullable|array',
             'khau_tru_khac.tam_ung' => 'nullable|numeric|min:0',
@@ -180,6 +183,7 @@ class BangLuongController extends Controller
                 'so_ngay_cong' => $data['so_ngay_cong'] ?? $luong->so_ngay_cong,
                 'gio_tang_ca' => $data['gio_tang_ca'] ?? $luong->gio_tang_ca,
                 'tong_phu_cap' => $data['tong_phu_cap'] ?? $luong->tong_phu_cap,
+                'tong_thuong' => $data['tong_thuong'] ?? $luong->tong_thuong,
                 'khau_tru_khac' => $tongKhauTruKhac,
             ]);
 
@@ -389,6 +393,7 @@ public function export($id)
             'nguoiDung.ho_so',
             'nguoiDung.chuc_vu',
             'phuCapLuongs.phuCap',
+            'thuongLuongs',
             'khauTruLuongs',
             'khauTrus',
         ])->where('bang_luong_id', $id)->findOrFail($luongId);

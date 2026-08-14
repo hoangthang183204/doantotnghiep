@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\BangLuong;
 use App\Models\ChamCong;
+use App\Models\DangKyTangCa;
 use App\Models\HopDongLaoDong;
 use App\Models\HoSo;
 use App\Models\KhauTruKhac;
@@ -13,6 +14,8 @@ use App\Models\NguoiDung;
 use App\Models\NguoiPhuThuoc;
 use App\Models\PhuCapLuong;
 use App\Models\PhuCapNhanVien;
+use App\Models\ThuongLuong;
+use App\Models\ThuongNhanVien;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -21,7 +24,7 @@ use Illuminate\Support\Facades\DB;
  *
  * Luồng xử lý (đúng theo sơ đồ nghiệp vụ):
  *   Người dùng -> Chấm công -> Tổng hợp ngày công -> Lấy lương cơ bản
- *   -> Tính phụ cấp -> Tính tăng ca -> Tính tổng lương
+ *   -> Tính phụ cấp -> Tính tăng ca -> Tính thưởng -> Tính tổng lương
  *   -> Tính lương thực nhận -> Lưu bảng lương
  */
 class TinhLuongService
@@ -29,8 +32,29 @@ class TinhLuongService
     /** Số ngày công chuẩn 1 tháng (quy ước VN phổ biến) */
     public const NGAY_CONG_CHUAN = 22;
 
-    /** Hệ số lương tăng ca ngày thường */
+    /** Hệ số lương tăng ca ngày thường (giữ lại cho dữ liệu/màn hình cũ) */
     public const HE_SO_TANG_CA = 1.5;
+
+    /**
+     * Hệ số tiền lương làm thêm giờ theo từng loại ngày — Điều 98 BLLĐ 2019:
+     *  - Ngày thường            : ít nhất 150% đơn giá giờ
+     *  - Ngày nghỉ hằng tuần    : ít nhất 200% (T7/CN)
+     *  - Ngày lễ, Tết           : ít nhất 300% chưa kể tiền lương ngày lễ được hưởng
+     *                             → hệ thống không trả riêng lương ngày lễ (ngày lễ không có
+     *                               chấm công nên không vào lương theo công), nên trả gộp 400%.
+     */
+    public const HE_SO_TANG_CA_THEO_LOAI = [
+        'ngay_thuong' => 1.5,
+        'ngay_nghi'   => 2.0,
+        'le_tet'      => 4.0,
+    ];
+
+    /** Nhãn hiển thị từng loại tăng ca */
+    public const LOAI_TANG_CA_LABELS = [
+        'ngay_thuong' => 'Ngày thường (150%)',
+        'ngay_nghi'   => 'Ngày nghỉ T7/CN (200%)',
+        'le_tet'      => 'Lễ, Tết (400%)',
+    ];
 
     /**
      * Giảm trừ gia cảnh cho bản thân người nộp thuế (đ/tháng).
@@ -88,7 +112,6 @@ class TinhLuongService
         $soNgayCong         = $cong['so_ngay_cong'];
         $ngayNghiPhep       = $cong['ngay_nghi_phep'];
         $ngayNghiKhongPhep  = $cong['ngay_nghi_khong_phep'];
-        $gioTangCa          = $cong['gio_tang_ca'];
 
         // --- BƯỚC 3: Quy lương cơ bản theo ngày công thực tế ---
         $ngayCongChuan = self::NGAY_CONG_CHUAN;
@@ -104,12 +127,20 @@ class TinhLuongService
         $phuCapChiuThue  = $phuCap['tong_chiu_thue'];
         $chiTietPhuCap   = $phuCap['chi_tiet'];
 
-        // --- BƯỚC 5: Tính tăng ca (quy ra tiền) ---
-        $tienTangCa = round($gioTangCa * $luongGio * self::HE_SO_TANG_CA, 2);
+        // --- BƯỚC 5: Tính tăng ca theo từng loại ngày (150% / 200% / 400%) ---
+        $tangCa     = $this->tongHopTangCa($nguoiDungId, $thang, $nam, $luongGio, $cong['gio_tang_ca_cham_cong']);
+        $gioTangCa  = $tangCa['tong_gio'];
+        $tienTangCa = $tangCa['tong_tien'];
         $congTangCa = round($gioTangCa / 8, 2);
 
+        // --- BƯỚC 5b: Tính thưởng (định kỳ hàng tháng + áp dụng 1 lần) ---
+        $thuong          = $this->tinhThuong($nguoiDungId, $thang, $nam, $luongCoBan);
+        $tongThuong      = $thuong['tong'];
+        $thuongChiuThue  = $thuong['tong_chiu_thue'];
+        $chiTietThuong   = $thuong['chi_tiet'];
+
         // --- BƯỚC 6: Tổng lương (gross) ---
-        $tongLuong = round($luongTheoCong + $tongPhuCap + $tienTangCa, 2);
+        $tongLuong = round($luongTheoCong + $tongPhuCap + $tienTangCa + $tongThuong, 2);
 
         // --- BƯỚC 7: Khấu trừ (bảo hiểm bắt buộc + thuế TNCN) ---
         $bhxh = round($luongCoBan * self::TY_LE_BHXH, 2);
@@ -124,8 +155,8 @@ class TinhLuongService
         $giamTruNPT      = round($soNguoiPhuThuoc * self::GIAM_TRU_NGUOI_PHU_THUOC, 2);
         $giamTruGiaCanh  = round(self::GIAM_TRU_BAN_THAN + $giamTruNPT, 2);
 
-        // Thu nhập chịu thuế = lương theo công + phụ cấp CHỊU THUẾ + tiền tăng ca
-        $thuNhapChiuThue = round($luongTheoCong + $phuCapChiuThue + $tienTangCa, 2);
+        // Thu nhập chịu thuế = lương theo công + phụ cấp CHỊU THUẾ + tiền tăng ca + thưởng CHỊU THUẾ
+        $thuNhapChiuThue = round($luongTheoCong + $phuCapChiuThue + $tienTangCa + $thuongChiuThue, 2);
         // Thu nhập tính thuế = thu nhập chịu thuế − bảo hiểm bắt buộc − giảm trừ gia cảnh
         $thuNhapTinhThue = max(0, round($thuNhapChiuThue - $tongBaoHiem - $giamTruGiaCanh, 2));
         $chiTietBacThue  = self::chiTietBacThue($thuNhapTinhThue);
@@ -183,10 +214,21 @@ class TinhLuongService
             'phu_cap_chiu_thue'    => $phuCapChiuThue,
             'chi_tiet_phu_cap'     => $chiTietPhuCap,
 
+            'tong_thuong'          => $tongThuong,
+            'thuong_chiu_thue'     => $thuongChiuThue,
+            'chi_tiet_thuong'      => $chiTietThuong,
+
             'gio_tang_ca'          => $gioTangCa,
             'cong_tang_ca'         => $congTangCa,
             'he_so_tang_ca'        => self::HE_SO_TANG_CA,
             'tien_tang_ca'         => $tienTangCa,
+            'chi_tiet_tang_ca'     => $tangCa['chi_tiet'],
+            'gio_tang_ca_ngay_thuong'  => $tangCa['chi_tiet']['ngay_thuong']['gio'],
+            'gio_tang_ca_ngay_nghi'    => $tangCa['chi_tiet']['ngay_nghi']['gio'],
+            'gio_tang_ca_le_tet'       => $tangCa['chi_tiet']['le_tet']['gio'],
+            'tien_tang_ca_ngay_thuong' => $tangCa['chi_tiet']['ngay_thuong']['tien'],
+            'tien_tang_ca_ngay_nghi'   => $tangCa['chi_tiet']['ngay_nghi']['tien'],
+            'tien_tang_ca_le_tet'      => $tangCa['chi_tiet']['le_tet']['tien'],
 
             'tong_luong'           => $tongLuong,
 
@@ -228,6 +270,7 @@ class TinhLuongService
                 ->first();
             if ($cu) {
                 KhauTruLuong::where('luong_nhan_vien_id', $cu->id)->delete();
+                ThuongLuong::where('luong_nhan_vien_id', $cu->id)->delete();
                 $cu->delete(); // phu_cap_luong cascade theo FK
             }
 
@@ -247,6 +290,19 @@ class TinhLuongService
                 'so_ngay_cong_chuan'    => $kq['so_ngay_cong_chuan'],
                 'gio_tang_ca'           => $kq['gio_tang_ca'],
                 'cong_tang_ca'          => $kq['cong_tang_ca'],
+
+                // Tách tăng ca theo loại ngày (150% / 200% / 400%)
+                'gio_tang_ca_ngay_thuong'  => $kq['gio_tang_ca_ngay_thuong'],
+                'gio_tang_ca_ngay_nghi'    => $kq['gio_tang_ca_ngay_nghi'],
+                'gio_tang_ca_le_tet'       => $kq['gio_tang_ca_le_tet'],
+                'tien_tang_ca_ngay_thuong' => $kq['tien_tang_ca_ngay_thuong'],
+                'tien_tang_ca_ngay_nghi'   => $kq['tien_tang_ca_ngay_nghi'],
+                'tien_tang_ca_le_tet'      => $kq['tien_tang_ca_le_tet'],
+
+                // Thưởng
+                'tong_thuong'           => $kq['tong_thuong'],
+                'thuong_chiu_thue'      => $kq['thuong_chiu_thue'],
+
                 'ngay_nghi_phep'        => $kq['ngay_nghi_phep'],
                 'ngay_nghi_khong_phep'  => $kq['ngay_nghi_khong_phep'],
                 'ngay_le'               => 0,
@@ -274,6 +330,20 @@ class TinhLuongService
                     'phu_cap_id'         => $pc['phu_cap_id'],
                     'so_tien'            => $pc['so_tien'],
                     'ghi_chu'            => $pc['ten'] ?? null,
+                ]);
+            }
+
+            // Lưu chi tiết thưởng đã áp dụng cho kỳ lương này
+            foreach ($kq['chi_tiet_thuong'] as $tt) {
+                ThuongLuong::create([
+                    'luong_nhan_vien_id'  => $lnv->id,
+                    'loai_thuong_id'      => $tt['loai_thuong_id'],
+                    'thuong_nhan_vien_id' => $tt['thuong_nhan_vien_id'],
+                    'ten'                 => $tt['ten'],
+                    'hinh_thuc'           => $tt['hinh_thuc'],
+                    'so_tien'             => $tt['so_tien'],
+                    'chiu_thue'           => $tt['chiu_thue'],
+                    'ghi_chu'             => $tt['ghi_chu'],
                 ]);
             }
 
@@ -372,8 +442,149 @@ class TinhLuongService
             'so_ngay_cong'         => $chamCongs->count(),  // ✅ Đếm tất cả
             'ngay_nghi_phep'       => 0,
             'ngay_nghi_khong_phep' => 0,
-            'gio_tang_ca'          => round((float) $chamCongs->sum('gio_tang_ca'), 2),
+            // Giờ tăng ca ghi thẳng trên bảng chấm công — chỉ dùng làm nguồn dự phòng
+            // khi nhân viên không có đơn tăng ca nào trong tháng (xem tongHopTangCa).
+            'gio_tang_ca_cham_cong' => round((float) $chamCongs->sum('gio_tang_ca'), 2),
         ];
+    }
+
+    /**
+     * Tổng hợp tăng ca trong tháng, TÁCH THEO LOẠI NGÀY và quy ra tiền theo hệ số:
+     *   - Ngày thường     : 150% đơn giá giờ
+     *   - Ngày nghỉ T7/CN : 200%
+     *   - Lễ, Tết         : 400%
+     *
+     * Nguồn dữ liệu: đơn đăng ký tăng ca ĐÃ DUYỆT và ĐÃ HOÀN THÀNH.
+     * Số giờ ưu tiên giờ thực tế (thuc_hien_tang_ca), không vượt quá số giờ đã đăng ký.
+     *
+     * @param float $gioTangCaChamCong Giờ tăng ca nhập tay trên bảng chấm công (nguồn dự phòng).
+     */
+    private function tongHopTangCa(
+        int $nguoiDungId,
+        int $thang,
+        int $nam,
+        float $luongGio,
+        float $gioTangCaChamCong = 0
+    ): array {
+        $chiTiet = [];
+        foreach (self::HE_SO_TANG_CA_THEO_LOAI as $loai => $heSo) {
+            $chiTiet[$loai] = [
+                'loai'   => $loai,
+                'nhan'   => self::LOAI_TANG_CA_LABELS[$loai],
+                'he_so'  => $heSo,
+                'gio'    => 0.0,
+                'tien'   => 0.0,
+                'so_don' => 0,
+            ];
+        }
+
+        $donTangCas = DangKyTangCa::with('thuc_hien')
+            ->where('nguoi_dung_id', $nguoiDungId)
+            ->whereYear('ngay_tang_ca', $nam)
+            ->whereMonth('ngay_tang_ca', $thang)
+            ->where('trang_thai', 'da_duyet')
+            ->get()
+            ->filter(fn($don) => $this->tangCaDaHoanThanh($don));
+
+        foreach ($donTangCas as $don) {
+            $loai = array_key_exists($don->loai_tang_ca, $chiTiet) ? $don->loai_tang_ca : 'ngay_thuong';
+            $gio  = $this->soGioTangCaThucTe($don);
+
+            if ($gio <= 0) {
+                continue;
+            }
+
+            $chiTiet[$loai]['gio']    += $gio;
+            $chiTiet[$loai]['so_don'] += 1;
+        }
+
+        // Không có đơn tăng ca nào → dùng giờ nhập tay trên bảng chấm công (tính như ngày thường)
+        $tongGioTuDon = array_sum(array_column($chiTiet, 'gio'));
+        if ($tongGioTuDon <= 0 && $gioTangCaChamCong > 0) {
+            $chiTiet['ngay_thuong']['gio'] = $gioTangCaChamCong;
+        }
+
+        foreach ($chiTiet as $loai => $item) {
+            $chiTiet[$loai]['gio']  = round($item['gio'], 2);
+            $chiTiet[$loai]['tien'] = round($chiTiet[$loai]['gio'] * $luongGio * $item['he_so'], 2);
+        }
+
+        return [
+            'chi_tiet'  => $chiTiet,
+            'tong_gio'  => round(array_sum(array_column($chiTiet, 'gio')), 2),
+            'tong_tien' => round(array_sum(array_column($chiTiet, 'tien')), 2),
+        ];
+    }
+
+    /** Đơn tăng ca đã thực sự hoàn thành (được tính lương) chưa? */
+    private function tangCaDaHoanThanh(DangKyTangCa $don): bool
+    {
+        if ($don->da_hoan_thanh) {
+            return true;
+        }
+
+        return in_array(
+            $don->thuc_hien->trang_thai ?? '',
+            ['hoan_thanh', 'quan_ly_xac_nhan'],
+            true
+        );
+    }
+
+    /** Số giờ tăng ca được tính lương: giờ thực tế, tối đa bằng giờ đã đăng ký */
+    private function soGioTangCaThucTe(DangKyTangCa $don): float
+    {
+        $gioDangKy = (float) $don->so_gio_tang_ca;
+        $gioThucTe = (float) ($don->thuc_hien->so_gio_tang_ca_thuc_te ?? 0);
+
+        if ($gioThucTe <= 0) {
+            $gioThucTe = $gioDangKy;
+        }
+
+        return max(0, min($gioThucTe, $gioDangKy));
+    }
+
+    /**
+     * Tính các khoản thưởng áp dụng cho kỳ lương tháng/năm.
+     *
+     *  - Thưởng ĐỊNH KỲ : lặp lại mỗi tháng khi còn trong khoảng hiệu lực.
+     *  - Thưởng 1 LẦN   : chỉ áp dụng đúng kỳ lương thang/nam.
+     *
+     * Giá trị hỗ trợ số tiền cố định hoặc % lương cơ bản.
+     */
+    private function tinhThuong(int $nguoiDungId, int $thang, int $nam, float $luongCoBan): array
+    {
+        $khoanThuongs = ThuongNhanVien::with('loaiThuong')
+            ->where('nguoi_dung_id', $nguoiDungId)
+            ->hieuLuc()
+            ->apDungChoKy($thang, $nam)
+            ->orderBy('hinh_thuc')
+            ->get();
+
+        $chiTiet = [];
+        foreach ($khoanThuongs as $tt) {
+            $soTien = $tt->tinhSoTien($luongCoBan);
+            if ($soTien <= 0) {
+                continue;
+            }
+
+            $chiTiet[] = [
+                'loai_thuong_id'      => $tt->loai_thuong_id,
+                'thuong_nhan_vien_id' => $tt->id,
+                'ten'                 => $tt->loaiThuong->ten ?? 'Thưởng',
+                'hinh_thuc'           => $tt->hinh_thuc,
+                'so_tien'             => $soTien,
+                'chiu_thue'           => $tt->chiuThueThucTe(),
+                'ghi_chu'             => $tt->ly_do,
+            ];
+        }
+
+        $tong = round(array_sum(array_column($chiTiet, 'so_tien')), 2);
+        $tongChiuThue = round(array_sum(array_map(
+            fn($i) => $i['chiu_thue'] ? $i['so_tien'] : 0,
+            $chiTiet
+        )), 2);
+
+        return ['tong' => $tong, 'tong_chiu_thue' => $tongChiuThue, 'chi_tiet' => $chiTiet];
     }
 
     /**
@@ -567,6 +778,7 @@ class TinhLuongService
     $soNgayCong = $input['so_ngay_cong'] ?? $luong->so_ngay_cong;
     $gioTangCa  = $input['gio_tang_ca'] ?? $luong->gio_tang_ca;
     $tongPhuCap = $input['tong_phu_cap'] ?? $luong->tong_phu_cap;
+    $tongThuong = $input['tong_thuong'] ?? $luong->tong_thuong;
     $khauTruKhac = $input['khau_tru_khac'] ?? $luong->tong_khau_tru_khac;
 
     // ==========================
@@ -592,13 +804,33 @@ class TinhLuongService
 );;
 
     // ==========================
-    // Tăng ca
+    // Tăng ca — giữ nguyên tỷ lệ giữa các loại ngày (150% / 200% / 400%),
+    // chỉ co giãn theo tổng số giờ mà admin nhập lại.
     // ==========================
 
-    $tienTangCa = round(
-        $gioTangCa * $luongGio * self::HE_SO_TANG_CA,
-        2
-    );
+    $gioTheoLoai = [
+        'ngay_thuong' => (float) $luong->gio_tang_ca_ngay_thuong,
+        'ngay_nghi'   => (float) $luong->gio_tang_ca_ngay_nghi,
+        'le_tet'      => (float) $luong->gio_tang_ca_le_tet,
+    ];
+    $tongGioGoc = array_sum($gioTheoLoai);
+
+    if ($tongGioGoc > 0) {
+        $tyLe = $gioTangCa / $tongGioGoc;
+        foreach ($gioTheoLoai as $loai => $gio) {
+            $gioTheoLoai[$loai] = round($gio * $tyLe, 2);
+        }
+    } else {
+        // Phiếu lương cũ chưa tách loại → coi toàn bộ là tăng ca ngày thường
+        $gioTheoLoai = ['ngay_thuong' => (float) $gioTangCa, 'ngay_nghi' => 0.0, 'le_tet' => 0.0];
+    }
+
+    $tienTheoLoai = [];
+    foreach ($gioTheoLoai as $loai => $gio) {
+        $tienTheoLoai[$loai] = round($gio * $luongGio * self::HE_SO_TANG_CA_THEO_LOAI[$loai], 2);
+    }
+
+    $tienTangCa = round(array_sum($tienTheoLoai), 2);
 
     $congTangCa = round(
         $gioTangCa / 8,
@@ -612,7 +844,8 @@ class TinhLuongService
     $tongLuong = round(
         $luongTheoCong
         + $tongPhuCap
-        + $tienTangCa,
+        + $tienTangCa
+        + $tongThuong,
         2
     );
 
@@ -633,10 +866,17 @@ class TinhLuongService
 
     $phuCapChiuThue = $luong->phu_cap_chiu_thue;
 
+    // Thưởng chịu thuế co giãn theo tỷ lệ chịu thuế đã chốt của kỳ lương
+    $tongThuongGoc = (float) $luong->tong_thuong;
+    $thuongChiuThue = $tongThuongGoc > 0
+        ? round((float) $luong->thuong_chiu_thue / $tongThuongGoc * (float) $tongThuong, 2)
+        : (float) $tongThuong;
+
     $thuNhapChiuThue = round(
         $luongTheoCong
         + $phuCapChiuThue
-        + $tienTangCa,
+        + $tienTangCa
+        + $thuongChiuThue,
         2
     );
 
@@ -692,7 +932,17 @@ class TinhLuongService
 
         'tien_tang_ca'          => $tienTangCa,
 
+        'gio_tang_ca_ngay_thuong'  => $gioTheoLoai['ngay_thuong'],
+        'gio_tang_ca_ngay_nghi'    => $gioTheoLoai['ngay_nghi'],
+        'gio_tang_ca_le_tet'       => $gioTheoLoai['le_tet'],
+        'tien_tang_ca_ngay_thuong' => $tienTheoLoai['ngay_thuong'],
+        'tien_tang_ca_ngay_nghi'   => $tienTheoLoai['ngay_nghi'],
+        'tien_tang_ca_le_tet'      => $tienTheoLoai['le_tet'],
+
         'tong_phu_cap'          => $tongPhuCap,
+
+        'tong_thuong'           => $tongThuong,
+        'thuong_chiu_thue'      => $thuongChiuThue,
 
         'tong_khau_tru_khac'    => $khauTruKhac,
 
