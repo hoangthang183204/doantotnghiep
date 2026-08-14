@@ -6,7 +6,7 @@ namespace App\Helpers;
 use App\Models\DangKyTangCa;
 use App\Models\LuongNhanVien;
 use App\Models\NguoiDung;
-use App\Services\TinhLuongService;
+use App\Models\HopDongLaoDong;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -17,130 +17,176 @@ class OvertimeHelper
     public static $gioLamHanhChinhBatDau = '08:30';
     public static $gioLamHanhChinhKetThuc = '17:30';
 
-    /**
-     * ⭐ KIỂM TRA THỜI GIAN CÓ NẰM TRONG GIỜ HÀNH CHÍNH KHÔNG
-     */
-    public static function isGioHanhChinh($gioBatDau, $gioKetThuc = null)
-    {
-        $start = Carbon::parse($gioBatDau);
-        $startTime = $start->format('H:i');
-        
-        $gioBD = self::$gioLamHanhChinhBatDau;
-        $gioKT = self::$gioLamHanhChinhKetThuc;
-        
-        if ($startTime >= $gioBD && $startTime < $gioKT) {
-            return true;
-        }
-        
-        if ($gioKetThuc) {
-            $end = Carbon::parse($gioKetThuc);
-            $endTime = $end->format('H:i');
-            
-            if ($endTime > $gioBD && $endTime <= $gioKT) {
-                return true;
-            }
-            
-            if ($startTime < $gioBD && $endTime > $gioKT) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-
-    /**
-     * ⭐ KIỂM TRA GIỜ TĂNG CA HỢP LỆ
-     * @param string $gioBatDau
-     * @param string $gioKetThuc
-     * @param bool $isWeekend - true nếu là ngày cuối tuần (bỏ qua kiểm tra giờ hành chính)
-     */
-    public static function kiemTraGioTangCaHopLe($gioBatDau, $gioKetThuc, $isWeekend = false)
-    {
-        $start = Carbon::parse($gioBatDau);
-        $end = Carbon::parse($gioKetThuc);
-        
-        $hours = $start->diffInHours($end);
-        
-        // Kiểm tra tối đa 8 giờ/ngày
-        if ($hours > 8) {
-            return [
-                'valid' => false,
-                'message' => "❌ Thời gian tăng ca tối đa 8 giờ/ngày. Hiện tại: {$hours} giờ"
-            ];
-        }
-        
-        if ($hours < 0.5) {
-            return [
-                'valid' => false,
-                'message' => "❌ Thời gian tăng ca tối thiểu 0.5 giờ. Hiện tại: {$hours} giờ"
-            ];
-        }
-        
-        // ⭐ NẾU LÀ NGÀY CUỐI TUẦN, KHÔNG CẦN KIỂM TRA GIỜ HÀNH CHÍNH
-        if ($isWeekend) {
-            return ['valid' => true, 'message' => '✅ Giờ tăng ca hợp lệ (ngày cuối tuần)'];
-        }
-        
-        // ⭐ CHỈ KIỂM TRA GIỜ HÀNH CHÍNH CHO NGÀY THƯỜNG
-        $gioHanhChinhBD = self::$gioLamHanhChinhBatDau;
-        $gioHanhChinhKT = self::$gioLamHanhChinhKetThuc;
-        
-        $startTime = $start->format('H:i');
-        $endTime = $end->format('H:i');
-        
-        if ($startTime < $gioHanhChinhKT) {
-            return [
-                'valid' => false,
-                'message' => "❌ Giờ tăng ca phải bắt đầu sau giờ làm hành chính ({$gioHanhChinhKT}). Hiện tại: {$startTime}"
-            ];
-        }
-        
-        if ($endTime < $gioHanhChinhKT && $endTime > $gioHanhChinhBD) {
-            return [
-                'valid' => false,
-                'message' => "❌ Giờ tăng ca phải kết thúc sau giờ làm hành chính ({$gioHanhChinhKT}). Hiện tại: {$endTime}"
-            ];
-        }
-        
-        return ['valid' => true, 'message' => '✅ Giờ tăng ca hợp lệ'];
-    }
-
     // ═══════════════════════════════════════════════════════════════
-    // ⭐⭐⭐ PHẦN LẤY HỆ SỐ VÀ TÊN HIỂN THỊ ⭐⭐⭐
+    // ⭐⭐⭐ PHẦN TÍNH LƯƠNG TĂNG CA ⭐⭐⭐
     // ═══════════════════════════════════════════════════════════════
 
     /**
-     * ⭐ LẤY HỆ SỐ TIỀN TĂNG CA (dùng chung với engine tính lương)
-     * - Ngày thường: 150%
-     * - Ngày cuối tuần (nghỉ): 200%
-     * - Lễ Tết: 400% (đã gộp cả tiền lương ngày lễ vì ngày lễ không có chấm công
-     *   nên không được trả qua lương theo công)
+     * ⭐ LẤY LƯƠNG GROSS (Lương tháng thực trả cố định)
+     * Ưu tiên: Hợp đồng lao động → Hồ sơ nhân viên → Bảng lương
+     */
+    public static function getLuongGross($userId)
+    {
+        // 1. Tìm hợp đồng lao động đang hiệu lực
+        $hopDong = HopDongLaoDong::where('nguoi_dung_id', $userId)
+            ->where('trang_thai_hop_dong', 'hieu_luc')
+            ->orderBy('id', 'desc')
+            ->first();
+        
+        if ($hopDong && $hopDong->luong_co_ban > 0) {
+            return (float) $hopDong->luong_co_ban;
+        }
+        
+        // 2. Lấy từ hồ sơ nhân viên
+        $user = NguoiDung::with('hoSo')->find($userId);
+        if ($user && $user->hoSo && $user->hoSo->luong_co_ban > 0) {
+            return (float) $user->hoSo->luong_co_ban;
+        }
+        
+        // 3. Lấy từ bảng lương tháng gần nhất
+        $luongNhanVien = LuongNhanVien::where('nguoi_dung_id', $userId)
+            ->orderBy('luong_nam', 'desc')
+            ->orderBy('luong_thang', 'desc')
+            ->first();
+        
+        if ($luongNhanVien && $luongNhanVien->luong_co_ban > 0) {
+            return (float) $luongNhanVien->luong_co_ban;
+        }
+        
+        // 4. Mặc định 5.000.000đ
+        return 5000000;
+    }
+
+    /**
+     * ⭐ TÍNH SỐ NGÀY CÔNG CHUẨN TRONG THÁNG
+     * (Tính theo lịch: Thứ 2 - Thứ 6, trừ Thứ 7 và Chủ Nhật)
+     */
+    public static function tinhSoNgayCongChuan($thang, $nam)
+    {
+        $ngayDauThang = Carbon::create($nam, $thang, 1);
+        $ngayCuoiThang = Carbon::create($nam, $thang, $ngayDauThang->daysInMonth);
+        
+        $soNgayLam = 0;
+        $current = $ngayDauThang->copy();
+        
+        while ($current->lte($ngayCuoiThang)) {
+            // Thứ 7 (6) và Chủ Nhật (0) là ngày nghỉ
+            if ($current->dayOfWeek !== 6 && $current->dayOfWeek !== 0) {
+                $soNgayLam++;
+            }
+            $current->addDay();
+        }
+        
+        return $soNgayLam;
+    }
+
+    /**
+     * ⭐ BƯỚC 1: TÍNH LƯƠNG 1 GIỜ LÀM VIỆC BÌNH THƯỜNG
+     * Công thức: Lương Gross / (Số ngày công chuẩn của tháng × 8 giờ)
+     */
+    public static function tinhLuongMotGio($userId, $thang, $nam)
+    {
+        // 1. Lấy lương Gross
+        $luongGross = self::getLuongGross($userId);
+        
+        // 2. Lấy số ngày công chuẩn của tháng
+        $soNgayCongChuan = self::tinhSoNgayCongChuan($thang, $nam);
+        
+        // 3. Tính tổng số giờ làm việc bình thường trong tháng
+        $tongGioLam = $soNgayCongChuan * 8;
+        
+        // 4. Tính lương 1 giờ
+        if ($tongGioLam <= 0) {
+            return 0;
+        }
+        
+        return round($luongGross / $tongGioLam, 0);
+    }
+
+    /**
+     * ⭐ LẤY HỆ SỐ TĂNG CA
+     * - Ngày thường: 1.5 (150%)
+     * - Ngày cuối tuần (nghỉ): 2.0 (200%)
+     * - Lễ Tết: 4.0 (400%)
      */
     public static function getHeSo($type)
     {
-        return TinhLuongService::HE_SO_TANG_CA_THEO_LOAI[$type]
-            ?? TinhLuongService::HE_SO_TANG_CA_THEO_LOAI['ngay_thuong'];
-    }
-
-    /**
-     * ⭐ LẤY HỆ SỐ LƯƠNG GỐC CỦA NGÀY ĐÓ (đã nằm trong lương theo công, chỉ để diễn giải)
-     */
-    public static function getHeSoLuongGoc($type)
-    {
         return match ($type) {
-            'ngay_thuong' => 1.0,   // 100% lương ngày làm việc bình thường
-            'ngay_nghi' => 0.0,     // ngày nghỉ hằng tuần không hưởng lương
-            'le_tet' => 0.0,        // tiền lương ngày lễ đã gộp trong hệ số 400%
-            default => 1.0,
+            'ngay_thuong' => 1.5,
+            'ngay_nghi' => 2.0,
+            'le_tet' => 4.0,
+            default => 1.5,
         };
     }
 
     /**
-     * ⭐ LẤY TỔNG HỆ SỐ (Lương gốc của ngày + Tiền tăng ca trả thêm)
+     * ⭐ BƯỚC 2: TÍNH TIỀN LƯƠNG TĂNG CA
+     * Công thức: Lương 1 giờ × Số giờ tăng ca thực tế × Hệ số tăng ca
      */
-    public static function getTongHeSo($type)
+    public static function tinhLuongTangCa($userId, $hours, $type = 'ngay_thuong', $thang = null, $nam = null)
     {
-        return round(self::getHeSo($type) + self::getHeSoLuongGoc($type), 2);
+        if ($thang === null || $nam === null) {
+            $now = Carbon::now('Asia/Ho_Chi_Minh');
+            $thang = $now->month;
+            $nam = $now->year;
+        }
+        
+        // Bước 1: Tính lương 1 giờ
+        $luongMotGio = self::tinhLuongMotGio($userId, $thang, $nam);
+        
+        if ($luongMotGio <= 0) {
+            return 0;
+        }
+        
+        // Bước 2: Lấy hệ số tăng ca
+        $heSo = self::getHeSo($type);
+        
+        // Bước 3: Tính tiền lương tăng ca
+        $tienTangCa = round($hours * $luongMotGio * $heSo, 0);
+        
+        return $tienTangCa;
+    }
+
+    /**
+     * ⭐ TÍNH LƯƠNG TĂNG CA CHI TIẾT (CÓ THÔNG TIN ĐẦY ĐỦ)
+     */
+    public static function tinhLuongTangCaChiTiet($userId, $hours, $type = 'ngay_thuong', $thang = null, $nam = null)
+    {
+        if ($thang === null || $nam === null) {
+            $now = Carbon::now('Asia/Ho_Chi_Minh');
+            $thang = $now->month;
+            $nam = $now->year;
+        }
+        
+        // Bước 1: Lấy dữ liệu cơ bản
+        $luongGross = self::getLuongGross($userId);
+        $soNgayCongChuan = self::tinhSoNgayCongChuan($thang, $nam);
+        $tongGioLam = $soNgayCongChuan * 8;
+        $luongMotGio = $tongGioLam > 0 ? round($luongGross / $tongGioLam, 0) : 0;
+        
+        // Bước 2: Lấy hệ số
+        $heSoTangCa = self::getHeSo($type);
+        
+        // Bước 3: Tính tiền
+        $tienTangCa = round($hours * $luongMotGio * $heSoTangCa, 0);
+        
+        // Chi tiết
+        $chiTiet = match ($type) {
+            'ngay_thuong' => number_format($luongMotGio) . "đ × " . number_format($hours, 1, ',', '') . "h × 1.5 = " . number_format($tienTangCa) . "đ",
+            'ngay_nghi' => number_format($luongMotGio) . "đ × " . number_format($hours, 1, ',', '') . "h × 2.0 = " . number_format($tienTangCa) . "đ",
+            'le_tet' => number_format($luongMotGio) . "đ × " . number_format($hours, 1, ',', '') . "h × 4.0 = " . number_format($tienTangCa) . "đ",
+            default => number_format($luongMotGio) . "đ × " . number_format($hours, 1, ',', '') . "h × 1.5 = " . number_format($tienTangCa) . "đ",
+        };
+
+        return [
+            'hourly_rate' => $luongMotGio,
+            'he_so_tang_ca' => $heSoTangCa,
+            'tien_tang_ca' => $tienTangCa,
+            'chi_tiet' => $chiTiet,
+            'luong_gross' => $luongGross,
+            'so_ngay_cong_chuan' => $soNgayCongChuan,
+            'tong_gio_lam_trong_thang' => $tongGioLam,
+        ];
     }
 
     /**
@@ -157,225 +203,48 @@ class OvertimeHelper
     }
 
     /**
-     * ⭐ LẤY TÊN HIỂN THỊ NGẮN GỌN
+     * ⭐ KIỂM TRA GIỜ TĂNG CA HỢP LỆ
      */
-    public static function getLoaiLabelShort($type)
+    public static function kiemTraGioTangCaHopLe($gioBatDau, $gioKetThuc, $isWeekend = false)
     {
-        return match ($type) {
-            'ngay_thuong' => '150%',
-            'ngay_nghi' => '200%',
-            'le_tet' => '400%',
-            default => '150%',
-        };
-    }
-
-    /**
-     * ⭐ LẤY MÔ TẢ CHI TIẾT
-     */
-    public static function getLoaiDescription($type)
-    {
-        return match ($type) {
-            'ngay_thuong' => 'Làm thêm ngày thường được hưởng 150% lương giờ',
-            'ngay_nghi' => 'Làm thêm ngày cuối tuần được hưởng 200% lương giờ',
-            'le_tet' => 'Làm thêm ngày Lễ, Tết được hưởng 400% lương giờ (đã gồm tiền lương ngày lễ)',
-            default => 'Làm thêm ngày thường được hưởng 150% lương giờ',
-        };
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    // ⭐⭐⭐ PHẦN TÍNH LƯƠNG TĂNG CA ⭐⭐⭐
-    // ═══════════════════════════════════════════════════════════════
-
-    /**
-     * ⭐ LẤY LƯƠNG THỰC TẾ CỦA NHÂN VIÊN TRONG THÁNG
-     */
-    public static function getLuongThucTeThang($userId, $thang, $nam)
-    {
-        $luong = LuongNhanVien::where('nguoi_dung_id', $userId)
-            ->where('luong_thang', $thang)
-            ->where('luong_nam', $nam)
-            ->first();
+        $start = Carbon::parse($gioBatDau);
+        $end = Carbon::parse($gioKetThuc);
         
-        if ($luong) {
-            if ($luong->luong_thuc_nhan > 0) {
-                return (float) $luong->luong_thuc_nhan;
-            }
-            if ($luong->luong_theo_cong > 0) {
-                return (float) $luong->luong_theo_cong;
-            }
-            if ($luong->tong_luong > 0) {
-                return (float) $luong->tong_luong;
-            }
-        }
-
-        $lastSalary = LuongNhanVien::where('nguoi_dung_id', $userId)
-            ->orderBy('luong_nam', 'desc')
-            ->orderBy('luong_thang', 'desc')
-            ->first();
+        $hours = $start->diffInHours($end);
         
-        if ($lastSalary) {
-            if ($lastSalary->luong_thuc_nhan > 0) {
-                return (float) $lastSalary->luong_thuc_nhan;
-            }
-            if ($lastSalary->luong_theo_cong > 0) {
-                return (float) $lastSalary->luong_theo_cong;
-            }
-        }
-
-        $user = NguoiDung::with('hoSo')->find($userId);
-        if ($user && $user->hoSo && $user->hoSo->luong_co_ban > 0) {
-            return (float) $user->hoSo->luong_co_ban;
-        }
-
-        return 5000000;
-    }
-
-    /**
-     * ⭐ LẤY SỐ NGÀY CÔNG THỰC TẾ TRONG THÁNG
-     */
-    public static function getSoNgayCongThucTe($userId, $thang, $nam)
-    {
-        $luong = LuongNhanVien::where('nguoi_dung_id', $userId)
-            ->where('luong_thang', $thang)
-            ->where('luong_nam', $nam)
-            ->first();
-        
-        if ($luong && $luong->so_ngay_cong > 0) {
-            return (float) $luong->so_ngay_cong;
-        }
-        
-        return self::tinhSoNgayLamViec($thang, $nam);
-    }
-
-    /**
-     * ⭐ TÍNH SỐ NGÀY LÀM VIỆC TRONG THÁNG
-     */
-    public static function tinhSoNgayLamViec($thang, $nam)
-    {
-        $ngayDauThang = Carbon::create($nam, $thang, 1);
-        $ngayCuoiThang = Carbon::create($nam, $thang, $ngayDauThang->daysInMonth);
-        
-        $soNgayLam = 0;
-        $current = $ngayDauThang->copy();
-        
-        while ($current->lte($ngayCuoiThang)) {
-            if ($current->dayOfWeek !== 6 && $current->dayOfWeek !== 7) {
-                $soNgayLam++;
-            }
-            $current->addDay();
-        }
-        
-        return $soNgayLam;
-    }
-
-    /**
-     * ⭐ TÍNH TỔNG GIỜ LÀM VIỆC TRONG THÁNG
-     */
-    public static function tinhTongGioLamTrongThang($userId, $thang, $nam)
-    {
-        $soNgayCong = self::getSoNgayCongThucTe($userId, $thang, $nam);
-        return $soNgayCong * 8;
-    }
-
-    /**
-     * ⭐ TÍNH LƯƠNG THEO GIỜ CHUẨN
-     */
-    public static function tinhLuongTheoGio($userId, $thang, $nam)
-    {
-        $luongThucTe = self::getLuongThucTeThang($userId, $thang, $nam);
-        if ($luongThucTe <= 0) return 0;
-
-        $tongGioLam = self::tinhTongGioLamTrongThang($userId, $thang, $nam);
-        if ($tongGioLam <= 0) return 0;
-
-        return round($luongThucTe / $tongGioLam, 0);
-    }
-
-    /**
-     * ⭐ TÍNH LƯƠNG TĂNG CA CHI TIẾT
-     */
-    public static function tinhLuongTangCaChiTiet($userId, $hours, $type = 'ngay_thuong', $thang = null, $nam = null)
-    {
-        if ($thang === null || $nam === null) {
-            $now = Carbon::now('Asia/Ho_Chi_Minh');
-            $thang = $now->month;
-            $nam = $now->year;
-        }
-
-        $luongThucTe = self::getLuongThucTeThang($userId, $thang, $nam);
-        $soNgayCong = self::getSoNgayCongThucTe($userId, $thang, $nam);
-        $tongGioLam = $soNgayCong * 8;
-        $luongTheoGio = $tongGioLam > 0 ? round($luongThucTe / $tongGioLam, 0) : 0;
-        
-        if ($luongTheoGio <= 0) {
+        if ($hours > 8) {
             return [
-                'hourly_rate' => 0,
-                'he_so_tang_ca' => 0,
-                'he_so_luong_goc' => 0,
-                'tong_he_so' => 0,
-                'tien_tang_ca' => 0,
-                'luong_goc' => 0,
-                'tong_thu_nhap' => 0,
-                'chi_tiet' => 'Không có dữ liệu lương',
-                'luong_thuc_te_thang' => 0,
-                'so_ngay_cong' => 0,
-                'tong_gio_lam_trong_thang' => 0,
+                'valid' => false,
+                'message' => "❌ Thời gian tăng ca tối đa 8 giờ/ngày. Hiện tại: {$hours} giờ"
             ];
         }
-
-        $heSoTangCa = self::getHeSo($type);
-        $heSoLuongGoc = self::getHeSoLuongGoc($type);
-        $tongHeSo = self::getTongHeSo($type);
-
-        $tienTangCa = round($hours * $luongTheoGio * $heSoTangCa, 0);
-        $luongGoc = round($hours * $luongTheoGio * $heSoLuongGoc, 0);
-        $tongThuNhap = round($hours * $luongTheoGio * $tongHeSo, 0);
-
-        $chiTiet = match ($type) {
-            'ngay_thuong' => "Lương gốc: " . number_format($luongGoc) . "đ + Tăng ca 150%: " . number_format($tienTangCa) . "đ = " . number_format($tongThuNhap) . "đ (250%)",
-            'ngay_nghi' => "Lương gốc: 0đ (ngày cuối tuần không lương) + Tăng ca 200%: " . number_format($tienTangCa) . "đ = " . number_format($tongThuNhap) . "đ (200%)",
-            'le_tet' => "Tăng ca ngày lễ 400% (đã gồm lương ngày lễ): " . number_format($tienTangCa) . "đ",
-            default => "Lương gốc: " . number_format($luongGoc) . "đ + Tăng ca: " . number_format($tienTangCa) . "đ = " . number_format($tongThuNhap) . "đ",
-        };
-
-        return [
-            'hourly_rate' => $luongTheoGio,
-            'he_so_tang_ca' => $heSoTangCa,
-            'he_so_luong_goc' => $heSoLuongGoc,
-            'tong_he_so' => $tongHeSo,
-            'tien_tang_ca' => $tienTangCa,
-            'luong_goc' => $luongGoc,
-            'tong_thu_nhap' => $tongThuNhap,
-            'chi_tiet' => $chiTiet,
-            'luong_thuc_te_thang' => $luongThucTe,
-            'so_ngay_cong' => $soNgayCong,
-            'tong_gio_lam_trong_thang' => $tongGioLam,
-        ];
+        
+        if ($hours < 0.5) {
+            return [
+                'valid' => false,
+                'message' => "❌ Thời gian tăng ca tối thiểu 0.5 giờ. Hiện tại: {$hours} giờ"
+            ];
+        }
+        
+        // Nếu là ngày cuối tuần, không cần kiểm tra giờ hành chính
+        if ($isWeekend) {
+            return ['valid' => true, 'message' => '✅ Giờ tăng ca hợp lệ (ngày cuối tuần)'];
+        }
+        
+        // Kiểm tra giờ hành chính cho ngày thường
+        $gioHanhChinhKT = self::$gioLamHanhChinhKetThuc;
+        $startTime = $start->format('H:i');
+        $endTime = $end->format('H:i');
+        
+        if ($startTime < $gioHanhChinhKT) {
+            return [
+                'valid' => false,
+                'message' => "❌ Giờ tăng ca phải bắt đầu sau giờ làm hành chính ({$gioHanhChinhKT}). Hiện tại: {$startTime}"
+            ];
+        }
+        
+        return ['valid' => true, 'message' => '✅ Giờ tăng ca hợp lệ'];
     }
-
-    /**
-     * ⭐ TÍNH LƯƠNG TĂNG CA
-     */
-    public static function tinhLuongTangCa($userId, $hours, $type = 'ngay_thuong')
-    {
-        $now = Carbon::now('Asia/Ho_Chi_Minh');
-        $result = self::tinhLuongTangCaChiTiet($userId, $hours, $type, $now->month, $now->year);
-        return $result['tien_tang_ca'];
-    }
-
-    /**
-     * ⭐ LẤY LƯƠNG THEO GIỜ
-     */
-    public static function getHourlyRate($userId, $default = 0)
-    {
-        $now = Carbon::now('Asia/Ho_Chi_Minh');
-        $rate = self::tinhLuongTheoGio($userId, $now->month, $now->year);
-        return $rate > 0 ? $rate : $default;
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    // ⭐⭐⭐ CÁC HÀM KIỂM TRA GIỚI HẠN VÀ THỐNG KÊ ⭐⭐⭐
-    // ═══════════════════════════════════════════════════════════════
 
     /**
      * ⭐ KIỂM TRA GIỚI HẠN GIỜ TĂNG CA

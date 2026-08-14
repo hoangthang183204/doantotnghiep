@@ -63,7 +63,7 @@
                 <div>
                     <p class="text-xs text-gray-400">Số giờ</p>
                     <p class="font-medium text-blue-600 dark:text-blue-400">
-                        {{ number_format($donTangCa->so_gio_tang_ca ?? 0, 1, ',', '') }} giờ
+                        {{ number_format($donTangCa->so_gio_tang_ca ?? 0, 2, ',', '') }} giờ
                     </p>
                 </div>
                 <div>
@@ -195,10 +195,10 @@
                                 @php
                                     $hoursDisplay = $soGioThucTe > 0 ? $soGioThucTe : $donTangCa->so_gio_tang_ca;
                                 @endphp
-                                {{ number_format($hoursDisplay, 1, ',', '') }} giờ
+                                {{ number_format($hoursDisplay, 2, ',', '') }} giờ
                                 @if($daCheckout && $hoursDisplay < $donTangCa->so_gio_tang_ca)
                                     <span class="text-xs text-yellow-600 dark:text-yellow-400 ml-1">
-                                        (sớm hơn {{ number_format($donTangCa->so_gio_tang_ca - $hoursDisplay, 1, ',', '') }}h)
+                                        (sớm hơn {{ number_format($donTangCa->so_gio_tang_ca - $hoursDisplay, 2, ',', '') }}h)
                                     </span>
                                 @endif
                             @else
@@ -278,11 +278,11 @@
             @php
                 $showLuong = false;
                 $tienTangCa = 0;
-                $luongTheoGio = 0;
+                $luongMotGio = 0;
                 $heSoTangCa = 0;
                 $hours = 0;
-                $luongThucTe = 0;
-                $soNgayCong = 0;
+                $luongGross = 0;
+                $soNgayCongChuan = 0;
                 $tongGioLam = 0;
                 $chiTiet = '';
                 
@@ -300,53 +300,25 @@
                     }
                     
                     $type = $donTangCa->loai_tang_ca;
-                    
                     $thang = Carbon\Carbon::parse($donTangCa->ngay_tang_ca)->month;
                     $nam = Carbon\Carbon::parse($donTangCa->ngay_tang_ca)->year;
                     
-                    // Lấy lương từ bảng lương
-                    $luongNhanVien = \App\Models\LuongNhanVien::where('nguoi_dung_id', $userId)
-                        ->where('luong_thang', $thang)
-                        ->where('luong_nam', $nam)
-                        ->first();
+                    // ⭐ TÍNH LƯƠNG THEO CÔNG THỨC MỚI
+                    $result = \App\Helpers\OvertimeHelper::tinhLuongTangCaChiTiet(
+                        $userId, 
+                        $hours, 
+                        $type, 
+                        $thang, 
+                        $nam
+                    );
                     
-                    if (!$luongNhanVien) {
-                        $luongNhanVien = \App\Models\LuongNhanVien::where('nguoi_dung_id', $userId)
-                            ->orderBy('luong_nam', 'desc')
-                            ->orderBy('luong_thang', 'desc')
-                            ->first();
-                    }
-                    
-                    // Lấy dữ liệu
-                    $luongThucTe = 0;
-                    $soNgayCong = 0;
-                    
-                    if ($luongNhanVien) {
-                        $luongThucTe = $luongNhanVien->luong_thuc_nhan > 0 ? $luongNhanVien->luong_thuc_nhan : 
-                                    ($luongNhanVien->luong_theo_cong > 0 ? $luongNhanVien->luong_theo_cong : 
-                                    ($luongNhanVien->tong_luong > 0 ? $luongNhanVien->tong_luong : 0));
-                        $soNgayCong = $luongNhanVien->so_ngay_cong > 0 ? $luongNhanVien->so_ngay_cong : 0;
-                    }
-                    
-                    if ($luongThucTe <= 0) {
-                        $user = \App\Models\NguoiDung::with('hoSo')->find($userId);
-                        if ($user && $user->hoSo && $user->hoSo->luong_co_ban > 0) {
-                            $luongThucTe = $user->hoSo->luong_co_ban;
-                            $soNgayCong = 26;
-                        }
-                    }
-                    
-                    if ($luongThucTe <= 0) {
-                        $luongThucTe = 5000000;
-                        $soNgayCong = 26;
-                    }
-                    
-                    $tongGioLam = $soNgayCong * 8;
-                    $luongTheoGio = $tongGioLam > 0 ? round($luongThucTe / $tongGioLam, 0) : 0;
-                    $heSoTangCa = \App\Helpers\OvertimeHelper::getHeSo($type);
-                    $tienTangCa = round($hours * $luongTheoGio * $heSoTangCa, 0);
-                    
-                    $chiTiet = number_format($hours, 1, ',', '') . ' giờ × ' . number_format($luongTheoGio) . 'đ × ' . $heSoTangCa . ' = ' . number_format($tienTangCa) . 'đ';
+                    $luongMotGio = $result['hourly_rate'];
+                    $heSoTangCa = $result['he_so_tang_ca'];
+                    $tienTangCa = $result['tien_tang_ca'];
+                    $luongGross = $result['luong_gross'];
+                    $soNgayCongChuan = $result['so_ngay_cong_chuan'];
+                    $tongGioLam = $result['tong_gio_lam_trong_thang'];
+                    $chiTiet = $result['chi_tiet'];
                 }
             @endphp
 
@@ -366,45 +338,53 @@
                 
                 <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-600">
                     
-                    <div class="p-4 border-b border-gray-200 dark:border-gray-600">
+                    {{-- Bước 1: Lương 1 giờ --}}
+                    <div class="p-4 border-b border-gray-200 dark:border-gray-600 bg-blue-50/50 dark:bg-blue-900/10">
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                            📌 Bước 1: Lương 1 giờ làm việc bình thường
+                        </p>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Lương theo giờ</p>
-                                <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ number_format($luongTheoGio) }}đ/giờ</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Lương tháng (Gross)</p>
+                                <p class="text-lg font-bold text-blue-600 dark:text-blue-400">{{ number_format($luongGross) }}đ</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Hệ số tăng ca</p>
-                                <p class="text-2xl font-bold text-orange-600 dark:text-orange-400">{{ $heSoTangCa }} ({{ $heSoTangCa * 100 }}%)</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Số ngày công chuẩn</p>
+                                <p class="text-lg font-bold text-green-600 dark:text-green-400">{{ $soNgayCongChuan }} ngày</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Số giờ thực tế</p>
-                                <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ number_format($hours, 1, ',', '') }} giờ</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Lương 1 giờ</p>
+                                <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ number_format($luongMotGio) }}đ/giờ</p>
+                                <p class="text-xs text-gray-400">
+                                    = {{ number_format($luongGross) }}đ ÷ ({{ $soNgayCongChuan }} × 8)
+                                </p>
                             </div>
                         </div>
                     </div>
 
+                    {{-- Bước 2: Tính lương tăng ca --}}
                     <div class="p-4">
-                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                            📊 Cách tính lương tăng ca
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                            📌 Bước 2: Tính tiền lương tăng ca
                         </p>
                         
                         <div class="space-y-3 text-sm">
                             <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
                                 <p class="text-gray-700 dark:text-gray-300">
                                     <span class="font-medium">Công thức:</span>
-                                    {{ number_format($hours, 1, ',', '') }} giờ × {{ number_format($luongTheoGio) }}đ × {{ $heSoTangCa }} = 
+                                    {{ number_format($luongMotGio) }}đ × {{ number_format($hours, 2, ',', '') }} giờ × {{ $heSoTangCa }} = 
                                     <span class="font-bold text-blue-600 dark:text-blue-400">{{ number_format($tienTangCa) }}đ</span>
                                 </p>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-600 text-center">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">① Số giờ thực tế</p>
-                                    <p class="font-bold text-gray-900 dark:text-white text-lg">{{ number_format($hours, 1, ',', '') }} giờ</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">① Lương 1 giờ</p>
+                                    <p class="font-bold text-blue-600 dark:text-blue-400 text-lg">{{ number_format($luongMotGio) }}đ</p>
                                 </div>
                                 <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-600 text-center">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">② Lương theo giờ</p>
-                                    <p class="font-bold text-blue-600 dark:text-blue-400 text-lg">{{ number_format($luongTheoGio) }}đ</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">② Số giờ thực tế</p>
+                                    <p class="font-bold text-gray-900 dark:text-white text-lg">{{ number_format($hours, 2, ',', '') }} giờ</p>
                                 </div>
                                 <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-600 text-center">
                                     <p class="text-xs text-gray-500 dark:text-gray-400">③ Hệ số tăng ca</p>
@@ -470,11 +450,11 @@
                             <div>
                                 <p class="text-sm text-gray-600 dark:text-gray-400">
                                     <i class="fas fa-calculator mr-1"></i>
-                                    Tính theo: {{ $chiTiet }}
+                                    {{ $chiTiet }}
                                 </p>
                                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    Lương tháng: {{ number_format($luongThucTe) }}đ | 
-                                    Ngày công: {{ $soNgayCong }} ngày | 
+                                    Lương tháng (Gross): {{ number_format($luongGross) }}đ | 
+                                    Ngày công chuẩn: {{ $soNgayCongChuan }} ngày | 
                                     Tổng giờ: {{ $tongGioLam }} giờ
                                 </p>
                             </div>
@@ -600,7 +580,7 @@
                 $canXinVeSom = false;
                 
                 if ($donTangCa->trang_thai == 'da_duyet' && !$donTangCa->da_hoan_thanh) {
-                    // Kiểm tra đã đến giờ tăng ca chưa (cho phép trước 30 phút)
+                    // Kiểm tra đã đến giờ tăng ca chưa
                     $now = Carbon\Carbon::now('Asia/Ho_Chi_Minh');
                     $ngayTangCa = Carbon\Carbon::parse($donTangCa->ngay_tang_ca)->startOfDay();
                     $gioBatDau = Carbon\Carbon::parse($donTangCa->gio_bat_dau);
@@ -616,6 +596,7 @@
                     } else {
                         // Kiểm tra có thể check-out không (chỉ khi đã đến giờ tăng ca)
                         if ($daDenGioTangCa) {
+                            // ⭐ CHỈ CHECK-OUT KHI CÒN 10 PHÚT CUỐI
                             $canCheckoutResult = \App\Models\DangKyTangCa::canCheckout($donTangCa->id);
                             if ($canCheckoutResult['valid']) {
                                 $canCheckout = true;
@@ -639,11 +620,21 @@
                         }
                     }
                     
-                    // Kiểm tra có thể xin về sớm không (chỉ khi đã đến giờ tăng ca và chưa check-out)
-                    if (!$daCheckout && $daDenGioTangCa) {
-                        $xinVeSom = $donTangCa->xin_ve_som;
-                        if (!$xinVeSom || $xinVeSom->trang_thai == 'tu_choi' || $xinVeSom->trang_thai == 'huy') {
-                            $canXinVeSom = true;
+                    // Kiểm tra có thể xin về sớm không (chỉ khi đã làm >= 30p và còn >= 30p)
+                    if (!$daCheckout) {
+                        $gioKetThuc = Carbon\Carbon::parse($donTangCa->gio_ket_thuc);
+                        $thoiGianKetThuc = Carbon\Carbon::parse(
+                            $ngayTangCa->format('Y-m-d') . ' ' . $gioKetThuc->format('H:i:s')
+                        );
+                        
+                        $sau30pBatDau = $now->gte($thoiGianBatDau->copy()->addMinutes(30));
+                        $truoc30pKetThuc = $now->lte($thoiGianKetThuc->copy()->subMinutes(30));
+                        
+                        if ($sau30pBatDau && $truoc30pKetThuc) {
+                            $xinVeSom = $donTangCa->xin_ve_som;
+                            if (!$xinVeSom || $xinVeSom->trang_thai == 'tu_choi' || $xinVeSom->trang_thai == 'huy') {
+                                $canXinVeSom = true;
+                            }
                         }
                     }
                 } else {
@@ -689,7 +680,7 @@
                         <div class="flex items-center gap-2 px-4 py-2.5 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-lg border border-purple-200 dark:border-purple-800">
                             <i class="fas fa-check-double text-purple-500"></i>
                             <span>Đã check-out lúc {{ Carbon\Carbon::parse($thucHien->thoi_gian_ket_thuc)->format('H:i') }}</span>
-                            <span class="text-xs text-purple-500">({{ number_format($thucHien->so_gio_tang_ca_thuc_te ?? 0, 1, ',', '') }} giờ)</span>
+                            <span class="text-xs text-purple-500">({{ number_format($thucHien->so_gio_tang_ca_thuc_te ?? 0, 2, ',', '') }} giờ)</span>
                         </div>
                     @endif
                 </div>
@@ -697,7 +688,7 @@
                 @if($canCheckout)
                 <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
                     <i class="fas fa-info-circle mr-1"></i>
-                    Check-out sớm tối đa 1 tiếng, tính lương đến thời điểm check-out
+                    Check-out trong 10 phút cuối, tính lương đến thời điểm check-out
                 </div>
                 @endif
             </div>
