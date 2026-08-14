@@ -107,6 +107,63 @@
         <p class="text-gray-700 dark:text-gray-300">Lương thực nhận: <strong class="text-green-600 text-lg">{{ number_format($payroll->luong_thuc_nhan) }}</strong></p>
     </div>
 
+    {{-- CÁC KHOẢN THU NHẬP: lương theo công + phụ cấp + tăng ca (theo hệ số) + thưởng --}}
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Các khoản thu nhập</h3>
+
+        <div class="space-y-3">
+
+            <div class="flex justify-between items-center pb-3 border-b border-gray-200 dark:border-gray-700">
+                <span class="text-gray-700 dark:text-gray-300">Lương theo ngày công</span>
+                <span class="font-semibold text-gray-900 dark:text-white">{{ number_format($payroll->luong_theo_cong) }} đ</span>
+            </div>
+
+            <div class="pb-3 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-700 dark:text-gray-300">Phụ cấp</span>
+                    <span class="font-semibold text-gray-900 dark:text-white">{{ number_format($payroll->tong_phu_cap) }} đ</span>
+                </div>
+                @foreach($payroll->phuCapLuongs as $pc)
+                    <div class="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400 mt-1 pl-4">
+                        <span>• {{ $pc->phuCap->ten ?? $pc->ghi_chu ?? 'Phụ cấp' }}</span>
+                        <span>{{ number_format($pc->so_tien) }} đ</span>
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="pb-3 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-700 dark:text-gray-300">Tiền tăng ca</span>
+                    <span class="font-semibold text-indigo-600 dark:text-indigo-400">{{ number_format($payroll->tien_tang_ca) }} đ</span>
+                </div>
+                @forelse($payroll->chiTietTangCa() as $tc)
+                    <div class="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400 mt-1 pl-4">
+                        <span>• {{ $tc['nhan'] }} — {{ rtrim(rtrim(number_format($tc['gio'], 2), '0'), '.') }} giờ × {{ $tc['he_so'] }}</span>
+                        <span>{{ number_format($tc['tien']) }} đ</span>
+                    </div>
+                @empty
+                    <p class="text-sm text-gray-400 mt-1 pl-4">Không có tăng ca trong kỳ</p>
+                @endforelse
+            </div>
+
+            <div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-700 dark:text-gray-300">Thưởng</span>
+                    <span class="font-semibold text-amber-600 dark:text-amber-400">{{ number_format($payroll->tong_thuong) }} đ</span>
+                </div>
+                @forelse($payroll->thuongLuongs as $tt)
+                    <div class="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400 mt-1 pl-4">
+                        <span>• {{ $tt->ten }} <span class="text-xs">({{ $tt->hinh_thuc_text }})</span></span>
+                        <span>{{ number_format($tt->so_tien) }} đ</span>
+                    </div>
+                @empty
+                    <p class="text-sm text-gray-400 mt-1 pl-4">Không có khoản thưởng nào trong kỳ</p>
+                @endforelse
+            </div>
+
+        </div>
+    </div>
+
     {{-- LƯƠNG THƯỞNG --}}
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
     <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">

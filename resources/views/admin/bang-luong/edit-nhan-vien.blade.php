@@ -6,7 +6,8 @@
     $luongNgay = $luong->so_ngay_cong_chuan > 0 ? ($luong->luong_co_ban / $luong->so_ngay_cong_chuan) : 0;
     $luongGio = $luongNgay / 8;
     $ngayHuongLuong = (float) $luong->so_ngay_cong + (float) $luong->ngay_nghi_phep;
-    $tienTangCa = (float) $luong->gio_tang_ca * $luongGio * \App\Services\TinhLuongService::HE_SO_TANG_CA;
+    $tienTangCa = (float) $luong->tien_tang_ca;
+    $chiTietTangCa = $luong->chiTietTangCa();
     $isLocked = !$bangLuong->la_nhap;
     $tongPhuCapHienTai = (float) ($luong->phuCapLuongs->sum('so_tien') ?? 0);
 @endphp
@@ -51,6 +52,32 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Giờ tăng ca</label>
                     <input type="number" step="0.1" min="0" name="gio_tang_ca" value="{{ old('gio_tang_ca', $luong->gio_tang_ca) }}" @disabled($isLocked)
                            class="form-edit-input w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-gray-900 dark:text-white">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-slate-400">
+@forelse($chiTietTangCa as $tc)
+    {{ $tc['nhan'] }}:
+    {{ rtrim(rtrim(number_format($tc['gio'], 2), '0'), '.') }}h
+    @if (!$loop->last)
+        •
+    @endif
+@empty
+    Không có tăng ca trong kỳ.
+@endforelse
+                        <br>Khi sửa tổng số giờ, hệ thống giữ nguyên tỷ lệ giữa các loại ngày và tính lại theo hệ số 150% / 200% / 400%.
+                    </p>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Tổng thưởng</label>
+                    <input type="number" step="1000" min="0" name="tong_thuong" value="{{ old('tong_thuong', $luong->tong_thuong) }}" @disabled($isLocked)
+                           class="form-edit-input w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-gray-900 dark:text-white">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-slate-400">
+                        Tổng các khoản thưởng đã áp dụng cho kỳ lương này
+                        ({{ $luong->thuongLuongs->count() }} khoản:
+                        @forelse($luong->thuongLuongs as $tt){{ $tt->ten }} {{ number_format($tt->so_tien) }}đ@if(!$loop->last), @endif @empty không có @endforelse).
+                        Sửa ở đây chỉ đổi tổng tiền của kỳ này; muốn đổi tận gốc hãy sửa trong mục
+                        <a href="{{ route('admin.thuong.index') }}" class="text-blue-500 hover:underline">Thưởng nhân viên</a>
+                        rồi tính lại lương.
+                    </p>
                 </div>
 
                 <div class="md:col-span-2">

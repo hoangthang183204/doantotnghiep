@@ -62,6 +62,16 @@
                 <tr><td class="sub">• {{ $pc->phuCap->ten ?? $pc->ghi_chu ?? 'Phụ cấp' }}</td><td class="right sub">{{ number_format($pc->so_tien) }}</td></tr>
             @endforeach
             <tr><td>Tăng ca ({{ rtrim(rtrim(number_format($luong->gio_tang_ca, 1), '0'), '.') }} giờ)</td><td class="right income">{{ number_format($luong->tien_tang_ca) }}</td></tr>
+            @foreach($luong->chiTietTangCa() as $tc)
+                <tr>
+                    <td class="sub">• {{ $tc['nhan'] }} — {{ rtrim(rtrim(number_format($tc['gio'], 1), '0'), '.') }} giờ × {{ $tc['he_so'] }}</td>
+                    <td class="right sub">{{ number_format($tc['tien']) }}</td>
+                </tr>
+            @endforeach
+            <tr><td>Thưởng</td><td class="right income">{{ number_format($luong->tong_thuong) }}</td></tr>
+            @foreach($luong->thuongLuongs as $tt)
+                <tr><td class="sub">• {{ $tt->ten }} ({{ $tt->hinh_thuc_text }})</td><td class="right sub">{{ number_format($tt->so_tien) }}</td></tr>
+            @endforeach
             <tr><td><b>Các khoản khấu trừ</b></td><td class="right deduct">-{{ number_format($luong->tong_khau_tru) }}</td></tr>
             @foreach($luong->khauTruLuongs as $kt)
                 <tr><td class="sub">• {{ $kt->ghi_chu ?: $kt->ten_loai }}</td><td class="right sub deduct">-{{ number_format($kt->so_tien) }}</td></tr>

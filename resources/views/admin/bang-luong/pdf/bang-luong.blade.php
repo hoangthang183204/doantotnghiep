@@ -48,6 +48,7 @@
                 <th class="right">Lương theo công</th>
                 <th class="right">Phụ cấp</th>
                 <th class="right">Tăng ca</th>
+                <th class="right">Thưởng</th>
                 <th class="right">Tổng lương</th>
                 <th class="right">Khấu trừ</th>
                 <th class="right">Thực nhận</th>
@@ -63,6 +64,7 @@
                 <td class="right">{{ number_format($lnv->luong_theo_cong) }}</td>
                 <td class="right">{{ number_format($lnv->tong_phu_cap) }}</td>
                 <td class="right">{{ number_format($lnv->tien_tang_ca) }}</td>
+                <td class="right">{{ number_format($lnv->tong_thuong) }}</td>
                 <td class="right">{{ number_format($lnv->tong_luong) }}</td>
                 <td class="right deduct">-{{ number_format($lnv->tong_khau_tru) }}</td>
                 <td class="right net">{{ number_format($lnv->luong_thuc_nhan) }}</td>
@@ -75,6 +77,7 @@
                 <td class="right">{{ number_format($bangLuong->luongNhanViens->sum('luong_theo_cong')) }}</td>
                 <td class="right">{{ number_format($bangLuong->luongNhanViens->sum('tong_phu_cap')) }}</td>
                 <td class="right">{{ number_format($bangLuong->luongNhanViens->sum('tien_tang_ca')) }}</td>
+                <td class="right">{{ number_format($bangLuong->luongNhanViens->sum('tong_thuong')) }}</td>
                 <td class="right">{{ number_format($bangLuong->luongNhanViens->sum('tong_luong')) }}</td>
                 <td class="right deduct">-{{ number_format($bangLuong->luongNhanViens->sum('tong_khau_tru')) }}</td>
                 <td class="right net">{{ number_format($bangLuong->luongNhanViens->sum('luong_thuc_nhan')) }}</td>

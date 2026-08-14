@@ -6,7 +6,7 @@
     $nv = $luong->nguoiDung;
     $hoTen = trim(($nv->ho_so->ho ?? '') . ' ' . ($nv->ho_so->ten ?? '')) ?: $nv->ten_dang_nhap;
     $ngayHuongLuong = (float) $luong->so_ngay_cong + (float) $luong->ngay_nghi_phep;
-    $heSoTC = \App\Services\TinhLuongService::HE_SO_TANG_CA;
+    $chiTietTangCa = $luong->chiTietTangCa();
     $dienGiai = $luong->dienGiai();
     // hiển thị số gọn (bỏ .00 thừa)
     $fmtNgay = fn($v) => rtrim(rtrim(number_format((float)$v, 2), '0'), '.');
@@ -88,7 +88,13 @@
         <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-gray-200 dark:border-slate-700">
             <p class="text-sm text-gray-500 dark:text-slate-400"><i class="fa-solid fa-business-time text-indigo-500 mr-1"></i> Tăng ca</p>
             <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">{{ $fmtNgay($luong->gio_tang_ca) }} giờ</p>
-            <p class="text-xs text-gray-400 mt-1">Hệ số x{{ $heSoTC }}</p>
+            <p class="text-xs text-gray-400 mt-1">
+                @forelse($chiTietTangCa as $tc)
+                    {{ $fmtNgay($tc['gio']) }}h × {{ (int) round($tc['he_so'] * 100) }}%@if(!$loop->last) • @endif
+                @empty
+                    Không có tăng ca
+                @endforelse
+            </p>
         </div>
     </div>
 
@@ -138,19 +144,61 @@
                 </div>
             </div>
 
-            {{-- B5: Tăng ca --}}
+            {{-- B5: Tăng ca theo từng loại ngày --}}
             <div class="px-5 py-4">
                 <div class="flex justify-between items-start gap-4">
-                    <div>
+                    <div class="flex-1">
                         <p class="font-medium text-gray-900 dark:text-white">③ Tiền tăng ca</p>
                         <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">
-                            = Số giờ TC × Đơn giá giờ × Hệ số
+                            = Σ (Số giờ TC từng loại ngày × Đơn giá giờ × Hệ số)
                         </p>
-                        <p class="text-xs text-gray-400 mt-1 font-mono">
-                            = {{ $fmtNgay($luong->gio_tang_ca) }} × {{ number_format($luong->luong_mot_gio) }} × {{ $heSoTC }}
-                        </p>
+                        @if(empty($chiTietTangCa))
+                            <p class="text-sm text-gray-400 mt-1">Không có tăng ca trong kỳ</p>
+                        @else
+                            <ul class="mt-2 space-y-1">
+                                @foreach($chiTietTangCa as $tc)
+                                <li class="text-sm text-gray-600 dark:text-slate-300 flex justify-between max-w-xl">
+                                    <span>
+                                        • {{ $tc['nhan'] }}
+                                        <span class="text-xs text-gray-400 font-mono ml-1">
+                                            {{ $fmtNgay($tc['gio']) }}h × {{ number_format($luong->luong_mot_gio) }} × {{ $tc['he_so'] }}
+                                        </span>
+                                    </span>
+                                    <span class="font-medium whitespace-nowrap ml-4">{{ number_format($tc['tien']) }} đ</span>
+                                </li>
+                                @endforeach
+                            </ul>
+                        @endif
                     </div>
                     <p class="text-lg font-bold text-indigo-600 dark:text-indigo-400 whitespace-nowrap">+{{ number_format($luong->tien_tang_ca) }} đ</p>
+                </div>
+            </div>
+
+            {{-- B5b: Thưởng --}}
+            <div class="px-5 py-4">
+                <div class="flex justify-between items-start gap-4">
+                    <div class="flex-1">
+                        <p class="font-medium text-gray-900 dark:text-white">④ Thưởng</p>
+                        @if($luong->thuongLuongs->isEmpty())
+                            <p class="text-sm text-gray-400 mt-1">Không có khoản thưởng nào trong kỳ</p>
+                        @else
+                            <ul class="mt-2 space-y-1">
+                                @foreach($luong->thuongLuongs as $tt)
+                                <li class="text-sm text-gray-600 dark:text-slate-300 flex justify-between max-w-xl">
+                                    <span>
+                                        • {{ $tt->ten }}
+                                        <span class="text-xs text-gray-400 ml-1">({{ $tt->hinh_thuc_text }}@if(!$tt->chiu_thue) • miễn thuế @endif)</span>
+                                        @if($tt->ghi_chu)
+                                            <span class="block text-xs text-gray-400 ml-3">{{ $tt->ghi_chu }}</span>
+                                        @endif
+                                    </span>
+                                    <span class="font-medium whitespace-nowrap ml-4">{{ number_format($tt->so_tien) }} đ</span>
+                                </li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </div>
+                    <p class="text-lg font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">+{{ number_format($luong->tong_thuong) }} đ</p>
                 </div>
             </div>
 
@@ -158,8 +206,8 @@
             <div class="px-5 py-4 bg-gray-50 dark:bg-slate-900/50">
                 <div class="flex justify-between items-center gap-4">
                     <div>
-                        <p class="font-semibold text-gray-900 dark:text-white">④ TỔNG LƯƠNG (gross)</p>
-                        <p class="text-xs text-gray-400 mt-1 font-mono">= ① + ② + ③</p>
+                        <p class="font-semibold text-gray-900 dark:text-white">⑤ TỔNG LƯƠNG (gross)</p>
+                        <p class="text-xs text-gray-400 mt-1 font-mono">= ① + ② + ③ + ④</p>
                     </div>
                     <p class="text-xl font-bold text-gray-900 dark:text-white whitespace-nowrap">{{ number_format($luong->tong_luong) }} đ</p>
                 </div>
@@ -169,7 +217,7 @@
             <div class="px-5 py-4">
                 <div class="flex justify-between items-start gap-4">
                     <div class="flex-1">
-                        <p class="font-medium text-gray-900 dark:text-white">⑤ Các khoản khấu trừ</p>
+                        <p class="font-medium text-gray-900 dark:text-white">⑥ Các khoản khấu trừ</p>
                         <ul class="mt-2 space-y-1">
                             <li class="text-sm text-gray-600 dark:text-slate-300 flex justify-between max-w-md">
                                 <span>• Bảo hiểm bắt buộc (BHXH 8% + BHYT 1.5% + BHTN 1% trên lương cơ bản)</span>
@@ -196,8 +244,8 @@
             <div class="px-5 py-5 bg-blue-50 dark:bg-blue-950/30">
                 <div class="flex justify-between items-center gap-4">
                     <div>
-                        <p class="font-bold text-gray-900 dark:text-white">⑥ LƯƠNG THỰC NHẬN (net)</p>
-                        <p class="text-xs text-gray-500 dark:text-slate-400 mt-1 font-mono">= ④ Tổng lương − ⑤ Khấu trừ</p>
+                        <p class="font-bold text-gray-900 dark:text-white">⑦ LƯƠNG THỰC NHẬN (net)</p>
+                        <p class="text-xs text-gray-500 dark:text-slate-400 mt-1 font-mono">= ⑤ Tổng lương − ⑥ Khấu trừ</p>
                     </div>
                     <p class="text-2xl font-extrabold text-blue-600 dark:text-sky-400 whitespace-nowrap">{{ number_format($luong->luong_thuc_nhan) }} đ</p>
                 </div>

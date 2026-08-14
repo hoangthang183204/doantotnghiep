@@ -273,6 +273,27 @@
                 <td class="right income">{{ number_format($luong->tien_tang_ca) }}</td>
             </tr>
 
+            @foreach($luong->chiTietTangCa() as $tc)
+            <tr>
+                <td style="padding-left:18px;color:#6b7280;font-size:12px;">
+                    • {{ $tc['nhan'] }} — {{ rtrim(rtrim(number_format($tc['gio'], 1), '0'), '.') }} giờ
+                </td>
+                <td class="right" style="color:#6b7280;font-size:12px;">{{ number_format($tc['tien']) }}</td>
+            </tr>
+            @endforeach
+
+            <tr>
+                <td>Thưởng</td>
+                <td class="right income">{{ number_format($luong->tong_thuong) }}</td>
+            </tr>
+
+            @foreach($luong->thuongLuongs as $tt)
+            <tr>
+                <td style="padding-left:18px;color:#6b7280;font-size:12px;">• {{ $tt->ten }}</td>
+                <td class="right" style="color:#6b7280;font-size:12px;">{{ number_format($tt->so_tien) }}</td>
+            </tr>
+            @endforeach
+
             <tr>
                 <td>Khấu trừ</td>
                 <td class="right deduct">-{{ number_format($luong->tong_khau_tru) }}</td>

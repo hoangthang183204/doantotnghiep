@@ -6,6 +6,7 @@ namespace App\Helpers;
 use App\Models\DangKyTangCa;
 use App\Models\LuongNhanVien;
 use App\Models\NguoiDung;
+use App\Services\TinhLuongService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -109,45 +110,37 @@ class OvertimeHelper
     // ═══════════════════════════════════════════════════════════════
 
     /**
-     * ⭐ LẤY HỆ SỐ TĂNG CA
+     * ⭐ LẤY HỆ SỐ TIỀN TĂNG CA (dùng chung với engine tính lương)
      * - Ngày thường: 150%
      * - Ngày cuối tuần (nghỉ): 200%
-     * - Lễ Tết: 400% (300% tiền tăng ca + 100% lương ngày lễ)
+     * - Lễ Tết: 400% (đã gộp cả tiền lương ngày lễ vì ngày lễ không có chấm công
+     *   nên không được trả qua lương theo công)
      */
     public static function getHeSo($type)
     {
-        return match ($type) {
-            'ngay_thuong' => 1.5,   // 150%
-            'ngay_nghi' => 2.0,     // 200%
-            'le_tet' => 3.0,        // 300% (chưa tính lương gốc)
-            default => 1.5,
-        };
+        return TinhLuongService::HE_SO_TANG_CA_THEO_LOAI[$type]
+            ?? TinhLuongService::HE_SO_TANG_CA_THEO_LOAI['ngay_thuong'];
     }
 
     /**
-     * ⭐ LẤY HỆ SỐ LƯƠNG GỐC
+     * ⭐ LẤY HỆ SỐ LƯƠNG GỐC CỦA NGÀY ĐÓ (đã nằm trong lương theo công, chỉ để diễn giải)
      */
     public static function getHeSoLuongGoc($type)
     {
         return match ($type) {
-            'ngay_thuong' => 1.0,   // 100% lương ngày thường
-            'ngay_nghi' => 0.0,     // 0% ngày nghỉ không lương
-            'le_tet' => 1.0,        // 100% ngày lễ có lương
+            'ngay_thuong' => 1.0,   // 100% lương ngày làm việc bình thường
+            'ngay_nghi' => 0.0,     // ngày nghỉ hằng tuần không hưởng lương
+            'le_tet' => 0.0,        // tiền lương ngày lễ đã gộp trong hệ số 400%
             default => 1.0,
         };
     }
 
     /**
-     * ⭐ LẤY TỔNG HỆ SỐ (Lương gốc + Tiền tăng ca trả thêm)
+     * ⭐ LẤY TỔNG HỆ SỐ (Lương gốc của ngày + Tiền tăng ca trả thêm)
      */
     public static function getTongHeSo($type)
     {
-        return match ($type) {
-            'ngay_thuong' => 2.5,   // 100% + 150% = 250%
-            'ngay_nghi' => 2.0,     // 0% + 200% = 200%
-            'le_tet' => 4.0,        // 100% + 300% = 400%
-            default => 2.5,
-        };
+        return round(self::getHeSo($type) + self::getHeSoLuongGoc($type), 2);
     }
 
     /**
@@ -184,7 +177,7 @@ class OvertimeHelper
         return match ($type) {
             'ngay_thuong' => 'Làm thêm ngày thường được hưởng 150% lương giờ',
             'ngay_nghi' => 'Làm thêm ngày cuối tuần được hưởng 200% lương giờ',
-            'le_tet' => 'Làm thêm ngày Lễ, Tết được hưởng 400% lương giờ (300% tiền tăng ca + 100% lương ngày lễ)',
+            'le_tet' => 'Làm thêm ngày Lễ, Tết được hưởng 400% lương giờ (đã gồm tiền lương ngày lễ)',
             default => 'Làm thêm ngày thường được hưởng 150% lương giờ',
         };
     }
@@ -341,7 +334,7 @@ class OvertimeHelper
         $chiTiet = match ($type) {
             'ngay_thuong' => "Lương gốc: " . number_format($luongGoc) . "đ + Tăng ca 150%: " . number_format($tienTangCa) . "đ = " . number_format($tongThuNhap) . "đ (250%)",
             'ngay_nghi' => "Lương gốc: 0đ (ngày cuối tuần không lương) + Tăng ca 200%: " . number_format($tienTangCa) . "đ = " . number_format($tongThuNhap) . "đ (200%)",
-            'le_tet' => "Lương gốc: " . number_format($luongGoc) . "đ (ngày lễ có lương) + Tăng ca 300%: " . number_format($tienTangCa) . "đ = " . number_format($tongThuNhap) . "đ (400%)",
+            'le_tet' => "Tăng ca ngày lễ 400% (đã gồm lương ngày lễ): " . number_format($tienTangCa) . "đ",
             default => "Lương gốc: " . number_format($luongGoc) . "đ + Tăng ca: " . number_format($tienTangCa) . "đ = " . number_format($tongThuNhap) . "đ",
         };
 

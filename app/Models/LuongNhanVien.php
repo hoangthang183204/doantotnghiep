@@ -20,6 +20,8 @@ class LuongNhanVien extends Model
         'luong_co_ban',
         'luong_theo_cong',
         'tong_phu_cap',
+        'tong_thuong',
+        'thuong_chiu_thue',
         'tien_tang_ca',
         'tong_khau_tru',
         'tong_luong',
@@ -28,6 +30,12 @@ class LuongNhanVien extends Model
         'so_ngay_cong_chuan',
         'gio_tang_ca',
         'cong_tang_ca',
+        'gio_tang_ca_ngay_thuong',
+        'gio_tang_ca_ngay_nghi',
+        'gio_tang_ca_le_tet',
+        'tien_tang_ca_ngay_thuong',
+        'tien_tang_ca_ngay_nghi',
+        'tien_tang_ca_le_tet',
         'ngay_nghi_phep',
         'ngay_nghi_khong_phep',
         'ngay_le',
@@ -55,6 +63,8 @@ class LuongNhanVien extends Model
         'luong_co_ban'          => 'decimal:2',
         'luong_theo_cong'       => 'decimal:2',
         'tong_phu_cap'          => 'decimal:2',
+        'tong_thuong'           => 'decimal:2',
+        'thuong_chiu_thue'      => 'decimal:2',
         'tien_tang_ca'          => 'decimal:2',
         'tong_khau_tru'         => 'decimal:2',
         'tong_luong'            => 'decimal:2',
@@ -63,6 +73,12 @@ class LuongNhanVien extends Model
         'so_ngay_cong_chuan'    => 'decimal:2',
         'gio_tang_ca'           => 'decimal:2',
         'cong_tang_ca'          => 'decimal:2',
+        'gio_tang_ca_ngay_thuong'  => 'decimal:2',
+        'gio_tang_ca_ngay_nghi'    => 'decimal:2',
+        'gio_tang_ca_le_tet'       => 'decimal:2',
+        'tien_tang_ca_ngay_thuong' => 'decimal:2',
+        'tien_tang_ca_ngay_nghi'   => 'decimal:2',
+        'tien_tang_ca_le_tet'      => 'decimal:2',
         'ngay_nghi_phep'        => 'decimal:2',
         'ngay_nghi_khong_phep'  => 'decimal:2',
         'ngay_le'               => 'decimal:2',
@@ -113,6 +129,12 @@ class LuongNhanVien extends Model
         return $this->hasMany(KhauTruLuong::class, 'luong_nhan_vien_id');
     }
 
+    /** Chi tiết các khoản thưởng đã áp dụng cho dòng lương này */
+    public function thuongLuongs()
+    {
+        return $this->hasMany(ThuongLuong::class, 'luong_nhan_vien_id');
+    }
+
     public function hoSo()
     {
         return $this->hasOne(HoSo::class, 'nguoi_dung_id', 'nguoi_dung_id');
@@ -133,6 +155,51 @@ class LuongNhanVien extends Model
     public function getLuongMotGioAttribute(): float
     {
         return round($this->luong_mot_ngay / 8, 2);
+    }
+
+    /**
+     * Bóc tách tăng ca theo loại ngày để diễn giải trên phiếu lương:
+     * ngày thường 150%, ngày nghỉ T7/CN 200%, lễ Tết 400%.
+     *
+     * Phiếu lương chốt trước khi có các cột tách loại sẽ được quy về "ngày thường"
+     * để giao diện không bị trống.
+     *
+     * @return array<int, array{loai:string, nhan:string, he_so:float, gio:float, tien:float}>
+     */
+    public function chiTietTangCa(): array
+    {
+        $gio = [
+            'ngay_thuong' => (float) $this->gio_tang_ca_ngay_thuong,
+            'ngay_nghi'   => (float) $this->gio_tang_ca_ngay_nghi,
+            'le_tet'      => (float) $this->gio_tang_ca_le_tet,
+        ];
+        $tien = [
+            'ngay_thuong' => (float) $this->tien_tang_ca_ngay_thuong,
+            'ngay_nghi'   => (float) $this->tien_tang_ca_ngay_nghi,
+            'le_tet'      => (float) $this->tien_tang_ca_le_tet,
+        ];
+
+        // Phiếu lương cũ: chưa tách loại → gom hết vào ngày thường
+        if (array_sum($gio) <= 0 && (float) $this->gio_tang_ca > 0) {
+            $gio['ngay_thuong']  = (float) $this->gio_tang_ca;
+            $tien['ngay_thuong'] = (float) $this->tien_tang_ca;
+        }
+
+        $chiTiet = [];
+        foreach (TinhLuongService::HE_SO_TANG_CA_THEO_LOAI as $loai => $heSo) {
+            if ($gio[$loai] <= 0) {
+                continue;
+            }
+            $chiTiet[] = [
+                'loai'  => $loai,
+                'nhan'  => TinhLuongService::LOAI_TANG_CA_LABELS[$loai],
+                'he_so' => $heSo,
+                'gio'   => $gio[$loai],
+                'tien'  => $tien[$loai],
+            ];
+        }
+
+        return $chiTiet;
     }
     public function yeuCauXemXet()
 {
@@ -174,9 +241,10 @@ class LuongNhanVien extends Model
 
         // --- Căn cứ tính thuế ---
         $phuCapChiuThue = $coSnapshot ? (float) $this->phu_cap_chiu_thue : (float) $this->tong_phu_cap;
+        $thuongChiuThue = (float) $this->thuong_chiu_thue;
         $thuNhapChiuThue = (float) $this->thu_nhap_chiu_thue > 0
             ? (float) $this->thu_nhap_chiu_thue
-            : round((float) $this->luong_theo_cong + $phuCapChiuThue + (float) $this->tien_tang_ca, 2);
+            : round((float) $this->luong_theo_cong + $phuCapChiuThue + (float) $this->tien_tang_ca + $thuongChiuThue, 2);
         $thuNhapTinhThue = (float) $this->thu_nhap_tinh_thue > 0
             ? (float) $this->thu_nhap_tinh_thue
             : max(0, round($thuNhapChiuThue - $tongBaoHiem - $giamTruGiaCanh, 2));
@@ -198,6 +266,8 @@ class LuongNhanVien extends Model
             'tong_bao_hiem'     => $tongBaoHiem,
 
             'phu_cap_chiu_thue' => $phuCapChiuThue,
+            'tong_thuong'       => (float) $this->tong_thuong,
+            'thuong_chiu_thue'  => $thuongChiuThue,
             'thu_nhap_chiu_thue' => $thuNhapChiuThue,
 
             'so_nguoi_phu_thuoc'       => $soNPT,

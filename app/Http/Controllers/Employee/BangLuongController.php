@@ -54,6 +54,8 @@ class BangLuongController extends Controller
         $payroll = LuongNhanVien::with([
             'bangLuong',
             'khauTrus',
+            'phuCapLuongs.phuCap',
+            'thuongLuongs',
             'yeuCauXemXet'
         ])
             ->where('nguoi_dung_id', $userId)

@@ -96,6 +96,7 @@
                         <th class="p-3 text-right">Lương theo công</th>
                         <th class="p-3 text-right">Phụ cấp</th>
                         <th class="p-3 text-right">Tăng ca</th>
+                        <th class="p-3 text-right">Thưởng</th>
                         <th class="p-3 text-right">Tổng lương</th>
                         <th class="p-3 text-right">Khấu trừ</th>
                         <th class="p-3 text-right">Thực nhận</th>
@@ -123,6 +124,7 @@
                         <td class="p-3 text-right text-gray-700 dark:text-slate-300">{{ number_format($lnv->luong_theo_cong) }}</td>
                         <td class="p-3 text-right text-green-600 dark:text-green-400">{{ number_format($lnv->tong_phu_cap) }}</td>
                         <td class="p-3 text-right text-indigo-600 dark:text-indigo-400">{{ number_format($lnv->tien_tang_ca) }}</td>
+                        <td class="p-3 text-right text-amber-600 dark:text-amber-400">{{ number_format($lnv->tong_thuong) }}</td>
                         <td class="p-3 text-right font-semibold text-gray-900 dark:text-white">{{ number_format($lnv->tong_luong) }}</td>
                         <td class="p-3 text-right text-red-500">-{{ number_format($lnv->tong_khau_tru) }}</td>
                         <td class="p-3 text-right font-bold text-blue-600 dark:text-sky-400">{{ number_format($lnv->luong_thuc_nhan) }}</td>
@@ -163,6 +165,7 @@
                         <td class="p-3 text-right text-gray-700 dark:text-slate-300">{{ number_format($bangLuong->luongNhanViens->sum('luong_theo_cong')) }}</td>
                         <td class="p-3 text-right text-green-600 dark:text-green-400">{{ number_format($bangLuong->luongNhanViens->sum('tong_phu_cap')) }}</td>
                         <td class="p-3 text-right text-indigo-600 dark:text-indigo-400">{{ number_format($bangLuong->luongNhanViens->sum('tien_tang_ca')) }}</td>
+                        <td class="p-3 text-right text-amber-600 dark:text-amber-400">{{ number_format($bangLuong->luongNhanViens->sum('tong_thuong')) }}</td>
                         <td class="p-3 text-right text-gray-900 dark:text-white">{{ number_format($bangLuong->luongNhanViens->sum('tong_luong')) }}</td>
                         <td class="p-3 text-right text-red-500">-{{ number_format($bangLuong->luongNhanViens->sum('tong_khau_tru')) }}</td>
                         <td class="p-3 text-right text-blue-600 dark:text-sky-400">{{ number_format($bangLuong->luongNhanViens->sum('luong_thuc_nhan')) }}</td>
