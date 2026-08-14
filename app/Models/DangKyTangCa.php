@@ -121,6 +121,7 @@ class DangKyTangCa extends Model
 
     /**
      * ⭐ KIỂM TRA CÓ THỂ CHECK-OUT KHÔNG
+     * (CHỈ CHO PHÉP CHECK-OUT KHI CÒN 10 PHÚT CUỐI HOẶC ĐÃ QUA GIỜ KẾT THÚC)
      */
     public static function canCheckout($overtimeId)
     {
@@ -173,6 +174,21 @@ class DangKyTangCa extends Model
             ];
         }
 
+        // ⭐⭐ KIỂM TRA CHECK-OUT - CHỈ CHO PHÉP KHI CÒN 10 PHÚT CUỐI HOẶC ĐÃ QUA GIỜ KẾT THÚC ⭐⭐
+        $conLaiBaoNhieuPhut = $now->diffInMinutes($thoiGianKetThuc, false);
+
+        // Nếu còn nhiều hơn 10 phút (và chưa đến giờ kết thúc) -> KHÔNG CHO CHECK-OUT
+        if ($conLaiBaoNhieuPhut > 10) {
+            $hours = floor($conLaiBaoNhieuPhut / 60);
+            $minutes = $conLaiBaoNhieuPhut % 60;
+            $timeText = $hours > 0 ? "còn {$hours} giờ {$minutes} phút" : "còn {$minutes} phút";
+            return [
+                'valid' => false,
+                'message' => "⏳ Chưa đến giờ check-out. {$timeText} nữa."
+            ];
+        }
+
+        // Nếu còn 10 phút hoặc ít hơn, HOẶC đã qua giờ kết thúc -> CHO PHÉP CHECK-OUT
         // ⭐⭐ KIỂM TRA XIN VỀ SỚM ⭐⭐
         $xinVeSom = $overtime->xin_ve_som;
         $isEarly = $now->lt($thoiGianKetThuc);
@@ -212,27 +228,13 @@ class DangKyTangCa extends Model
             }
 
             // Nếu KHÔNG có đơn xin về sớm
-            // Kiểm tra xem có đang trong khoảng cho phép check-out sớm tối đa 1 tiếng không
-            $checkoutWindow = $thoiGianKetThuc->copy()->subHours(1);
-
-            if ($now->lt($checkoutWindow)) {
-                $diffMinutes = $now->diffInMinutes($checkoutWindow);
-                $hours = floor($diffMinutes / 60);
-                $minutes = $diffMinutes % 60;
-                $timeText = $hours > 0 ? "Còn {$hours} giờ {$minutes} phút" : "Còn {$minutes} phút";
-                return [
-                    'valid' => false,
-                    'message' => "⏳ Chưa đến giờ check-out. {$timeText} nữa. Để về sớm hơn, bạn cần gửi đơn xin về sớm."
-                ];
-            }
-
-            // Check-out sớm trong 1 tiếng cuối (không cần xin)
+            // Cho phép check-out khi còn 10 phút cuối
             $soGioThucTe = $thoiGianBatDau->diffInHours($now);
             $soGioThucTe = min($soGioThucTe, $overtime->so_gio_tang_ca);
 
             return [
                 'valid' => true,
-                'message' => '✅ Check-out sớm (trong 1 tiếng cuối)',
+                'message' => '✅ Check-out (còn 10 phút cuối)',
                 'is_early' => true,
                 'early_minutes' => $now->diffInMinutes($thoiGianKetThuc),
                 'so_gio_thuc_te' => $soGioThucTe,
