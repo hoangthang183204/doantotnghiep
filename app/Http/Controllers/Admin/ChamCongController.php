@@ -222,13 +222,54 @@ class ChamCongController extends Controller
     }
 
     /**
+     * Hiển thị lịch sử chấm công của một nhân viên (trang riêng)
+     */
+    public function showByNhanVien(Request $request, $id)
+    {
+        $nhanVien = NguoiDung::with(['hoSo', 'phongBan', 'chucVu'])->findOrFail($id);
+        
+        $query = ChamCong::with(['nguoi_dung.hoSo', 'nguoi_dung.phongBan'])
+            ->where('nguoi_dung_id', $id);
+        
+        // Bộ lọc
+        if ($request->filled('tu_ngay')) {
+            $query->whereDate('ngay_cham_cong', '>=', $request->tu_ngay);
+        }
+        if ($request->filled('den_ngay')) {
+            $query->whereDate('ngay_cham_cong', '<=', $request->den_ngay);
+        }
+        if ($request->filled('trang_thai')) {
+            $query->where('trang_thai', $request->trang_thai);
+        }
+        
+        $chamCongs = $query->orderBy('ngay_cham_cong', 'desc')
+            ->paginate(20)
+            ->appends($request->query());
+        
+        // Thống kê
+        $thongKe = [
+            'tong_ngay' => ChamCong::where('nguoi_dung_id', $id)->count(),
+            'tong_gio' => ChamCong::where('nguoi_dung_id', $id)->sum('so_gio_lam'),
+            'tong_cong' => ChamCong::where('nguoi_dung_id', $id)->sum('so_cong'),
+            'tong_tang_ca' => ChamCong::where('nguoi_dung_id', $id)->sum('gio_tang_ca'),
+            'di_muon' => ChamCong::where('nguoi_dung_id', $id)->where('trang_thai', 'di_muon')->count(),
+            've_som' => ChamCong::where('nguoi_dung_id', $id)->where('trang_thai', 've_som')->count(),
+            'dung_gio' => ChamCong::where('nguoi_dung_id', $id)->where('trang_thai', 'dung_gio')->count(),
+            'vang_mat' => ChamCong::where('nguoi_dung_id', $id)->where('trang_thai', 'vang_mat')->count(),
+        ];
+        
+        return view('admin.cham-cong.nhan-vien.show', compact('nhanVien', 'chamCongs', 'thongKe'));
+    }
+
+    /**
      * Chi tiết chấm công
      */
     public function show($id)
     {
         $chamCong = ChamCong::with([
             'nguoi_dung.hoSo',
-            'nguoi_dung.phongBan'
+            'nguoi_dung.phongBan',
+            'faceRecords'
         ])->findOrFail($id);
 
         return view('admin.cham-cong.show', compact('chamCong'));

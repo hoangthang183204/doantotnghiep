@@ -1,5 +1,4 @@
-[file name]: show.blade.php
-[file content begin]
+
 @extends('layouts.admin')
 
 @section('title', 'Chi tiết hồ sơ - ' . $hoSo->ho . ' ' . $hoSo->ten)

@@ -143,11 +143,26 @@
         </form>
     </div>
 
+    {{-- ========================================================== --}}
     {{-- THỐNG KÊ NHANH - CÓ LINK CLICK ĐỂ LỌC --}}
+    {{-- ========================================================== --}}
     @php
         $hopDongTaoMoi = $hopDongs->where('trang_thai_hop_dong', 'tao_moi')->count();
         $hopDongChoDuyet = $hopDongs->where('trang_thai_duyet', 'cho_duyet')->count();
         $hopDongChoKy = $hopDongs->where('trang_thai_ky', 'cho_ky')->where('trang_thai_duyet', 'da_duyet')->count();
+        
+        // 🔥 Đếm trực tiếp từ database - KHÔNG bị ảnh hưởng bởi bộ lọc
+        $now = \Carbon\Carbon::now();
+        $soNgayCanhBao = 30;
+        $hopDongSapHetHan30Ngay = \App\Models\HopDongLaoDong::where('trang_thai_hop_dong', 'hieu_luc')
+            ->whereNotNull('ngay_ket_thuc')
+            ->where('ngay_ket_thuc', '>', $now)
+            ->where('ngay_ket_thuc', '<=', $now->copy()->addDays($soNgayCanhBao))
+            ->where(function($q) {
+                $q->whereNull('trang_thai_tai_ky')
+                  ->orWhere('trang_thai_tai_ky', '!=', 'da_tai_ky');
+            })
+            ->count();
     @endphp
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -196,9 +211,9 @@
             </a>
         @endif
 
-        {{-- Sắp hết hạn (còn <= 3 ngày) - CÓ THỂ TÁI KÝ NGAY --}}
-        @if ($sapHetHan > 0)
-            <a href="{{ route('admin.hop-dong.index', ['trang_thai_hop_dong' => 'hieu_luc', 'sap_het_han' => 1]) }}" 
+        {{-- 🔥 Sắp hết hạn trong 30 ngày - THÊM tham số so_ngay=30 --}}
+        @if ($hopDongSapHetHan30Ngay > 0)
+            <a href="{{ route('admin.hop-dong.index', ['trang_thai_hop_dong' => 'hieu_luc', 'sap_het_han' => 1, 'so_ngay' => 30]) }}" 
                class="block p-4 rounded-xl bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700 flex items-center gap-3 hover:shadow-md transition hover:scale-[1.02] cursor-pointer">
                 <div class="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-800 flex items-center justify-center flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -206,12 +221,14 @@
                     </svg>
                 </div>
                 <div>
-                    <span class="font-semibold">{{ $sapHetHan }}</span> hợp đồng sắp <strong>hết hạn</strong> (còn <= 3 ngày) 
-                    <span class="text-xs font-bold text-purple-600 dark:text-purple-400 block">🔄 Có thể tái ký ngay</span>
+                    <span class="font-semibold">{{ $hopDongSapHetHan30Ngay }}</span> hợp đồng sắp <strong>hết hạn</strong> (30 ngày)
                 </div>
             </a>
         @endif
     </div>
+    {{-- ========================================================== --}}
+    {{-- KẾT THÚC THỐNG KÊ NHANH --}}
+    {{-- ========================================================== --}}
 
     {{-- TABLE CARD --}}
     <div class="bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">

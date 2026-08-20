@@ -317,4 +317,9 @@ class DangKyTangCa extends Model
         return $this->hasOne(XinVeSomTangCa::class, 'dang_ky_tang_ca_id')
             ->where('trang_thai', 'da_duyet');
     }
+
+    public function nguoiDuyet()
+    {
+        return $this->belongsTo(NguoiDung::class, 'nguoi_duyet_id');
+    }
 }

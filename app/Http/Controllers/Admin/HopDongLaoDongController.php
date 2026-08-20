@@ -74,11 +74,13 @@ class HopDongLaoDongController extends Controller
             }
         }
 
-        // Lọc hợp đồng sắp hết hạn (có thể tái ký) - CHỈ LẤY HỢP ĐỒNG CHƯA TÁI KÝ
+        // 🔥 SỬA: Lọc hợp đồng sắp hết hạn - hỗ trợ tham số so_ngay
         if ($request->sap_het_han) {
             $now = now();
-            $soNgayTruoc = Config::get('contract.tai_ky_so_ngay_truoc', 3);
-            $inDays = now()->addDays($soNgayTruoc);
+            // 🔥 SỬA LỖI: Chuyển $soNgay sang integer (int)
+            $soNgay = (int) $request->input('so_ngay', Config::get('contract.tai_ky_so_ngay_truoc', 3));
+            $inDays = now()->addDays($soNgay);
+
             $query->where('trang_thai_hop_dong', 'hieu_luc')
                 ->whereNotNull('ngay_ket_thuc')
                 ->where('ngay_ket_thuc', '>=', $now)
@@ -128,14 +130,14 @@ class HopDongLaoDongController extends Controller
         $inDays = now()->addDays($soNgayTruoc);
 
         $hieuLuc = HopDongLaoDong::where('trang_thai_hop_dong', 'hieu_luc')
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('trang_thai_tai_ky')->orWhere('trang_thai_tai_ky', '!=', 'da_tai_ky');
             })
             ->count();
-            
+
         $chuaCoHopDong = HoSoNguoiDung::whereDoesntHave('hopDongLaoDong')->count();
-        
-        // Hợp đồng sắp hết hạn (có thể tái ký)
+
+        // Hợp đồng sắp hết hạn (có thể tái ký) - 3 ngày
         $sapHetHan = HopDongLaoDong::where('trang_thai_hop_dong', 'hieu_luc')
             ->whereNotNull('ngay_ket_thuc')
             ->where('ngay_ket_thuc', '>', $now)
@@ -145,13 +147,13 @@ class HopDongLaoDongController extends Controller
                     ->orWhere('trang_thai_tai_ky', '!=', 'da_tai_ky');
             })
             ->count();
-            
+
         $hetHanChuaTaiKy = HopDongLaoDong::where('trang_thai_tai_ky', 'cho_tai_ky')
             ->where('trang_thai_hop_dong', 'het_han')
             ->count();
-            
+
         $choDuyet = HopDongLaoDong::where('trang_thai_duyet', 'cho_duyet')
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('trang_thai_tai_ky')->orWhere('trang_thai_tai_ky', '!=', 'da_tai_ky');
             })
             ->count();
@@ -966,6 +968,7 @@ class HopDongLaoDongController extends Controller
         return Excel::download(new HopDongExport($hopDongs), 'danh_sach_hop_dong_' . now()->format('Y-m-d_H-i-s') . '.xlsx');
     }
 
+
     /**
      * Thống kê hợp đồng
      */
@@ -975,8 +978,9 @@ class HopDongLaoDongController extends Controller
         $denNgay = $request->input('den_ngay');
         $query = HopDongLaoDong::query();
 
+        // 🔥 SỬA LỖI: Thêm tên bảng vào whereBetween
         if ($tuNgay && $denNgay) {
-            $query->whereBetween('created_at', [$tuNgay . ' 00:00:00', $denNgay . ' 23:59:59']);
+            $query->whereBetween('hop_dong_lao_dong.created_at', [$tuNgay . ' 00:00:00', $denNgay . ' 23:59:59']);
         }
 
         $tongHopDong = (clone $query)->count();
@@ -988,17 +992,28 @@ class HopDongLaoDongController extends Controller
 
         $thongKeLoaiHopDong = (clone $query)->selectRaw('loai_hop_dong, COUNT(*) as so_luong')->groupBy('loai_hop_dong')->get()->keyBy('loai_hop_dong');
         $thongKeTrangThaiKy = (clone $query)->selectRaw('trang_thai_ky, COUNT(*) as so_luong')->groupBy('trang_thai_ky')->get()->keyBy('trang_thai_ky');
+
+        // 🔥 SỬA LỖI: Thêm tên bảng vào groupBy cho rõ ràng
         $thongKeTheoPhongBan = (clone $query)->join('nguoi_dung', 'hop_dong_lao_dong.nguoi_dung_id', '=', 'nguoi_dung.id')
             ->join('phong_ban', 'nguoi_dung.phong_ban_id', '=', 'phong_ban.id')
-            ->selectRaw('phong_ban.ten_phong_ban, COUNT(*) as so_luong')->groupBy('phong_ban.id', 'phong_ban.ten_phong_ban')->orderBy('so_luong', 'desc')->get();
+            ->selectRaw('phong_ban.ten_phong_ban, COUNT(*) as so_luong')
+            ->groupBy('phong_ban.id', 'phong_ban.ten_phong_ban')
+            ->orderBy('so_luong', 'desc')
+            ->get();
 
-        // Hợp đồng sắp hết hạn (3 ngày)
-        $soNgayTruoc = Config::get('contract.tai_ky_so_ngay_truoc', 3);
-        $hopDongSapHetHan = HopDongLaoDong::where('trang_thai_hop_dong', 'hieu_luc')
+        // 🔥 SỬA: Hợp đồng sắp hết hạn trong 30 ngày tới (KHÔNG bị giới hạn bởi bộ lọc ngày)
+        $soNgayCanhBao = 30;
+        $hopDongSapHetHan30Ngay = HopDongLaoDong::where('trang_thai_hop_dong', 'hieu_luc')
             ->whereNotNull('ngay_ket_thuc')
             ->where('ngay_ket_thuc', '>', now())
-            ->where('ngay_ket_thuc', '<=', now()->addDays($soNgayTruoc))
-            ->with(['hoSoNguoiDung', 'chucVu'])->get();
+            ->where('ngay_ket_thuc', '<=', now()->addDays($soNgayCanhBao))
+            ->where(function ($q) {
+                $q->whereNull('trang_thai_tai_ky')
+                    ->orWhere('trang_thai_tai_ky', '!=', 'da_tai_ky');
+            })
+            ->with(['hoSoNguoiDung', 'chucVu'])
+            ->orderBy('ngay_ket_thuc', 'asc')
+            ->get();
 
         return view('admin.hop-dong-lao-dong.thong-ke', compact(
             'tongHopDong',
@@ -1010,7 +1025,7 @@ class HopDongLaoDongController extends Controller
             'thongKeLoaiHopDong',
             'thongKeTrangThaiKy',
             'thongKeTheoPhongBan',
-            'hopDongSapHetHan',
+            'hopDongSapHetHan30Ngay',
             'tuNgay',
             'denNgay'
         ));
@@ -1069,14 +1084,14 @@ class HopDongLaoDongController extends Controller
         // Kiểm tra trạng thái hợp đồng
         $isHetHan = $hopDongCu->trang_thai_hop_dong === 'het_han';
         $isHieuLuc = $hopDongCu->trang_thai_hop_dong === 'hieu_luc';
-        
+
         // Lấy số ngày cấu hình
         $soNgayTruoc = Config::get('contract.tai_ky_so_ngay_truoc', 3);
-        
+
         // Kiểm tra xem có được phép tái ký không
         $canTaiKy = false;
         $lyDo = '';
-        
+
         if ($isHetHan) {
             $canTaiKy = true;
             $lyDo = 'Hợp đồng đã hết hạn';
@@ -1121,8 +1136,8 @@ class HopDongLaoDongController extends Controller
             'trang_thai_ky' => HopDongLaoDong::TRANG_THAI_KY_CHO_KY,
             'trang_thai_duyet' => HopDongLaoDong::TRANG_THAI_DUYET_CHO_DUYET,
             'created_by' => auth()->id(),
-            'ghi_chu' => '🔄 Tái ký (gia hạn) từ hợp đồng ' . $hopDongCu->so_hop_dong . 
-                         ' (Lý do: ' . $lyDo . ' - Ngày ' . now()->format('d/m/Y') . ')',
+            'ghi_chu' => '🔄 Tái ký (gia hạn) từ hợp đồng ' . $hopDongCu->so_hop_dong .
+                ' (Lý do: ' . $lyDo . ' - Ngày ' . now()->format('d/m/Y') . ')',
         ]);
 
         // CẬP NHẬT HỢP ĐỒNG CŨ: ĐÁNH DẤU ĐÃ TÁI KÝ VÀ CHUYỂN SANG TRẠNG THÁI "HẾT HẠN"
@@ -1131,7 +1146,7 @@ class HopDongLaoDongController extends Controller
             'trang_thai_hop_dong' => 'het_han',  // CHUYỂN SANG HẾT HẠN
             'ngay_ket_thuc' => now()->subDay(),   // ĐẶT NGÀY KẾT THÚC LÀ HÔM QUA
             'ghi_chu' => ($hopDongCu->ghi_chu ? $hopDongCu->ghi_chu . ' | ' : '') .
-                '🔄 Đã tái ký (gia hạn) sang hợp đồng ' . $hopDongMoi->so_hop_dong . 
+                '🔄 Đã tái ký (gia hạn) sang hợp đồng ' . $hopDongMoi->so_hop_dong .
                 ' (Lý do: ' . $lyDo . ' - Ngày ' . now()->format('d/m/Y') . ')',
         ]);
 
