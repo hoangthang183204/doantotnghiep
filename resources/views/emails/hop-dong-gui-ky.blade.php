@@ -1,120 +1,127 @@
+<!-- hop-dong-gui-ky.blade.php -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hợp đồng cần ký</title>
-    <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background: #f8fafc; }
-        .header { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; padding: 25px 30px; border-radius: 12px 12px 0 0; text-align: center; }
-        .header h1 { margin: 0; font-size: 24px; }
-        .header p { margin: 5px 0 0; opacity: 0.9; }
-        .content { background: white; padding: 30px; border-radius: 0 0 12px 12px; border: 1px solid #e2e8f0; border-top: none; }
-        .info-box { background: #f1f5f9; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #2563eb; }
-        .info-box .row { display: flex; padding: 6px 0; border-bottom: 1px solid #e8edf4; }
-        .info-box .row:last-child { border-bottom: none; }
-        .info-box .label { font-weight: 600; color: #64748b; width: 130px; flex-shrink: 0; }
-        .info-box .value { color: #1e293b; }
-        .btn-wrapper { text-align: center; margin: 25px 0; }
-        .btn { display: inline-block; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; padding: 14px 40px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 16px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5); background: #1d4ed8; }
-        .btn-secondary { display: inline-block; background: white; color: #2563eb; padding: 12px 35px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px; border: 2px solid #2563eb; transition: all 0.3s ease; }
-        .btn-secondary:hover { background: #eff6ff; }
-        .footer { text-align: center; font-size: 12px; color: #94a3b8; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; }
-        .status-badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #fef3c7; color: #d97706; }
-        .note { background: #fef2f2; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px solid #fecaca; }
-        .note strong { color: #dc2626; }
-        .hr-contact { background: #f1f5f9; padding: 15px; border-radius: 8px; margin-top: 20px; }
-        .text-center { text-align: center; }
-        .text-muted { color: #64748b; font-size: 14px; }
-        .mt-10 { margin-top: 10px; }
-        .mt-20 { margin-top: 20px; }
-    </style>
 </head>
-<body>
-    <div class="header">
-        <h1>📄 Hợp đồng lao động cần ký</h1>
-        <p>Vui lòng đăng nhập để xem và ký hợp đồng</p>
-    </div>
-    <div class="content">
-        <p>Xin chào <strong>{{ $hoSo->ho ?? '' }} {{ $hoSo->ten ?? $nhanVien->ten_dang_nhap }}</strong>,</p>
+<body style="margin:0;padding:0;background-color:#f5f7fa;font-family:'Segoe UI',Arial,Helvetica,sans-serif;">
 
-        <p>Bộ phận Nhân sự đã gửi cho bạn <strong>hợp đồng lao động</strong> để ký. Vui lòng đăng nhập vào hệ thống để xem và ký hợp đồng.</p>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f5f7fa;padding:30px 0;">
+    <tr>
+        <td align="center">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%;">
+                <tr>
+                    <td style="padding:0 20px;">
+                        <!-- Header -->
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff;border-radius:8px 8px 0 0;border-bottom:2px solid #1e293b;">
+                            <tr>
+                                <td style="padding:28px 30px 20px;text-align:center;">
+                                    <h1 style="margin:0;font-size:20px;font-weight:600;color:#1e293b;letter-spacing:-0.5px;">
+                                        📄 Hợp đồng lao động cần ký
+                                    </h1>
+                                    <p style="margin:4px 0 0;font-size:14px;color:#64748b;">Vui lòng đăng nhập để xem và ký hợp đồng</p>
+                                </td>
+                            </tr>
+                        </table>
 
-        <div class="info-box">
-            <div class="row">
-                <span class="label">📌 Số hợp đồng:</span>
-                <span class="value"><strong>{{ $hopDong->so_hop_dong }}</strong></span>
-            </div>
-            <div class="row">
-                <span class="label">📋 Loại hợp đồng:</span>
-                <span class="value">
-                    @switch($hopDong->loai_hop_dong)
-                        @case('thu_viec') Thử việc @break
-                        @case('xac_dinh_thoi_han') Xác định thời hạn @break
-                        @case('khong_xac_dinh_thoi_han') Không xác định thời hạn @break
-                        @default {{ $hopDong->loai_hop_dong }}
-                    @endswitch
-                </span>
-            </div>
-            <div class="row">
-                <span class="label">💰 Lương cơ bản:</span>
-                <span class="value" style="color: #16a34a; font-weight: 700;">{{ number_format($hopDong->luong_co_ban, 0, ',', '.') }} VNĐ</span>
-            </div>
-            <div class="row">
-                <span class="label">📅 Ngày bắt đầu:</span>
-                <span class="value">{{ \Carbon\Carbon::parse($hopDong->ngay_bat_dau)->format('d/m/Y') }}</span>
-            </div>
-            <div class="row">
-                <span class="label">📅 Ngày kết thúc:</span>
-                <span class="value">{{ $hopDong->ngay_ket_thuc ? \Carbon\Carbon::parse($hopDong->ngay_ket_thuc)->format('d/m/Y') : '♾️ Vô thời hạn' }}</span>
-            </div>
-            <div class="row">
-                <span class="label">📊 Trạng thái:</span>
-                <span class="value"><span class="status-badge">⏳ Chờ ký</span></span>
-            </div>
-        </div>
+                        <!-- Content -->
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff;border-radius:0 0 8px 8px;">
+                            <tr>
+                                <td style="padding:30px 30px 20px;">
+                                    <p style="margin:0 0 16px;font-size:15px;color:#334155;line-height:1.7;">
+                                        Xin chào <strong>{{ $hoSo->ho ?? '' }} {{ $hoSo->ten ?? $nhanVien->ten_dang_nhap }}</strong>,
+                                    </p>
+                                    <p style="margin:0 0 20px;font-size:15px;color:#334155;line-height:1.7;">
+                                        Bộ phận Nhân sự đã gửi cho bạn <strong>hợp đồng lao động</strong> để ký. Vui lòng đăng nhập vào hệ thống để xem và ký hợp đồng.
+                                    </p>
 
-        <div class="note">
-            <p style="margin: 0;"><strong>⚠️ Lưu ý:</strong> Vui lòng ký hợp đồng trước ngày <strong>{{ \Carbon\Carbon::parse($hopDong->ngay_bat_dau)->format('d/m/Y') }}</strong> để hợp đồng có hiệu lực đúng hạn.</p>
-        </div>
+                                    <!-- Info Box -->
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fafc;border-radius:6px;border-left:3px solid #1e293b;margin-bottom:20px;">
+                                        <tr><td style="padding:16px 20px;">
+                                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                <tr><td style="padding:4px 0;font-size:14px;color:#475569;border-bottom:1px solid #e9edf2;"><span style="font-weight:600;color:#64748b;display:inline-block;width:120px;">📌 Số hợp đồng:</span> <strong style="color:#1e293b;">{{ $hopDong->so_hop_dong }}</strong></td></tr>
+                                                <tr><td style="padding:4px 0;font-size:14px;color:#475569;border-bottom:1px solid #e9edf2;"><span style="font-weight:600;color:#64748b;display:inline-block;width:120px;">📋 Loại hợp đồng:</span> <span style="color:#1e293b;">
+                                                    @switch($hopDong->loai_hop_dong)
+                                                        @case('thu_viec') Thử việc @break
+                                                        @case('xac_dinh_thoi_han') Xác định thời hạn @break
+                                                        @case('khong_xac_dinh_thoi_han') Không xác định thời hạn @break
+                                                        @default {{ $hopDong->loai_hop_dong }}
+                                                    @endswitch
+                                                </span></td></tr>
+                                                <tr><td style="padding:4px 0;font-size:14px;color:#475569;border-bottom:1px solid #e9edf2;"><span style="font-weight:600;color:#64748b;display:inline-block;width:120px;">💰 Lương cơ bản:</span> <span style="color:#16a34a;font-weight:700;">{{ number_format($hopDong->luong_co_ban, 0, ',', '.') }} VNĐ</span></td></tr>
+                                                <tr><td style="padding:4px 0;font-size:14px;color:#475569;border-bottom:1px solid #e9edf2;"><span style="font-weight:600;color:#64748b;display:inline-block;width:120px;">📅 Ngày bắt đầu:</span> <span style="color:#1e293b;">{{ \Carbon\Carbon::parse($hopDong->ngay_bat_dau)->format('d/m/Y') }}</span></td></tr>
+                                                <tr><td style="padding:4px 0;font-size:14px;color:#475569;border-bottom:1px solid #e9edf2;"><span style="font-weight:600;color:#64748b;display:inline-block;width:120px;">📅 Ngày kết thúc:</span> <span style="color:#1e293b;">{{ $hopDong->ngay_ket_thuc ? \Carbon\Carbon::parse($hopDong->ngay_ket_thuc)->format('d/m/Y') : 'Vô thời hạn' }}</span></td></tr>
+                                                <tr><td style="padding:4px 0;font-size:14px;color:#475569;"><span style="font-weight:600;color:#64748b;display:inline-block;width:120px;">📊 Trạng thái:</span> <span style="display:inline-block;padding:2px 12px;border-radius:20px;font-size:12px;font-weight:600;background-color:#fef3c7;color:#b45309;">Chờ ký</span></td></tr>
+                                            </table>
+                                        </td></tr>
+                                    </table>
 
-        {{-- 🔥 NÚT KÝ HỢP ĐỒNG NGAY (ĐÃ CHỈNH) --}}
-        <div class="btn-wrapper">
-            <a href="{{ route('login') }}?redirect={{ route('employee.hop-dong.index') }}" class="btn">
-                ✍️ Ký hợp đồng ngay
-            </a>
-            <p class="text-muted mt-10">Bạn sẽ được chuyển đến trang đăng nhập</p>
-        </div>
+                                    <!-- Note -->
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#fef2f2;border-radius:6px;border:1px solid #fecaca;margin-bottom:20px;">
+                                        <tr><td style="padding:12px 16px;">
+                                            <p style="margin:0;font-size:13px;color:#991b1b;"><strong>⚠️ Lưu ý:</strong> Vui lòng ký hợp đồng trước ngày <strong>{{ \Carbon\Carbon::parse($hopDong->ngay_bat_dau)->format('d/m/Y') }}</strong> để hợp đồng có hiệu lực đúng hạn.</p>
+                                        </td></tr>
+                                    </table>
 
-        {{-- NÚT PHỤ: XEM CHI TIẾT (KHÔNG CẦN ĐĂNG NHẬP) --}}
-        <div class="text-center mt-20">
-            <a href="{{ route('employee.hop-dong.index') }}" class="btn-secondary">
-                📄 Xem chi tiết hợp đồng
-            </a>
-        </div>
+                                    <!-- Main Button -->
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                        <tr><td align="center" style="padding:4px 0 2px;">
+                                            <a href="{{ route('login') }}?redirect={{ route('employee.hop-dong.index') }}" style="display:inline-block;padding:13px 36px;background-color:#1e293b;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:6px;letter-spacing:0.3px;">✍️ Ký hợp đồng ngay</a>
+                                        </td></tr>
+                                        <tr><td align="center" style="padding:4px 0 8px;">
+                                            <p style="margin:0;font-size:12px;color:#94a3b8;">Bạn sẽ được chuyển đến trang đăng nhập</p>
+                                        </td></tr>
+                                    </table>
 
-        <div style="margin-top: 25px; padding: 15px; background: #f1f5f9; border-radius: 8px; font-size: 14px;">
-            <p style="margin: 0 0 5px;"><strong>📎 Hướng dẫn:</strong></p>
-            <ol style="margin: 0; padding-left: 20px; color: #475569;">
-                <li>Nhấn nút "<strong>Ký hợp đồng ngay</strong>"</li>
-                <li>Đăng nhập vào hệ thống (nếu chưa đăng nhập)</li>
-                <li>Vào mục "<strong>Hợp đồng của tôi</strong>"</li>
-                <li>Xem nội dung và ký hợp đồng</li>
-                <li>Tải lên file scan hợp đồng đã ký</li>
-            </ol>
-        </div>
+                                    <!-- Secondary link -->
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                        <tr><td align="center" style="padding:2px 0 14px;">
+                                            <a href="{{ route('employee.hop-dong.index') }}" style="display:inline-block;padding:10px 30px;background-color:transparent;color:#1e293b;text-decoration:none;font-size:13px;font-weight:500;border:1px solid #d1d5db;border-radius:6px;">📄 Xem chi tiết hợp đồng</a>
+                                        </td></tr>
+                                    </table>
 
-        <p class="text-muted">Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ bộ phận Nhân sự.</p>
+                                    <!-- Instructions -->
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fafc;border-radius:6px;margin-bottom:16px;">
+                                        <tr><td style="padding:14px 18px;">
+                                            <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#334155;">📎 Hướng dẫn:</p>
+                                            <ol style="margin:0;padding-left:20px;font-size:13px;color:#475569;line-height:1.8;">
+                                                <li>Nhấn nút "<strong>Ký hợp đồng ngay</strong>"</li>
+                                                <li>Đăng nhập vào hệ thống (nếu chưa đăng nhập)</li>
+                                                <li>Vào mục "<strong>Hợp đồng của tôi</strong>"</li>
+                                                <li>Xem nội dung và ký hợp đồng</li>
+                                                <li>Tải lên file scan hợp đồng đã ký</li>
+                                            </ol>
+                                        </td></tr>
+                                    </table>
 
-        <div class="hr-contact">
-            <p style="margin: 0;"><strong>📞 Liên hệ HR:</strong></p>
-            <p style="margin: 5px 0 0;">📧 Email: hr@hrflow.com | 📞 Điện thoại: 024.1234.5678</p>
-        </div>
-    </div>
-    <div class="footer">
-        <p>📧 Email này được gửi tự động từ hệ thống HRFlow. Vui lòng không trả lời email này.</p>
-        <p>&copy; {{ date('Y') }} HRFlow - Hệ thống quản lý nhân sự</p>
-    </div>
+                                    <p style="margin:0 0 16px;font-size:13px;color:#64748b;">Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ bộ phận Nhân sự.</p>
+
+                                    <!-- Contact -->
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fafc;border-radius:6px;">
+                                        <tr><td style="padding:14px 20px;">
+                                            <p style="margin:0 0 2px;font-size:13px;font-weight:600;color:#334155;">📞 Liên hệ HR:</p>
+                                            <p style="margin:0;font-size:13px;color:#64748b;">📧 hr@hrflow.com &nbsp;|&nbsp; 📞 024.1234.5678</p>
+                                        </td></tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Footer -->
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr><td style="padding:20px 20px 10px;text-align:center;">
+                                <p style="margin:0 0 4px;font-size:11px;color:#94a3b8;">📧 Email này được gửi tự động từ hệ thống HRFlow. Vui lòng không trả lời email này.</p>
+                                <p style="margin:0;font-size:11px;color:#94a3b8;">&copy; {{ date('Y') }} HRFlow - Hệ thống quản lý nhân sự</p>
+                            </td></tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
 </body>
 </html>

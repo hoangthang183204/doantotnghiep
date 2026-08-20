@@ -212,16 +212,17 @@
                                 <td class="px-4 py-4 font-semibold text-blue-600">{{ $tongNgayCong }} ngày</td>
                                 <td class="px-4 py-4">{{ $ngayGanNhat }}</td>
                                 <td class="px-4 py-4">
-                                    <button onclick="openNhanVienModal('{{ addslashes($hoTen) }}', {{ $user->id }})" 
-                                            class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" 
-                                            title="Xem chi tiết">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                        </svg>
-                                    </button>
+                                    <div class="flex items-center gap-2">
+                                        {{-- Xem lịch sử chi tiết (trang riêng) --}}
+                                        <a href="{{ route('admin.cham-cong.nhan-vien.show', $user->id) }}" 
+                                           class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" 
+                                           title="Xem lịch sử chấm công chi tiết">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -278,89 +279,7 @@
             </div>
         </div>
     </div>
-
-    {{-- MODAL HIỂN THỊ CHẤM CÔNG CỦA NHÂN VIÊN (CÓ PHÂN TRANG) --}}
-    <div id="nhanVienModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-6xl max-h-[90vh] flex flex-col">
-            <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                <div>
-                    <h3 class="text-xl font-bold text-gray-800 dark:text-white" id="modalTitle">
-                        📋 Danh sách chấm công
-                    </h3>
-                    <p class="text-sm text-gray-500 mt-1" id="modalSubtitle"></p>
-                </div>
-                <button onclick="closeNhanVienModal()" class="text-gray-500 hover:text-gray-700 text-2xl">
-                    ×
-                </button>
-            </div>
-            <div class="p-6 overflow-auto flex-1">
-                <div id="loadingNhanVien" class="text-center py-10">
-                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto"></div>
-                    <p class="mt-3 text-gray-500">Đang tải dữ liệu...</p>
-                </div>
-                <div id="nhanVienContent" class="hidden">
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-sm text-gray-500">Tổng số: <strong id="totalRecords">0</strong> bản ghi</span>
-                        <div class="flex items-center gap-3">
-                            <select id="perPageSelect" class="px-3 py-1.5 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600">
-                                <option value="5">5</option>
-                                <option value="10" selected>10</option>
-                                <option value="20">20</option>
-                                <option value="50">50</option>
-                            </select>
-                            <button onclick="exportNhanVienData()" class="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">
-                                <i class="fas fa-file-excel"></i> Xuất Excel
-                            </button>
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full border border-gray-200 dark:border-gray-700 rounded-lg">
-                            <thead class="bg-gray-100 dark:bg-gray-700">
-                                <tr>
-                                    <th class="px-4 py-3 text-left text-gray-700 dark:text-gray-200">Ngày</th>
-                                    <th class="px-4 py-3 text-left text-gray-700 dark:text-gray-200">Thứ</th>
-                                    <th class="px-4 py-3 text-left text-gray-700 dark:text-gray-200">Giờ vào</th>
-                                    <th class="px-4 py-3 text-left text-gray-700 dark:text-gray-200">Giờ ra</th>
-                                    <th class="px-4 py-3 text-left text-gray-700 dark:text-gray-200">Số giờ</th>
-                                    <th class="px-4 py-3 text-left text-gray-700 dark:text-gray-200">Số công</th>
-                                    <th class="px-4 py-3 text-left text-gray-700 dark:text-gray-200">Trạng thái</th>
-                                    <th class="px-4 py-3 text-left text-gray-700 dark:text-gray-200">Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody id="nhanVienTableBody">
-                                <!-- Dữ liệu sẽ được inject bằng JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                    {{-- PHÂN TRANG CỦA MODAL --}}
-                    <div id="modalPagination" class="flex justify-between items-center mt-4 hidden">
-                        <div class="text-sm text-gray-500">
-                            Hiển thị <span id="paginationFrom">0</span> - <span id="paginationTo">0</span> trong tổng <span id="paginationTotal">0</span> bản ghi
-                        </div>
-                        <div class="flex gap-2">
-                            <button id="prevPageBtn" onclick="loadPage(currentPage - 1)" 
-                                    class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded-lg text-sm hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                ← Trước
-                            </button>
-                            <span id="pageInfo" class="px-3 py-1 text-sm">Trang 1 / 1</span>
-                            <button id="nextPageBtn" onclick="loadPage(currentPage + 1)" 
-                                    class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded-lg text-sm hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                Sau →
-                            </button>
-                        </div>
-                    </div>
-                    <div id="emptyNhanVien" class="text-center py-10 text-gray-500 hidden">
-                        📭 Nhân viên này chưa có dữ liệu chấm công
-                    </div>
-                </div>
-            </div>
-            <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
-                <button onclick="closeNhanVienModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Đóng
-                </button>
-            </div>
-        </div>
-    </div>
+    
 
 @endsection
 

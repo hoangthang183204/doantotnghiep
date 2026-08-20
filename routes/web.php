@@ -240,19 +240,20 @@ Route::prefix('admin')
 
         // ========== CHẤM CÔNG - AI CŨNG CÓ ==========
         Route::prefix('cham-cong')->name('cham-cong.')->group(function () {
+            Route::get('/nhan-vien/{id}', [ChamCongController::class, 'showByNhanVien'])
+                ->name('nhan-vien.show');
 
-            Route::get('/don-ve-som', [ChamCongController::class, 'danhSachDonVeSom'])->name('don-ve-som')->middleware('CheckPermission:attendance.index');
-            Route::post('/don-ve-som/{id}/duyet', [ChamCongController::class, 'duyetDonVeSom'])->name('duyet-don-ve-som')->middleware('CheckPermission:attendance.index');
-            Route::post('/don-ve-som/{id}/tu-choi', [ChamCongController::class, 'tuChoiDonVeSom'])->name('tu-choi-don-ve-som')->middleware('CheckPermission:attendance.index');
+            Route::get('/don-ve-som', [ChamCongController::class, 'danhSachDonVeSom'])->name('don-ve-som');
+            Route::post('/don-ve-som/{id}/duyet', [ChamCongController::class, 'duyetDonVeSom'])->name('duyet-don-ve-som');
+            Route::post('/don-ve-som/{id}/tu-choi', [ChamCongController::class, 'tuChoiDonVeSom'])->name('tu-choi-don-ve-som');
+            Route::get('/don-ve-som/{id}/detail', [ChamCongController::class, 'chiTietDonVeSom'])->name('chi-tiet-don-ve-som');
 
             Route::get('/export', [ChamCongController::class, 'export'])->name('export');
             Route::get('/get-by-nhan-vien', [ChamCongController::class, 'getByNhanVien'])->name('get-by-nhan-vien');
-            Route::get('/', [ChamCongController::class, 'index'])->name('index')->middleware('CheckPermission:attendance.index');
-            Route::get('/{id}', [ChamCongController::class, 'show'])->name('show')->middleware('CheckPermission:attendance.index');
-            Route::get('/export', [ChamCongController::class, 'export'])->name('export')->middleware('CheckPermission:attendance.export');
-            Route::post('/bulk-action', [ChamCongController::class, 'bulkAction'])->name('bulk-action')->middleware('CheckPermission:attendance.index');
-            Route::post('/{id}/phe-duyet', [ChamCongController::class, 'pheDuyetDonLe'])->name('phe-duyet')->middleware('CheckPermission:attendance.index');
-            Route::get('/don-ve-som/{id}/detail', [ChamCongController::class, 'chiTietDonVeSom'])->name('admin.cham-cong.chi-tiet-don-ve-som');
+            Route::get('/', [ChamCongController::class, 'index'])->name('index');
+            Route::get('/{id}', [ChamCongController::class, 'show'])->name('show');
+            Route::post('/bulk-action', [ChamCongController::class, 'bulkAction'])->name('bulk-action');
+            Route::post('/{id}/phe-duyet', [ChamCongController::class, 'pheDuyetDonLe'])->name('phe-duyet');
         });
 
         // ========== ĐƠN NGHỈ - AI CŨNG CÓ ==========
@@ -824,7 +825,7 @@ Route::middleware(['auth', 'truong_phong'])
             Route::get('/', [TruongPhongTangCaController::class, 'index'])->name('index');
             Route::get('/create', [TruongPhongTangCaController::class, 'create'])->name('create');
             Route::post('/', [TruongPhongTangCaController::class, 'store'])->name('store');
-Route::get('/{id}', [TruongPhongTangCaController::class, 'show'])->name('show');
+            Route::get('/{id}', [TruongPhongTangCaController::class, 'show'])->name('show');
             Route::post('/{id}/duyet', [TruongPhongTangCaController::class, 'duyet'])->name('duyet');
             Route::post('/{id}/tu-choi', [TruongPhongTangCaController::class, 'tuChoi'])->name('tu-choi');
 

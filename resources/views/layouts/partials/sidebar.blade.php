@@ -332,43 +332,6 @@
                                 </li>
                             @endif
 
-                            {{-- Đơn nghỉ phép --}}
-                            @if (Route::has('truong-phong.don-nghi.index'))
-                                <li>
-                                    <a href="{{ route('truong-phong.don-nghi.index') }}"
-                                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors 
-                                        {{ str_starts_with($currentRoute, 'truong-phong.don-nghi.')
-                                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                                        <svg class="w-4 h-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg"
-                                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                            stroke-width="1.5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                        <span class="menu-text">Đơn nghỉ phép</span>
-                                        @php
-                                            $donNghiChoDuyet = \App\Models\DonXinNghi::whereIn(
-                                                'nguoi_dung_id',
-                                                function ($q) use ($phongBanInfo) {
-                                                    $q->select('id')
-                                                        ->from('nguoi_dung')
-                                                        ->where('phong_ban_id', $phongBanInfo->id);
-                                                },
-                                            )
-                                                ->where('trang_thai', 'cho_duyet')
-                                                ->where('nguoi_dung_id', '!=', $user->id) // 🔴 THÊM DÒNG NÀY TO LOẠI TRỪ TRƯỞNG PHÒNG
-                                                ->count();
-                                        @endphp
-                                        @if ($donNghiChoDuyet > 0)
-                                            <span
-                                                class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                                                {{ $donNghiChoDuyet }}
-                                            </span>
-                                        @endif
-                                    </a>
-                                </li>
-                            @endif
 
                             {{-- DUYỆT ĐƠN NGHỈ PHÉP --}}
                             @if (Route::has('duyet-don.index'))
