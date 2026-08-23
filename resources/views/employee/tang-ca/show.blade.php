@@ -62,7 +62,7 @@
         {{-- STATUS BAR --}}
         <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800/50 dark:to-gray-800">
             <div class="flex flex-wrap items-center justify-between gap-3">
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-4 flex-wrap">
                     @php
                         $statusConfig = [
                             'cho_duyet' => ['icon' => 'fa-clock', 'color' => 'yellow', 'label' => '⏳ Chờ duyệt'],
@@ -72,22 +72,81 @@
                         ];
                         $status = $statusConfig[$donTangCa->trang_thai] ?? ['icon' => 'fa-circle', 'color' => 'gray', 'label' => $donTangCa->trang_thai];
                     @endphp
-                    <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold 
-                            @if($status['color'] == 'yellow') bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300
-                            @elseif($status['color'] == 'green') bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300
-                            @elseif($status['color'] == 'red') bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300
-                            @else bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 @endif">
-                            <i class="fas {{ $status['icon'] }}"></i>
-                            {{ $status['label'] }}
-                        </span>
-                        @if($donTangCa->trang_thai == 'da_duyet' && $donTangCa->da_hoan_thanh)
+                    
+                    {{-- Trạng thái chính --}}
+                    <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold 
+                        @if($status['color'] == 'yellow') bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300
+                        @elseif($status['color'] == 'green') bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300
+                        @elseif($status['color'] == 'red') bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300
+                        @else bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 @endif">
+                        <i class="fas {{ $status['icon'] }}"></i>
+                        {{ $status['label'] }}
+                    </span>
+
+                    {{-- ⭐ Trạng thái phụ cho đã duyệt --}}
+                    @if($donTangCa->trang_thai == 'da_duyet' && !is_null($donTangCa->ngay_tang_ca))
+                        @php
+                            $thucHien = $donTangCa->thuc_hien;
+                            $daCheckout = $thucHien && $thucHien->thoi_gian_ket_thuc;
+                        @endphp
+
+                        @if($donTangCa->da_hoan_thanh)
                             <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
                                 <i class="fas fa-check-double"></i>
-                                Hoàn thành
+                                ✅ Hoàn thành
                             </span>
+                        @elseif($donTangCa->thieu_cham_cong_ra)
+                            <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                ⚠️ Thiếu chấm công ra
+                            </span>
+                        @elseif($thucHien && $thucHien->trang_thai == 'cho_xac_nhan_sua_chua')
+                            <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
+                                <i class="fas fa-clock"></i>
+                                ⏳ Chờ xác nhận sửa công
+                            </span>
+                        @elseif($thucHien && $thucHien->trang_thai == 'tu_choi_sua_chua')
+                            <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                                <i class="fas fa-times-circle"></i>
+                                ❌ Từ chối sửa công
+                            </span>
+                        @elseif($daCheckout && $thucHien->trang_thai == 'nhan_vien_xac_nhan')
+                            <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
+                                <i class="fas fa-clock"></i>
+                                ⏳ Chờ xác nhận hoàn thành
+                            </span>
+                        @elseif($daCheckout)
+                            <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                <i class="fas fa-check-circle"></i>
+                                ✅ Đã check-out
+                            </span>
+                        @else
+                            @php
+                                $checkoutStatus = $donTangCa->getCheckoutStatus();
+                            @endphp
+                            @if($checkoutStatus['status'] == 'dang_dien_ra')
+                                <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                                    <i class="fas fa-play"></i>
+                                    🔄 Đang diễn ra
+                                </span>
+                            @elseif($checkoutStatus['status'] == 'sap_ket_thuc')
+                                <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
+                                    <i class="fas fa-hourglass-end"></i>
+                                    {{ $checkoutStatus['label'] }}
+                                </span>
+                            @elseif($checkoutStatus['status'] == 'cho_checkout')
+                                <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    ⏳ Chờ check-out
+                                </span>
+                            @elseif($checkoutStatus['status'] == 'chua_den_gio')
+                                <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                                    <i class="fas fa-clock"></i>
+                                    {{ $checkoutStatus['label'] }}
+                                </span>
+                            @endif
                         @endif
-                    </div>
+                    @endif
                 </div>
                 <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <i class="far fa-calendar-alt"></i>
@@ -221,6 +280,9 @@
                 $soGioThucTe = $thucHien && $thucHien->so_gio_tang_ca_thuc_te ? $thucHien->so_gio_tang_ca_thuc_te : 0;
                 $trangThaiThucHien = $thucHien ? $thucHien->trang_thai : 'chua_xac_nhan';
                 $daHoanThanh = $donTangCa->da_hoan_thanh;
+                $isSuaChua = $trangThaiThucHien == 'cho_xac_nhan_sua_chua';
+                $isTuChoiSuaChua = $trangThaiThucHien == 'tu_choi_sua_chua';
+                $fileDinhKem = $thucHien && $thucHien->file_dinh_kem ? $thucHien->file_dinh_kem : null;
             @endphp
 
             <div>
@@ -259,7 +321,11 @@
                                 </span>
                             @else
                                 <span class="text-gray-400">---</span>
-                                <span class="text-xs text-gray-400 ml-1">(chưa check-out)</span>
+                                @if($donTangCa->thieu_cham_cong_ra)
+                                    <span class="text-xs text-red-500 ml-1">(chưa checkout)</span>
+                                @else
+                                    <span class="text-xs text-gray-400 ml-1">(chưa checkout)</span>
+                                @endif
                             @endif
                         </p>
                     </div>
@@ -269,7 +335,7 @@
                             Số giờ thực tế
                         </p>
                         <p class="mt-1.5 font-bold text-blue-600 dark:text-blue-400 text-lg">
-                            @if($soGioThucTe > 0 || $daHoanThanh)
+                            @if($soGioThucTe > 0 || $daHoanThanh || $isSuaChua)
                                 @php
                                     $hoursDisplay = $soGioThucTe > 0 ? $soGioThucTe : $donTangCa->so_gio_tang_ca;
                                 @endphp
@@ -280,6 +346,9 @@
                                         (sớm {{ number_format($donTangCa->so_gio_tang_ca - $hoursDisplay, 2, ',', '') }}h)
                                     </span>
                                 @endif
+                            @elseif($donTangCa->thieu_cham_cong_ra)
+                                <span class="text-gray-400">---</span>
+                                <span class="text-xs text-red-500 block mt-0.5">(chưa checkout)</span>
                             @else
                                 <span class="text-gray-400">---</span>
                             @endif
@@ -300,6 +369,8 @@
                                 'quan_ly_xac_nhan' => ['color' => 'purple', 'label' => '✅ Hoàn thành'],
                                 'hoan_thanh' => ['color' => 'purple', 'label' => '✅ Hoàn thành'],
                                 'khong_hoan_thanh' => ['color' => 'red', 'label' => '❌ Không hoàn thành'],
+                                'cho_xac_nhan_sua_chua' => ['color' => 'orange', 'label' => '⏳ Chờ xác nhận sửa công'],
+                                'tu_choi_sua_chua' => ['color' => 'red', 'label' => '❌ Từ chối sửa công'],
                             ];
                             $thStatus = $statusThucHienConfig[$trangThaiThucHien] ?? ['color' => 'gray', 'label' => $trangThaiThucHien];
                         @endphp
@@ -309,12 +380,67 @@
                                 @elseif($thStatus['color'] == 'yellow') text-yellow-600 dark:text-yellow-400
                                 @elseif($thStatus['color'] == 'purple') text-purple-600 dark:text-purple-400
                                 @elseif($thStatus['color'] == 'red') text-red-600 dark:text-red-400
+                                @elseif($thStatus['color'] == 'orange') text-orange-600 dark:text-orange-400
                                 @else text-gray-400 @endif">
                                 {{ $thStatus['label'] }}
                             </span>
                         </p>
                     </div>
                 </div>
+
+                {{-- ⭐ HIỂN THỊ THÔNG TIN SỬA CHỮA CÔNG --}}
+                @if($isSuaChua || $isTuChoiSuaChua)
+                <div class="mt-4 p-4 rounded-xl border 
+                    @if($isSuaChua) bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800
+                    @else bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 @endif">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-edit text-xl mt-0.5 
+                            @if($isSuaChua) text-orange-500
+                            @else text-red-500 @endif"></i>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium 
+                                @if($isSuaChua) text-orange-700 dark:text-orange-400
+                                @else text-red-700 dark:text-red-400 @endif">
+                                @if($isSuaChua)
+                                    📝 Yêu cầu sửa chữa công đang chờ xác nhận
+                                @else
+                                    ❌ Yêu cầu sửa chữa công đã bị từ chối
+                                @endif
+                            </p>
+                            <div class="grid grid-cols-2 gap-2 mt-2 text-sm">
+                                <div>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">Giờ checkout thực tế:</span>
+                                    <p class="font-semibold text-gray-900 dark:text-white">
+                                        {{ $thucHien->thoi_gian_ket_thuc ? Carbon\Carbon::parse($thucHien->thoi_gian_ket_thuc)->format('H:i') : '---' }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">Số giờ thực tế:</span>
+                                    <p class="font-semibold text-gray-900 dark:text-white">
+                                        {{ number_format($thucHien->so_gio_tang_ca_thuc_te ?? 0, 1, ',', '') }} giờ
+                                    </p>
+                                </div>
+                            </div>
+                            @if($thucHien->ghi_chu)
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">
+                                    <strong>Ghi chú:</strong> {{ $thucHien->ghi_chu }}
+                                </p>
+                            @endif
+                            @if($fileDinhKem)
+                                <a href="{{ Storage::url($fileDinhKem) }}" target="_blank" 
+                                    class="inline-flex items-center gap-2 mt-2 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400">
+                                    <i class="fas fa-file"></i> Xem file đính kèm
+                                </a>
+                            @endif
+                            @if($isTuChoiSuaChua && $thucHien->ghi_chu)
+                                <p class="text-sm text-red-600 dark:text-red-400 mt-2">
+                                    <strong>Lý do từ chối:</strong> {{ $thucHien->ghi_chu }}
+                                </p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endif
             </div>
 
             {{-- ⭐ LƯƠNG TĂNG CA --}}
@@ -327,9 +453,9 @@
                 $luongGross = 0;
                 $soNgayCongChuan = 0;
                 $tongGioLam = 0;
-                $chiTiet = '';
                 
-                if (($thucHien && $thucHien->thoi_gian_ket_thuc) || $daHoanThanh) {
+                // Hiển thị lương khi đã checkout hoặc hoàn thành
+                if (($thucHien && $thucHien->thoi_gian_ket_thuc) || $daHoanThanh || $isSuaChua || $isTuChoiSuaChua) {
                     $showLuong = true;
                     $userId = $donTangCa->nguoi_dung_id;
                     
@@ -357,7 +483,6 @@
                     $luongGross = $result['luong_gross'];
                     $soNgayCongChuan = $result['so_ngay_cong_chuan'];
                     $tongGioLam = $result['tong_gio_lam_trong_thang'];
-                    $chiTiet = $result['chi_tiet'];
                 }
             @endphp
 
@@ -370,7 +495,11 @@
                         <span class="ml-2 text-xs text-red-500 font-normal">(Đã bị từ chối)</span>
                     @elseif($daHoanThanh)
                         <span class="ml-2 text-xs text-green-500 font-normal">(Đã hoàn thành)</span>
-                    @else
+                    @elseif($isSuaChua)
+                        <span class="ml-2 text-xs text-orange-500 font-normal">(Chờ xác nhận sửa công)</span>
+                    @elseif($isTuChoiSuaChua)
+                        <span class="ml-2 text-xs text-red-500 font-normal">(Từ chối sửa công)</span>
+                    @elseif($daCheckout)
                         <span class="ml-2 text-xs text-blue-500 font-normal">(Đã check-out)</span>
                     @endif
                 </h3>
@@ -428,10 +557,12 @@
 
                             {{-- Kết quả --}}
                             <div class="p-5 rounded-xl border-2 
-                                @if($donTangCa->trang_thai == 'tu_choi') 
+                                @if($donTangCa->trang_thai == 'tu_choi' || $isTuChoiSuaChua) 
                                     bg-red-50 border-red-300 dark:bg-red-900/20 dark:border-red-700
                                 @elseif($daHoanThanh)
                                     bg-emerald-50 border-emerald-300 dark:bg-emerald-900/20 dark:border-emerald-700
+                                @elseif($isSuaChua)
+                                    bg-orange-50 border-orange-300 dark:bg-orange-900/20 dark:border-orange-700
                                 @else
                                     bg-yellow-50 border-yellow-300 dark:bg-yellow-900/20 dark:border-yellow-700
                                 @endif
@@ -439,19 +570,22 @@
                                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
                                     <div>
                                         <p class="text-sm font-medium 
-                                            @if($donTangCa->trang_thai == 'tu_choi') text-red-700 dark:text-red-300
+                                            @if($donTangCa->trang_thai == 'tu_choi' || $isTuChoiSuaChua) text-red-700 dark:text-red-300
                                             @elseif($daHoanThanh) text-emerald-700 dark:text-emerald-300
+                                            @elseif($isSuaChua) text-orange-700 dark:text-orange-300
                                             @else text-yellow-700 dark:text-yellow-300 @endif">
                                             <i class="fas fa-info-circle mr-1"></i>
-                                            @if($donTangCa->trang_thai == 'tu_choi')
+                                            @if($donTangCa->trang_thai == 'tu_choi' || $isTuChoiSuaChua)
                                                 ⚠️ Lương tăng ca đã bị từ chối
                                             @elseif($daHoanThanh)
                                                 ✅ Lương tăng ca đã được xác nhận
+                                            @elseif($isSuaChua)
+                                                📝 Lương tăng ca đang chờ xác nhận sửa công
                                             @else
                                                 📝 Lương tăng ca tạm tính (chờ xác nhận)
                                             @endif
                                         </p>
-                                        @if($donTangCa->trang_thai == 'tu_choi')
+                                        @if($donTangCa->trang_thai == 'tu_choi' || $isTuChoiSuaChua)
                                             <p class="text-xs text-red-600 dark:text-red-400 mt-1">
                                                 <i class="fas fa-exclamation-circle mr-1"></i>
                                                 Đơn đã bị từ chối nên lương này sẽ không được thanh toán
@@ -461,8 +595,9 @@
                                     <div class="text-right">
                                         <p class="text-xs text-gray-500 dark:text-gray-400">Tổng tiền</p>
                                         <p class="text-3xl font-bold 
-                                            @if($donTangCa->trang_thai == 'tu_choi') text-red-600 dark:text-red-400
+                                            @if($donTangCa->trang_thai == 'tu_choi' || $isTuChoiSuaChua) text-red-600 dark:text-red-400
                                             @elseif($daHoanThanh) text-emerald-600 dark:text-emerald-400
+                                            @elseif($isSuaChua) text-orange-600 dark:text-orange-400
                                             @else text-yellow-600 dark:text-yellow-400 @endif">
                                             {{ number_format($tienTangCa) }}đ
                                         </p>
@@ -484,67 +619,9 @@
                     </div>
                 </div>
             </div>
-
-            @elseif($donTangCa->trang_thai == 'da_duyet' && !$donTangCa->da_hoan_thanh)
-                @if($daCheckout)
-                    <div>
-                        <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                            <i class="fas fa-coins text-yellow-500"></i>
-                            Lương tăng ca
-                        </h3>
-                        <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-6 text-center border border-yellow-200 dark:border-yellow-800">
-                            <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-yellow-100 dark:bg-yellow-900/30 mb-3">
-                                <i class="fas fa-clock text-yellow-600 dark:text-yellow-400 text-2xl"></i>
-                            </div>
-                            <p class="text-yellow-700 dark:text-yellow-300 font-medium">
-                                Đang chờ trưởng phòng xác nhận hoàn thành
-                            </p>
-                            <p class="text-sm text-yellow-600 dark:text-yellow-400 mt-1">
-                                Lương sẽ được tính sau khi xác nhận
-                            </p>
-                        </div>
-                    </div>
-                @else
-                    <div>
-                        <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                            <i class="fas fa-coins text-yellow-500"></i>
-                            Lương tăng ca
-                        </h3>
-                        <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-6 text-center border border-yellow-200 dark:border-yellow-800">
-                            <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-yellow-100 dark:bg-yellow-900/30 mb-3">
-                                <i class="fas fa-hourglass-half text-yellow-600 dark:text-yellow-400 text-2xl"></i>
-                            </div>
-                            <p class="text-yellow-700 dark:text-yellow-300 font-medium">
-                                Lương sẽ được tính sau khi check-out
-                            </p>
-                            <p class="text-sm text-yellow-600 dark:text-yellow-400 mt-1">
-                                Vui lòng check-out khi kết thúc tăng ca
-                            </p>
-                        </div>
-                    </div>
-                @endif
-
-            @elseif($donTangCa->trang_thai == 'cho_duyet')
-            <div>
-                <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <i class="fas fa-coins text-yellow-500"></i>
-                    Lương tăng ca
-                </h3>
-                <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-6 text-center border border-yellow-200 dark:border-yellow-800">
-                    <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-yellow-100 dark:bg-yellow-900/30 mb-3">
-                        <i class="fas fa-file-signature text-yellow-600 dark:text-yellow-400 text-2xl"></i>
-                    </div>
-                    <p class="text-yellow-700 dark:text-yellow-300 font-medium">
-                        Đơn đang chờ duyệt
-                    </p>
-                    <p class="text-sm text-yellow-600 dark:text-yellow-400 mt-1">
-                        Lương sẽ được tính sau khi đơn được duyệt
-                    </p>
-                </div>
-            </div>
             @endif
 
-            {{-- ⭐ NÚT CHECK-OUT & XIN VỀ SỚM --}}
+            {{-- ⭐ NÚT THAO TÁC --}}
             @php
                 $canCheckout = false;
                 $checkoutMessage = '';
@@ -553,18 +630,24 @@
                 $canXinVeSom = false;
                 
                 if ($donTangCa->trang_thai == 'da_duyet' && !$donTangCa->da_hoan_thanh) {
-                    $now = Carbon\Carbon::now('Asia/Ho_Chi_Minh');
-                    $ngayTangCa = Carbon\Carbon::parse($donTangCa->ngay_tang_ca)->startOfDay();
-                    $gioBatDau = Carbon\Carbon::parse($donTangCa->gio_bat_dau);
-                    $thoiGianBatDau = Carbon\Carbon::parse(
-                        $ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s')
-                    );
-                    $daDenGioTangCa = $now->gte($thoiGianBatDau->copy()->subMinutes(30));
-                    
-                    if ($daCheckout) {
+                    if ($donTangCa->thieu_cham_cong_ra) {
+                        $checkoutDisabled = true;
+                        $checkoutDisabledMessage = '⚠️ Thiếu chấm công ra. Vui lòng yêu cầu sửa chữa công.';
+                    } elseif ($daCheckout) {
                         $checkoutDisabled = true;
                         $checkoutDisabledMessage = 'Đã check-out lúc ' . Carbon\Carbon::parse($thucHien->thoi_gian_ket_thuc)->format('H:i');
+                    } elseif ($isSuaChua) {
+                        $checkoutDisabled = true;
+                        $checkoutDisabledMessage = '⏳ Đang chờ xác nhận sửa chữa công';
                     } else {
+                        $now = Carbon\Carbon::now('Asia/Ho_Chi_Minh');
+                        $ngayTangCa = Carbon\Carbon::parse($donTangCa->ngay_tang_ca)->startOfDay();
+                        $gioBatDau = Carbon\Carbon::parse($donTangCa->gio_bat_dau);
+                        $thoiGianBatDau = Carbon\Carbon::parse(
+                            $ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s')
+                        );
+                        $daDenGioTangCa = $now->gte($thoiGianBatDau->copy()->subMinutes(30));
+                        
                         if ($daDenGioTangCa) {
                             $canCheckoutResult = \App\Models\DangKyTangCa::canCheckout($donTangCa->id);
                             if ($canCheckoutResult['valid']) {
@@ -589,7 +672,8 @@
                         }
                     }
                     
-                    if (!$daCheckout) {
+                    // ⭐ KIỂM TRA XIN VỀ SỚM
+                    if (!$daCheckout && !$donTangCa->thieu_cham_cong_ra && !$isSuaChua) {
                         $gioKetThuc = Carbon\Carbon::parse($donTangCa->gio_ket_thuc);
                         $thoiGianKetThuc = Carbon\Carbon::parse(
                             $ngayTangCa->format('Y-m-d') . ' ' . $gioKetThuc->format('H:i:s')
@@ -611,8 +695,75 @@
                 }
             @endphp
 
-            @if($canCheckout || $canXinVeSom || $checkoutDisabled)
+            @if($canCheckout || $canXinVeSom || $checkoutDisabled || $donTangCa->thieu_cham_cong_ra)
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                {{-- Thiếu chấm công ra --}}
+                @if($donTangCa->thieu_cham_cong_ra && !$isSuaChua && !$daHoanThanh)
+                    <div class="flex flex-wrap items-center gap-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
+                        <div class="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                            <i class="fas fa-exclamation-triangle text-red-500 dark:text-red-400"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-red-700 dark:text-red-400">
+                                ⚠️ Thiếu chấm công ra
+                            </p>
+                            <p class="text-xs text-red-600 dark:text-red-300">
+                                Bạn đã quên check-out. Vui lòng yêu cầu sửa chữa công để nhập giờ checkout thực tế.
+                            </p>
+                        </div>
+                        <a href="{{ route('employee.tang-ca.sua-chua-cong', $donTangCa->id) }}"
+                            class="inline-flex items-center gap-2 px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition shadow-md hover:shadow-lg">
+                            <i class="fas fa-edit"></i>
+                            Yêu cầu sửa chữa công
+                        </a>
+                    </div>
+                @endif
+
+                {{-- Đang chờ xác nhận sửa công --}}
+                @if($isSuaChua && !$daHoanThanh)
+                    <div class="flex flex-wrap items-center gap-4 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-800">
+                        <div class="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                            <i class="fas fa-clock text-orange-500 dark:text-orange-400"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-orange-700 dark:text-orange-400">
+                                ⏳ Đang chờ trưởng phòng xác nhận sửa chữa công
+                            </p>
+                            <p class="text-xs text-orange-600 dark:text-orange-300">
+                                Vui lòng chờ trưởng phòng xác nhận. Bạn sẽ nhận được thông báo khi có kết quả.
+                            </p>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Từ chối sửa công --}}
+                @if($isTuChoiSuaChua && !$daHoanThanh)
+                    <div class="flex flex-wrap items-center gap-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
+                        <div class="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                            <i class="fas fa-times-circle text-red-500 dark:text-red-400"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-red-700 dark:text-red-400">
+                                ❌ Yêu cầu sửa chữa công đã bị từ chối
+                            </p>
+                            <p class="text-xs text-red-600 dark:text-red-300">
+                                Vui lòng liên hệ trưởng phòng để biết thêm chi tiết.
+                            </p>
+                            @if($thucHien && $thucHien->ghi_chu)
+                                <p class="text-xs text-red-600 dark:text-red-300 mt-1">
+                                    <strong>Lý do:</strong> {{ $thucHien->ghi_chu }}
+                                </p>
+                            @endif
+                        </div>
+                        <a href="{{ route('employee.tang-ca.sua-chua-cong', $donTangCa->id) }}"
+                            class="inline-flex items-center gap-2 px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition shadow-md hover:shadow-lg">
+                            <i class="fas fa-redo"></i>
+                            Gửi lại yêu cầu
+                        </a>
+                    </div>
+                @endif
+
+                {{-- Check-out và Xin về sớm --}}
                 @if($canCheckout || $canXinVeSom)
                     <div class="flex flex-wrap items-center gap-4">
                         @if($canCheckout)
@@ -651,7 +802,7 @@
                             Check-out trong 10 phút cuối, tính lương đến thời điểm check-out
                         </p>
                     @endif
-                @elseif($checkoutDisabled)
+                @elseif($checkoutDisabled && !$donTangCa->thieu_cham_cong_ra && !$isSuaChua && !$isTuChoiSuaChua)
                     <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-200 dark:border-gray-700">
                         <div class="p-2 bg-gray-200 dark:bg-gray-600 rounded-lg">
                             <i class="fas fa-clock text-gray-500 dark:text-gray-400"></i>

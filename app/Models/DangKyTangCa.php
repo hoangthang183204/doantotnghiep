@@ -1,9 +1,9 @@
 <?php
+// app/Models/DangKyTangCa.php
 
 namespace App\Models;
 
 use App\Models\XinVeSomTangCa;
-
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -32,6 +32,8 @@ class DangKyTangCa extends Model
         'da_hoan_thanh',
         'da_checkout_thay_the',
         'thoi_gian_hoan_thanh',
+        'thieu_cham_cong_ra', // Thêm trường mới
+        'thoi_gian_checkout_du_kien', // Thêm trường mới
     ];
 
     protected $casts = [
@@ -40,6 +42,8 @@ class DangKyTangCa extends Model
         'thoi_gian_hoan_thanh' => 'datetime',
         'da_hoan_thanh' => 'boolean',
         'da_checkout_thay_the' => 'boolean',
+        'thieu_cham_cong_ra' => 'boolean',
+        'thoi_gian_checkout_du_kien' => 'datetime',
     ];
 
     // Trạng thái đơn
@@ -120,6 +124,101 @@ class DangKyTangCa extends Model
     }
 
     /**
+     * ⭐ KIỂM TRA TRẠNG THÁI CHECKOUT
+     * Trả về trạng thái hiện tại của đơn tăng ca
+     */
+    public function getCheckoutStatus()
+    {
+        $thucHien = $this->thuc_hien;
+        
+        // Nếu đã hoàn thành
+        if ($this->da_hoan_thanh) {
+            return [
+                'status' => 'hoan_thanh',
+                'label' => '✅ Hoàn thành',
+                'color' => 'purple'
+            ];
+        }
+        
+        // Nếu đã checkout
+        if ($thucHien && $thucHien->thoi_gian_ket_thuc) {
+            if ($thucHien->trang_thai === 'nhan_vien_xac_nhan') {
+                return [
+                    'status' => 'cho_xac_nhan',
+                    'label' => '⏳ Chờ xác nhận',
+                    'color' => 'yellow'
+                ];
+            }
+            return [
+                'status' => 'da_checkout',
+                'label' => '✅ Đã check-out',
+                'color' => 'blue'
+            ];
+        }
+        
+        // Kiểm tra thiếu chấm công ra
+        $now = Carbon::now('Asia/Ho_Chi_Minh');
+        $ngayTangCa = Carbon::parse($this->ngay_tang_ca)->startOfDay();
+        $gioKetThuc = Carbon::parse($this->gio_ket_thuc);
+        $thoiGianKetThuc = Carbon::parse(
+            $ngayTangCa->format('Y-m-d') . ' ' . $gioKetThuc->format('H:i:s')
+        );
+        
+        // Nếu đã quá giờ kết thúc 15 phút
+        if ($now->gt($thoiGianKetThuc->copy()->addMinutes(15))) {
+            // Đánh dấu là thiếu chấm công ra
+            if (!$this->thieu_cham_cong_ra) {
+                $this->update(['thieu_cham_cong_ra' => true]);
+            }
+            return [
+                'status' => 'thieu_cham_cong_ra',
+                'label' => '⚠️ Thiếu chấm công ra',
+                'color' => 'red'
+            ];
+        }
+        
+        // Nếu chưa đến giờ kết thúc
+        if ($now->lt($thoiGianKetThuc)) {
+            $diffMinutes = $now->diffInMinutes($thoiGianKetThuc);
+            if ($diffMinutes <= 10) {
+                return [
+                    'status' => 'sap_ket_thuc',
+                    'label' => "⏳ Sắp kết thúc ({$diffMinutes}p)",
+                    'color' => 'orange'
+                ];
+            }
+            
+            // Kiểm tra đã bắt đầu chưa
+            $gioBatDau = Carbon::parse($this->gio_bat_dau);
+            $thoiGianBatDau = Carbon::parse(
+                $ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s')
+            );
+            
+            if ($now->gte($thoiGianBatDau)) {
+                return [
+                    'status' => 'dang_dien_ra',
+                    'label' => '🔄 Đang diễn ra',
+                    'color' => 'green'
+                ];
+            }
+            
+            $diffMinutes = $now->diffInMinutes($thoiGianBatDau);
+            return [
+                'status' => 'chua_den_gio',
+                'label' => $diffMinutes <= 30 ? "⏳ Sắp đến giờ ({$diffMinutes}p)" : '⏳ Chưa đến giờ',
+                'color' => 'gray'
+            ];
+        }
+        
+        // Sau giờ kết thúc nhưng chưa quá 15 phút
+        return [
+            'status' => 'cho_checkout',
+            'label' => '⏳ Chờ check-out',
+            'color' => 'yellow'
+        ];
+    }
+
+    /**
      * ⭐ KIỂM TRA CÓ THỂ CHECK-OUT KHÔNG
      * (CHỈ CHO PHÉP CHECK-OUT KHI CÒN 10 PHÚT CUỐI HOẶC ĐÃ QUA GIỜ KẾT THÚC)
      */
@@ -147,6 +246,15 @@ class DangKyTangCa extends Model
             return [
                 'valid' => false,
                 'message' => 'Đơn tăng ca đã hoàn thành'
+            ];
+        }
+
+        // Kiểm tra đã thiếu chấm công ra chưa
+        if ($overtime->thieu_cham_cong_ra) {
+            return [
+                'valid' => false,
+                'message' => '⚠️ Đã quá giờ check-out. Vui lòng liên hệ trưởng phòng để xác nhận.',
+                'is_late' => true
             ];
         }
 
