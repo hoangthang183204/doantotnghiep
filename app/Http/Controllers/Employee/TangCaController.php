@@ -632,4 +632,126 @@ class TangCaController extends Controller
             return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
         }
     }
+
+    /**
+     * ⭐ NHÂN VIÊN GỬI YÊU CẦU SỬA CHỮA CÔNG (KHI THIẾU CHECKOUT)
+     */
+    public function yeuCauSuaChuaCong($id)
+    {
+        $user = Auth::user();
+        $donTangCa = DangKyTangCa::findOrFail($id);
+
+        if ($donTangCa->nguoi_dung_id !== $user->id) {
+            return back()->with('error', 'Không có quyền thực hiện');
+        }
+
+        if (!$donTangCa->thieu_cham_cong_ra) {
+            return back()->with('error', 'Đơn không ở trạng thái thiếu chấm công ra');
+        }
+
+        return view('employee.tang-ca.sua-chua-cong', [
+            'donTangCa' => $donTangCa,
+        ]);
+    }
+
+    public function storeSuaChuaCong(Request $request, $id)
+    {
+        $user = Auth::user();
+        $donTangCa = DangKyTangCa::findOrFail($id);
+
+        if ($donTangCa->nguoi_dung_id !== $user->id) {
+            return back()->with('error', 'Không có quyền thực hiện');
+        }
+
+        if (!$donTangCa->thieu_cham_cong_ra) {
+            return back()->with('error', 'Đơn không ở trạng thái thiếu chấm công ra');
+        }
+
+        $request->validate([
+            'gio_checkout_thuc_te' => 'required|date_format:H:i',
+            'ghi_chu' => 'nullable|string|max:500',
+            'file_dinh_kem' => 'nullable|file|max:5120|mimes:jpg,jpeg,png,pdf,doc,docx',
+        ]);
+
+        // Kiểm tra giờ checkout hợp lệ
+        $ngayTangCa = Carbon::parse($donTangCa->ngay_tang_ca);
+        $gioCheckout = Carbon::parse($request->gio_checkout_thuc_te);
+        $gioBatDau = Carbon::parse($donTangCa->gio_bat_dau);
+        $gioKetThuc = Carbon::parse($donTangCa->gio_ket_thuc);
+
+        $thoiGianCheckout = Carbon::parse(
+            $ngayTangCa->format('Y-m-d') . ' ' . $gioCheckout->format('H:i:s')
+        );
+        $thoiGianBatDau = Carbon::parse(
+            $ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s')
+        );
+        $thoiGianKetThuc = Carbon::parse(
+            $ngayTangCa->format('Y-m-d') . ' ' . $gioKetThuc->format('H:i:s')
+        );
+
+        if ($thoiGianCheckout->lt($thoiGianBatDau)) {
+            return back()->with('error', 'Giờ checkout phải sau giờ bắt đầu tăng ca');
+        }
+
+        // ⭐ Nếu checkout trước giờ kết thúc, kiểm tra thời gian tối thiểu
+        if ($thoiGianCheckout->lt($thoiGianKetThuc)) {
+            // Kiểm tra đã làm ít nhất 30 phút chưa
+            $soPhutLam = $thoiGianBatDau->diffInMinutes($thoiGianCheckout);
+            if ($soPhutLam < 30) {
+                return back()->with('error', 'Thời gian làm tăng ca tối thiểu là 30 phút');
+            }
+        }
+
+        $soGioThucTe = $thoiGianBatDau->diffInHours($thoiGianCheckout);
+        $soGioThucTe = min($soGioThucTe, $donTangCa->so_gio_tang_ca);
+
+        if ($soGioThucTe < 0.5) {
+            return back()->with('error', 'Số giờ thực tế tối thiểu là 0.5 giờ');
+        }
+
+        DB::beginTransaction();
+        try {
+            // Tạo bản ghi thực hiện
+            $thucHien = ThucHienTangCa::create([
+                'dang_ky_tang_ca_id' => $donTangCa->id,
+                'nguoi_dung_id' => $user->id,
+                'thoi_gian_bat_dau' => $thoiGianBatDau,
+                'thoi_gian_ket_thuc' => $thoiGianCheckout,
+                'so_gio_tang_ca_thuc_te' => $soGioThucTe,
+                'trang_thai' => 'cho_xac_nhan_sua_chua',
+                'ghi_chu' => $request->ghi_chu,
+            ]);
+
+            // Lưu file nếu có
+            if ($request->hasFile('file_dinh_kem')) {
+                $path = $request->file('file_dinh_kem')->store('overtime_corrections', 'public');
+                $thucHien->update(['file_dinh_kem' => $path]);
+            }
+
+            // Cập nhật đơn: chỉ set thieu_cham_cong_ra = false, giữ nguyên trang_thai
+            $donTangCa->update([
+                'thieu_cham_cong_ra' => false,
+            ]);
+
+            // Gửi thông báo cho trưởng phòng
+            try {
+                $truongPhong = $this->getTruongPhong($user);
+                if ($truongPhong) {
+                    $this->notificationService->notifyOvertime($donTangCa, 'employee_request_correction');
+                }
+            } catch (\Exception $e) {
+                Log::error('⚠️ Failed to send notification: ' . $e->getMessage());
+            }
+
+            DB::commit();
+
+            return redirect()
+                ->route('employee.tang-ca.show', $donTangCa->id)
+                ->with('success', '✅ Đã gửi yêu cầu sửa chữa công. Vui lòng chờ trưởng phòng xác nhận.');
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('❌ Store sua chua cong error: ' . $e->getMessage());
+            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        }
+    }
 }

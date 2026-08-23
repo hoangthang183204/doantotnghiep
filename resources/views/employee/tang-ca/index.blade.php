@@ -47,61 +47,48 @@
                 $thucHien = $overtimeToday->thuc_hien;
                 $daCheckout = $thucHien && $thucHien->thoi_gian_ket_thuc;
                 
-                $now = Carbon\Carbon::now('Asia/Ho_Chi_Minh');
-                $ngayTangCa = Carbon\Carbon::parse($overtimeToday->ngay_tang_ca)->startOfDay();
-                $gioBatDau = Carbon\Carbon::parse($overtimeToday->gio_bat_dau);
-                $gioKetThuc = Carbon\Carbon::parse($overtimeToday->gio_ket_thuc);
-                
-                $thoiGianBatDau = Carbon\Carbon::parse(
-                    $ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s')
-                );
-                $thoiGianKetThuc = Carbon\Carbon::parse(
-                    $ngayTangCa->format('Y-m-d') . ' ' . $gioKetThuc->format('H:i:s')
-                );
-                
-                // ⭐ KIỂM TRA TRẠNG THÁI
-                if ($daCheckout) {
-                    $trangThaiHienThi = '✅ Đã check-out';
-                    $mauTrangThai = 'text-purple-600 dark:text-purple-400';
-                } elseif ($now->gte($thoiGianBatDau) && $now->lte($thoiGianKetThuc)) {
-                    $trangThaiHienThi = '🔄 Đang diễn ra';
-                    $mauTrangThai = 'text-green-600 dark:text-green-400';
-                } elseif ($now->lt($thoiGianBatDau)) {
-                    $phutDenGio = $now->diffInMinutes($thoiGianBatDau);
-                    if ($phutDenGio <= 30) {
-                        $trangThaiHienThi = '⏳ Sắp đến giờ (' . $phutDenGio . 'p)';
-                    } else {
-                        $trangThaiHienThi = '⏳ Chưa đến giờ';
-                    }
-                    $mauTrangThai = 'text-yellow-600 dark:text-yellow-400';
-                } else {
-                    $trangThaiHienThi = '⏳ Chờ check-out';
-                    $mauTrangThai = 'text-yellow-600 dark:text-yellow-400';
+                // ⭐ LẤY TRẠNG THÁI CHECKOUT
+                $checkoutStatus = $overtimeToday->getCheckoutStatus();
+                $trangThaiHienThi = $checkoutStatus['label'] ?? '';
+                $mauTrangThai = '';
+                switch ($checkoutStatus['color'] ?? 'gray') {
+                    case 'green': $mauTrangThai = 'text-green-600 dark:text-green-400'; break;
+                    case 'yellow': $mauTrangThai = 'text-yellow-600 dark:text-yellow-400'; break;
+                    case 'orange': $mauTrangThai = 'text-orange-600 dark:text-orange-400'; break;
+                    case 'red': $mauTrangThai = 'text-red-600 dark:text-red-400'; break;
+                    case 'purple': $mauTrangThai = 'text-purple-600 dark:text-purple-400'; break;
+                    case 'blue': $mauTrangThai = 'text-blue-600 dark:text-blue-400'; break;
+                    default: $mauTrangThai = 'text-gray-600 dark:text-gray-400';
                 }
                 
-                // ⭐ ĐIỀU KIỆN: SAU 30P BẮT ĐẦU VÀ TRƯỚC 30P KẾT THÚC
-                $sau30pBatDau = $now->gte($thoiGianBatDau->copy()->addMinutes(30));
-                $truoc30pKetThuc = $now->lte($thoiGianKetThuc->copy()->subMinutes(30));
-                
-                $daDenGioTangCa = $sau30pBatDau && $truoc30pKetThuc;
-                
-                if (!$daCheckout && $daDenGioTangCa) {
-                    $xinVeSom = $overtimeToday->xin_ve_som;
-                    if (!$xinVeSom || $xinVeSom->trang_thai == 'tu_choi' || $xinVeSom->trang_thai == 'huy') {
-                        $canXinVeSom = true;
-                    }
-                }
-                
-                // ⭐ KIỂM TRA CHECK-OUT - CHỈ HIỂN THỊ KHI CÒN 10 PHÚT CUỐI
-                if (!$daCheckout && $daDenGioTangCa) {
+                // ⭐ KIỂM TRA CHECK-OUT
+                if (!$daCheckout && !$overtimeToday->thieu_cham_cong_ra) {
                     $canCheckoutResult = \App\Models\DangKyTangCa::canCheckout($overtimeToday->id);
                     if ($canCheckoutResult['valid']) {
                         $canCheckout = true;
                         if ($canCheckoutResult['is_early'] ?? false) {
                             $checkoutMessage = "Sớm " . ($canCheckoutResult['early_minutes'] ?? 0) . " phút";
                         }
-                    } else {
-                        $checkoutMessage = $canCheckoutResult['message'];
+                    }
+                }
+                
+                // ⭐ KIỂM TRA XIN VỀ SỚM
+                if (!$daCheckout && !$overtimeToday->thieu_cham_cong_ra) {
+                    $now = Carbon\Carbon::now('Asia/Ho_Chi_Minh');
+                    $ngayTangCa = Carbon\Carbon::parse($overtimeToday->ngay_tang_ca)->startOfDay();
+                    $gioBatDau = Carbon\Carbon::parse($overtimeToday->gio_bat_dau);
+                    $gioKetThuc = Carbon\Carbon::parse($overtimeToday->gio_ket_thuc);
+                    $thoiGianBatDau = Carbon\Carbon::parse($ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s'));
+                    $thoiGianKetThuc = Carbon\Carbon::parse($ngayTangCa->format('Y-m-d') . ' ' . $gioKetThuc->format('H:i:s'));
+                    
+                    $sau30pBatDau = $now->gte($thoiGianBatDau->copy()->addMinutes(30));
+                    $truoc30pKetThuc = $now->lte($thoiGianKetThuc->copy()->subMinutes(30));
+                    
+                    if ($sau30pBatDau && $truoc30pKetThuc) {
+                        $xinVeSom = $overtimeToday->xin_ve_som;
+                        if (!$xinVeSom || $xinVeSom->trang_thai == 'tu_choi' || $xinVeSom->trang_thai == 'huy') {
+                            $canXinVeSom = true;
+                        }
                     }
                 }
             }
@@ -118,11 +105,11 @@
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 text-sm">
                         <div>
                             <span class="text-xs text-gray-500 dark:text-gray-400">Giờ bắt đầu</span>
-                            <p class="font-semibold text-blue-600 dark:text-blue-400">{{ \Carbon\Carbon::parse($overtimeToday->gio_bat_dau)->format('H:i') }}</p>
+                            <p class="font-semibold text-blue-600 dark:text-blue-400">{{ Carbon\Carbon::parse($overtimeToday->gio_bat_dau)->format('H:i') }}</p>
                         </div>
                         <div>
                             <span class="text-xs text-gray-500 dark:text-gray-400">Giờ kết thúc</span>
-                            <p class="font-semibold text-blue-600 dark:text-blue-400">{{ \Carbon\Carbon::parse($overtimeToday->gio_ket_thuc)->format('H:i') }}</p>
+                            <p class="font-semibold text-blue-600 dark:text-blue-400">{{ Carbon\Carbon::parse($overtimeToday->gio_ket_thuc)->format('H:i') }}</p>
                         </div>
                         <div>
                             <span class="text-xs text-gray-500 dark:text-gray-400">Số giờ</span>
@@ -137,8 +124,16 @@
                     </div>
                     
                     <div class="mt-3 flex flex-wrap gap-2">
-                        {{-- Nút Check-out --}}
-                        @if($canCheckout)
+                        {{-- Nếu thiếu chấm công ra --}}
+                        @if($overtimeToday->thieu_cham_cong_ra)
+                            <a href="{{ route('employee.tang-ca.sua-chua-cong', $overtimeToday->id) }}"
+                                class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition text-sm font-medium">
+                                <i class="fas fa-edit mr-1"></i> Yêu cầu sửa chữa công
+                            </a>
+                            <span class="inline-flex items-center px-3 py-1.5 bg-red-100 text-red-700 rounded-lg text-sm">
+                                <i class="fas fa-exclamation-triangle mr-1"></i> Thiếu chấm công ra
+                            </span>
+                        @elseif($canCheckout)
                             <form action="{{ route('employee.tang-ca.confirm-thuc-hien', $overtimeToday->id) }}" method="POST">
                                 @csrf
                                 <button type="submit"
@@ -153,10 +148,6 @@
                             <span class="text-xs text-gray-500 dark:text-gray-400 self-center">
                                 ⏰ Check-out trong 10 phút cuối
                             </span>
-                        @elseif(!empty($checkoutMessage))
-                            <span class="inline-flex items-center px-3 py-1.5 bg-gray-200 text-gray-600 rounded-lg text-sm">
-                                <i class="fas fa-clock mr-1"></i> {{ $checkoutMessage }}
-                            </span>
                         @elseif($daCheckout)
                             <span class="inline-flex items-center px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-sm">
                                 <i class="fas fa-check-circle mr-1"></i> Đã hoàn thành
@@ -164,7 +155,7 @@
                         @endif
 
                         {{-- Nút Xin về sớm --}}
-                        @if($canXinVeSom && !$daCheckout)
+                        @if($canXinVeSom)
                             <a href="{{ route('employee.tang-ca.xin-ve-som', $overtimeToday->id) }}"
                                 class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition text-sm font-medium">
                                 <i class="fas fa-clock mr-1"></i> Xin về sớm
@@ -277,61 +268,19 @@
                                 $xinVeSomItem = null;
                                 $trangThaiPhu = '';
                                 $mauTrangThaiPhu = '';
-                                $phutDenGioBatDau = 0;
-                                $phutDenGioKetThuc = 0;
+                                $thoiGianConLaiText = '';
                                 
-                                if (!$isKienNghi && $don->trang_thai == 'da_duyet' && !$daXacNhan && !$daCheckout) {
-                                    $now = Carbon\Carbon::now('Asia/Ho_Chi_Minh');
-                                    $ngayTangCa = Carbon\Carbon::parse($don->ngay_tang_ca)->startOfDay();
-                                    $gioBatDau = Carbon\Carbon::parse($don->gio_bat_dau);
-                                    $gioKetThuc = Carbon\Carbon::parse($don->gio_ket_thuc);
-                                    
-                                    $thoiGianBatDauItem = Carbon\Carbon::parse(
-                                        $ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s')
-                                    );
-                                    $thoiGianKetThucItem = Carbon\Carbon::parse(
-                                        $ngayTangCa->format('Y-m-d') . ' ' . $gioKetThuc->format('H:i:s')
-                                    );
-                                    
-                                    // ⭐ KIỂM TRA ĐÃ ĐẾN GIỜ TĂNG CA CHƯA
-                                    $daDenGioTangCaItem = $now->gte($thoiGianBatDauItem->copy()->subMinutes(30));
-                                    
-                                    // ⭐ TÍNH PHÚT ĐẾN GIỜ BẮT ĐẦU
-                                    if ($now->lt($thoiGianBatDauItem)) {
-                                        $phutDenGioBatDau = $now->diffInMinutes($thoiGianBatDauItem);
-                                    }
-                                    
-                                    // ⭐ TÍNH PHÚT ĐẾN GIỜ KẾT THÚC
-                                    if ($now->lt($thoiGianKetThucItem)) {
-                                        $phutDenGioKetThuc = $now->diffInMinutes($thoiGianKetThucItem);
-                                    }
-                                    
-                                    // ⭐ XÁC ĐỊNH TRẠNG THÁI PHỤ
-                                    if ($now->gte($thoiGianBatDauItem) && $now->lte($thoiGianKetThucItem)) {
-                                        $trangThaiPhu = '🔄 Đang diễn ra';
-                                        $mauTrangThaiPhu = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
-                                    } elseif ($now->lt($thoiGianBatDauItem)) {
-                                        if ($phutDenGioBatDau <= 30) {
-                                            $trangThaiPhu = '⏳ Sắp đến giờ (' . $phutDenGioBatDau . 'p)';
-                                        } else {
-                                            $trangThaiPhu = '⏳ Chờ đến giờ';
-                                        }
-                                        $mauTrangThaiPhu = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
-                                    } else {
-                                        $trangThaiPhu = '⏳ Chờ check-out';
-                                        $mauTrangThaiPhu = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
-                                    }
-                                    
-                                    // ⭐ ĐIỀU KIỆN XIN VỀ SỚM: SAU 30P BẮT ĐẦU VÀ TRƯỚC 30P KẾT THÚC
-                                    $sau30pBatDau = $now->gte($thoiGianBatDauItem->copy()->addMinutes(30));
-                                    $truoc30pKetThuc = $now->lte($thoiGianKetThucItem->copy()->subMinutes(30));
-                                    
-                                    if ($sau30pBatDau && $truoc30pKetThuc) {
-                                        $xinVeSomItem = $don->xin_ve_som;
-                                        if (!$xinVeSomItem || $xinVeSomItem->trang_thai == 'tu_choi' || $xinVeSomItem->trang_thai == 'huy') {
-                                            $canXinVeSomItem = true;
-                                        }
-                                    }
+                                // ⭐ LẤY TRẠNG THÁI CHECKOUT
+                                $checkoutStatus = $don->getCheckoutStatus();
+                                $trangThaiPhu = $checkoutStatus['label'] ?? '';
+                                switch ($checkoutStatus['color'] ?? 'gray') {
+                                    case 'green': $mauTrangThaiPhu = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'; break;
+                                    case 'yellow': $mauTrangThaiPhu = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'; break;
+                                    case 'orange': $mauTrangThaiPhu = 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'; break;
+                                    case 'red': $mauTrangThaiPhu = 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'; break;
+                                    case 'purple': $mauTrangThaiPhu = 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'; break;
+                                    case 'blue': $mauTrangThaiPhu = 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'; break;
+                                    default: $mauTrangThaiPhu = 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
                                 }
                                 
                                 $loaiLabels = [
@@ -352,36 +301,81 @@
                                     'huy' => '🗑️ Đã hủy',
                                 ];
                                 
-                                $now = Carbon\Carbon::now('Asia/Ho_Chi_Minh');
                                 $coTheCheckout = false;
                                 $thongBaoThoiGian = '';
                                 $checkoutMessage = '';
                                 
-                                if (!$isKienNghi && $don->trang_thai == 'da_duyet' && !$daXacNhan && !$daCheckout) {
-                                    $ngayTangCa = Carbon\Carbon::parse($don->ngay_tang_ca)->startOfDay();
-                                    $gioBatDau = Carbon\Carbon::parse($don->gio_bat_dau);
-                                    $thoiGianBatDau = Carbon\Carbon::parse(
-                                        $ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s')
-                                    );
-                                    $daDenGioTangCa = $now->gte($thoiGianBatDau->copy()->subMinutes(30));
-                                    
-                                    if ($daDenGioTangCa) {
-                                        // ⭐ KIỂM TRA CHECK-OUT - CHỈ HIỂN THỊ KHI CÒN 10 PHÚT CUỐI
-                                        $canCheckoutResult = \App\Models\DangKyTangCa::canCheckout($don->id);
-                                        if ($canCheckoutResult['valid']) {
-                                            $coTheCheckout = true;
-                                            if ($canCheckoutResult['is_early'] ?? false) {
-                                                $checkoutMessage = "Sớm " . ($canCheckoutResult['early_minutes'] ?? 0) . " phút";
+                                if (!$isKienNghi && $don->trang_thai == 'da_duyet' && !$don->da_hoan_thanh) {
+                                    if ($don->thieu_cham_cong_ra) {
+                                        $thongBaoThoiGian = '⚠️ Thiếu chấm công ra';
+                                    } elseif (!$daCheckout) {
+                                        $now = Carbon\Carbon::now('Asia/Ho_Chi_Minh');
+                                        $ngayTangCa = Carbon\Carbon::parse($don->ngay_tang_ca)->startOfDay();
+                                        $gioBatDau = Carbon\Carbon::parse($don->gio_bat_dau);
+                                        $gioKetThuc = Carbon\Carbon::parse($don->gio_ket_thuc);
+                                        $thoiGianBatDau = Carbon\Carbon::parse(
+                                            $ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s')
+                                        );
+                                        $thoiGianKetThuc = Carbon\Carbon::parse(
+                                            $ngayTangCa->format('Y-m-d') . ' ' . $gioKetThuc->format('H:i:s')
+                                        );
+                                        
+                                        // ⭐ TÍNH THỜI GIAN CÒN LẠI ĐẾN GIỜ BẮT ĐẦU
+                                        if ($now->lt($thoiGianBatDau)) {
+                                            $diffInMinutes = $now->diffInMinutes($thoiGianBatDau);
+                                            $diffInMinutes = (int) ceil($diffInMinutes); // Làm tròn lên và ép kiểu int
+                                            
+                                            if ($diffInMinutes < 60) {
+                                                $thoiGianConLaiText = '⏳ ' . $diffInMinutes . ' phút nữa';
+                                            } else {
+                                                $hours = floor($diffInMinutes / 60);
+                                                $minutes = $diffInMinutes % 60;
+                                                if ($minutes > 0) {
+                                                    $thoiGianConLaiText = '⏳ Còn ' . $hours . 'h' . $minutes . 'p';
+                                                } else {
+                                                    $thoiGianConLaiText = '⏳ Còn ' . $hours . ' giờ';
+                                                }
+                                            }
+                                        }
+                                        
+                                        $daDenGioTangCaItem = $now->gte($thoiGianBatDau->copy()->subMinutes(30));
+                                        
+                                        if ($daDenGioTangCaItem) {
+                                            // ⭐ KIỂM TRA CHECK-OUT
+                                            $canCheckoutResult = \App\Models\DangKyTangCa::canCheckout($don->id);
+                                            if ($canCheckoutResult['valid']) {
+                                                $coTheCheckout = true;
+                                                if ($canCheckoutResult['is_early'] ?? false) {
+                                                    $earlyMinutes = (int) ($canCheckoutResult['early_minutes'] ?? 0);
+                                                    $checkoutMessage = "Sớm " . $earlyMinutes . " phút";
+                                                }
+                                            } else {
+                                                $thongBaoThoiGian = $canCheckoutResult['message'];
                                             }
                                         } else {
-                                            $thongBaoThoiGian = $canCheckoutResult['message'];
+                                            $thongBaoThoiGian = $thoiGianConLaiText ?: '⏳ Chưa đến giờ tăng ca';
                                         }
                                     } else {
-                                        $phutDenGio = $now->diffInMinutes($thoiGianBatDau);
-                                        if ($phutDenGio <= 30) {
-                                            $thongBaoThoiGian = "⏳ Sắp đến giờ (" . $phutDenGio . "p)";
-                                        } else {
-                                            $thongBaoThoiGian = "⏳ Chưa đến giờ tăng ca";
+                                        $thongBaoThoiGian = '⏳ Chờ xác nhận';
+                                    }
+                                }
+                                
+                                // ⭐ KIỂM TRA XIN VỀ SỚM
+                                if (!$isKienNghi && $don->trang_thai == 'da_duyet' && !$don->da_hoan_thanh && !$don->thieu_cham_cong_ra && !$daCheckout) {
+                                    $now = Carbon\Carbon::now('Asia/Ho_Chi_Minh');
+                                    $ngayTangCa = Carbon\Carbon::parse($don->ngay_tang_ca)->startOfDay();
+                                    $gioBatDau = Carbon\Carbon::parse($don->gio_bat_dau);
+                                    $gioKetThuc = Carbon\Carbon::parse($don->gio_ket_thuc);
+                                    $thoiGianBatDau = Carbon\Carbon::parse($ngayTangCa->format('Y-m-d') . ' ' . $gioBatDau->format('H:i:s'));
+                                    $thoiGianKetThuc = Carbon\Carbon::parse($ngayTangCa->format('Y-m-d') . ' ' . $gioKetThuc->format('H:i:s'));
+                                    
+                                    $sau30pBatDau = $now->gte($thoiGianBatDau->copy()->addMinutes(30));
+                                    $truoc30pKetThuc = $now->lte($thoiGianKetThuc->copy()->subMinutes(30));
+                                    
+                                    if ($sau30pBatDau && $truoc30pKetThuc) {
+                                        $xinVeSomItem = $don->xin_ve_som;
+                                        if (!$xinVeSomItem || $xinVeSomItem->trang_thai == 'tu_choi' || $xinVeSomItem->trang_thai == 'huy') {
+                                            $canXinVeSomItem = true;
                                         }
                                     }
                                 }
@@ -419,13 +413,13 @@
                                         {{ $trangThaiLabels[$don->trang_thai] ?? $don->trang_thai }}
                                     </span>
                                     @if ($don->trang_thai == 'da_duyet' && !$isKienNghi)
-                                        @if ($daXacNhan)
+                                        @if ($don->da_hoan_thanh)
                                             <span class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
                                                 ✅ Hoàn thành
                                             </span>
-                                        @elseif($daCheckout)
-                                            <span class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                                                ⏳ Chờ xác nhận
+                                        @elseif($don->thieu_cham_cong_ra)
+                                            <span class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                                                ⚠️ Thiếu chấm công ra
                                             </span>
                                         @elseif($trangThaiPhu)
                                             <span class="ml-1 px-2 py-1 rounded-full text-xs font-medium {{ $mauTrangThaiPhu }}">
@@ -433,7 +427,7 @@
                                             </span>
                                         @endif
                                     @endif
-                                    @if($xinVeSomItem && !$daCheckout && !$isKienNghi)
+                                    @if($xinVeSomItem && !$don->da_hoan_thanh && !$isKienNghi)
                                         <span class="ml-1 px-2 py-1 rounded-full text-xs font-medium 
                                             @if($xinVeSomItem->trang_thai == 'cho_duyet') bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300
                                             @elseif($xinVeSomItem->trang_thai == 'da_duyet') bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300
@@ -453,8 +447,16 @@
                                             <i class="fas fa-eye text-sm"></i>
                                         </a>
 
-                                        {{-- ⭐ NÚT CHECK-OUT - CHỈ HIỂN THỊ KHI CÒN 10 PHÚT CUỐI --}}
-                                        @if (!$isKienNghi && $don->trang_thai == 'da_duyet' && !$daXacNhan && !$daCheckout)
+                                        {{-- ⭐ THIẾU CHẤM CÔNG RA - HIỂN THỊ NÚT SỬA CÔNG --}}
+                                        @if (!$isKienNghi && $don->trang_thai == 'da_duyet' && $don->thieu_cham_cong_ra && !$don->da_hoan_thanh)
+                                            <a href="{{ route('employee.tang-ca.sua-chua-cong', $don->id) }}"
+                                                class="inline-flex items-center justify-center px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition text-sm font-medium">
+                                                <i class="fas fa-edit mr-1"></i> Sửa công
+                                            </a>
+                                        @endif
+
+                                        {{-- ⭐ NÚT CHECK-OUT --}}
+                                        @if (!$isKienNghi && $don->trang_thai == 'da_duyet' && !$don->da_hoan_thanh && !$don->thieu_cham_cong_ra)
                                             @if ($coTheCheckout)
                                                 <form action="{{ route('employee.tang-ca.confirm-thuc-hien', $don->id) }}" method="POST" class="inline">
                                                     @csrf
@@ -476,8 +478,8 @@
                                             @endif
                                         @endif
 
-                                        {{-- ⭐ NÚT XIN VỀ SỚM - CHỈ HIỂN THỊ KHI ĐÃ LÀM >= 30P VÀ CÒN >= 30P --}}
-                                        @if($canXinVeSomItem && !$daCheckout && !$isKienNghi)
+                                        {{-- ⭐ NÚT XIN VỀ SỚM --}}
+                                        @if($canXinVeSomItem && !$don->da_hoan_thanh && !$isKienNghi && !$don->thieu_cham_cong_ra)
                                             <a href="{{ route('employee.tang-ca.xin-ve-som', $don->id) }}"
                                                 class="inline-flex items-center justify-center px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition text-sm font-medium">
                                                 <i class="fas fa-clock mr-1"></i> Xin về sớm
@@ -501,7 +503,7 @@
                                         @endif
 
                                         {{-- ⭐ TỪ CHỐI ĐƠN TĂNG CA (DO TRƯỞNG PHÒNG TẠO) --}}
-                                        @if (!$isKienNghi && $don->loai_tao == 'truong_phong' && $don->trang_thai == 'da_duyet' && !$daCheckout && !$daXacNhan)
+                                        @if (!$isKienNghi && $don->loai_tao == 'truong_phong' && $don->trang_thai == 'da_duyet' && !$don->da_hoan_thanh && !$don->thieu_cham_cong_ra)
                                             <button onclick="showTuChoiModalIndex({{ $don->id }})"
                                                 class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg transition"
                                                 title="Từ chối đơn tăng ca">
