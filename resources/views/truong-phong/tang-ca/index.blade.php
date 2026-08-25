@@ -174,6 +174,8 @@
                                 $daXacNhan = $thucHien && $thucHien->trang_thai === 'quan_ly_xac_nhan';
                                 $daNhanVienXacNhan = $thucHien && $thucHien->trang_thai === 'nhan_vien_xac_nhan';
                                 $daCheckout = $thucHien && $thucHien->thoi_gian_ket_thuc;
+                                $isSuaChua = $thucHien && $thucHien->trang_thai === 'cho_xac_nhan_sua_chua';
+                                $isTuChoiSuaChua = $thucHien && $thucHien->trang_thai === 'tu_choi_sua_chua';
 
                                 $loaiLabels = [
                                     'ngay_thuong' => 'Ngày thường',
@@ -245,15 +247,30 @@
                                         {{ $trangThaiLabels[$don->trang_thai] ?? $don->trang_thai }}
                                     </span>
                                     @if ($don->trang_thai == 'da_duyet' && !$isKienNghi)
-                                        @if ($daXacNhan)
+                                        @if ($don->da_hoan_thanh)
                                             <span
                                                 class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
                                                 ✅ Hoàn thành
+                                            </span>
+                                        @elseif($don->thieu_cham_cong_ra)
+                                            <span
+                                                class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                                                ⚠️ Thiếu chấm công ra
                                             </span>
                                         @elseif($daNhanVienXacNhan)
                                             <span
                                                 class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
                                                 ⏳ Chờ xác nhận
+                                            </span>
+                                        @elseif($isSuaChua)
+                                            <span
+                                                class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
+                                                ⏳ Chờ xác nhận sửa công
+                                            </span>
+                                        @elseif($isTuChoiSuaChua)
+                                            <span
+                                                class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                                                ❌ Từ chối sửa công
                                             </span>
                                         @endif
                                     @endif
@@ -308,6 +325,20 @@
                                                 title="Tạo đơn tăng ca từ kiến nghị">
                                                 <i class="fas fa-plus-circle mr-1"></i> Tạo đơn
                                             </a>
+                                        @endif
+
+                                        {{-- ⭐ XÁC NHẬN SỬA CHỮA CÔNG --}}
+                                        @if ($isSuaChua && !$don->da_hoan_thanh)
+                                            <button onclick="showApproveSuaChuaModal({{ $don->id }}, {{ $don->so_gio_tang_ca }})"
+                                                class="inline-flex items-center justify-center px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition text-sm font-medium"
+                                                title="Xác nhận sửa chữa công">
+                                                <i class="fas fa-check-double mr-1"></i> Xác nhận sửa công
+                                            </button>
+                                            <button onclick="showRejectSuaChuaModal({{ $don->id }})"
+                                                class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg transition"
+                                                title="Từ chối sửa chữa công">
+                                                <i class="fas fa-times text-sm"></i>
+                                            </button>
                                         @endif
 
                                         {{-- ⭐ DUYỆT/TỪ CHỐI TRONG INDEX --}}
@@ -430,7 +461,87 @@
         </div>
     </div>
 
-    {{-- ⭐ MODAL TỪ CHỐI XIN VỀ SỚM --}}
+    {{-- ⭐ MODAL XÁC NHẬN SỬA CHỮA CÔNG --}}
+    <div id="approveSuaChuaModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 mx-4 animate-scale-up">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-check-circle text-green-500 text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Xác nhận sửa chữa công</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Nhập số giờ thực tế</p>
+                </div>
+            </div>
+            
+            <form action="" method="POST" id="approveSuaChuaForm">
+                @csrf
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Số giờ thực tế <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" name="so_gio_thuc_te" id="soGioThucTeInput"
+                        step="0.5" min="0.5" 
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        required>
+                    <p class="text-xs text-gray-400 mt-1" id="soGioNote">Tối thiểu 0.5 giờ</p>
+                </div>
+                <div class="flex gap-3 justify-end">
+                    <button type="button" onclick="closeApproveSuaChuaModal()" 
+                        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition">
+                        Hủy
+                    </button>
+                    <button type="submit" 
+                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-2">
+                        <i class="fas fa-check"></i> Xác nhận
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- ⭐ MODAL TỪ CHỐI SỬA CHỮA CÔNG --}}
+    <div id="rejectSuaChuaModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 mx-4 animate-scale-up">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-times-circle text-red-500 text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Từ chối sửa chữa công</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Nhập lý do từ chối</p>
+                </div>
+            </div>
+            
+            <form action="" method="POST" id="rejectSuaChuaForm">
+                @csrf
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Lý do từ chối <span class="text-red-500">*</span>
+                    </label>
+                    <textarea name="ly_do_tu_choi" id="lyDoTuChoiSuaChua" rows="4"
+                        class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none transition"
+                        placeholder="Nhập lý do từ chối..." required></textarea>
+                    <div class="flex justify-between mt-2">
+                        <span class="text-xs text-gray-400">Tối thiểu 10 ký tự</span>
+                        <span id="lyDoTuChoiSuaChuaCount" class="text-xs text-gray-400">0/500</span>
+                    </div>
+                </div>
+                <div class="flex gap-3 justify-end">
+                    <button type="button" onclick="closeRejectSuaChuaModal()" 
+                        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition">
+                        Hủy
+                    </button>
+                    <button type="submit" 
+                        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition flex items-center gap-2">
+                        <i class="fas fa-check"></i> Xác nhận từ chối
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- MODAL TỪ CHỐI XIN VỀ SỚM --}}
     <div id="tuChoiXinVeSomModal"
         class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 mx-4 animate-scale-up">
@@ -501,6 +612,8 @@
             tuChoiDon: '{{ route('truong-phong.tang-ca.tu-choi', ['id' => ':id']) }}',
             tuChoiKienNghi: '{{ route('truong-phong.tang-ca.tu-choi-kien-nghi', ['id' => ':id']) }}',
             tuChoiXinVeSom: '{{ route('truong-phong.tang-ca.tu-choi-xin-ve-som', ['id' => ':id']) }}',
+            approveSuaChua: '{{ route('truong-phong.tang-ca.approve-sua-chua-cong', ['id' => ':id']) }}',
+            rejectSuaChua: '{{ route('truong-phong.tang-ca.reject-sua-chua-cong', ['id' => ':id']) }}',
         };
 
         let currentIdIndex = null;
@@ -529,6 +642,48 @@
             currentIdIndex = null;
         }
 
+        // ⭐ HIỂN THỊ MODAL XÁC NHẬN SỬA CHỮA CÔNG
+        function showApproveSuaChuaModal(id, soGioDangKy) {
+            const modal = document.getElementById('approveSuaChuaModal');
+            const form = document.getElementById('approveSuaChuaForm');
+            
+            let url = ROUTES_INDEX.approveSuaChua.replace(':id', id);
+            form.action = url;
+            
+            // Set max value
+            const input = document.getElementById('soGioThucTeInput');
+            input.max = soGioDangKy;
+            input.value = soGioDangKy;
+            document.getElementById('soGioNote').textContent = 'Tối thiểu 0.5 giờ, tối đa ' + soGioDangKy + ' giờ';
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeApproveSuaChuaModal() {
+            document.getElementById('approveSuaChuaModal').classList.add('hidden');
+            document.getElementById('approveSuaChuaModal').classList.remove('flex');
+        }
+
+        // ⭐ HIỂN THỊ MODAL TỪ CHỐI SỬA CHỮA CÔNG
+        function showRejectSuaChuaModal(id) {
+            const modal = document.getElementById('rejectSuaChuaModal');
+            const form = document.getElementById('rejectSuaChuaForm');
+
+            let url = ROUTES_INDEX.rejectSuaChua.replace(':id', id);
+            form.action = url;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.getElementById('lyDoTuChoiSuaChua').value = '';
+            document.getElementById('lyDoTuChoiSuaChuaCount').textContent = '0/500';
+        }
+
+        function closeRejectSuaChuaModal() {
+            document.getElementById('rejectSuaChuaModal').classList.add('hidden');
+            document.getElementById('rejectSuaChuaModal').classList.remove('flex');
+        }
+
         // ⭐ HIỂN THỊ MODAL TỪ CHỐI XIN VỀ SỚM
         function showTuChoiXinVeSomModal(id) {
             const modal = document.getElementById('tuChoiXinVeSomModal');
@@ -554,12 +709,17 @@
             document.getElementById('lyDoTuChoiCountIndex').textContent = count + '/500';
         });
 
+        document.getElementById('lyDoTuChoiSuaChua').addEventListener('input', function() {
+            const count = this.value.length;
+            document.getElementById('lyDoTuChoiSuaChuaCount').textContent = count + '/500';
+        });
+
         document.getElementById('lyDoTuChoiXinVeSom').addEventListener('input', function() {
             const count = this.value.length;
             document.getElementById('lyDoTuChoiXinVeSomCount').textContent = count + '/500';
         });
 
-        // ⭐ XỬ LÝ SUBMIT FORM TỪ CHỐI - KHÔNG DÙNG AJAX
+        // ⭐ XỬ LÝ SUBMIT FORM TỪ CHỐI
         document.getElementById('tuChoiFormIndex').addEventListener('submit', function(e) {
             const lyDo = document.getElementById('lyDoTuChoiIndex').value.trim();
             if (lyDo.length < 10) {
@@ -567,11 +727,9 @@
                 alert('⚠️ Lý do từ chối phải có ít nhất 10 ký tự!');
                 return false;
             }
-            // Cho phép submit bình thường, trang sẽ reload
             return true;
         });
 
-        // ⭐ XỬ LÝ SUBMIT FORM TỪ CHỐI XIN VỀ SỚM - KHÔNG DÙNG AJAX
         document.getElementById('tuChoiXinVeSomForm').addEventListener('submit', function(e) {
             const lyDo = document.getElementById('lyDoTuChoiXinVeSom').value.trim();
             if (lyDo.length < 10) {
@@ -579,57 +737,56 @@
                 alert('⚠️ Lý do từ chối phải có ít nhất 10 ký tự!');
                 return false;
             }
-            // Cho phép submit bình thường, trang sẽ reload
             return true;
         });
 
-        // ⭐ XỬ LÝ DUYỆT KIẾN NGHỊ - KHÔNG DÙNG AJAX
-        document.querySelectorAll('form[action*="duyet-kien-nghi"]').forEach(form => {
-            form.addEventListener('submit', function(e) {
-                if (!confirm('Duyệt kiến nghị tăng ca này?')) {
-                    e.preventDefault();
-                    return false;
-                }
-                return true;
-            });
+        // ⭐ XỬ LÝ SUBMIT FORM XÁC NHẬN SỬA CHỮA CÔNG
+        document.getElementById('approveSuaChuaForm').addEventListener('submit', function(e) {
+            const soGio = parseFloat(document.getElementById('soGioThucTeInput').value);
+            const maxGio = parseFloat(document.getElementById('soGioThucTeInput').max);
+            if (soGio < 0.5) {
+                e.preventDefault();
+                alert('⚠️ Số giờ thực tế tối thiểu là 0.5 giờ!');
+                return false;
+            }
+            if (soGio > maxGio) {
+                e.preventDefault();
+                alert('⚠️ Số giờ thực tế không được vượt quá ' + maxGio + ' giờ!');
+                return false;
+            }
+            if (!confirm('Xác nhận sửa chữa công với số giờ ' + soGio + ' giờ?')) {
+                e.preventDefault();
+                return false;
+            }
+            return true;
         });
 
-        // ⭐ XỬ LÝ DUYỆT ĐƠN TĂNG CA - KHÔNG DÙNG AJAX
-        document.querySelectorAll('form[action*="/duyet"]:not([action*="duyet-kien-nghi"])').forEach(form => {
-            form.addEventListener('submit', function(e) {
-                if (!confirm('Duyệt đơn tăng ca này?')) {
-                    e.preventDefault();
-                    return false;
-                }
-                return true;
-            });
-        });
-
-        // ⭐ XỬ LÝ DUYỆT XIN VỀ SỚM - KHÔNG DÙNG AJAX
-        document.querySelectorAll('form[action*="duyet-xin-ve-som"]').forEach(form => {
-            form.addEventListener('submit', function(e) {
-                if (!confirm('Duyệt đơn xin về sớm?')) {
-                    e.preventDefault();
-                    return false;
-                }
-                return true;
-            });
-        });
-
-        // ⭐ XỬ LÝ XÁC NHẬN HOÀN THÀNH - KHÔNG DÙNG AJAX
-        document.querySelectorAll('form[action*="approve-thuc-hien"]').forEach(form => {
-            form.addEventListener('submit', function(e) {
-                if (!confirm('Xác nhận nhân viên đã hoàn thành tăng ca?')) {
-                    e.preventDefault();
-                    return false;
-                }
-                return true;
-            });
+        // ⭐ XỬ LÝ SUBMIT FORM TỪ CHỐI SỬA CHỮA CÔNG
+        document.getElementById('rejectSuaChuaForm').addEventListener('submit', function(e) {
+            const lyDo = document.getElementById('lyDoTuChoiSuaChua').value.trim();
+            if (lyDo.length < 10) {
+                e.preventDefault();
+                alert('⚠️ Lý do từ chối phải có ít nhất 10 ký tự!');
+                return false;
+            }
+            if (!confirm('Bạn có chắc muốn từ chối yêu cầu sửa chữa công?')) {
+                e.preventDefault();
+                return false;
+            }
+            return true;
         });
 
         // ⭐ CLICK OUTSIDE ĐỂ ĐÓNG MODAL
         document.getElementById('tuChoiModalIndex').addEventListener('click', function(e) {
             if (e.target === this) closeTuChoiModalIndex();
+        });
+
+        document.getElementById('approveSuaChuaModal').addEventListener('click', function(e) {
+            if (e.target === this) closeApproveSuaChuaModal();
+        });
+
+        document.getElementById('rejectSuaChuaModal').addEventListener('click', function(e) {
+            if (e.target === this) closeRejectSuaChuaModal();
         });
 
         document.getElementById('tuChoiXinVeSomModal').addEventListener('click', function(e) {
@@ -640,6 +797,8 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeTuChoiModalIndex();
+                closeApproveSuaChuaModal();
+                closeRejectSuaChuaModal();
                 closeTuChoiXinVeSomModal();
             }
         });

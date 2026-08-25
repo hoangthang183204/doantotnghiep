@@ -40,6 +40,8 @@ class ThucHienTangCa extends Model
         'khong_hoan_thanh' => '❌ Không hoàn thành',
         'nhan_vien_xac_nhan' => '👤 Nhân viên đã xác nhận',
         'quan_ly_xac_nhan' => '✅ Quản lý đã xác nhận hoàn thành',
+        'cho_xac_nhan_sua_chua' => '⏳ Chờ xác nhận sửa chữa công', // THÊM MỚI
+        'tu_choi_sua_chua' => '❌ Từ chối sửa chữa công', // THÊM MỚI
     ];
 
     // ⭐ Danh sách màu sắc cho trạng thái
@@ -50,6 +52,8 @@ class ThucHienTangCa extends Model
         'khong_hoan_thanh' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
         'nhan_vien_xac_nhan' => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
         'quan_ly_xac_nhan' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+        'cho_xac_nhan_sua_chua' => 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400', // THÊM MỚI
+        'tu_choi_sua_chua' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', // THÊM MỚI
     ];
 
     // Relationships

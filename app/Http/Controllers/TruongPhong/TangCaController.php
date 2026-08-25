@@ -701,4 +701,131 @@ class TangCaController extends Controller
             return back()->with('error', '❌ Có lỗi xảy ra: ' . $e->getMessage());
         }
     }
+
+    /**
+     * ⭐ TRƯỞNG PHÒNG XÁC NHẬN SỬA CHỮA CÔNG
+     */
+  public function approveSuaChuaCong(Request $request, $id)
+{
+    try {
+        $user = Auth::user();
+        $nhanVienIds = $this->getNhanVienIdsTrongPhong();
+
+        $tangCa = DangKyTangCa::with(['nguoi_dung', 'thuc_hien'])
+            ->whereIn('nguoi_dung_id', $nhanVienIds)
+            ->findOrFail($id);
+
+        $thucHien = ThucHienTangCa::where('dang_ky_tang_ca_id', $tangCa->id)
+            ->where('trang_thai', 'cho_xac_nhan_sua_chua')
+            ->first();
+
+        if (!$thucHien) {
+            return back()->with('error', 'Không tìm thấy yêu cầu sửa chữa công');
+        }
+
+        $request->validate([
+            'so_gio_thuc_te' => 'required|numeric|min:0.5|max:' . $tangCa->so_gio_tang_ca,
+        ]);
+
+        $soGioThucTe = $request->so_gio_thuc_te;
+
+        DB::beginTransaction();
+
+        // Cập nhật thực hiện tăng ca
+        $thucHien->update([
+            'so_gio_tang_ca_thuc_te' => $soGioThucTe,
+            'trang_thai' => 'quan_ly_xac_nhan',
+        ]);
+
+        // Tính lương
+        $userId = $tangCa->nguoi_dung_id;
+        $type = $tangCa->loai_tang_ca;
+        $luongTangCa = OvertimeHelper::tinhLuongTangCa($userId, $soGioThucTe, $type);
+
+        // ⭐ CẬP NHẬT: Không sửa trang_thai, chỉ cập nhật các trường khác
+        $tangCa->luong_tang_ca = $luongTangCa;
+        $tangCa->da_hoan_thanh = true;
+        $tangCa->thoi_gian_hoan_thanh = now();
+        $tangCa->thieu_cham_cong_ra = false;
+        // KHÔNG CÓ: $tangCa->trang_thai = 'da_duyet';
+        $tangCa->save();
+
+        Log::info('✅ Truong phong approved sua chua cong: ID ' . $tangCa->id);
+
+        // Gửi thông báo
+        try {
+            $this->notificationService->notifyOvertime($tangCa, 'correction_approved');
+        } catch (\Exception $e) {
+            Log::error('⚠️ Failed to send notification: ' . $e->getMessage());
+        }
+
+        DB::commit();
+
+        return redirect()
+            ->route('truong-phong.tang-ca.show', $tangCa->id)
+            ->with('success', '✅ Xác nhận sửa chữa công thành công. Lương: ' . number_format($luongTangCa) . 'đ');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('❌ approveSuaChuaCong error: ' . $e->getMessage());
+        return redirect()
+            ->route('truong-phong.tang-ca.show', $id)
+            ->with('error', '❌ Có lỗi xảy ra: ' . $e->getMessage());
+    }
+}
+
+// Sửa phương thức rejectSuaChuaCong()
+public function rejectSuaChuaCong(Request $request, $id)
+{
+    try {
+        $request->validate([
+            'ly_do_tu_choi' => 'required|string|max:500',
+        ]);
+
+        $user = Auth::user();
+        $nhanVienIds = $this->getNhanVienIdsTrongPhong();
+
+        $tangCa = DangKyTangCa::with(['nguoi_dung', 'thuc_hien'])
+            ->whereIn('nguoi_dung_id', $nhanVienIds)
+            ->findOrFail($id);
+
+        $thucHien = ThucHienTangCa::where('dang_ky_tang_ca_id', $tangCa->id)
+            ->where('trang_thai', 'cho_xac_nhan_sua_chua')
+            ->first();
+
+        if (!$thucHien) {
+            return back()->with('error', 'Không tìm thấy yêu cầu sửa chữa công');
+        }
+
+        DB::beginTransaction();
+
+        $thucHien->update([
+            'trang_thai' => 'tu_choi_sua_chua',
+            'ghi_chu' => $request->ly_do_tu_choi,
+        ]);
+
+        // ⭐ CẬP NHẬT: Chỉ đánh dấu thiếu chấm công ra, KHÔNG sửa trang_thai
+        $tangCa->update([
+            'thieu_cham_cong_ra' => true,
+        ]);
+
+        // Gửi thông báo
+        try {
+            $this->notificationService->notifyOvertime($tangCa, 'correction_rejected');
+        } catch (\Exception $e) {
+            Log::error('⚠️ Failed to send notification: ' . $e->getMessage());
+        }
+
+        DB::commit();
+
+        return redirect()
+            ->route('truong-phong.tang-ca.show', $tangCa->id)
+            ->with('success', '✅ Đã từ chối yêu cầu sửa chữa công.');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('❌ rejectSuaChuaCong error: ' . $e->getMessage());
+        return redirect()
+            ->route('truong-phong.tang-ca.show', $id)
+            ->with('error', '❌ Có lỗi xảy ra: ' . $e->getMessage());
+    }
+}
 }

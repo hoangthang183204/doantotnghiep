@@ -697,6 +697,10 @@ Route::prefix('employee')
             // ⭐⭐⭐ ROUTE XIN VỀ SỚM TĂNG CA ⭐⭐⭐
             Route::get('/{id}/xin-ve-som', [EmployeeTangCaController::class, 'xinVeSom'])->name('xin-ve-som');
             Route::post('/{id}/xin-ve-som', [EmployeeTangCaController::class, 'storeXinVeSom'])->name('xin-ve-som.store');
+
+            // ⭐⭐ ROUTE SỬA CHỮA CÔNG (THÊM MỚI) ⭐⭐
+            Route::get('/{id}/sua-chua-cong', [EmployeeTangCaController::class, 'yeuCauSuaChuaCong'])->name('sua-chua-cong');
+            Route::post('/{id}/sua-chua-cong', [EmployeeTangCaController::class, 'storeSuaChuaCong'])->name('store-sua-chua-cong');
         });
 
         // ========== YÊU CẦU CHỈNH CÔNG ==========
@@ -869,6 +873,10 @@ Route::middleware(['auth', 'truong_phong'])
             // KIẾN NGHỊ TĂNG CA
             Route::post('/{id}/duyet-kien-nghi', [App\Http\Controllers\TruongPhong\TangCaController::class, 'duyetKienNghi'])->name('duyet-kien-nghi');
             Route::post('/{id}/tu-choi-kien-nghi', [App\Http\Controllers\TruongPhong\TangCaController::class, 'tuChoiKienNghi'])->name('tu-choi-kien-nghi');
+
+            // ⭐⭐ ROUTE XÁC NHẬN SỬA CHỮA CÔNG (THÊM MỚI) ⭐⭐
+            Route::post('/{id}/approve-sua-chua-cong', [TruongPhongTangCaController::class, 'approveSuaChuaCong'])->name('approve-sua-chua-cong');
+            Route::post('/{id}/reject-sua-chua-cong', [TruongPhongTangCaController::class, 'rejectSuaChuaCong'])->name('reject-sua-chua-cong');
         });
 
         // KIẾN NGHỊ TĂNG CA - TRƯỞNG PHÒNG
