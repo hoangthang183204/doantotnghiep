@@ -4,10 +4,10 @@
 @section('title', 'Gửi kiến nghị tăng ca')
 
 @section('content')
-<div class="space-y-6 max-w-3xl mx-auto">
+<div class="space-y-6 max-w-full px-4 sm:px-6">
 
     {{-- HEADER --}}
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
                 <i class="fas fa-paper-plane mr-3 text-blue-600"></i>
@@ -15,7 +15,7 @@
             </h1>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Gửi kiến nghị đến trưởng phòng để xem xét</p>
         </div>
-        <a href="{{ route('employee.tang-ca.index') }}" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition">
+        <a href="{{ route('employee.tang-ca.index') }}" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition whitespace-nowrap">
             ← Quay lại
         </a>
     </div>

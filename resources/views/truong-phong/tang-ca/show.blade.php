@@ -4,10 +4,10 @@
 @section('title', 'Chi tiết đơn tăng ca')
 
 @section('content')
-<div class="space-y-6 max-w-4xl mx-auto">
+<div class="space-y-6 max-w-full px-4 sm:px-6">
 
     {{-- HEADER --}}
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
                 <i class="fas fa-file-alt mr-3 text-blue-600"></i>
@@ -18,14 +18,14 @@
             </p>
         </div>
         <a href="{{ route('truong-phong.tang-ca.index') }}" 
-            class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition flex items-center gap-2">
+            class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition flex items-center gap-2 whitespace-nowrap">
             <i class="fas fa-arrow-left"></i> Quay lại
         </a>
     </div>
 
     {{-- THÔNG TIN ĐƠN --}}
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="p-6 space-y-6">
+        <div class="p-4 sm:p-6 space-y-6">
             
             {{-- Thông tin nhân viên --}}
             <div>
@@ -444,8 +444,6 @@
     }
 </style>
 
-@endsection
-
 @push('scripts')
 <script>
     // ⭐ LƯU ROUTES VÀO BIẾN JAVASCRIPT
@@ -608,3 +606,4 @@
     });
 </script>
 @endpush
+@endsection
