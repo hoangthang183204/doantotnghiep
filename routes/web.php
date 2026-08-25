@@ -770,6 +770,10 @@ Route::prefix('employee')
             Route::get('/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('mark-read');
             Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
         });
+
+        Route::get('/notifications', [App\Http\Controllers\Employee\NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/notifications/{id}/mark-read', [App\Http\Controllers\Employee\NotificationController::class, 'markRead'])->name('notifications.mark-read');
+        Route::get('/notifications/mark-all-read', [App\Http\Controllers\Employee\NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
     });
 
 // ========== QUY ĐỊNH (CÔNG KHAI) ==========

@@ -29,6 +29,15 @@ class LoginController extends Controller
 
                 if (auth('api')->check()) {
                     $user = auth('api')->user();
+                    
+                    // ⭐ KIỂM TRA TRẠNG THÁI TÀI KHOẢN
+                    if ($user->trang_thai != 1) {
+                        Cookie::forget('access_token');
+                        return view('auth.login')->withErrors([
+                            'email' => 'Tài khoản của bạn đã bị khóa hoặc ngừng hoạt động. Vui lòng liên hệ quản trị viên.'
+                        ]);
+                    }
+                    
                     Auth::login($user);
                     return $this->redirectBasedOnRole();
                 }
@@ -52,16 +61,38 @@ class LoginController extends Controller
 
         $credentials = $request->only('email', 'password');
 
+        // ⭐ KIỂM TRA TÀI KHOẢN CÓ TỒN TẠI VÀ TRẠNG THÁI TRƯỚC KHI ĐĂNG NHẬP
+        $user = \App\Models\NguoiDung::where('email', $request->email)->first();
+
+        // Kiểm tra tài khoản có bị khóa không
+        if ($user && $user->trang_thai != 1) {
+            return back()->withErrors([
+                'email' => 'Tài khoản của bạn đã bị khóa hoặc ngừng hoạt động. Vui lòng liên hệ quản trị viên.'
+            ])->withInput();
+        }
+
         // Thử đăng nhập với guard web trước
         if (Auth::attempt($credentials, $request->remember)) {
             $request->session()->regenerate();
 
             $user = Auth::user();
 
+            // ⭐ KIỂM TRA LẠI TRẠNG THÁI (đề phòng trường hợp user bị khóa sau khi attempt)
+            if ($user->trang_thai != 1) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                
+                return back()->withErrors([
+                    'email' => 'Tài khoản của bạn đã bị khóa hoặc ngừng hoạt động.'
+                ])->withInput();
+            }
+
             // Cập nhật thông tin đăng nhập
             $user->update([
                 'lan_dang_nhap_cuoi' => now(),
-                'ip_dang_nhap_cuoi' => $request->ip()
+                'ip_dang_nhap_cuoi' => $request->ip(),
+                'dang_nhap_lan_dau' => 0 // Đánh dấu đã đăng nhập
             ]);
 
             // Tạo token cho API (nếu cần)
@@ -95,12 +126,21 @@ class LoginController extends Controller
 
         $user = auth('api')->user();
 
+        // ⭐ KIỂM TRA TRẠNG THÁI
+        if ($user->trang_thai != 1) {
+            auth('api')->logout();
+            return back()->withErrors([
+                'email' => 'Tài khoản của bạn đã bị khóa hoặc ngừng hoạt động. Vui lòng liên hệ quản trị viên.'
+            ])->withInput();
+        }
+
         // Đăng nhập cả guard web
         Auth::login($user);
 
         $user->update([
             'lan_dang_nhap_cuoi' => now(),
-            'ip_dang_nhap_cuoi' => $request->ip()
+            'ip_dang_nhap_cuoi' => $request->ip(),
+            'dang_nhap_lan_dau' => 0
         ]);
 
         // Lưu token vào cookie
@@ -211,6 +251,7 @@ class LoginController extends Controller
             'phong_ban' => $phongBan ? $phongBan->ten_phong_ban : null,
             'phong_ban_id' => $phongBan ? $phongBan->id : null,
             'avatar' => $hoSo ? $hoSo->anh_dai_dien : null,
+            'trang_thai' => $user->trang_thai,
         ]);
     }
 }
