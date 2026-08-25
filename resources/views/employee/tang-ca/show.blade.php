@@ -4,7 +4,7 @@
 @section('title', 'Chi tiết đơn tăng ca')
 
 @section('content')
-<div class="space-y-6 max-w-5xl mx-auto px-4 sm:px-6">
+<div class="space-y-6 max-w-full px-4 sm:px-6">
 
     {{-- HEADER --}}
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

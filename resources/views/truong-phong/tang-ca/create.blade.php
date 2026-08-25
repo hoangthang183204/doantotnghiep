@@ -4,10 +4,10 @@
 @section('title', 'Tạo đơn tăng ca cho nhân viên')
 
 @section('content')
-<div class="space-y-6 max-w-4xl mx-auto">
+<div class="space-y-6 max-w-full px-4 sm:px-6">
 
     {{-- HEADER --}}
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
                 <i class="fas fa-user-plus mr-3 text-blue-600"></i>
@@ -18,7 +18,7 @@
             </p>
         </div>
         <a href="{{ route('truong-phong.tang-ca.index') }}" 
-            class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition flex items-center gap-2">
+            class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition flex items-center gap-2 whitespace-nowrap">
             <i class="fas fa-arrow-left"></i> Quay lại
         </a>
     </div>
@@ -227,7 +227,7 @@
                 </div>
 
                 {{-- Hiển thị số giờ tăng ca tự động --}}
-                <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3 flex items-center justify-between">
+                <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                     <div>
                         <span class="text-sm text-gray-600 dark:text-gray-400">
                             <i class="fas fa-clock mr-1 text-blue-500"></i>
@@ -284,7 +284,7 @@
                 </div>
 
                 {{-- Nút --}}
-                <div class="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 flex-wrap">
                     <button type="submit" 
                         class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition flex items-center gap-2 shadow-sm hover:shadow-md">
                         <i class="fas fa-paper-plane"></i>
@@ -356,8 +356,6 @@
     display: none !important;
 }
 </style>
-
-@endsection
 
 @push('scripts')
 <script>
@@ -665,3 +663,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
+@endsection

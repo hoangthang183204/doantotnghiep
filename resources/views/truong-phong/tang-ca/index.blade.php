@@ -5,7 +5,7 @@
 @section('title', 'Quản lý tăng ca')
 
 @section('content')
-    <div class="space-y-6">
+    <div class="space-y-6 max-w-full px-4 sm:px-6">
 
         {{-- ⭐ HIỂN THỊ THÔNG BÁO --}}
         @if (session('success'))
@@ -27,7 +27,7 @@
         @endif
 
         {{-- HEADER --}}
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
                     <i class="fas fa-clock mr-3 text-blue-600 dark:text-blue-400"></i>
@@ -38,87 +38,83 @@
                 </p>
             </div>
             <a href="{{ route('truong-phong.tang-ca.create') }}"
-                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition flex items-center gap-2 shadow-sm hover:shadow-md">
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition flex items-center gap-2 shadow-sm hover:shadow-md whitespace-nowrap">
                 <i class="fas fa-plus-circle"></i>
                 Tạo đơn tăng ca
             </a>
         </div>
 
         {{-- THỐNG KÊ --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
             <div
-                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 text-center border border-gray-100 dark:border-gray-700">
-                <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ $thongKe['tong'] ?? 0 }}</p>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Tổng yêu cầu</p>
+                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 sm:p-4 text-center border border-gray-100 dark:border-gray-700">
+                <p class="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">{{ $thongKe['tong'] ?? 0 }}</p>
+                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Tổng yêu cầu</p>
             </div>
             <div
-                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 text-center border border-gray-100 dark:border-gray-700">
-                <p class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{{ $thongKe['cho_duyet'] ?? 0 }}</p>
-                <p class="text-sm text-gray-500 dark:text-gray-400">⏳ Chờ duyệt</p>
+                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 sm:p-4 text-center border border-gray-100 dark:border-gray-700">
+                <p class="text-xl sm:text-2xl font-bold text-yellow-600 dark:text-yellow-400">{{ $thongKe['cho_duyet'] ?? 0 }}</p>
+                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">⏳ Chờ duyệt</p>
             </div>
             <div
-                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 text-center border border-gray-100 dark:border-gray-700">
-                <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ $thongKe['da_duyet'] ?? 0 }}</p>
-                <p class="text-sm text-gray-500 dark:text-gray-400">✅ Đã duyệt</p>
+                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 sm:p-4 text-center border border-gray-100 dark:border-gray-700">
+                <p class="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">{{ $thongKe['da_duyet'] ?? 0 }}</p>
+                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">✅ Đã duyệt</p>
             </div>
             <div
-                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 text-center border border-gray-100 dark:border-gray-700">
-                <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 sm:p-4 text-center border border-gray-100 dark:border-gray-700">
+                <p class="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
                     {{ $donTangCa->filter(function ($item) {
                             return $item->trang_thai == 'da_duyet' &&
                                 $item->thuc_hien &&
                                 $item->thuc_hien->trang_thai == 'quan_ly_xac_nhan';
                         })->count() }}
                 </p>
-                <p class="text-sm text-gray-500 dark:text-gray-400">✅ Hoàn thành</p>
+                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">✅ Hoàn thành</p>
             </div>
             <div
-                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 text-center border border-gray-100 dark:border-gray-700">
-                <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ $thongKe['tu_choi'] ?? 0 }}</p>
-                <p class="text-sm text-gray-500 dark:text-gray-400">❌ Từ chối</p>
+                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 sm:p-4 text-center border border-gray-100 dark:border-gray-700 col-span-2 sm:col-span-1">
+                <p class="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400">{{ $thongKe['tu_choi'] ?? 0 }}</p>
+                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">❌ Từ chối</p>
             </div>
         </div>
 
         {{-- BỘ LỌC --}}
         <div
             class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+            <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 dark:border-gray-700">
                 <form method="GET" action="{{ route('truong-phong.tang-ca.index') }}"
-                    class="flex flex-wrap items-center gap-4">
-                    <div class="flex-1 min-w-[200px]">
+                    class="flex flex-wrap items-center gap-3 sm:gap-4">
+                    <div class="flex-1 min-w-[150px] sm:min-w-[200px]">
                         <input type="text" name="ten_nhan_vien" placeholder="🔍 Tìm theo tên nhân viên..."
                             value="{{ request('ten_nhan_vien') }}"
-                            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            class="w-full px-3 sm:px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
                     </div>
                     <div>
                         <select name="trang_thai"
-                            class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            class="px-3 sm:px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
                             <option value="">Tất cả trạng thái</option>
-                            <option value="cho_duyet" {{ request('trang_thai') == 'cho_duyet' ? 'selected' : '' }}>⏳ Chờ
-                                duyệt</option>
-                            <option value="da_duyet" {{ request('trang_thai') == 'da_duyet' ? 'selected' : '' }}>✅ Đã duyệt
-                            </option>
-                            <option value="tu_choi" {{ request('trang_thai') == 'tu_choi' ? 'selected' : '' }}>❌ Từ chối
-                            </option>
-                            <option value="huy" {{ request('trang_thai') == 'huy' ? 'selected' : '' }}>🗑️ Đã hủy
-                            </option>
+                            <option value="cho_duyet" {{ request('trang_thai') == 'cho_duyet' ? 'selected' : '' }}>⏳ Chờ duyệt</option>
+                            <option value="da_duyet" {{ request('trang_thai') == 'da_duyet' ? 'selected' : '' }}>✅ Đã duyệt</option>
+                            <option value="tu_choi" {{ request('trang_thai') == 'tu_choi' ? 'selected' : '' }}>❌ Từ chối</option>
+                            <option value="huy" {{ request('trang_thai') == 'huy' ? 'selected' : '' }}>🗑️ Đã hủy</option>
                         </select>
                     </div>
                     <div>
                         <input type="date" name="tu_ngay" value="{{ request('tu_ngay') }}"
-                            class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            class="px-3 sm:px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
                     </div>
                     <div>
                         <input type="date" name="den_ngay" value="{{ request('den_ngay') }}"
-                            class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            class="px-3 sm:px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
                     </div>
                     <div class="flex gap-2">
                         <button type="submit"
-                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-sm">
                             <i class="fas fa-search"></i> Lọc
                         </button>
                         <a href="{{ route('truong-phong.tang-ca.index') }}"
-                            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition">
+                            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition text-sm">
                             <i class="fas fa-redo"></i>
                         </a>
                     </div>
@@ -129,41 +125,23 @@
         {{-- DANH SÁCH --}}
         <div
             class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+            <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <h3 class="font-semibold text-gray-900 dark:text-white">📋 Danh sách</h3>
                 <span class="text-sm text-gray-500">Tổng: {{ $donTangCa->total() }}</span>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full">
+                <table class="w-full min-w-[1100px]">
                     <thead class="bg-gray-50 dark:bg-gray-700/50">
                         <tr>
-                            <th
-                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Loại</th>
-                            <th
-                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Nhân viên</th>
-                            <th
-                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Ngày</th>
-                            <th
-                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Giờ</th>
-                            <th
-                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Số giờ</th>
-                            <th
-                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Loại</th>
-                            <th
-                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Trạng thái</th>
-                            <th
-                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Xin về sớm</th>
-                            <th
-                                class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Thao tác</th>
+                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Loại</th>
+                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Nhân viên</th>
+                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Ngày</th>
+                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Giờ</th>
+                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Số giờ</th>
+                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Loại</th>
+                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Trạng thái</th>
+                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Xin về sớm</th>
+                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-center text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -204,30 +182,30 @@
                                 $canDuyetXinVeSom = $xinVeSom && $xinVeSom->trang_thai == 'cho_duyet';
                             @endphp
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                <td class="px-4 py-3">
+                                <td class="px-2 sm:px-4 py-2 sm:py-3">
                                     @if ($isKienNghi)
                                         <span
-                                            class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                            class="px-2 py-1 rounded-full text-[10px] sm:text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 whitespace-nowrap">
                                             📝 Kiến nghị
                                         </span>
                                     @else
                                         <span
-                                            class="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                                            class="px-2 py-1 rounded-full text-[10px] sm:text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 whitespace-nowrap">
                                             📄 Đơn tăng ca
                                         </span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                                <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900 dark:text-white whitespace-nowrap">
                                     {{ optional($don->nguoi_dung->hoSo)->ho }} {{ optional($don->nguoi_dung->hoSo)->ten }}
                                 </td>
-                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                                <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900 dark:text-white whitespace-nowrap">
                                     @if ($isKienNghi)
                                         {{ Carbon\Carbon::parse($don->created_at)->format('d/m/Y') }}
                                     @else
                                         {{ Carbon\Carbon::parse($don->ngay_tang_ca)->format('d/m/Y') }}
                                     @endif
                                 </td>
-                                <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                                <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                                     @if ($isKienNghi)
                                         <span class="text-gray-400">---</span>
                                     @else
@@ -235,55 +213,57 @@
                                     @endif
                                 </td>
                                 <td
-                                    class="px-4 py-3 text-sm font-medium {{ $isKienNghi ? 'text-gray-400' : 'text-blue-600 dark:text-blue-400' }}">
+                                    class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium {{ $isKienNghi ? 'text-gray-400' : 'text-blue-600 dark:text-blue-400' }} whitespace-nowrap">
                                     {{ number_format($don->so_gio_tang_ca ?? 0, 1, ',', '') }} giờ
                                 </td>
-                                <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                                <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                                     {{ $loaiLabels[$don->loai_tang_ca] ?? $don->loai_tang_ca }}
                                 </td>
-                                <td class="px-4 py-3">
-                                    <span
-                                        class="px-2 py-1 rounded-full text-xs font-medium {{ $badgeClasses[$don->trang_thai] ?? 'bg-gray-100 text-gray-800' }}">
-                                        {{ $trangThaiLabels[$don->trang_thai] ?? $don->trang_thai }}
-                                    </span>
-                                    @if ($don->trang_thai == 'da_duyet' && !$isKienNghi)
-                                        @if ($don->da_hoan_thanh)
-                                            <span
-                                                class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
-                                                ✅ Hoàn thành
-                                            </span>
-                                        @elseif($don->thieu_cham_cong_ra)
-                                            <span
-                                                class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
-                                                ⚠️ Thiếu chấm công ra
-                                            </span>
-                                        @elseif($daNhanVienXacNhan)
-                                            <span
-                                                class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                                                ⏳ Chờ xác nhận
-                                            </span>
-                                        @elseif($isSuaChua)
-                                            <span
-                                                class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
-                                                ⏳ Chờ xác nhận sửa công
-                                            </span>
-                                        @elseif($isTuChoiSuaChua)
-                                            <span
-                                                class="ml-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
-                                                ❌ Từ chối sửa công
-                                            </span>
+                                <td class="px-2 sm:px-4 py-2 sm:py-3">
+                                    <div class="flex flex-wrap items-center gap-1">
+                                        <span
+                                            class="px-2 py-1 rounded-full text-[10px] sm:text-xs font-medium {{ $badgeClasses[$don->trang_thai] ?? 'bg-gray-100 text-gray-800' }} whitespace-nowrap">
+                                            {{ $trangThaiLabels[$don->trang_thai] ?? $don->trang_thai }}
+                                        </span>
+                                        @if ($don->trang_thai == 'da_duyet' && !$isKienNghi)
+                                            @if ($don->da_hoan_thanh)
+                                                <span
+                                                    class="ml-1 px-2 py-1 rounded-full text-[10px] sm:text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 whitespace-nowrap">
+                                                    ✅ Hoàn thành
+                                                </span>
+                                            @elseif($don->thieu_cham_cong_ra)
+                                                <span
+                                                    class="ml-1 px-2 py-1 rounded-full text-[10px] sm:text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 whitespace-nowrap">
+                                                    ⚠️ Thiếu chấm công ra
+                                                </span>
+                                            @elseif($daNhanVienXacNhan)
+                                                <span
+                                                    class="ml-1 px-2 py-1 rounded-full text-[10px] sm:text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 whitespace-nowrap">
+                                                    ⏳ Chờ xác nhận
+                                                </span>
+                                            @elseif($isSuaChua)
+                                                <span
+                                                    class="ml-1 px-2 py-1 rounded-full text-[10px] sm:text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 whitespace-nowrap">
+                                                    ⏳ Chờ xác nhận sửa công
+                                                </span>
+                                            @elseif($isTuChoiSuaChua)
+                                                <span
+                                                    class="ml-1 px-2 py-1 rounded-full text-[10px] sm:text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 whitespace-nowrap">
+                                                    ❌ Từ chối sửa công
+                                                </span>
+                                            @endif
                                         @endif
-                                    @endif
+                                    </div>
                                 </td>
-                                <td class="px-4 py-3">
+                                <td class="px-2 sm:px-4 py-2 sm:py-3">
                                     @if ($xinVeSom)
                                         <span
-                                            class="px-2 py-1 rounded-full text-xs font-medium 
+                                            class="px-2 py-1 rounded-full text-[10px] sm:text-xs font-medium 
                                         @if ($xinVeSom->trang_thai == 'cho_duyet') bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300
                                         @elseif($xinVeSom->trang_thai == 'da_duyet') bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300
                                         @elseif($xinVeSom->trang_thai == 'tu_choi') bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300
                                         @else bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 @endif
-                                    ">
+                                    whitespace-nowrap">
                                             {{ XinVeSomTangCa::$trangThaiLabels[$xinVeSom->trang_thai] ?? $xinVeSom->trang_thai }}
                                             ({{ $xinVeSom->so_phut_ve_som }}p)
                                         </span>
@@ -294,13 +274,13 @@
                                                     method="POST" class="inline">
                                                     @csrf
                                                     <button type="submit"
-                                                        class="px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded transition"
+                                                        class="px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-[10px] sm:text-xs rounded transition"
                                                         onclick="return confirm('Duyệt đơn xin về sớm?')">
                                                         <i class="fas fa-check"></i>
                                                     </button>
                                                 </form>
                                                 <button onclick="showTuChoiXinVeSomModal({{ $xinVeSom->id }})"
-                                                    class="px-2 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded transition">
+                                                    class="px-2 py-1 bg-red-500 hover:bg-red-600 text-white text-[10px] sm:text-xs rounded transition">
                                                     <i class="fas fa-times"></i>
                                                 </button>
                                             </div>
@@ -309,19 +289,19 @@
                                         <span class="text-xs text-gray-400">---</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3 text-center">
-                                    <div class="flex items-center justify-center gap-2 flex-wrap">
+                                <td class="px-2 sm:px-4 py-2 sm:py-3">
+                                    <div class="flex items-center justify-center gap-1 flex-nowrap">
                                         {{-- Nút Xem chi tiết --}}
                                         <a href="{{ route('truong-phong.tang-ca.show', $don->id) }}"
-                                            class="inline-flex items-center justify-center w-8 h-8 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 rounded-lg transition"
+                                            class="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 rounded-lg transition flex-shrink-0"
                                             title="Xem chi tiết">
-                                            <i class="fas fa-eye text-sm"></i>
+                                            <i class="fas fa-eye text-xs sm:text-sm"></i>
                                         </a>
 
                                         {{-- ⭐ NÚT TẠO ĐƠN TỪ KIẾN NGHỊ ĐÃ DUYỆT --}}
                                         @if ($isKienNghi && $don->trang_thai == 'da_duyet')
                                             <a href="{{ route('truong-phong.tang-ca.create', ['kien_nghi_id' => $don->id]) }}"
-                                                class="inline-flex items-center justify-center px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg transition text-sm font-medium"
+                                                class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg transition text-[10px] sm:text-sm font-medium whitespace-nowrap flex-shrink-0"
                                                 title="Tạo đơn tăng ca từ kiến nghị">
                                                 <i class="fas fa-plus-circle mr-1"></i> Tạo đơn
                                             </a>
@@ -330,14 +310,14 @@
                                         {{-- ⭐ XÁC NHẬN SỬA CHỮA CÔNG --}}
                                         @if ($isSuaChua && !$don->da_hoan_thanh)
                                             <button onclick="showApproveSuaChuaModal({{ $don->id }}, {{ $don->so_gio_tang_ca }})"
-                                                class="inline-flex items-center justify-center px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition text-sm font-medium"
+                                                class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition text-[10px] sm:text-sm font-medium whitespace-nowrap flex-shrink-0"
                                                 title="Xác nhận sửa chữa công">
-                                                <i class="fas fa-check-double mr-1"></i> Xác nhận sửa công
+                                                <i class="fas fa-check-double mr-1"></i> Xác nhận
                                             </button>
                                             <button onclick="showRejectSuaChuaModal({{ $don->id }})"
-                                                class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg transition"
+                                                class="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg transition flex-shrink-0"
                                                 title="Từ chối sửa chữa công">
-                                                <i class="fas fa-times text-sm"></i>
+                                                <i class="fas fa-times text-xs sm:text-sm"></i>
                                             </button>
                                         @endif
 
@@ -347,38 +327,38 @@
                                                 {{-- Duyệt kiến nghị --}}
                                                 <form
                                                     action="{{ route('truong-phong.tang-ca.duyet-kien-nghi', $don->id) }}"
-                                                    method="POST" class="inline">
+                                                    method="POST" class="inline flex-shrink-0">
                                                     @csrf
                                                     <button type="submit"
-                                                        class="inline-flex items-center justify-center w-8 h-8 bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 rounded-lg transition"
+                                                        class="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 rounded-lg transition"
                                                         onclick="return confirm('Duyệt kiến nghị tăng ca này?')"
                                                         title="Duyệt kiến nghị">
-                                                        <i class="fas fa-check text-sm"></i>
+                                                        <i class="fas fa-check text-xs sm:text-sm"></i>
                                                     </button>
                                                 </form>
                                                 {{-- Từ chối kiến nghị --}}
                                                 <button onclick="showTuChoiModalIndex({{ $don->id }}, true)"
-                                                    class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg transition"
+                                                    class="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg transition flex-shrink-0"
                                                     title="Từ chối kiến nghị">
-                                                    <i class="fas fa-times text-sm"></i>
+                                                    <i class="fas fa-times text-xs sm:text-sm"></i>
                                                 </button>
                                             @else
                                                 {{-- Duyệt đơn tăng ca --}}
                                                 <form action="{{ route('truong-phong.tang-ca.duyet', $don->id) }}"
-                                                    method="POST" class="inline">
+                                                    method="POST" class="inline flex-shrink-0">
                                                     @csrf
                                                     <button type="submit"
-                                                        class="inline-flex items-center justify-center w-8 h-8 bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 rounded-lg transition"
+                                                        class="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 rounded-lg transition"
                                                         onclick="return confirm('Duyệt đơn tăng ca này?')"
                                                         title="Duyệt đơn">
-                                                        <i class="fas fa-check text-sm"></i>
+                                                        <i class="fas fa-check text-xs sm:text-sm"></i>
                                                     </button>
                                                 </form>
                                                 {{-- Từ chối đơn tăng ca --}}
                                                 <button onclick="showTuChoiModalIndex({{ $don->id }}, false)"
-                                                    class="inline-flex items-center justify-center w-8 h-8 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg transition"
+                                                    class="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg transition flex-shrink-0"
                                                     title="Từ chối đơn">
-                                                    <i class="fas fa-times text-sm"></i>
+                                                    <i class="fas fa-times text-xs sm:text-sm"></i>
                                                 </button>
                                             @endif
                                         @endif
@@ -386,13 +366,13 @@
                                         {{-- Xác nhận hoàn thành --}}
                                         @if ($don->trang_thai == 'da_duyet' && !$isKienNghi && $daNhanVienXacNhan && !$daXacNhan)
                                             <form action="{{ route('truong-phong.tang-ca.approve-thuc-hien', $don->id) }}"
-                                                method="POST" class="inline">
+                                                method="POST" class="inline flex-shrink-0">
                                                 @csrf
                                                 <button type="submit"
-                                                    class="inline-flex items-center justify-center w-8 h-8 bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/50 rounded-lg transition"
+                                                    class="inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/50 rounded-lg transition"
                                                     onclick="return confirm('Xác nhận nhân viên đã hoàn thành tăng ca?')"
                                                     title="Xác nhận hoàn thành">
-                                                    <i class="fas fa-check-double text-sm"></i>
+                                                    <i class="fas fa-check-double text-xs sm:text-sm"></i>
                                                 </button>
                                             </form>
                                         @endif
@@ -411,7 +391,7 @@
                 </table>
             </div>
             @if ($donTangCa->hasPages())
-                <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700">
+                <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 dark:border-gray-700">
                     {{ $donTangCa->links() }}
                 </div>
             @endif
@@ -603,9 +583,7 @@
         }
     </style>
 
-@endsection
-
-@push('scripts')
+    @push('scripts')
     <script>
         // ⭐ LƯU ROUTES VÀO BIẾN JAVASCRIPT
         const ROUTES_INDEX = {
@@ -803,4 +781,5 @@
             }
         });
     </script>
-@endpush
+    @endpush
+@endsection

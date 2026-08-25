@@ -4,10 +4,10 @@
 @section('title', 'Xin về sớm tăng ca')
 
 @section('content')
-<div class="space-y-6 max-w-2xl mx-auto">
+<div class="space-y-6 max-w-full px-4 sm:px-6">
 
     {{-- HEADER --}}
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
                 <i class="fas fa-clock mr-3 text-yellow-600"></i>
@@ -18,7 +18,7 @@
             </p>
         </div>
         <a href="{{ route('employee.tang-ca.show', $donTangCa->id) }}" 
-            class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition flex items-center gap-2">
+            class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition flex items-center gap-2 whitespace-nowrap">
             <i class="fas fa-arrow-left"></i> Quay lại
         </a>
     </div>
@@ -156,10 +156,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        console.log('gioBatDau:', gioBatDau);
-        console.log('gioKetThuc:', gioKetThuc);
-        console.log('gioVe:', gioVe);
-
         // Tách giờ và phút
         const batDauParts = gioBatDau.split(':');
         const ketThucParts = gioKetThuc.split(':');
@@ -169,13 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const ketThucPhut = parseInt(ketThucParts[0]) * 60 + parseInt(ketThucParts[1]);
         const vePhut = parseInt(veParts[0]) * 60 + parseInt(veParts[1]);
         
-        console.log('batDauPhut:', batDauPhut);
-        console.log('ketThucPhut:', ketThucPhut);
-        console.log('vePhut:', vePhut);
-
         const soPhutVeSom = ketThucPhut - vePhut;
-        
-        console.log('soPhutVeSom:', soPhutVeSom);
         
         if (soPhutVeSom <= 0) {
             thongBao.innerHTML = `
