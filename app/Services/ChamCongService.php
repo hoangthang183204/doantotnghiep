@@ -332,26 +332,14 @@ class ChamCongService
     {
         $gioVao = Carbon::parse($checkIn->gio_vao);
         $gioRa = Carbon::parse($chamCong->gio_ra);
-        $gioKetThuc = Carbon::parse($ca->gio_ket_thuc);
+        app(TinhCongMotLanService::class)->apDung($chamCong, $gioVao, $gioRa, (int) $checkIn->nguoi_dung_id);
 
-        // Số phút làm việc
-        $soPhutLam = $gioVao->diffInMinutes($gioRa);
-        $chamCong->so_gio_lam = number_format($soPhutLam / 60, 2);
-
-        // Số công (dựa trên số giờ tiêu chuẩn của ca)
-        $soGioTieuChuan = (float) ($ca->so_gio_lam_viec ?? 4);
-        $chamCong->so_cong = round(($soPhutLam / 60 / $soGioTieuChuan) * 2) / 2;
-
-        // Giới hạn tối đa 0.5 công cho mỗi ca
-        if ($chamCong->so_cong > 0.5) {
-            $chamCong->so_cong = 0.5;
-        }
-
-        // Phút về sớm
-        $phutVeSom = 0;
-        if ($gioRa->lt($gioKetThuc)) {
-            $phutVeSom = $gioRa->diffInMinutes($gioKetThuc);
-        }
+        $veSom = app(TinhCongMotLanService::class)->kiemTraVeSom(
+            $gioRa,
+            Carbon::parse($checkIn->ngay_cham_cong),
+            (int) ($ca->so_phut_cho_phep_ve_som ?? 15)
+        );
+        $phutVeSom = $veSom['phut'];
         $chamCong->phut_ve_som = $phutVeSom;
 
         // Cập nhật trạng thái

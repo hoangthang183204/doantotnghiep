@@ -12,7 +12,7 @@ class CaLamViec extends Model
         'ten', 'ma', 'gio_bat_dau', 'gio_ket_thuc',
         'so_gio_lam_viec', 'gio_bat_dau_tang_ca',
         'so_phut_cho_phep_di_tre', 'so_phut_cho_phep_ve_som',
-        'is_default', 'trang_thai'
+        'is_default', 'trang_thai', 'loai', 'mo_ta'
     ];
 
     protected $casts = [

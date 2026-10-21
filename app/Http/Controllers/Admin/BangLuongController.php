@@ -322,6 +322,19 @@ class BangLuongController extends Controller
     Mail::to($luong->nguoiDung->email)
         ->send(new PhieuLuongMail($luong));
 
+    try {
+        app(\App\Services\ThongBaoDaKenhService::class)->gui(
+            $luong->nguoiDung,
+            'Phiếu lương tháng ' . $luong->luong_thang . '/' . $luong->luong_nam,
+            'Lương thực nhận: ' . number_format($luong->luong_thuc_nhan) . ' đ. Xem chi tiết trên hệ thống.',
+            url('/employee/bang-luong/' . $luong->id),
+            ['zalo', 'sms', 'push', 'in_app'],
+            true
+        );
+    } catch (\Throwable $e) {
+        // Kênh phụ không chặn email phiếu lương đã gửi.
+    }
+
     return back()->with(
         'success',
         'Đã gửi phiếu lương cho ' . $luong->nguoiDung->ho_ten

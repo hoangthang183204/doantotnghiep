@@ -44,6 +44,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'attendance.location' => \App\Http\Middleware\CheckAttendanceLocation::class,
             'CheckPermission' => \App\Http\Middleware\CheckPermission::class,
             'truong_phong' => \App\Http\Middleware\CheckTruongPhong::class,
+            'hr.module' => \App\Http\Middleware\CheckHrModule::class,
+        ]);
+
+        $middleware->web(append: [
+            \App\Http\Middleware\AuditLogMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -168,7 +168,7 @@
                     x-transition:enter="transition ease-out duration-200"
                     x-transition:enter-start="opacity-0 scale-95"
                     x-transition:enter-end="opacity-100 scale-100"
-                    class="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+                    class="absolute right-0 mt-2 w-80 sm:w-[28rem] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
                     style="display: none;">
                     
                     <div class="p-3 border-b dark:border-gray-700 flex justify-between items-center">
@@ -190,12 +190,12 @@
                         <p class="text-sm text-gray-500 dark:text-gray-400">Không có thông báo nào</p>
                     </div>
 
-                    <!-- List - Chỉ hiển thị thông báo chưa đọc -->
-                    <div x-show="!loading && notifications.length > 0" class="max-h-96 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
+                    <div x-show="!loading && notifications.length > 0" class="max-h-[28rem] overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
                         <template x-for="notification in notifications" :key="notification.id">
                             <a :href="notification.data.url || '#'" 
                                 @click="markAsRead(notification)"
-                                class="flex items-start p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer bg-blue-50 dark:bg-blue-900/20">
+                                class="flex items-start p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                                :class="notification.read_at ? '' : 'bg-blue-50 dark:bg-blue-900/20'">
                                 
                                 <div class="flex-shrink-0 mt-0.5">
                                     <div class="w-8 h-8 rounded-full flex items-center justify-center"
@@ -217,19 +217,28 @@
                                 </div>
 
                                 <div class="ml-3 flex-1 min-w-0">
-                                    <div class="flex justify-between items-start">
-                                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate" 
+                                    <div class="flex justify-between items-start gap-2">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white" 
                                             x-text="notification.data.title">
                                         </p>
-                                        <span class="text-[10px] text-gray-400 whitespace-nowrap ml-2" 
+                                        <span class="text-[10px] text-gray-400 whitespace-nowrap" 
                                             x-text="timeAgo(notification.created_at)">
                                         </span>
                                     </div>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2" 
+                                    <p class="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-line" 
                                         x-text="notification.data.message">
                                     </p>
-                                    <div class="mt-1">
+                                    <div class="mt-2 flex flex-wrap gap-1" x-show="notification.data.chi_tiet && notification.data.chi_tiet.length">
+                                        <template x-for="dong in notification.data.chi_tiet" :key="dong.nhan">
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-[11px] text-gray-700 dark:text-gray-200">
+                                                <span class="text-gray-500 dark:text-gray-400" x-text="dong.nhan + ':'"></span>
+                                                <span x-text="dong.gia_tri"></span>
+                                            </span>
+                                        </template>
+                                    </div>
+                                    <div class="mt-1" x-show="!notification.read_at">
                                         <span class="inline-block w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                        <span class="text-[10px] text-blue-600 dark:text-blue-400 ml-1">Chưa đọc</span>
                                     </div>
                                 </div>
                             </a>
@@ -237,7 +246,14 @@
                     </div>
 
                     <div class="p-3 border-t dark:border-gray-700 text-center">
-                        <a href="{{ route('admin.notifications.index') }}" 
+                        @php
+                            $vaiTroHeader = auth()->user()?->vaiTros?->pluck('name') ?? collect();
+                            $laQuanTri = $vaiTroHeader->intersect(['admin', 'Super Admin', 'Admin', 'hr', 'HR', 'ke_toan', 'truong_phong', 'quan_ly'])->isNotEmpty();
+                            $linkTatCa = (!$laQuanTri && Route::has('employee.notifications.index'))
+                                ? route('employee.notifications.index')
+                                : route('admin.notifications.index');
+                        @endphp
+                        <a href="{{ $linkTatCa }}" 
                             class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400">
                             Xem tất cả
                         </a>

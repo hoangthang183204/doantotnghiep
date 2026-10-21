@@ -220,7 +220,7 @@
                         <p class="font-medium text-gray-900 dark:text-white">⑥ Các khoản khấu trừ</p>
                         <ul class="mt-2 space-y-1">
                             <li class="text-sm text-gray-600 dark:text-slate-300 flex justify-between max-w-md">
-                                <span>• Bảo hiểm bắt buộc (BHXH 8% + BHYT 1.5% + BHTN 1% trên lương cơ bản)</span>
+                                <span>• Bảo hiểm NLĐ (BHXH {{ rtrim(rtrim(number_format(($dienGiai['ty_le_bhxh'] ?? 0) * 100, 2), '0'), '.') }}% + BHYT {{ rtrim(rtrim(number_format(($dienGiai['ty_le_bhyt'] ?? 0) * 100, 2), '0'), '.') }}% + BHTN {{ rtrim(rtrim(number_format(($dienGiai['ty_le_bhtn'] ?? 0) * 100, 2), '0'), '.') }}%). DN đóng thêm {{ number_format($dienGiai['tong_bao_hiem_dn'] ?? 0) }} đ, không trừ lương.</span>
                                 <span class="font-medium text-red-500 whitespace-nowrap ml-4">-{{ number_format($dienGiai['tong_bao_hiem']) }} đ</span>
                             </li>
                             <li class="text-sm text-gray-600 dark:text-slate-300 flex justify-between max-w-md">

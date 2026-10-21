@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\BangLuong;
+use App\Models\CauHinhBhxhThue;
 use App\Models\ChamCong;
 use App\Models\DangKyTangCa;
 use App\Models\HopDongLaoDong;
@@ -112,13 +113,16 @@ class TinhLuongService
         $soNgayCong         = $cong['so_ngay_cong'];
         $ngayNghiPhep       = $cong['ngay_nghi_phep'];
         $ngayNghiKhongPhep  = $cong['ngay_nghi_khong_phep'];
+        $cauHinhThue        = CauHinhBhxhThue::choNam($nam);
+        $lichLam            = LichLamViecService::cauHinh();
+        $ngayLe             = LichLamViecService::soNgayLeHuongLuong($thang, $nam);
 
         // --- BƯỚC 3: Quy lương cơ bản theo ngày công thực tế ---
-        $ngayCongChuan = self::NGAY_CONG_CHUAN;
+        $ngayCongChuan = (float) ($lichLam->ngay_cong_chuan ?: self::NGAY_CONG_CHUAN);
         $luongNgay     = $ngayCongChuan > 0 ? $luongCoBan / $ngayCongChuan : 0;
         $luongGio      = $luongNgay / 8;
-        // Nghỉ phép vẫn được hưởng lương
-        $ngayHuongLuong = $soNgayCong + $ngayNghiPhep;
+        // Nghỉ phép và ngày lễ hưởng lương vẫn được tính công
+        $ngayHuongLuong = $soNgayCong + $ngayNghiPhep + $ngayLe;
         $luongTheoCong  = round($luongNgay * $ngayHuongLuong, 2);
 
         // --- BƯỚC 4: Tính phụ cấp ---
@@ -142,39 +146,48 @@ class TinhLuongService
         // --- BƯỚC 6: Tổng lương (gross) ---
         $tongLuong = round($luongTheoCong + $tongPhuCap + $tienTangCa + $tongThuong, 2);
 
-        // --- BƯỚC 7: Khấu trừ (bảo hiểm bắt buộc + thuế TNCN) ---
-        $bhxh = round($luongCoBan * self::TY_LE_BHXH, 2);
-        $bhyt = round($luongCoBan * self::TY_LE_BHYT, 2);
-        $bhtn = round($luongCoBan * self::TY_LE_BHTN, 2);
+        // --- BƯỚC 7: Khấu trừ (bảo hiểm bắt buộc + thuế TNCN) theo cấu hình năm ---
+        $tranDong = (float) $cauHinhThue->tran_dong_bhxh;
+        $mucDongBhxh = $tranDong > 0 ? min($luongCoBan, $tranDong) : $luongCoBan;
+        $bhxh = round($mucDongBhxh * (float) $cauHinhThue->ty_le_bhxh_nld, 2);
+        $bhyt = round($mucDongBhxh * (float) $cauHinhThue->ty_le_bhyt_nld, 2);
+        $bhtn = round($mucDongBhxh * (float) $cauHinhThue->ty_le_bhtn_nld, 2);
         $tongBaoHiem = round($bhxh + $bhyt + $bhtn, 2);
+        $bhxhDn = round($mucDongBhxh * (float) $cauHinhThue->ty_le_bhxh_dn, 2);
+        $bhytDn = round($mucDongBhxh * (float) $cauHinhThue->ty_le_bhyt_dn, 2);
+        $bhtnDn = round($mucDongBhxh * (float) $cauHinhThue->ty_le_bhtn_dn, 2);
+        $tongBaoHiemDn = round($bhxhDn + $bhytDn + $bhtnDn, 2);
 
-        // Giảm trừ gia cảnh = bản thân + (số người phụ thuộc × mức/người)
-        // (NQ 110/2025/UBTVQH15, áp dụng từ kỳ tính thuế 2026)
         $nguoiPhuThuoc   = $this->layNguoiPhuThuoc($nguoiDungId, $dauThang, $cuoiThang);
         $soNguoiPhuThuoc = $nguoiPhuThuoc->count();
-        $giamTruNPT      = round($soNguoiPhuThuoc * self::GIAM_TRU_NGUOI_PHU_THUOC, 2);
-        $giamTruGiaCanh  = round(self::GIAM_TRU_BAN_THAN + $giamTruNPT, 2);
+        $giamTruBanThan  = (float) $cauHinhThue->giam_tru_ban_than;
+        $mucGiamTruNpt   = (float) $cauHinhThue->giam_tru_npt;
+        $giamTruNPT      = round($soNguoiPhuThuoc * $mucGiamTruNpt, 2);
+        $giamTruGiaCanh  = round($giamTruBanThan + $giamTruNPT, 2);
 
         // Thu nhập chịu thuế = lương theo công + phụ cấp CHỊU THUẾ + tiền tăng ca + thưởng CHỊU THUẾ
         $thuNhapChiuThue = round($luongTheoCong + $phuCapChiuThue + $tienTangCa + $thuongChiuThue, 2);
-        // Thu nhập tính thuế = thu nhập chịu thuế − bảo hiểm bắt buộc − giảm trừ gia cảnh
+        // Thu nhập tính thuế = thu nhập chịu thuế − bảo hiểm NLĐ đóng − giảm trừ gia cảnh
         $thuNhapTinhThue = max(0, round($thuNhapChiuThue - $tongBaoHiem - $giamTruGiaCanh, 2));
-        $chiTietBacThue  = self::chiTietBacThue($thuNhapTinhThue);
-        $thueTNCN        = $this->tinhThueTNCN($thuNhapTinhThue);
+        $bacThue         = $cauHinhThue->bacThue();
+        $chiTietBacThue  = self::chiTietBacThue($thuNhapTinhThue, $bacThue);
+        $thueTNCN        = $this->tinhThueTNCN($thuNhapTinhThue, $bacThue);
+        $soBac           = count($bacThue);
 
-        $ghiChuThue = 'Thuế TNCN luỹ tiến 5 bậc trên thu nhập tính thuế '
-            . number_format($thuNhapTinhThue) . 'đ — đã trừ bảo hiểm bắt buộc '
+        $pt = fn ($v) => rtrim(rtrim(number_format($v * 100, 2), '0'), '.');
+        $ghiChuThue = 'Thuế TNCN luỹ tiến ' . $soBac . ' bậc (năm ' . $nam . ') trên thu nhập tính thuế '
+            . number_format($thuNhapTinhThue) . 'đ — đã trừ bảo hiểm NLĐ '
             . number_format($tongBaoHiem) . 'đ và giảm trừ gia cảnh '
             . number_format($giamTruGiaCanh) . 'đ (bản thân '
-            . number_format(self::GIAM_TRU_BAN_THAN) . 'đ'
+            . number_format($giamTruBanThan) . 'đ'
             . ($soNguoiPhuThuoc > 0
-                ? " + {$soNguoiPhuThuoc} NPT × " . number_format(self::GIAM_TRU_NGUOI_PHU_THUOC) . 'đ'
+                ? " + {$soNguoiPhuThuoc} NPT × " . number_format($mucGiamTruNpt) . 'đ'
                 : '')
             . ')';
         $chiTietKhauTru = [
-            ['loai' => 'bhxh',      'so_tien' => $bhxh,     'ghi_chu' => 'BHXH 8% × lương cơ bản ' . number_format($luongCoBan) . 'đ'],
-            ['loai' => 'bhyt',      'so_tien' => $bhyt,     'ghi_chu' => 'BHYT 1.5% × lương cơ bản ' . number_format($luongCoBan) . 'đ'],
-            ['loai' => 'bhtn',      'so_tien' => $bhtn,     'ghi_chu' => 'BHTN 1% × lương cơ bản ' . number_format($luongCoBan) . 'đ'],
+            ['loai' => 'bhxh',      'so_tien' => $bhxh,     'ghi_chu' => 'BHXH ' . $pt($cauHinhThue->ty_le_bhxh_nld) . '% × mức đóng ' . number_format($mucDongBhxh) . 'đ'],
+            ['loai' => 'bhyt',      'so_tien' => $bhyt,     'ghi_chu' => 'BHYT ' . $pt($cauHinhThue->ty_le_bhyt_nld) . '% × mức đóng ' . number_format($mucDongBhxh) . 'đ'],
+            ['loai' => 'bhtn',      'so_tien' => $bhtn,     'ghi_chu' => 'BHTN ' . $pt($cauHinhThue->ty_le_bhtn_nld) . '% × mức đóng ' . number_format($mucDongBhxh) . 'đ'],
             ['loai' => 'thue_tncn', 'so_tien' => $thueTNCN, 'ghi_chu' => $ghiChuThue],
         ];
 
@@ -206,6 +219,7 @@ class TinhLuongService
             'so_ngay_cong_chuan'   => $ngayCongChuan,
             'ngay_nghi_phep'       => $ngayNghiPhep,
             'ngay_nghi_khong_phep' => $ngayNghiKhongPhep,
+            'ngay_le'              => $ngayLe,
             'luong_ngay'           => round($luongNgay, 2),
             'luong_gio'            => round($luongGio, 2),
             'luong_theo_cong'      => $luongTheoCong,
@@ -232,14 +246,19 @@ class TinhLuongService
 
             'tong_luong'           => $tongLuong,
 
+            'muc_dong_bhxh'        => $mucDongBhxh,
             'bhxh'                 => $bhxh,
             'bhyt'                 => $bhyt,
             'bhtn'                 => $bhtn,
             'tong_bao_hiem'        => $tongBaoHiem,
+            'bhxh_dn'              => $bhxhDn,
+            'bhyt_dn'              => $bhytDn,
+            'bhtn_dn'              => $bhtnDn,
+            'tong_bao_hiem_dn'     => $tongBaoHiemDn,
             'so_nguoi_phu_thuoc'   => $soNguoiPhuThuoc,
             'danh_sach_nguoi_phu_thuoc' => $nguoiPhuThuoc,
-            'muc_giam_tru_moi_npt' => self::GIAM_TRU_NGUOI_PHU_THUOC,
-            'giam_tru_ban_than'    => self::GIAM_TRU_BAN_THAN,
+            'muc_giam_tru_moi_npt' => $mucGiamTruNpt,
+            'giam_tru_ban_than'    => $giamTruBanThan,
             'giam_tru_nguoi_phu_thuoc' => $giamTruNPT,
             'giam_tru_gia_canh'    => $giamTruGiaCanh,
             'thu_nhap_chiu_thue'   => $thuNhapChiuThue,
@@ -280,6 +299,7 @@ class TinhLuongService
                 'luong_nam'             => $nam,
                 'nguoi_dung_id'         => $nguoiDungId,
                 'luong_co_ban'          => $kq['luong_co_ban'],
+                'muc_dong_bhxh'         => $kq['muc_dong_bhxh'],
                 'luong_theo_cong'       => $kq['luong_theo_cong'],
                 'tong_phu_cap'          => $kq['tong_phu_cap'],
                 'tien_tang_ca'          => $kq['tien_tang_ca'],
@@ -305,8 +325,12 @@ class TinhLuongService
 
                 'ngay_nghi_phep'        => $kq['ngay_nghi_phep'],
                 'ngay_nghi_khong_phep'  => $kq['ngay_nghi_khong_phep'],
-                'ngay_le'               => 0,
+                'ngay_le'               => $kq['ngay_le'],
                 'thue_thu_nhap_ca_nhan' => $kq['thue_thu_nhap_ca_nhan'],
+                'bhxh_dn'               => $kq['bhxh_dn'],
+                'bhyt_dn'               => $kq['bhyt_dn'],
+                'bhtn_dn'               => $kq['bhtn_dn'],
+                'tong_bao_hiem_dn'      => $kq['tong_bao_hiem_dn'],
 
                 // Snapshot căn cứ khấu trừ để phiếu lương diễn giải lại được
                 'phu_cap_chiu_thue'        => $kq['phu_cap_chiu_thue'],
@@ -439,7 +463,11 @@ class TinhLuongService
             ->get();
 
         return [
-            'so_ngay_cong'         => $chamCongs->count(),  // ✅ Đếm tất cả
+            'so_ngay_cong'         => round($chamCongs->sum(function ($cc) {
+                $cong = (float) $cc->so_cong;
+
+                return $cong > 0 ? min($cong, 1) : 1;
+            }), 2),
             'ngay_nghi_phep'       => 0,
             'ngay_nghi_khong_phep' => 0,
             // Giờ tăng ca ghi thẳng trên bảng chấm công — chỉ dùng làm nguồn dự phòng
@@ -534,13 +562,11 @@ class TinhLuongService
     private function soGioTangCaThucTe(DangKyTangCa $don): float
     {
         $gioDangKy = (float) $don->so_gio_tang_ca;
-        $gioThucTe = (float) ($don->thuc_hien->so_gio_tang_ca_thuc_te ?? 0);
-
-        if ($gioThucTe <= 0) {
-            $gioThucTe = $gioDangKy;
+        if ($don->thuc_hien) {
+            return max(0, min((float) $don->thuc_hien->so_gio_tang_ca_thuc_te, $gioDangKy));
         }
 
-        return max(0, min($gioThucTe, $gioDangKy));
+        return max(0, $gioDangKy);
     }
 
     /**
@@ -715,16 +741,17 @@ class TinhLuongService
      *
      * @return array<int, array{bac:int, tu:float, den:float|null, phan_thu_nhap:float, thue_suat:float, thue:float}>
      */
-    public static function chiTietBacThue(float $thuNhapTinhThue): array
+    public static function chiTietBacThue(float $thuNhapTinhThue, ?array $bacThue = null): array
     {
         $chiTiet = [];
         $tu      = 0.0;
+        $bacThue = $bacThue ?: self::BAC_THUE;
 
         if ($thuNhapTinhThue <= 0) {
             return $chiTiet;
         }
 
-        foreach (self::BAC_THUE as $bac) {
+        foreach ($bacThue as $bac) {
             $tran = $bac['den'] === null ? $thuNhapTinhThue : (float) $bac['den'];
             $phan = min($thuNhapTinhThue, $tran) - $tu;
 
@@ -756,10 +783,10 @@ class TinhLuongService
      * Luật Thuế TNCN 2025: rút gọn 7 bậc → 5 bậc, áp dụng từ kỳ tính thuế 2026.
      * Bậc: đến 10tr (5%), 10–30tr (10%), 30–60tr (20%), 60–100tr (30%), trên 100tr (35%).
      */
-    private function tinhThueTNCN(float $thuNhapTinhThue): float
+    private function tinhThueTNCN(float $thuNhapTinhThue, ?array $bacThue = null): float
     {
         return round(
-            array_sum(array_column(self::chiTietBacThue($thuNhapTinhThue), 'thue')),
+            array_sum(array_column(self::chiTietBacThue($thuNhapTinhThue, $bacThue), 'thue')),
             2
         );
     }
@@ -798,10 +825,9 @@ class TinhLuongService
     // ==========================
 
     $luongTheoCong = round(
-    $luongNgay *
-    ($soNgayCong + $luong->ngay_nghi_phep),
-    2
-);;
+        $luongNgay * ($soNgayCong + $luong->ngay_nghi_phep + (float) $luong->ngay_le),
+        2
+    );
 
     // ==========================
     // Tăng ca — giữ nguyên tỷ lệ giữa các loại ngày (150% / 200% / 400%),
@@ -898,7 +924,8 @@ class TinhLuongService
     // Thuế TNCN
     // ==========================
 
-    $thue = $this->tinhThueTNCN($thuNhapTinhThue);
+    $cauHinhSua = CauHinhBhxhThue::choNam((int) $luong->luong_nam);
+    $thue = $this->tinhThueTNCN($thuNhapTinhThue, $cauHinhSua->bacThue());
 
     // ==========================
     // Tổng khấu trừ

@@ -39,9 +39,10 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
+                {{-- Nhân viên --}}
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                        Nhân viên
+                        Nhân viên <span class="text-red-500">*</span>
                     </label>
                     <select name="ho_so_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         @foreach ($hoSos as $hs)
@@ -50,8 +51,12 @@
                             </option>
                         @endforeach
                     </select>
+                    @error('ho_so_id')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
+                {{-- Loại quyết định --}}
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                         Loại quyết định
@@ -59,37 +64,32 @@
                     <input type="text" value="{{ $ktkl->loai === 'khen_thuong' ? 'Khen thưởng' : 'Kỷ luật' }}" disabled class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white">
                 </div>
 
+                {{-- Ngày quyết định --}}
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                        Hình thức / xử lý
+                        Ngày quyết định <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" name="hinh_thuc" value="{{ old('hinh_thuc', $ktkl->hinh_thuc) }}" placeholder="VD: Tiền mặt, Bằng khen..." class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <input type="date" name="ngay" value="{{ old('ngay', optional($ktkl->ngay)->format('Y-m-d')) }}" 
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:[color-scheme:dark]">
+                    @error('ngay')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
+                {{-- Hình thức --}}
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                        Số quyết định
+                        {{ $ktkl->loai === 'khen_thuong' ? 'Hình thức khen thưởng' : 'Hình thức xử lý' }}
                     </label>
-                    <input type="text" name="quyet_dinh_so" value="{{ old('quyet_dinh_so', $ktkl->quyet_dinh_so) }}" placeholder="VD: QĐ-2025-001" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <input type="text" name="hinh_thuc" value="{{ old('hinh_thuc', $ktkl->hinh_thuc) }}" 
+                        placeholder="VD: Tiền mặt, Bằng khen..." 
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
 
+                {{-- Mức độ --}}
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                        Ngày quyết định
-                    </label>
-                    <input type="date" name="ngay" value="{{ old('ngay', optional($ktkl->ngay)->format('Y-m-d')) }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:[color-scheme:dark]">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                        Tiêu đề
-                    </label>
-                    <input type="text" name="ten" value="{{ old('ten', $ktkl->ten) }}" placeholder="Tiêu đề quyết định" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                        Mức độ
+                        Mức độ <span class="text-red-500">*</span>
                     </label>
                     <select name="muc_do" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         @if ($ktkl->loai === 'khen_thuong')
@@ -102,49 +102,96 @@
                             <option value="sa_thai" {{ old('muc_do', $ktkl->muc_do) == 'sa_thai' ? 'selected' : '' }}>Sa thải</option>
                         @endif
                     </select>
+                    @error('muc_do')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
+                {{-- Số tiền --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        {{ $ktkl->loai === 'khen_thuong' ? 'Số tiền thưởng' : 'Số tiền phạt' }}
+                    </label>
+                    <input type="number" name="so_tien" value="{{ old('so_tien', $ktkl->so_tien) }}" 
+                        placeholder="0" min="0" step="1000"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        {{ $ktkl->loai === 'khen_thuong' ? 'Số tiền thưởng cho nhân viên' : 'Số tiền phạt (nếu có)' }}
+                    </p>
+                </div>
+
+                {{-- Số quyết định --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Số quyết định
+                    </label>
+                    <input type="text" name="quyet_dinh_so" value="{{ old('quyet_dinh_so', $ktkl->quyet_dinh_so) }}" 
+                        placeholder="VD: QĐ-2025-001" 
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                {{-- Tiêu đề --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Tiêu đề <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" name="ten" value="{{ old('ten', $ktkl->ten) }}" 
+                        placeholder="Tiêu đề quyết định" 
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    @error('ten')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Người ký (chỉ hiển thị, không cho sửa) --}}
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                         Người ký
                     </label>
-                    <select name="nguoi_ky_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        @foreach ($nguoiKys as $nk)
-                            <option value="{{ $nk->id }}" @selected(old('nguoi_ky_id', $ktkl->nguoi_ky_id) == $nk->id)>
-                                {{ $nk->ten_dang_nhap }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <input type="text" value="{{ $ktkl->nguoiKy?->ten_dang_nhap ?? '---' }}" disabled 
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Người ký được xác định tự động khi tạo</p>
                 </div>
 
             </div>
 
+            {{-- Nội dung --}}
             <div class="mt-6">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     Nội dung
                 </label>
-                <textarea name="noi_dung" rows="4" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ old('noi_dung', $ktkl->noi_dung) }}</textarea>
+                <textarea name="noi_dung" rows="4" 
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ old('noi_dung', $ktkl->noi_dung) }}</textarea>
             </div>
 
+            {{-- File đính kèm (chỉ cho khen thưởng) --}}
             @if ($ktkl->loai === 'khen_thuong')
             <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                         Bằng chứng
                     </label>
-                    <input type="file" name="bang_chung" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <input type="file" name="bang_chung" 
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     @if ($ktkl->bang_chung)
-                        <a href="{{ Storage::url($ktkl->bang_chung) }}" target="_blank" class="inline-block mt-2 text-sm text-blue-600 hover:underline">Xem bằng chứng hiện tại</a>
+                        <a href="{{ Storage::url($ktkl->bang_chung) }}" target="_blank" class="inline-block mt-2 text-sm text-blue-600 hover:underline">
+                            <i class="fas fa-file mr-1"></i> Xem bằng chứng hiện tại
+                        </a>
                     @endif
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Hỗ trợ: JPG, PNG, PDF, DOC, DOCX (tối đa 5MB)</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                         File quyết định
                     </label>
-                    <input type="file" name="quyet_dinh_file" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <input type="file" name="quyet_dinh_file" 
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     @if ($ktkl->quyet_dinh_file)
-                        <a href="{{ Storage::url($ktkl->quyet_dinh_file) }}" target="_blank" class="inline-block mt-2 text-sm text-blue-600 hover:underline">Xem file hiện tại</a>
+                        <a href="{{ Storage::url($ktkl->quyet_dinh_file) }}" target="_blank" class="inline-block mt-2 text-sm text-blue-600 hover:underline">
+                            <i class="fas fa-file-pdf mr-1"></i> Xem file hiện tại
+                        </a>
                     @endif
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Hỗ trợ: PDF, JPG, PNG (tối đa 5MB)</p>
                 </div>
             </div>
             @endif
@@ -153,10 +200,12 @@
 
         {{-- FOOTER --}}
         <div class="flex justify-end gap-3 mt-6">
-            <a href="{{ route('admin.khen-thuong-ky-luat.index') }}" class="px-5 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium transition">
+            <a href="{{ route('admin.khen-thuong-ky-luat.index') }}" 
+                class="px-5 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium transition">
                 Hủy
             </a>
-            <button type="submit" class="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition shadow-sm">
+            <button type="submit" 
+                class="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition shadow-sm">
                 Cập nhật
             </button>
         </div>

@@ -21,8 +21,7 @@ class NotificationController extends Controller
             ]);
         }
 
-        // ⭐ CHỈ LẤY THÔNG BÁO CHƯA ĐỌC
-        $notifications = $user->unreadNotifications()
+        $notifications = $user->notifications()
             ->orderBy('created_at', 'desc')
             ->limit(20)
             ->get()
@@ -31,9 +30,10 @@ class NotificationController extends Controller
                 if (is_string($data)) {
                     $data = json_decode($data, true);
                 }
+
                 return [
                     'id' => $notification->id,
-                    'data' => $data,
+                    'data' => $this->chuanHoa($data ?? []),
                     'read_at' => $notification->read_at,
                     'created_at' => $notification->created_at,
                 ];
@@ -97,5 +97,38 @@ class NotificationController extends Controller
         $notification->delete();
 
         return response()->json(['success' => true]);
+    }
+
+    private function chuanHoa(array $data): array
+    {
+        if (isset($data['data']) && is_array($data['data']) && empty($data['title'])) {
+            $data = array_merge($data['data'], $data);
+        }
+
+        $data['title'] = $data['title'] ?? 'Thông báo';
+        $data['message'] = $data['message'] ?? ($data['noi_dung'] ?? '');
+        $data['url'] = $data['url'] ?? ($data['link'] ?? '#');
+        $data['icon'] = $data['icon'] ?? 'bell';
+        $data['color'] = $data['color'] ?? 'info';
+
+        $nhan = [
+            'ma_don_nghi' => 'Mã đơn',
+            'nhan_vien' => 'Nhân viên',
+            'phong_ban' => 'Phòng ban',
+            'loai_nghi' => 'Loại nghỉ',
+            'so_ngay_nghi' => 'Số ngày',
+            'tu_ngay' => 'Từ ngày',
+            'den_ngay' => 'Đến ngày',
+            'ly_do' => 'Lý do',
+        ];
+        $chiTiet = [];
+        foreach ($nhan as $khoa => $ten) {
+            if (!empty($data[$khoa]) && $data[$khoa] !== 'N/A') {
+                $chiTiet[] = ['nhan' => $ten, 'gia_tri' => (string) $data[$khoa]];
+            }
+        }
+        $data['chi_tiet'] = $chiTiet;
+
+        return $data;
     }
 }

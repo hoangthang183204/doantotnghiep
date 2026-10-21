@@ -18,6 +18,7 @@ class LuongNhanVien extends Model
         'luong_nam',
         'nguoi_dung_id',
         'luong_co_ban',
+        'muc_dong_bhxh',
         'luong_theo_cong',
         'tong_phu_cap',
         'tong_thuong',
@@ -48,6 +49,10 @@ class LuongNhanVien extends Model
         'bhyt',
         'bhtn',
         'tong_bao_hiem',
+        'bhxh_dn',
+        'bhyt_dn',
+        'bhtn_dn',
+        'tong_bao_hiem_dn',
         'so_nguoi_phu_thuoc',
         'giam_tru_ban_than',
         'giam_tru_nguoi_phu_thuoc',
@@ -255,15 +260,45 @@ class LuongNhanVien extends Model
             ? (float) $this->tong_khau_tru_khac
             : (float) $khoanKhac->sum('so_tien');
 
+        $cfg = \App\Models\CauHinhBhxhThue::choNam((int) ($this->luong_nam ?: now()->year));
+        $mucDong = (float) $this->muc_dong_bhxh > 0 ? (float) $this->muc_dong_bhxh : $luongCoBan;
+
+        $tyLeBhxh = (float) $cfg->ty_le_bhxh_nld;
+        $tyLeBhyt = (float) $cfg->ty_le_bhyt_nld;
+        $tyLeBhtn = (float) $cfg->ty_le_bhtn_nld;
+
+        $bhxhDn = (float) $this->bhxh_dn > 0 ? (float) $this->bhxh_dn : round($mucDong * (float) $cfg->ty_le_bhxh_dn, 2);
+        $bhytDn = (float) $this->bhyt_dn > 0 ? (float) $this->bhyt_dn : round($mucDong * (float) $cfg->ty_le_bhyt_dn, 2);
+        $bhtnDn = (float) $this->bhtn_dn > 0 ? (float) $this->bhtn_dn : round($mucDong * (float) $cfg->ty_le_bhtn_dn, 2);
+
+        $chiTietBac = TinhLuongService::chiTietBacThue($thuNhapTinhThue, $cfg->bacThue());
+        $thueTheoBac = round(array_sum(array_column($chiTietBac, 'thue')), 2);
+        $thueDaLuu = (float) $this->thue_thu_nhap_ca_nhan;
+        if (abs($thueTheoBac - $thueDaLuu) > 1) {
+            $chiTietCu = TinhLuongService::chiTietBacThue($thuNhapTinhThue, TinhLuongService::BAC_THUE);
+            $thueCu = round(array_sum(array_column($chiTietCu, 'thue')), 2);
+            if (abs($thueCu - $thueDaLuu) < abs($thueTheoBac - $thueDaLuu)) {
+                $chiTietBac = $chiTietCu;
+            }
+        }
+
         return [
             'luong_co_ban'      => $luongCoBan,
-            'ty_le_bhxh'        => TinhLuongService::TY_LE_BHXH,
-            'ty_le_bhyt'        => TinhLuongService::TY_LE_BHYT,
-            'ty_le_bhtn'        => TinhLuongService::TY_LE_BHTN,
+            'muc_dong_bhxh'     => $mucDong,
+            'ty_le_bhxh'        => $tyLeBhxh,
+            'ty_le_bhyt'        => $tyLeBhyt,
+            'ty_le_bhtn'        => $tyLeBhtn,
+            'ty_le_bhxh_dn'     => (float) $cfg->ty_le_bhxh_dn,
+            'ty_le_bhyt_dn'     => (float) $cfg->ty_le_bhyt_dn,
+            'ty_le_bhtn_dn'     => (float) $cfg->ty_le_bhtn_dn,
             'bhxh'              => $bhxh,
             'bhyt'              => $bhyt,
             'bhtn'              => $bhtn,
             'tong_bao_hiem'     => $tongBaoHiem,
+            'bhxh_dn'           => $bhxhDn,
+            'bhyt_dn'           => $bhytDn,
+            'bhtn_dn'           => $bhtnDn,
+            'tong_bao_hiem_dn'  => round($bhxhDn + $bhytDn + $bhtnDn, 2),
 
             'phu_cap_chiu_thue' => $phuCapChiuThue,
             'tong_thuong'       => (float) $this->tong_thuong,
@@ -277,8 +312,8 @@ class LuongNhanVien extends Model
             'giam_tru_gia_canh'        => $giamTruGiaCanh,
 
             'thu_nhap_tinh_thue' => $thuNhapTinhThue,
-            'chi_tiet_bac_thue'  => TinhLuongService::chiTietBacThue($thuNhapTinhThue),
-            'thue_tncn'          => (float) $this->thue_thu_nhap_ca_nhan,
+            'chi_tiet_bac_thue'  => $chiTietBac,
+            'thue_tncn'          => $thueDaLuu,
 
             'khau_tru_khac'      => $khoanKhac,
             'tong_khau_tru_khac' => $tongKhauTruKhac,
@@ -286,6 +321,7 @@ class LuongNhanVien extends Model
             'tong_khau_tru'      => (float) $this->tong_khau_tru,
             'tong_luong'         => (float) $this->tong_luong,
             'luong_thuc_nhan'    => (float) $this->luong_thuc_nhan,
+            'nam_cau_hinh'       => (int) $cfg->nam,
         ];
     }
 

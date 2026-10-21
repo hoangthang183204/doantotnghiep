@@ -70,9 +70,30 @@
                                 {{ \Carbon\Carbon::parse($notification->created_at)->diffForHumans() }}
                             </span>
                         </div>
-                        <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                        <p class="text-sm text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-line">
                             {{ $message }}
                         </p>
+                        @php
+                            $dongThongBao = array_filter([
+                                'Mã đơn' => $data['ma_don_nghi'] ?? null,
+                                'Nhân viên' => $data['nhan_vien'] ?? null,
+                                'Phòng ban' => $data['phong_ban'] ?? null,
+                                'Loại nghỉ' => $data['loai_nghi'] ?? null,
+                                'Số ngày' => $data['so_ngay_nghi'] ?? null,
+                                'Từ ngày' => $data['tu_ngay'] ?? null,
+                                'Đến ngày' => $data['den_ngay'] ?? null,
+                                'Lý do' => $data['ly_do'] ?? null,
+                            ]);
+                        @endphp
+                        @if(count($dongThongBao))
+                            <div class="mt-2 flex flex-wrap gap-1.5">
+                                @foreach($dongThongBao as $nhan => $giaTri)
+                                    <span class="inline-flex gap-1 rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-xs text-gray-700 dark:text-gray-200">
+                                        <span class="text-gray-500 dark:text-gray-400">{{ $nhan }}:</span> {{ $giaTri }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @endif
                         <div class="mt-2 flex flex-wrap gap-2">
                             @if($url && $url != '#')
                                 <a href="{{ $url }}" 

@@ -895,7 +895,7 @@
                     scanLine.style.top = scanPosition + '%';
 
                     const now = Date.now();
-                    if (now - lastProcessedTime > 3000 && !isProcessing) {
+                    if (now - lastProcessedTime > 1200 && !isProcessing) {
                         lastProcessedTime = now;
                         detectAndProcessFace();
                     }
@@ -941,12 +941,30 @@
                 showResult(`🔄 Đã chuyển sang ${facingMode === 'user' ? 'camera trước' : 'camera sau'}`, true);
             }
 
+            let geo = { latitude: null, longitude: null };
+
+            function layViTri() {
+                if (!navigator.geolocation) return;
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    geo.latitude = pos.coords.latitude;
+                    geo.longitude = pos.coords.longitude;
+                }, () => {}, {
+                    enableHighAccuracy: true,
+                    timeout: 8000,
+                    maximumAge: 30000
+                });
+            }
+
             function captureImage() {
                 const context = canvas.getContext('2d');
-                canvas.width = video.videoWidth || 320;
-                canvas.height = video.videoHeight || 240;
+                const srcW = video.videoWidth || 320;
+                const srcH = video.videoHeight || 240;
+                const maxW = 480;
+                const scale = Math.min(1, maxW / srcW);
+                canvas.width = Math.round(srcW * scale);
+                canvas.height = Math.round(srcH * scale);
                 context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                return canvas.toDataURL('image/jpeg', 0.7);
+                return canvas.toDataURL('image/jpeg', 0.6);
             }
 
             function showResult(message, isSuccess) {
@@ -1014,7 +1032,9 @@
                         },
                         body: JSON.stringify({
                             image: imageData,
-                            loai: loai
+                            loai: loai,
+                            latitude: geo.latitude,
+                            longitude: geo.longitude
                         })
                     });
 
@@ -1141,6 +1161,17 @@
                 }
             });
 
+            layViTri();
+            if (faceDetectStatus) {
+                faceDetectStatus.textContent = 'Đang chuẩn bị nhận diện khuôn mặt...';
+            }
+            fetch('{{ route('employee.cham-cong-face.warmup') }}', {
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+            }).then((res) => res.json()).then((data) => {
+                if (faceDetectStatus && data.ready) {
+                    faceDetectStatus.textContent = 'Sẵn sàng. Đưa khuôn mặt vào khung hình.';
+                }
+            }).catch(() => {});
             initCamera('user');
 
             setInterval(async () => {
