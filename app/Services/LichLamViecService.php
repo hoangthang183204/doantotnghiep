@@ -10,20 +10,7 @@ class LichLamViecService
 {
     public static function cauHinh(): object
     {
-        $row = DB::table('cau_hinh_lich_lam')->first();
-        if ($row) {
-            return $row;
-        }
-
-        return (object) [
-            'gio_vao' => '08:00:00',
-            'gio_ra' => '17:30:00',
-            'gio_nghi_trua_bat_dau' => '12:00:00',
-            'gio_nghi_trua_ket_thuc' => '13:30:00',
-            'so_gio_chuan' => 8,
-            'ngay_lam' => json_encode([1, 2, 3, 4, 5]),
-            'ngay_cong_chuan' => 22,
-        ];
+        return DanhMucCache::cauHinhLich();
     }
 
     public static function ngayLamTrongTuan(): array
@@ -35,7 +22,7 @@ class LichLamViecService
 
     public static function laNgayLe(Carbon $ngay, bool $chiHuongLuong = false): bool
     {
-        $les = NgayLe::query()->when($chiHuongLuong, fn ($q) => $q->where('co_huong_luong', true))->get();
+        $les = DanhMucCache::ngayLe()->when($chiHuongLuong, fn ($ds) => $ds->where('co_huong_luong', true));
         $md = $ngay->format('m-d');
         foreach ($les as $le) {
             if ($le->lap_lai_hang_nam && $le->ngay && $le->ngay->format('m-d') === $md) {

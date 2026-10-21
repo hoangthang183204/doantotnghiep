@@ -432,6 +432,9 @@
                             ✏️ Sửa hồ sơ
                         </a>
                     @endcan
+                    @if (\App\Support\VaiTroNghiepVu::laKeToanThuan(auth()->user()))
+                        <a href="{{ route('admin.ho-so.tai-chinh', $hoSo->id) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Tài khoản / MST</a>
+                    @endif
                     <a href="{{ route('admin.ho-so.index') }}"
                         class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition font-medium">
                         ← Quay lại
@@ -2018,19 +2021,34 @@
                         $luongCoBanHienTai = $luongGanNhat->luong_co_ban ?? ($hopDongHieuLuc->luong_co_ban ?? 0);
                         $tongPhuCap = $luongGanNhat->tong_phu_cap ?? 0;
                         $tienTangCa = $luongGanNhat->tien_tang_ca ?? 0;
-                        $tongBaoHiem = $luongGanNhat->tong_bao_hiem ?? 0;
                         $thueTncn = $luongGanNhat->thue_thu_nhap_ca_nhan ?? 0;
                         $tongThuNhap = $luongGanNhat->tong_luong ?? $luongCoBanHienTai + $tongPhuCap;
-                        $thucNhan = $luongGanNhat->luong_thuc_nhan ?? $tongThuNhap;
                         $bhxh = $luongGanNhat->bhxh ?? 0;
                         $bhyt = $luongGanNhat->bhyt ?? 0;
                         $bhtn = $luongGanNhat->bhtn ?? 0;
+                        $tongBaoHiem = $luongGanNhat->tong_bao_hiem ?? 0;
+                        $soNgayCongKy = (float) ($luongGanNhat->so_ngay_cong ?? 0);
+                        $ngayNghiPhepKy = (float) ($luongGanNhat->ngay_nghi_phep ?? 0);
+                        $ngayLeKy = (float) ($luongGanNhat->ngay_le ?? 0);
+                        $khauTruKhac = (float) ($luongGanNhat->tong_khau_tru_khac ?? 0);
+                        if ($khauTruKhac <= 0 && $luongGanNhat) {
+                            $khauTruKhac = max(0, (float) $luongGanNhat->tong_khau_tru - (float) $luongGanNhat->tong_bao_hiem - (float) $thueTncn);
+                        }
+                        $khongDiLam = $luongGanNhat && $soNgayCongKy <= 0 && $ngayNghiPhepKy <= 0;
+                        $mucDongBhxhHienThi = $luongCoBanHienTai;
+                        if ($khongDiLam) {
+                            $bhxh = $bhyt = $bhtn = $tongBaoHiem = 0;
+                            $mucDongBhxhHienThi = 0;
+                        }
                         $soNguoiPhuThuoc = $luongGanNhat->so_nguoi_phu_thuoc ?? ($hoSo->nguoiPhuThuoc?->count() ?? 0);
 
                         $giamTruBanThan = 15500000;
                         $giamTruGiaCanh = $giamTruBanThan + 6200000 * $soNguoiPhuThuoc;
                         $thuNhapChiuThue = max(0, $tongThuNhap - $tongBaoHiem);
                         $thuNhapTinhThue = max(0, $thuNhapChiuThue - $giamTruGiaCanh);
+                        $thucNhan = $khongDiLam
+                            ? round($tongThuNhap - $thueTncn - $khauTruKhac, 2)
+                            : ($luongGanNhat->luong_thuc_nhan ?? $tongThuNhap);
 
                         $coPhuCap = $tongPhuCap > 0;
                         $coTangCa = $tienTangCa > 0;
@@ -2097,7 +2115,7 @@
                                         <span
                                             class="toggle-content hidden-content font-medium text-green-600 dark:text-green-400 salary-amount"
                                             data-sensitive="bhxh_salary">
-                                            {{ number_format($luongCoBanHienTai, 0, ',', '.') }} ₫
+                                            {{ number_format($mucDongBhxhHienThi ?? $luongCoBanHienTai, 0, ',', '.') }} ₫
                                         </span>
                                         <button onclick="toggleSensitive(this, 'bhxh_salary')" class="toggle-btn"
                                             title="Nhấn để xem">
@@ -2468,7 +2486,13 @@
                                     = {{ number_format($tongThuNhap, 0, ',', '.') }}
                                     - {{ number_format($tongBaoHiem, 0, ',', '.') }}
                                     - {{ number_format($thueTncn, 0, ',', '.') }}
+                                    @if (($khauTruKhac ?? 0) > 0)
+                                        - {{ number_format($khauTruKhac, 0, ',', '.') }} (tạm ứng / khấu trừ khác)
+                                    @endif
                                 </div>
+                                @if (!empty($khongDiLam))
+                                    <p class="text-xs text-amber-700 mt-2">Tháng này không có ngày đi làm nên không trừ bảo hiểm cả tháng.@if(($khauTruKhac ?? 0) > 0) Thực nhận âm vì tạm ứng lớn hơn lương tháng.@endif</p>
+                                @endif
                                 @if ($bangLuongGanNhat)
                                     <div class="text-xs text-gray-400 dark:text-gray-500 mt-1 font-body">
                                         📋 Kỳ lương: {{ $kyLuu }}

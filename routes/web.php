@@ -111,7 +111,7 @@ Route::prefix('admin')
     ->middleware(['auth'])
     ->group(function () {
 
-        Route::prefix('cham-cong-face')->name('cham-cong-face.')->group(function () {
+        Route::prefix('cham-cong-face')->name('cham-cong-face.')->middleware('ke-toan.cam')->group(function () {
             Route::get('/', [ChamCongFaceController::class, 'index'])->name('index');
             Route::get('/create', [ChamCongFaceController::class, 'create'])->name('create');
             Route::post('/', [ChamCongFaceController::class, 'store'])->name('store');
@@ -152,6 +152,15 @@ Route::prefix('admin')
             return response()->json(['count' => $user ? $user->unreadNotifications()->count() : 0]);
         });
 
+        Route::post('/api/notifications/mark-all-as-read', function () {
+            $user = auth()->user();
+            if (!$user) {
+                return response()->json(['success' => false], 401);
+            }
+            $user->unreadNotifications()->update(['read_at' => now()]);
+            return response()->json(['success' => true]);
+        });
+
         Route::post('/api/notifications/{id}/mark-as-read', function ($id) {
             $user = auth()->user();
             if (!$user) {
@@ -159,15 +168,6 @@ Route::prefix('admin')
             }
             $notification = $user->notifications()->findOrFail($id);
             $notification->markAsRead();
-            return response()->json(['success' => true]);
-        });
-
-        Route::post('/api/notifications/mark-all-as-read', function () {
-            $user = auth()->user();
-            if (!$user) {
-                return response()->json(['success' => false], 401);
-            }
-            $user->unreadNotifications()->update(['read_at' => now()]);
             return response()->json(['success' => true]);
         });
 
@@ -183,6 +183,8 @@ Route::prefix('admin')
 
             Route::get('/export', [HoSoController::class, 'export'])->name('export');
             Route::post('/import', [HoSoController::class, 'import'])->name('import');
+            Route::get('/{id}/tai-chinh', [HoSoController::class, 'taiChinh'])->name('tai-chinh');
+            Route::put('/{id}/tai-chinh', [HoSoController::class, 'capNhatTaiChinh'])->name('tai-chinh.update');
             Route::get('/{id}/edit', [HoSoController::class, 'edit'])->name('edit')->middleware('CheckPermission:hoso.edit');
             Route::put('/{id}', [HoSoController::class, 'update'])->name('update')->middleware('CheckPermission:hoso.edit');
             Route::get('/{id}', [HoSoController::class, 'show'])->name('show')->middleware('CheckPermission:hoso.show');
@@ -246,16 +248,16 @@ Route::prefix('admin')
                 ->name('nhan-vien.show');
 
             Route::get('/don-ve-som', [ChamCongController::class, 'danhSachDonVeSom'])->name('don-ve-som');
-            Route::post('/don-ve-som/{id}/duyet', [ChamCongController::class, 'duyetDonVeSom'])->name('duyet-don-ve-som');
-            Route::post('/don-ve-som/{id}/tu-choi', [ChamCongController::class, 'tuChoiDonVeSom'])->name('tu-choi-don-ve-som');
+            Route::post('/don-ve-som/{id}/duyet', [ChamCongController::class, 'duyetDonVeSom'])->middleware('ke-toan.cam')->name('duyet-don-ve-som');
+            Route::post('/don-ve-som/{id}/tu-choi', [ChamCongController::class, 'tuChoiDonVeSom'])->middleware('ke-toan.cam')->name('tu-choi-don-ve-som');
             Route::get('/don-ve-som/{id}/detail', [ChamCongController::class, 'chiTietDonVeSom'])->name('chi-tiet-don-ve-som');
 
             Route::get('/export', [ChamCongController::class, 'export'])->name('export');
             Route::get('/get-by-nhan-vien', [ChamCongController::class, 'getByNhanVien'])->name('get-by-nhan-vien');
             Route::get('/', [ChamCongController::class, 'index'])->name('index');
             Route::get('/{id}', [ChamCongController::class, 'show'])->name('show');
-            Route::post('/bulk-action', [ChamCongController::class, 'bulkAction'])->name('bulk-action');
-            Route::post('/{id}/phe-duyet', [ChamCongController::class, 'pheDuyetDonLe'])->name('phe-duyet');
+            Route::post('/bulk-action', [ChamCongController::class, 'bulkAction'])->middleware('ke-toan.cam')->name('bulk-action');
+            Route::post('/{id}/phe-duyet', [ChamCongController::class, 'pheDuyetDonLe'])->middleware('ke-toan.cam')->name('phe-duyet');
         });
 
         // ========== ĐƠN NGHỈ - AI CŨNG CÓ ==========
@@ -283,6 +285,7 @@ Route::prefix('admin')
         // ========== BẢNG LƯƠNG - CHỈ HR VÀ ADMIN ==========
         Route::prefix('bang-luong')->name('bang-luong.')->middleware(['CheckPermission:salary.index'])->group(function () {
             Route::get('/', [BangLuongController::class, 'index'])->name('index');
+            Route::get('/tep-xuat/{ten}', [BangLuongController::class, 'taiTep'])->name('tep-xuat');
             Route::get('/create', [BangLuongController::class, 'create'])->name('create')->middleware('CheckPermission:salary.create');
             Route::post('/tinh', [BangLuongController::class, 'tinhLuong'])->name('tinh')->middleware('CheckPermission:salary.calculate');
             Route::get('/{id}', [BangLuongController::class, 'show'])->whereNumber('id')->name('show');
@@ -424,7 +427,7 @@ Route::prefix('admin')
         // ========== KHEN THƯỞNG VÀ KỶ LUẬT - CHỈ HR VÀ ADMIN ==========
         Route::prefix('khen-thuong-ky-luat')
             ->name('khen-thuong-ky-luat.')
-            ->middleware(['CheckPermission:hoso.edit'])
+            ->middleware(['CheckPermission:hoso.edit', 'ke-toan.cam'])
             ->group(function () {
 
                 Route::get('/', [KhenThuongKyLuatController::class, 'index'])
@@ -588,6 +591,9 @@ Route::prefix('admin')
         });
 
         Route::middleware('hr.module')->group(function () {
+            Route::get('/chot-du-lieu', [\App\Http\Controllers\Admin\ChotDuLieuController::class, 'index'])->name('chot-du-lieu.index');
+            Route::post('/chot-du-lieu', [\App\Http\Controllers\Admin\ChotDuLieuController::class, 'store'])->name('chot-du-lieu.store');
+
             Route::get('/bhxh-thue', [\App\Http\Controllers\Admin\CauHinhBhxhThueController::class, 'index'])->name('bhxh-thue.index');
             Route::post('/bhxh-thue', [\App\Http\Controllers\Admin\CauHinhBhxhThueController::class, 'update'])->name('bhxh-thue.update');
 
@@ -667,9 +673,9 @@ Route::prefix('employee')
         Route::prefix('cham-cong-face')->name('cham-cong-face.')->group(function () {
             Route::get('/', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'index'])->name('index');
             Route::get('/warmup', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'warmup'])->name('warmup');
-            Route::post('/authenticate', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'authenticate'])->name('authenticate');
+            Route::post('/authenticate', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'authenticate'])->middleware(['throttle:8,1', 'idempotent'])->name('authenticate');
             Route::get('/status', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'status'])->name('status');
-            Route::post('/register', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'registerFace'])->name('register');
+            Route::post('/register', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'registerFace'])->middleware('throttle:5,1')->name('register');
 
             Route::post('/tao-don-ve-som', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'taoDonVeSom'])->name('tao-don-ve-som');
             Route::get('/kiem-tra-don-ve-som', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'kiemTraDonVeSom'])->name('kiem-tra-don-ve-som');
@@ -802,6 +808,7 @@ Route::prefix('employee')
 
         Route::get('/ca', [\App\Http\Controllers\Employee\CaLamViecController::class, 'index'])->name('ca.index');
         Route::post('/ca/doi', [\App\Http\Controllers\Employee\CaLamViecController::class, 'doiCa'])->name('ca.doi');
+        Route::get('/tai-san', [\App\Http\Controllers\Employee\TaiSanController::class, 'index'])->name('tai-san.index');
         Route::get('/danh-gia', [\App\Http\Controllers\Employee\DanhGiaController::class, 'index'])->name('danh-gia.index');
         Route::get('/push/vapid', [\App\Http\Controllers\Employee\PushController::class, 'vapid'])->name('push.vapid');
         Route::post('/push/subscribe', [\App\Http\Controllers\Employee\PushController::class, 'subscribe'])->name('push.subscribe');

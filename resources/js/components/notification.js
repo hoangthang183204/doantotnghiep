@@ -53,6 +53,7 @@ export function notificationComponent() {
                         'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'application/json',
                         'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
                     },
                     credentials: 'same-origin',
                     body: JSON.stringify({})
@@ -76,6 +77,7 @@ export function notificationComponent() {
                         'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'application/json',
                         'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
                     },
                     credentials: 'same-origin',
                     body: JSON.stringify({})

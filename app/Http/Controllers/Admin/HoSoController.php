@@ -300,6 +300,30 @@ class HoSoController extends Controller
         return view('admin.ho-so.edit', compact('hoSo', 'nguoiKys'));
     }
 
+    public function taiChinh($id)
+    {
+        abort_unless(\App\Support\VaiTroNghiepVu::laKeToan(auth()->user()), 403);
+        $hoSo = HoSo::findOrFail($id);
+
+        return view('admin.ho-so.tai-chinh', compact('hoSo'));
+    }
+
+    public function capNhatTaiChinh(Request $request, $id)
+    {
+        abort_unless(\App\Support\VaiTroNghiepVu::laKeToan(auth()->user()), 403);
+        $hoSo = HoSo::findOrFail($id);
+        $data = $request->validate([
+            'chu_tai_khoan' => 'nullable|string|max:255',
+            'so_tai_khoan' => 'nullable|string|max:50',
+            'ten_ngan_hang' => 'nullable|string|max:255',
+            'chi_nhanh_ngan_hang' => 'nullable|string|max:255',
+            'ma_so_thue' => 'nullable|string|max:50',
+        ]);
+        $hoSo->update($data);
+
+        return back()->with('success', 'Đã cập nhật tài khoản ngân hàng và mã số thuế.');
+    }
+
 
     public function update(Request $request, $id)
     {

@@ -68,21 +68,21 @@
                 async markAsRead(notification) {
                     if (notification.read_at) return;
                     try {
-                        await fetch(`/api/notifications/${notification.id}/mark-as-read`, {
+                        const response = await fetch(`/api/notifications/${notification.id}/mark-as-read`, {
                             method: 'POST',
                             headers: {
                                 'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content || '',
+                                'Accept': 'application/json',
                                 'Content-Type': 'application/json',
                             },
                             credentials: 'same-origin',
                             body: JSON.stringify({})
                         });
-                        
-                        // ⭐ XÓA THÔNG BÁO KHỎI DANH SÁCH
-                        this.notifications = this.notifications.filter(n => n.id !== notification.id);
+                        if (!response.ok) return;
+
+                        notification.read_at = new Date().toISOString();
                         this.unreadCount = Math.max(0, this.unreadCount - 1);
-                        
-                        console.log('✅ Đã xóa thông báo:', notification.id);
                     } catch (error) {
                         console.error('Mark read error:', error);
                     }
@@ -90,21 +90,21 @@
 
                 async markAllAsRead() {
                     try {
-                        await fetch('/api/notifications/mark-all-as-read', {
+                        const response = await fetch('/api/notifications/mark-all-as-read', {
                             method: 'POST',
                             headers: {
                                 'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content || '',
+                                'Accept': 'application/json',
                                 'Content-Type': 'application/json',
                             },
                             credentials: 'same-origin',
                             body: JSON.stringify({})
                         });
-                        
-                        // ⭐ XÓA TẤT CẢ THÔNG BÁO
-                        this.notifications = [];
+                        if (!response.ok) return;
+
+                        this.notifications.forEach(n => n.read_at = new Date().toISOString());
                         this.unreadCount = 0;
-                        
-                        console.log('✅ Đã xóa tất cả thông báo');
                     } catch (error) {
                         console.error('Mark all read error:', error);
                     }

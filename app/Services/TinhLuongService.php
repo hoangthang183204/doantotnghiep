@@ -6,6 +6,7 @@ use App\Models\BangLuong;
 use App\Models\CauHinhBhxhThue;
 use App\Models\ChamCong;
 use App\Models\DangKyTangCa;
+use App\Models\DonXinNghi;
 use App\Models\HopDongLaoDong;
 use App\Models\HoSo;
 use App\Models\KhauTruKhac;
@@ -35,6 +36,13 @@ class TinhLuongService
 
     /** Hệ số lương tăng ca ngày thường (giữ lại cho dữ liệu/màn hình cũ) */
     public const HE_SO_TANG_CA = 1.5;
+
+    /** Dữ liệu nạp một lần cho cả kỳ lương, tránh N+1 khi tính nhiều nhân viên. */
+    private ?\Illuminate\Support\Collection $napNhanVien = null;
+    private ?\Illuminate\Support\Collection $napChamCong = null;
+    private ?\Illuminate\Support\Collection $napTangCa = null;
+    private ?\Illuminate\Support\Collection $napHopDong = null;
+    private ?\Illuminate\Support\Collection $napNghiPhep = null;
 
     /**
      * Hệ số tiền lương làm thêm giờ theo từng loại ngày — Điều 98 BLLĐ 2019:
@@ -100,7 +108,8 @@ class TinhLuongService
      */
     public function tinhChoNhanVien(int $nguoiDungId, int $thang, int $nam): array
     {
-        $nhanVien   = NguoiDung::with('chuc_vu')->findOrFail($nguoiDungId);
+        $nhanVien   = $this->napNhanVien?->get($nguoiDungId)
+            ?? NguoiDung::with('chuc_vu')->findOrFail($nguoiDungId);
         $dauThang   = Carbon::create($nam, $thang, 1)->startOfMonth();
         $cuoiThang  = (clone $dauThang)->endOfMonth();
 
@@ -149,6 +158,11 @@ class TinhLuongService
         // --- BƯỚC 7: Khấu trừ (bảo hiểm bắt buộc + thuế TNCN) theo cấu hình năm ---
         $tranDong = (float) $cauHinhThue->tran_dong_bhxh;
         $mucDongBhxh = $tranDong > 0 ? min($luongCoBan, $tranDong) : $luongCoBan;
+        // Không đi làm và không nghỉ phép hưởng lương: không trừ BHXH cả tháng
+        // (một ngày lễ vẫn được trả lương, nhưng không kéo mức đóng cả tháng làm thực nhận âm).
+        if (($soNgayCong + $ngayNghiPhep) <= 0) {
+            $mucDongBhxh = 0;
+        }
         $bhxh = round($mucDongBhxh * (float) $cauHinhThue->ty_le_bhxh_nld, 2);
         $bhyt = round($mucDongBhxh * (float) $cauHinhThue->ty_le_bhyt_nld, 2);
         $bhtn = round($mucDongBhxh * (float) $cauHinhThue->ty_le_bhtn_nld, 2);
@@ -407,8 +421,13 @@ class TinhLuongService
             ]
         );
 
-        foreach ($nhanVienIds as $id) {
-            $this->luuLuongNhanVien($bangLuong->id, (int) $id, $thang, $nam);
+        $this->napDuLieuThang($nhanVienIds, $thang, $nam);
+        try {
+            foreach ($nhanVienIds as $id) {
+                $this->luuLuongNhanVien($bangLuong->id, (int) $id, $thang, $nam);
+            }
+        } finally {
+            $this->xoaNap();
         }
 
         return $bangLuong->fresh('luongNhanViens');
@@ -420,17 +439,23 @@ class TinhLuongService
      */
     public function chotThang(int $thang, int $nam, ?int $nguoiXuLyId = null): BangLuong
     {
-        $nhanVienIds = NguoiDung::where('trang_thai', 1)->pluck('id')->all();
+        $ketQua = KhoaNghiepVu::giu('payroll_' . $nam . '_' . $thang, 180, function () use ($thang, $nam, $nguoiXuLyId) {
+            $nhanVienIds = NguoiDung::where('trang_thai', 1)->pluck('id')->all();
+            $bangLuong = $this->taoBangLuong($thang, $nam, $nhanVienIds, $nguoiXuLyId, 'da_chot');
+            $bangLuong->update([
+                'trang_thai'          => 'da_chot',
+                'nguoi_phe_duyet_id'  => $nguoiXuLyId,
+                'thoi_gian_phe_duyet' => now(),
+            ]);
 
-        $bangLuong = $this->taoBangLuong($thang, $nam, $nhanVienIds, $nguoiXuLyId, 'da_chot');
+            return $bangLuong;
+        });
 
-        $bangLuong->update([
-            'trang_thai'          => 'da_chot',
-            'nguoi_phe_duyet_id'  => $nguoiXuLyId,
-            'thoi_gian_phe_duyet' => now(),
-        ]);
+        if ($ketQua === null) {
+            throw new \RuntimeException('Hệ thống đang tính lương tháng ' . $thang . '/' . $nam . ', vui lòng đợi.');
+        }
 
-        return $bangLuong;
+        return $ketQua;
     }
 
     // =====================================================================
@@ -440,6 +465,10 @@ class TinhLuongService
     /** Lấy hợp đồng có hiệu lực trong tháng */
     private function layHopDong(int $nguoiDungId, Carbon $dauThang, Carbon $cuoiThang): ?HopDongLaoDong
     {
+        if ($this->napHopDong !== null) {
+            return $this->napHopDong->get($nguoiDungId, collect())->first();
+        }
+
         return HopDongLaoDong::with('phuCap')
             ->where('nguoi_dung_id', $nguoiDungId)
             ->where('ngay_bat_dau', '<=', $cuoiThang->toDateString())
@@ -454,13 +483,16 @@ class TinhLuongService
     /** Tổng hợp ngày công từ bảng chấm công đã duyệt */
     private function tongHopNgayCong(int $nguoiDungId, int $thang, int $nam): array
     {
-        $chamCongs = ChamCong::where('nguoi_dung_id', $nguoiDungId)
-            ->whereYear('ngay_cham_cong', $nam)
-            ->whereMonth('ngay_cham_cong', $thang)
-            // ✅ Chỉ lấy những ngày có giờ vào và giờ ra
-            ->whereNotNull('gio_vao')
-            ->whereNotNull('gio_ra')
-            ->get();
+        if ($this->napChamCong !== null) {
+            $chamCongs = $this->napChamCong->get($nguoiDungId, collect());
+        } else {
+            $chamCongs = ChamCong::where('nguoi_dung_id', $nguoiDungId)
+                ->whereYear('ngay_cham_cong', $nam)
+                ->whereMonth('ngay_cham_cong', $thang)
+                ->whereNotNull('gio_vao')
+                ->whereNotNull('gio_ra')
+                ->get();
+        }
 
         return [
             'so_ngay_cong'         => round($chamCongs->sum(function ($cc) {
@@ -468,12 +500,96 @@ class TinhLuongService
 
                 return $cong > 0 ? min($cong, 1) : 1;
             }), 2),
-            'ngay_nghi_phep'       => 0,
+            'ngay_nghi_phep'       => $this->soNgayNghiPhep($nguoiDungId, $thang, $nam),
             'ngay_nghi_khong_phep' => 0,
-            // Giờ tăng ca ghi thẳng trên bảng chấm công — chỉ dùng làm nguồn dự phòng
-            // khi nhân viên không có đơn tăng ca nào trong tháng (xem tongHopTangCa).
             'gio_tang_ca_cham_cong' => round((float) $chamCongs->sum('gio_tang_ca'), 2),
         ];
+    }
+
+    /** Ngày nghỉ phép đã duyệt, bắt đầu trong tháng. Không tính nghỉ không lương. */
+    private function soNgayNghiPhep(int $nguoiDungId, int $thang, int $nam): float
+    {
+        $don = $this->napNghiPhep !== null
+            ? $this->napNghiPhep->get($nguoiDungId, collect())
+            : DonXinNghi::with('loaiNghiPhep')
+                ->where('nguoi_dung_id', $nguoiDungId)
+                ->where('trang_thai', 'da_duyet')
+                ->whereYear('ngay_bat_dau', $nam)
+                ->whereMonth('ngay_bat_dau', $thang)
+                ->get();
+
+        $tong = 0.0;
+        foreach ($don as $item) {
+            $batDau = Carbon::parse($item->ngay_bat_dau);
+            if ((int) $batDau->year !== $nam || (int) $batDau->month !== $thang) {
+                continue;
+            }
+            $ten = mb_strtolower($item->loaiNghiPhep->ten ?? '', 'UTF-8');
+            if (str_contains($ten, 'không lương')) {
+                continue;
+            }
+            $tong += (float) $item->so_ngay_nghi;
+        }
+
+        return round($tong, 2);
+    }
+
+    private function napDuLieuThang(array $ids, int $thang, int $nam): void
+    {
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        if ($ids === []) {
+            $this->napNhanVien = collect();
+            $this->napChamCong = collect();
+            $this->napTangCa = collect();
+            $this->napHopDong = collect();
+            $this->napNghiPhep = collect();
+
+            return;
+        }
+
+        $dau = Carbon::create($nam, $thang, 1)->startOfDay();
+        $cuoi = (clone $dau)->endOfMonth();
+        $tu = $dau->toDateString();
+        $den = $cuoi->toDateString();
+
+        $this->napNhanVien = NguoiDung::with('chuc_vu')->whereIn('id', $ids)->get()->keyBy('id');
+        $this->napChamCong = ChamCong::whereIn('nguoi_dung_id', $ids)
+            ->whereBetween('ngay_cham_cong', [$tu, $den])
+            ->whereNotNull('gio_vao')
+            ->whereNotNull('gio_ra')
+            ->get()
+            ->groupBy('nguoi_dung_id');
+        $this->napTangCa = DangKyTangCa::with('thuc_hien')
+            ->whereIn('nguoi_dung_id', $ids)
+            ->whereBetween('ngay_tang_ca', [$tu, $den])
+            ->where('trang_thai', 'da_duyet')
+            ->get()
+            ->groupBy('nguoi_dung_id');
+        $this->napHopDong = HopDongLaoDong::with('phuCap')
+            ->whereIn('nguoi_dung_id', $ids)
+            ->where('ngay_bat_dau', '<=', $den)
+            ->where(function ($q) use ($tu) {
+                $q->whereNull('ngay_ket_thuc')->orWhere('ngay_ket_thuc', '>=', $tu);
+            })
+            ->orderByDesc('ngay_bat_dau')
+            ->get()
+            ->groupBy('nguoi_dung_id');
+        $this->napNghiPhep = DonXinNghi::with('loaiNghiPhep')
+            ->whereIn('nguoi_dung_id', $ids)
+            ->where('trang_thai', 'da_duyet')
+            ->whereDate('ngay_bat_dau', '<=', $den)
+            ->whereDate('ngay_ket_thuc', '>=', $tu)
+            ->get()
+            ->groupBy('nguoi_dung_id');
+    }
+
+    private function xoaNap(): void
+    {
+        $this->napNhanVien = null;
+        $this->napChamCong = null;
+        $this->napTangCa = null;
+        $this->napHopDong = null;
+        $this->napNghiPhep = null;
     }
 
     /**
@@ -506,13 +622,18 @@ class TinhLuongService
             ];
         }
 
-        $donTangCas = DangKyTangCa::with('thuc_hien')
-            ->where('nguoi_dung_id', $nguoiDungId)
-            ->whereYear('ngay_tang_ca', $nam)
-            ->whereMonth('ngay_tang_ca', $thang)
-            ->where('trang_thai', 'da_duyet')
-            ->get()
-            ->filter(fn($don) => $this->tangCaDaHoanThanh($don));
+        if ($this->napTangCa !== null) {
+            $donTangCas = $this->napTangCa->get($nguoiDungId, collect())
+                ->filter(fn ($don) => $this->tangCaDaHoanThanh($don));
+        } else {
+            $donTangCas = DangKyTangCa::with('thuc_hien')
+                ->where('nguoi_dung_id', $nguoiDungId)
+                ->whereYear('ngay_tang_ca', $nam)
+                ->whereMonth('ngay_tang_ca', $thang)
+                ->where('trang_thai', 'da_duyet')
+                ->get()
+                ->filter(fn ($don) => $this->tangCaDaHoanThanh($don));
+        }
 
         foreach ($donTangCas as $don) {
             $loai = array_key_exists($don->loai_tang_ca, $chiTiet) ? $don->loai_tang_ca : 'ngay_thuong';

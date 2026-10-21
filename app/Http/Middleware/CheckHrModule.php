@@ -15,14 +15,27 @@ class CheckHrModule
             return redirect()->route('login');
         }
 
-        $roleOk = $user->vaiTros()->whereIn('name', ['admin', 'Super Admin', 'Admin', 'hr', 'ke_toan'])->exists();
-        $permOk = $user->hasPermission('salary.index')
-            || $user->hasPermission('hoso.index')
-            || $user->hasPermission('setting.general');
+        $path = $request->path();
+        $laKeToan = \App\Support\VaiTroNghiepVu::laKeToan($user);
+        $laHr = \App\Support\VaiTroNghiepVu::laHr($user);
+        $laQuanTri = \App\Support\VaiTroNghiepVu::laQuanTri($user);
 
-        if (!$roleOk && !$permOk) {
-            abort(403, 'Bạn không có quyền dùng chức năng này.');
+        $laThue = str_contains($path, 'bhxh-thue') || str_contains($path, 'quyet-toan');
+        $laChot = str_contains($path, 'chot-du-lieu');
+        if ($laThue) {
+            abort_unless($laKeToan || \App\Support\VaiTroNghiepVu::laSuperAdmin($user) || ($laQuanTri && $user->hasPermission('salary.index')), 403, 'Chỉ kế toán cấu hình thuế và BHXH.');
+            return $next($request);
         }
+        if ($laChot) {
+            abort_unless($laHr || $laQuanTri, 403, 'Chỉ HR chốt dữ liệu tháng.');
+            return $next($request);
+        }
+        if (str_contains($path, 'nhat-ky')) {
+            abort_unless($laQuanTri || $laHr, 403);
+            return $next($request);
+        }
+
+        abort_unless($laHr || $laQuanTri, 403, 'Chức năng này thuộc HR.');
 
         return $next($request);
     }

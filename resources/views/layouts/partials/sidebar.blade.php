@@ -92,7 +92,7 @@
     $canViewOvertime = $user->hasPermission('overtime.index');
     $canCreateAdjustment = $user->hasPermission('adjustment.create');
     $canViewAdjustment = $user->hasPermission('adjustment.index');
-    $canViewPayroll = $user->hasPermission('payroll.index') || $isHR;
+    $canViewPayroll = $user->hasPermission('payroll.index') || $isHR || $isKeToan;
     $canViewContractPersonal = $user->hasPermission('contract.personal');
     $canViewLeaveHistory = $user->hasPermission('leave.history');
     $canRequestLeave = $user->hasPermission('leave.request');
@@ -121,6 +121,23 @@
     $canViewTime = $user->hasPermission('time.index');
     $canManagePermission = $user->hasPermission('setting.permission');
     $canViewDaoTao = $user->hasPermission('dao-tao.index');
+
+    if ($isAdmin) {
+        $canViewProfile = false;
+        $canCheckin = false;
+        $canCheckout = false;
+        $canViewAttendanceHistory = false;
+        $canCreateOvertime = false;
+        $canViewOvertime = false;
+        $canCreateAdjustment = false;
+        $canViewAdjustment = false;
+        $canViewPayroll = false;
+        $canViewContractPersonal = false;
+        $canViewLeaveHistory = false;
+        $canRequestLeave = false;
+        $canViewRegulationEmployee = false;
+        $canViewNotifications = false;
+    }
 
     $hasAdminPermission =
         $canViewEmployee ||
@@ -162,6 +179,61 @@
         $canRequestLeave ||
         $canViewRegulationEmployee ||
         $canViewNotifications;
+
+    $menuCong = [];
+    if (!$isAdmin && ($canCheckin || $canCheckout || $canViewAttendanceHistory) && Route::has('employee.cham-cong.index')) {
+        $menuCong[] = ['title' => 'Chấm công', 'route' => 'employee.cham-cong.index', 'active' => ['employee.cham-cong.index', 'employee.cham-cong.history']];
+    }
+    if (!$isAdmin && Route::has('employee.ca.index')) {
+        $menuCong[] = ['title' => 'Ca của tôi', 'route' => 'employee.ca.index', 'active' => ['employee.ca.index']];
+    }
+    if (!$isAdmin && ($canCreateOvertime || $canViewOvertime) && Route::has('employee.tang-ca.index')) {
+        $menuCong[] = ['title' => 'Đơn xin tăng ca', 'route' => 'employee.tang-ca.index', 'active' => ['employee.tang-ca.index']];
+    }
+    if (!$isAdmin && ($canCreateAdjustment || $canViewAdjustment) && Route::has('employee.yeu-cau-chinh-cong.index')) {
+        $menuCong[] = ['title' => 'Yêu cầu chỉnh công', 'route' => 'employee.yeu-cau-chinh-cong.index', 'active' => ['employee.yeu-cau-chinh-cong.index']];
+    }
+    if (!$isAdmin && ($canViewLeaveHistory || $canRequestLeave) && Route::has('employee.don-nghi.index')) {
+        $menuCong[] = ['title' => 'Đơn nghỉ phép', 'route' => 'employee.don-nghi.index', 'prefix' => 'employee.don-nghi'];
+    }
+
+    $menuCaNhan = [];
+    if (!$isAdmin && ($canViewDashboardEmployee || $canViewDashboardAdmin) && Route::has('employee.dashboard')) {
+        $menuCaNhan[] = ['title' => 'Thống kê cá nhân', 'route' => 'employee.dashboard', 'active' => ['employee.dashboard']];
+    }
+    if ($canViewProfile && Route::has('employee.ho-so.show')) {
+        $menuCaNhan[] = ['title' => 'Hồ sơ cá nhân', 'route' => 'employee.ho-so.show', 'active' => ['employee.ho-so.show']];
+    }
+    if (!$isAdmin && Route::has('employee.tai-san.index')) {
+        $menuCaNhan[] = ['title' => 'Tài sản của tôi', 'route' => 'employee.tai-san.index', 'active' => ['employee.tai-san.index']];
+    }
+    if (!$isAdmin && Route::has('employee.danh-gia.index')) {
+        $menuCaNhan[] = ['title' => 'Đánh giá của tôi', 'route' => 'employee.danh-gia.index', 'prefix' => 'employee.danh-gia'];
+    }
+    if ($canViewPayroll && Route::has('employee.bang-luong.index')) {
+        $menuCaNhan[] = ['title' => 'Lương của tôi', 'route' => 'employee.bang-luong.index', 'prefix' => 'employee.bang-luong'];
+    }
+    if ($canViewPayroll && Route::has('employee.ung-luong.index')) {
+        $menuCaNhan[] = ['title' => 'Ứng lương', 'route' => 'employee.ung-luong.index', 'prefix' => 'employee.ung-luong'];
+    }
+    if ($canViewContractPersonal && Route::has('employee.hop-dong.index')) {
+        $menuCaNhan[] = ['title' => 'Hợp đồng của tôi', 'route' => 'employee.hop-dong.index', 'prefix' => 'employee.hop-dong'];
+    }
+    if ($canViewRegulationEmployee && !$canViewRegulation && Route::has('employee.quydinh.index')) {
+        $menuCaNhan[] = ['title' => 'Quy định', 'route' => 'employee.quydinh.index', 'active' => ['employee.quydinh.index']];
+    }
+    if ($canViewNotifications && Route::has('employee.notifications.index')) {
+        $soThongBao = $user->unreadNotifications->count();
+        $menuCaNhan[] = ['title' => 'Thông báo', 'route' => 'employee.notifications.index', 'active' => ['employee.notifications.index'], 'badge' => $soThongBao];
+    }
+
+    $menuNghiPhep = [];
+    if ($canApproveLeave && Route::has('admin.don_nghi.index')) {
+        $menuNghiPhep[] = ['title' => 'Duyệt đơn', 'route' => 'admin.don_nghi.index', 'prefix' => 'admin.don_nghi'];
+    }
+    if ($canViewLeaveType && Route::has('admin.loai-nghi-phep.index')) {
+        $menuNghiPhep[] = ['title' => 'Loại nghỉ phép', 'route' => 'admin.loai-nghi-phep.index', 'prefix' => 'admin.loai-nghi-phep'];
+    }
 @endphp
 
 <aside id="sidebar" class="sidebar">
@@ -187,87 +259,18 @@
     <nav class="h-full overflow-y-auto px-3 py-4 pb-24">
         <ul class="space-y-1">
 
-            {{-- ========================================================== --}}
-            {{-- ⭐ 1. CHẤM CÔNG --}}
-            {{-- ========================================================== --}}
-            @if ($canCheckin || $canCheckout || $canViewAttendanceHistory)
+            @if ($isAdmin && ($canViewDashboardAdmin || $canViewDashboardEmployee))
                 <li>
-                    <a href="{{ route('employee.cham-cong.index') }}"
-                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.cham-cong.index' || $currentRoute == 'employee.cham-cong.history' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </span>
-                        <span class="font-medium menu-text">Chấm công</span>
+                    <a href="{{ route('admin.dashboard') }}"
+                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'admin.dashboard' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        @include('layouts.partials.sidebar-icon', ['icon' => 'home'])
+                        <span class="font-medium menu-text">Tổng quan</span>
                     </a>
                 </li>
             @endif
 
-            {{-- ========================================================== --}}
-            {{-- ⭐ 2. THỐNG KÊ CÁ NHÂN / TỔNG QUAN --}}
-            {{-- ========================================================== --}}
-            @if ($canViewDashboardAdmin || $canViewDashboardEmployee)
-                <li>
-                    <a href="{{ $isAdmin ? route('admin.dashboard') : route('employee.dashboard') }}"
-                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'admin.dashboard' || $currentRoute == 'employee.dashboard' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                            </svg>
-                        </span>
-                        <span class="font-medium menu-text">{{ $isAdmin ? 'Tổng quan' : 'Thống kê cá nhân' }}</span>
-                    </a>
-                </li>
-            @endif
-
-            {{-- ========================================================== --}}
-            {{-- ⭐ 3. HỒ SƠ CÁ NHÂN --}}
-            {{-- ========================================================== --}}
-            @if ($canViewProfile)
-                <li>
-                    <a href="{{ route('employee.ho-so.show') }}"
-                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.ho-so.show' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                        </span>
-                        <span class="font-medium menu-text">Hồ sơ cá nhân</span>
-                    </a>
-                </li>
-            @endif
-
-            @if (!$isAdmin && Route::has('employee.ca.index'))
-                <li>
-                    <a href="{{ route('employee.ca.index') }}" class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.ca.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </span>
-                        <span class="font-medium menu-text">Ca của tôi</span>
-                    </a>
-                </li>
-            @endif
-            @if (!$isAdmin && Route::has('employee.danh-gia.index'))
-                <li>
-                    <a href="{{ route('employee.danh-gia.index') }}" class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.danh-gia.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                            </svg>
-                        </span>
-                        <span class="font-medium menu-text">Đánh giá của tôi</span>
-                    </a>
-                </li>
-            @endif
+            @include('layouts.partials.sidebar-nhom', ['items' => $menuCong, 'nhomTitle' => 'Công của tôi', 'icon' => 'clock'])
+            @include('layouts.partials.sidebar-nhom', ['items' => $menuCaNhan, 'nhomTitle' => 'Cá nhân', 'icon' => 'user'])
 
             {{-- ========================================================== --}}
             {{-- ⭐ 4. QUẢN LÝ PHÒNG BAN (CHỈ TRƯỞNG PHÒNG - KHÔNG BAO GỒM KẾ TOÁN) --}}
@@ -691,8 +694,11 @@
                 if ($canViewAttendance && Route::has('admin.cham-cong.index')) {
                     $submenuChamCongAdmin[] = ['title' => 'Danh sách chấm công', 'route' => 'admin.cham-cong.index'];
                 }
-                if ($canViewAttendance && Route::has('admin.cham-cong-face.index')) {
+                if ($canViewAttendance && Route::has('admin.cham-cong-face.index') && !$isKeToan) {
                     $submenuChamCongAdmin[] = ['title' => 'Quản lý khuôn mặt', 'route' => 'admin.cham-cong-face.index'];
+                }
+                if (($isHR || $isAdmin) && Route::has('admin.chot-du-lieu.index')) {
+                    $submenuChamCongAdmin[] = ['title' => 'Chốt dữ liệu tháng', 'route' => 'admin.chot-du-lieu.index'];
                 }
                 if ($canManageOvertime && Route::has('admin.tang-ca.index')) {
                     $submenuChamCongAdmin[] = ['title' => 'Phê duyệt tăng ca', 'route' => 'admin.tang-ca.index'];
@@ -735,40 +741,6 @@
                             @endforeach
                         </ul>
                     </details>
-                </li>
-            @endif
-
-            {{-- ĐƠN XIN TĂNG CA --}}
-            @if ($canCreateOvertime || $canViewOvertime)
-                <li>
-                    <a href="{{ route('employee.tang-ca.index') }}"
-                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.tang-ca.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </span>
-                        <span class="font-medium menu-text">Đơn xin tăng ca</span>
-                    </a>
-                </li>
-            @endif
-
-            {{-- YÊU CẦU CHỈNH CÔNG --}}
-            @if ($canCreateAdjustment || $canViewAdjustment)
-                <li>
-                    <a href="{{ route('employee.yeu-cau-chinh-cong.index') }}"
-                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.yeu-cau-chinh-cong.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                        </span>
-                        <span class="font-medium menu-text">Yêu cầu chỉnh công</span>
-                    </a>
                 </li>
             @endif
 
@@ -840,61 +812,6 @@
                 </li>
             @endif
 
-            {{-- LƯƠNG --}}
-            @if ($canViewPayroll)
-                <li>
-                    <button onclick="togglePayrollMenu()"
-                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        <div class="flex items-center">
-                            <span class="w-5 h-5 mr-3 flex-shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor" stroke-width="1.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </span>
-                            <span class="font-medium menu-text">Lương của tôi</span>
-                        </div>
-                        <svg id="payrollArrow" class="w-4 h-4 transition-transform duration-200" fill="none"
-                            stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-
-                    <div id="payrollMenu" class="ml-6 mt-1 space-y-1 hidden">
-
-                        {{-- Bảng lương của tôi --}}
-                        <a href="{{ route('employee.bang-luong.index') }}"
-                            class="flex items-center px-3 py-2 rounded-lg transition-colors {{ in_array($currentRoute, ['employee.bang-luong.index', 'employee.bang-luong.year']) ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                            <span class="w-4 h-4 mr-3 flex-shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor" stroke-width="1.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                            </span>
-                            <span class="text-sm font-medium">Bảng lương của tôi</span>
-                        </a>
-
-                        {{-- Ứng lương --}}
-                        <a href="{{ url('/employee/ung-luong') }}"
-                            class="flex items-center px-3 py-2 rounded-lg transition-colors {{ str_contains(request()->path(), 'ung-luong') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                            <span class="w-4 h-4 mr-3 flex-shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor" stroke-width="1.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
-                            </span>
-                            <span class="text-sm font-medium">Ứng lương</span>
-                        </a>
-                    </div>
-                </li>
-            @endif
-
-
-
             {{-- HỢP ĐỒNG --}}
             @if ($canViewContract)
                 <li>
@@ -912,73 +829,7 @@
                 </li>
             @endif
 
-            {{-- HỢP ĐỒNG CỦA TÔI --}}
-            @if ($canViewContractPersonal)
-                <li>
-                    <a href="{{ route('employee.hop-dong.index') }}"
-                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.hop-dong.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                        </span>
-                        <span class="font-medium menu-text">Hợp đồng của tôi</span>
-                    </a>
-                </li>
-            @endif
-
-            {{-- DUYỆT ĐƠN NGHỈ PHÉP --}}
-            @if ($canApproveLeave)
-                <li>
-                    <a href="{{ route('admin.don_nghi.index') }}"
-                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'admin.don_nghi.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </span>
-                        <span class="font-medium menu-text">Duyệt đơn nghỉ phép</span>
-                    </a>
-                </li>
-            @endif
-
-            {{-- ĐƠN NGHỈ PHÉP --}}
-            @if ($canViewLeaveHistory || $canRequestLeave)
-                <li>
-                    <a href="{{ route('employee.don-nghi.index') }}"
-                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.don-nghi.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                        </span>
-                        <span class="font-medium menu-text">Đơn nghỉ phép</span>
-                    </a>
-                </li>
-            @endif
-
-            {{-- LOẠI NGHỈ PHÉP --}}
-            @if ($canViewLeaveType)
-                <li>
-                    <a href="{{ route('admin.loai-nghi-phep.index') }}"
-                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'admin.loai-nghi-phep.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                            </svg>
-                        </span>
-                        <span class="font-medium menu-text">Loại nghỉ phép</span>
-                    </a>
-                </li>
-            @endif
+            @include('layouts.partials.sidebar-nhom', ['items' => $menuNghiPhep, 'nhomTitle' => 'Nghỉ phép', 'icon' => 'calendar'])
 
             {{-- ĐÀO TẠO --}}
             @if ($canViewDaoTao)
@@ -1096,17 +947,17 @@
                         </summary>
                         <ul class="pl-10 mt-1 space-y-1">
                             @foreach ([
-                                ['Cấu hình BHXH / thuế', 'admin.bhxh-thue.index', 'fa-solid fa-shield-halved'],
-                                ['Quyết toán TNCN', 'admin.quyet-toan-thue.index', 'fa-solid fa-file-invoice-dollar'],
-                                ['Lịch làm việc và ngày lễ', 'admin.lich-lam-viec.index', 'fa-solid fa-calendar-days'],
-                                ['Ca làm việc', 'admin.ca-lam-viec.index', 'fa-solid fa-clock'],
-                                ['Nhận việc / nghỉ việc', 'admin.checklist.index', 'fa-solid fa-list-check'],
-                                ['Tài sản', 'admin.tai-san.index', 'fa-solid fa-laptop'],
-                                ['Đánh giá KPI', 'admin.danh-gia.index', 'fa-solid fa-star'],
-                                ['Thông báo đa kênh', 'admin.thong-bao-kenh.index', 'fa-solid fa-bell'],
-                                ['Nhật ký thao tác', 'admin.nhat-ky.index', 'fa-solid fa-clipboard-list'],
-                            ] as [$menuTitle, $routeName, $menuIcon])
-                                @if (Route::has($routeName))
+                                ['Cấu hình BHXH / thuế', 'admin.bhxh-thue.index', 'fa-solid fa-shield-halved', 'ke_toan'],
+                                ['Quyết toán TNCN', 'admin.quyet-toan-thue.index', 'fa-solid fa-file-invoice-dollar', 'ke_toan'],
+                                ['Lịch làm việc và ngày lễ', 'admin.lich-lam-viec.index', 'fa-solid fa-calendar-days', 'hr'],
+                                ['Ca làm việc', 'admin.ca-lam-viec.index', 'fa-solid fa-clock', 'hr'],
+                                ['Nhận việc / nghỉ việc', 'admin.checklist.index', 'fa-solid fa-list-check', 'hr'],
+                                ['Tài sản', 'admin.tai-san.index', 'fa-solid fa-laptop', 'hr'],
+                                ['Đánh giá KPI', 'admin.danh-gia.index', 'fa-solid fa-star', 'hr'],
+                                ['Thông báo đa kênh', 'admin.thong-bao-kenh.index', 'fa-solid fa-bell', 'hr'],
+                                ['Nhật ký thao tác', 'admin.nhat-ky.index', 'fa-solid fa-clipboard-list', 'hr'],
+                            ] as [$menuTitle, $routeName, $menuIcon, $nhomMenu])
+                                @if (Route::has($routeName) && (($nhomMenu === 'ke_toan' && ($isKeToan || $isAdmin)) || ($nhomMenu === 'hr' && ($isHR || $isAdmin))))
                                     <li>
                                         <a href="{{ route($routeName) }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ $currentRoute == $routeName ? 'bg-blue-50 text-blue-700' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100' }}">
                                             <i class="{{ $menuIcon }} w-4 text-center"></i>
@@ -1125,23 +976,6 @@
                 <li>
                     <a href="{{ route('admin.quy-dinh.index') }}"
                         class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'admin.quy-dinh.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                            </svg>
-                        </span>
-                        <span class="font-medium menu-text">Quy định</span>
-                    </a>
-                </li>
-            @endif
-
-            {{-- QUY ĐỊNH (EMPLOYEE) --}}
-            @if ($canViewRegulationEmployee)
-                <li>
-                    <a href="{{ route('employee.quydinh.index') }}"
-                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.quydinh.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                         <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor" stroke-width="1.5">
@@ -1195,31 +1029,6 @@
                             @endforeach
                         </ul>
                     </details>
-                </li>
-            @endif
-
-            {{-- THÔNG BÁO --}}
-            @if ($canViewNotifications)
-                <li>
-                    <a href="{{ route('employee.notifications.index') }}"
-                        class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.notifications.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                        <span class="w-5 h-5 mr-3 flex-shrink-0 text-gray-700 dark:text-gray-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
-                        </span>
-                        <span class="font-medium menu-text">Thông báo</span>
-                        @php
-                            $unreadCount = $user->unreadNotifications->count();
-                        @endphp
-                        @if ($unreadCount > 0)
-                            <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                                {{ $unreadCount }}
-                            </span>
-                        @endif
-                    </a>
                 </li>
             @endif
 
@@ -1284,13 +1093,3 @@
         display: block;
     }
 </style>
-
-
-<script>
-    function togglePayrollMenu() {
-        const menu = document.getElementById('payrollMenu');
-        const arrow = document.getElementById('payrollArrow');
-        menu.classList.toggle('hidden');
-        arrow.classList.toggle('rotate-180');
-    }
-</script>

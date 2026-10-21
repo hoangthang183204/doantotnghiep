@@ -8,10 +8,26 @@
 
     <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Tính lương nhân viên</h1>
-        <p class="text-gray-500 dark:text-slate-400 mt-1">Chọn kỳ lương và nhân viên cần tính</p>
+        <p class="text-gray-500 dark:text-slate-400 mt-1">
+            @if(!empty($laSuperAdmin))
+                Super Admin tính lương mọi kỳ. Kế toán chỉ tính sau khi HR đã chốt số liệu tháng.
+            @else
+                Chỉ tính sau khi HR đã chốt số liệu tháng. Kế toán kiểm tra phụ cấp, khấu trừ, BHXH và thuế rồi duyệt.
+            @endif
+        </p>
     </div>
 
     @include('layouts.partials.alerts')
+
+    @if(empty($hrDaChot) && empty($laSuperAdmin))
+        <div class="p-3 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 text-sm">
+            HR chưa chốt dữ liệu tháng {{ $thangTinh }}/{{ $namTinh }}. Nút tính lương sẽ bị chặn cho đến khi có thông báo “Đã chốt dữ liệu tháng”.
+        </div>
+    @elseif(!empty($hrDaChot))
+        <div class="p-3 rounded-lg bg-green-50 text-green-800 border border-green-200 text-sm">
+            HR đã chốt dữ liệu tháng {{ $thangTinh }}/{{ $namTinh }}. Có thể tính lương nháp.
+        </div>
+    @endif
 
     {{-- CHỌN KỲ LƯƠNG --}}
     <form method="GET" action="{{ route('admin.bang-luong.create') }}"

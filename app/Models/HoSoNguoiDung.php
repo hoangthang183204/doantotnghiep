@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\DuLieuNhayCam;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -44,7 +45,25 @@ class HoSoNguoiDung extends Model
         'ngay_sinh' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'cmnd_cccd' => DuLieuNhayCam::class,
+        'so_ho_chieu' => DuLieuNhayCam::class,
+        'ma_so_thue' => DuLieuNhayCam::class,
+        'so_bhxh' => DuLieuNhayCam::class,
+        'so_tai_khoan' => DuLieuNhayCam::class,
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $hs) {
+            foreach (['cmnd_cccd' => 'cmnd_cccd_hash', 'ma_so_thue' => 'ma_so_thue_hash'] as $cot => $hash) {
+                if (!$hs->isDirty($cot) && $hs->{$hash}) {
+                    continue;
+                }
+                $plain = $hs->{$cot};
+                $hs->{$hash} = $plain ? hash_hmac('sha256', (string) $plain, (string) config('app.key')) : null;
+            }
+        });
+    }
 
     // Quan hệ với NguoiDung
     public function nguoiDung()

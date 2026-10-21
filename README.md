@@ -1,59 +1,136 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# HR Flow
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Website quản lý nhân sự cho đồ án tốt nghiệp. Hệ thống gồm năm vai trò: Super Admin, HR, Kế toán, Trưởng phòng và Nhân viên.
 
-## About Laravel
+HR quản lý hồ sơ, hợp đồng, chấm công, nghỉ phép và chốt số liệu cuối tháng. Kế toán tính lương, BHXH, thuế TNCN, duyệt ứng lương và xuất phiếu lương sau khi HR đã chốt. Nhân viên chấm công, xin phép, xem lương và ký hợp đồng của mình.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Yêu cầu
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- PHP 8.2 trở lên, bật extension `pdo_mysql`, `mbstring`, `openssl`, `fileinfo`, `gd`
+- Composer
+- MySQL 8
+- Node.js 18 trở lên (chỉ cần khi build lại CSS)
+- Python 3.10 trở lên, chỉ khi muốn thử chấm công bằng khuôn mặt
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Không cần Redis. Cache, session và hàng đợi đang dùng MySQL.
 
-## Learning Laravel
+## Cài đặt
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Trên Windows, nếu không có lệnh `cp`, copy file `.env.example` thành `.env` rồi chạy `php artisan key:generate`.
 
-## Laravel Sponsors
+Sửa `.env` để dùng MySQL. File mẫu đang để SQLite, dự án này chạy trên MySQL:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```env
+APP_NAME="HR Flow"
+APP_URL=http://127.0.0.1:8000
 
-### Premium Partners
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=hrflow
+DB_USERNAME=root
+DB_PASSWORD=
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+SESSION_DRIVER=database
+CACHE_STORE=database
+QUEUE_CONNECTION=database
+```
 
-## Contributing
+Tạo database `hrflow` trong MySQL, rồi chạy:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+php artisan migrate:fresh --seed
+php artisan db:seed --class=NguoiDungVaiTroSeeder
+php artisan storage:link
+php artisan serve
+```
 
-## Code of Conduct
+Mở http://127.0.0.1:8000
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+`DatabaseSeeder` tạo người dùng nhưng chưa ghi bảng nối vai trò. Lệnh `NguoiDungVaiTroSeeder` là bước bắt buộc, nếu bỏ qua thì đăng nhập được mà menu trống.
 
-## Security Vulnerabilities
+`migrate:fresh` xóa toàn bộ dữ liệu hiện có. Chỉ dùng khi dựng máy mới hoặc muốn dữ liệu mẫu sạch.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Tài khoản mẫu
 
-## License
+Mật khẩu của dữ liệu seed là `123456`. Database đã dùng lâu có thể đã đổi mật khẩu.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+| Vai trò | Email | Việc nên thử |
+| --- | --- | --- |
+| Super Admin | admin@hrflow.com | Vào mọi chức năng quản trị, tính lương không cần đợi HR chốt |
+| HR | hr@hrflow.com | Hồ sơ, hợp đồng, chấm công, nghỉ phép, chốt dữ liệu tháng |
+| Kế toán | ke.toan@hrflow.com | Tính lương sau khi HR chốt, BHXH, thuế, ứng lương, phiếu lương |
+| Trưởng phòng | it.manager@hrflow.com | Duyệt đơn và xem nhân viên trong phòng mình |
+| Nhân viên | dev@hrflow.com | Chấm công, xin phép, lương của tôi, hợp đồng của tôi |
+
+Super Admin không hiện menu cá nhân. Các vai trò còn lại thấy hai nhóm **Công của tôi** và **Cá nhân**.
+
+## Kiểm tra luồng lương
+
+1. Đăng nhập HR, vào **Quản lý chấm công**, rồi **Chốt dữ liệu tháng**. Chọn tháng và bấm chốt. Kế toán nhận thông báo đã chốt.
+2. Đăng xuất, đăng nhập Kế toán, vào **Lương** rồi **Tính lương**. Nếu HR chưa chốt tháng đó, nút tính lương bị chặn.
+3. Sau khi có bảng lương nháp, kế toán điều chỉnh phụ cấp hoặc khấu trừ, duyệt, gửi phiếu lương và đánh dấu đã chi trả. HR nhận thông báo bảng lương đã được chi trả.
+4. Đăng nhập Super Admin để tính lương một tháng chưa chốt. Tài khoản này không bị chặn.
+
+Kế toán chỉ sửa được tài khoản ngân hàng và mã số thuế trên hồ sơ. Không duyệt đơn nghỉ, không tạo hợp đồng và không xem khuôn mặt.
+
+## Chấm công khuôn mặt
+
+Phần còn lại của web chạy được khi chưa bật dịch vụ này.
+
+```bash
+pip install insightface opencv-python onnxruntime onnx numpy
+python scripts/face_server.py
+```
+
+Lần đầu InsightFace tải model `buffalo_l`, có thể mất vài phút. Khi terminal in ra server đang nghe `127.0.0.1:18765`, giữ cửa sổ đó mở rồi vào trang chấm công của nhân viên.
+
+Trình duyệt cần camera. Ảnh gốc không được lưu. Hệ thống chỉ giữ đặc trưng khuôn mặt. Gửi lại cùng một lượt chấm công không tạo thêm bản ghi.
+
+## Lịch và xuất Excel
+
+Các việc nền chỉ chạy khi bật lịch:
+
+```bash
+php artisan schedule:work
+```
+
+Lịch gồm nhắc chấm công lúc 08:45, sao lưu database lúc 01:30, chốt lương và gửi email phiếu lương lúc 02:00 ngày 1 hàng tháng. Mail mặc định ghi vào `storage/logs/laravel.log`, không gửi ra hộp thư thật.
+
+Xuất Excel bảng lương đi qua hàng đợi `database`. `schedule:work` đã kéo job ngắn mỗi phút. Muốn xử lý ngay:
+
+```bash
+php artisan queue:work --stop-when-empty
+```
+
+## Test tự động
+
+```bash
+php artisan test
+```
+
+PHPUnit dùng SQLite trong bộ nhớ, không đụng database `hrflow`. Bộ test hiện chỉ kiểm tra route và ví dụ mặc định của Laravel, chưa phủ hết nghiệp vụ lương.
+
+## Cấu trúc chính
+
+```text
+app/Http/Controllers/Admin       Quản trị: hồ sơ, công, lương, hợp đồng
+app/Http/Controllers/Employee    Nhân viên: chấm công, phép, phiếu lương
+app/Services/TinhLuongService.php    Tính lương, BHXH, thuế
+app/Services/KhoaNghiepVu.php        Khóa không cho tính lương trùng
+scripts/face_server.py               Nhận diện khuôn mặt chạy nền
+routes/web.php                       Toàn bộ đường dẫn web
+database/seeders                     Dữ liệu mẫu
+```
+
+## Lưu ý
+
+- Không commit file `.env`.
+- `APP_KEY` dùng để mã hóa căn cước, mã số thuế, số BHXH, tài khoản ngân hàng và đặc trưng khuôn mặt. Đổi key thì dữ liệu đã mã hóa không đọc lại được.
+- HTTPS chỉ bật khi `APP_ENV=production` hoặc `FORCE_HTTPS=true`. Máy local giữ `APP_ENV=local`.

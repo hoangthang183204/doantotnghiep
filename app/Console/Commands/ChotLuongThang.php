@@ -38,7 +38,13 @@ class ChotLuongThang extends Command
             return self::SUCCESS;
         }
 
-        $bangLuong = $service->chotThang($thang, $nam, null);
+        try {
+            $bangLuong = $service->chotThang($thang, $nam, null);
+        } catch (\RuntimeException $e) {
+            $this->warn($e->getMessage());
+
+            return self::FAILURE;
+        }
 
         $soNV   = $bangLuong->luongNhanViens()->count();
         $tongNet = $bangLuong->luongNhanViens()->sum('luong_thuc_nhan');

@@ -30,7 +30,7 @@ class CaLamViec extends Model
      */
     public static function getDefault()
     {
-        return self::where('is_default', true)->first();
+        return \App\Services\DanhMucCache::cacCa()->first(fn ($ca) => (bool) $ca->is_default);
     }
 
     /**
@@ -38,7 +38,7 @@ class CaLamViec extends Model
      */
     public static function getSang()
     {
-        return self::where('ma', 'SANG')->first();
+        return \App\Services\DanhMucCache::cacCa()->firstWhere('ma', 'SANG');
     }
 
     /**
@@ -46,7 +46,7 @@ class CaLamViec extends Model
      */
     public static function getChieu()
     {
-        return self::where('ma', 'CHIEU')->first();
+        return \App\Services\DanhMucCache::cacCa()->firstWhere('ma', 'CHIEU');
     }
 
     /**

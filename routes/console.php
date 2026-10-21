@@ -15,4 +15,7 @@ Schedule::command('luong:chot --gui-email')
     ->timezone('Asia/Ho_Chi_Minh')
     ->withoutOverlapping();
 Schedule::command('leave:reset-annual')->yearly();
+Schedule::command('cham-cong:nhac')->dailyAt('08:45')->timezone('Asia/Ho_Chi_Minh')->withoutOverlapping();
+Schedule::command('db:backup')->dailyAt('01:30')->timezone('Asia/Ho_Chi_Minh')->withoutOverlapping();
+Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=1')->everyMinute()->withoutOverlapping();
 
