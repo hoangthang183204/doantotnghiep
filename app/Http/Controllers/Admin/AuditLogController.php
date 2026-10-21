@@ -20,7 +20,7 @@ class AuditLogController extends Controller
                 });
             })
             ->orderByDesc('id')
-            ->paginate(30)
+            ->paginate(10)
             ->withQueryString();
 
         return view('admin.audit-log.index', compact('logs'));

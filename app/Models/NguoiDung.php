@@ -386,6 +386,10 @@ class NguoiDung extends Authenticatable implements JWTSubject
 
     public function hasPermission($permissionName)
     {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
         $permissions = $this->vaiTros->flatMap(function ($role) {
             return $role->quyens->pluck('name');
         })->unique();

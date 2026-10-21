@@ -122,11 +122,12 @@ class DonNghiController extends Controller
             'action' => 'required|in:da_duyet,tu_choi'
         ]);
 
+        DB::beginTransaction();
         try {
             $donNghiList = DonXinNghi::with('loaiNghiPhep')
                 ->whereIn('id', $request->ids)
                 ->where('trang_thai', 'cho_duyet')
-                ->where('trang_thai', '!=', 'huy_bo')
+                ->lockForUpdate()
                 ->get();
 
             $count = 0;
@@ -156,6 +157,7 @@ class DonNghiController extends Controller
                             ['nguoi_dung_id' => $donNghi->nguoi_dung_id, 'nam' => $namDonNghi],
                             ['phep_nam_moi' => 12.0, 'phep_cu_chuyen_sang' => 0.0, 'phep_da_dung' => 0.0]
                         );
+                        $soDuPhep = \App\Models\SoDuPhep::whereKey($soDuPhep->id)->lockForUpdate()->first();
                         $soDuPhep->increment('phep_da_dung', $donNghi->so_ngay_nghi);
                     }
                 }
@@ -167,11 +169,13 @@ class DonNghiController extends Controller
             }
 
             $message = $request->action == 'da_duyet' ? 'duyệt' : 'từ chối';
+            DB::commit();
             return response()->json([
                 'success' => true,
                 'message' => "Đã {$message} {$count} đơn thành công!"
             ]);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
@@ -192,7 +196,7 @@ class DonNghiController extends Controller
         DB::beginTransaction();
 
         try {
-            $donNghi = DonXinNghi::with('loaiNghiPhep')->findOrFail($id);
+            $donNghi = DonXinNghi::with('loaiNghiPhep')->where('id', $id)->lockForUpdate()->firstOrFail();
 
             // ⛔ CHẶN KHÔNG CHO TỰ DUYỆT ĐƠN CỦA CHÍNH MÌNH
             if ((int)$donNghi->nguoi_dung_id === (int)Auth::id()) {
@@ -203,6 +207,12 @@ class DonNghiController extends Controller
             if ($donNghi->trang_thai == 'huy_bo') {
                 DB::rollBack();
                 return redirect()->back()->with('error', '❌ Đơn này đã bị hủy, không thể thay đổi trạng thái!');
+            }
+
+            $trangThaiMoi = $request->trang_thai;
+            if (in_array($donNghi->trang_thai, ['da_duyet', 'tu_choi'], true) && $trangThaiMoi !== 'cho_duyet') {
+                DB::rollBack();
+                return redirect()->back()->with('error', 'Đơn này vừa được xử lý bởi người khác.');
             }
 
             $trangThaiCu = $donNghi->trang_thai;
@@ -238,6 +248,7 @@ class DonNghiController extends Controller
                     ['nguoi_dung_id' => $donNghi->nguoi_dung_id, 'nam' => $namDonNghi],
                     ['phep_nam_moi' => 12.0, 'phep_cu_chuyen_sang' => 0.0, 'phep_da_dung' => 0.0]
                 );
+                $soDuPhep = \App\Models\SoDuPhep::whereKey($soDuPhep->id)->lockForUpdate()->first();
 
                 if ($trangThaiMoi === 'da_duyet' && $trangThaiCu !== 'da_duyet') {
                     $soDuPhep->increment('phep_da_dung', $donNghi->so_ngay_nghi);
@@ -273,7 +284,7 @@ class DonNghiController extends Controller
     {
         DB::beginTransaction();
         try {
-            $donNghi = DonXinNghi::with('loaiNghiPhep')->findOrFail($id);
+            $donNghi = DonXinNghi::with('loaiNghiPhep')->where('id', $id)->lockForUpdate()->firstOrFail();
 
             // ⛔ CHẶN KHÔNG CHO TỰ TỪ CHỐI ĐƠN CỦA CHÍNH MÌNH
             if ((int)$donNghi->nguoi_dung_id === (int)Auth::id()) {
@@ -284,6 +295,11 @@ class DonNghiController extends Controller
             if ($donNghi->trang_thai == 'huy_bo') {
                 DB::rollBack();
                 return redirect()->back()->with('error', '❌ Đơn này đã bị hủy!');
+            }
+
+            if (in_array($donNghi->trang_thai, ['da_duyet', 'tu_choi'], true)) {
+                DB::rollBack();
+                return redirect()->back()->with('error', 'Đơn này vừa được xử lý bởi người khác.');
             }
 
             $trangThaiCu = $donNghi->trang_thai;
@@ -304,6 +320,7 @@ class DonNghiController extends Controller
                         ->where('nam', $namDonNghi)
                         ->first();
                     if ($soDuPhep) {
+                        $soDuPhep = \App\Models\SoDuPhep::whereKey($soDuPhep->id)->lockForUpdate()->first();
                         $soDuPhep->phep_da_dung = max(0, $soDuPhep->phep_da_dung - $donNghi->so_ngay_nghi);
                         $soDuPhep->save();
                     }
@@ -324,7 +341,11 @@ class DonNghiController extends Controller
     {
         DB::beginTransaction();
         try {
-            $donNghi = DonXinNghi::with('loaiNghiPhep')->findOrFail($id);
+            $donNghi = DonXinNghi::with('loaiNghiPhep')->where('id', $id)->lockForUpdate()->firstOrFail();
+            if ($donNghi->trang_thai === 'huy_bo') {
+                DB::rollBack();
+                return redirect()->back()->with('error', 'Đơn này vừa được xử lý bởi người khác.');
+            }
             $trangThaiCu = $donNghi->trang_thai;
 
             $donNghi->trang_thai = 'huy_bo';
@@ -340,6 +361,7 @@ class DonNghiController extends Controller
                         ->where('nam', $namDonNghi)
                         ->first();
                     if ($soDuPhep) {
+                        $soDuPhep = \App\Models\SoDuPhep::whereKey($soDuPhep->id)->lockForUpdate()->first();
                         $soDuPhep->phep_da_dung = max(0, $soDuPhep->phep_da_dung - $donNghi->so_ngay_nghi);
                         $soDuPhep->save();
                     }

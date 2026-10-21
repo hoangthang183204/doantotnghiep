@@ -185,7 +185,26 @@ class HoSoController extends Controller
             $thueTncn = round($thueTncn, 0);
         }
 
-        $thucNhan = $luongGanNhat?->luong_thuc_nhan ?? ($tongThuNhap - $tongBaoHiem - $thueTncn);
+        $soNgayCongKy = (float) ($luongGanNhat?->so_ngay_cong ?? 0);
+        $ngayNghiPhepKy = (float) ($luongGanNhat?->ngay_nghi_phep ?? 0);
+        $ngayLeKy = (float) ($luongGanNhat?->ngay_le ?? 0);
+        $khauTruKhac = (float) ($luongGanNhat?->tong_khau_tru_khac ?? 0);
+        if ($khauTruKhac <= 0 && $luongGanNhat) {
+            $khauTruKhac = max(0, (float) $luongGanNhat->tong_khau_tru - (float) $luongGanNhat->tong_bao_hiem - (float) ($luongGanNhat->thue_thu_nhap_ca_nhan ?? 0));
+        }
+        $khongDiLam = (bool) $luongGanNhat && $soNgayCongKy <= 0 && $ngayNghiPhepKy <= 0;
+        if ($khongDiLam) {
+            $bhxh = 0;
+            $bhyt = 0;
+            $bhtn = 0;
+            $tongBaoHiem = 0;
+            $mucDongBhxhHienThi = 0;
+            $thuNhapChiuThue = max(0, $tongThuNhap);
+            $thucNhan = round($tongThuNhap - $thueTncn - $khauTruKhac, 2);
+        } else {
+            $mucDongBhxhHienThi = (float) ($luongGanNhat?->muc_dong_bhxh ?? $luongDongBhxh);
+            $thucNhan = $luongGanNhat?->luong_thuc_nhan ?? ($tongThuNhap - $tongBaoHiem - $thueTncn - $khauTruKhac);
+        }
 
         // Lấy chi tiết phụ cấp
         $phuCapChiTiets = collect();
@@ -263,9 +282,18 @@ class HoSoController extends Controller
             'bhtn',
             'tongBaoHiem',
             'soNguoiPhuThuoc',
+            'giamTruBanThan',
+            'giamTruGiaCanh',
             'thuNhapChiuThue',
+            'thuNhapTinhThue',
             'thueTncn',
             'thucNhan',
+            'soNgayCongKy',
+            'ngayNghiPhepKy',
+            'ngayLeKy',
+            'khauTruKhac',
+            'khongDiLam',
+            'mucDongBhxhHienThi',
             'phuCapChiTiets',
             // Dữ liệu lịch sử đơn từ
             'soDuPhep',

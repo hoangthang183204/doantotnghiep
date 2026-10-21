@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Exception;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -105,7 +106,7 @@ class FaceRecognitionService
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
         }
-        file_put_contents($path, json_encode($embedding));
+        file_put_contents($path, Crypt::encryptString(json_encode($embedding)));
         return true;
     }
 
@@ -115,7 +116,14 @@ class FaceRecognitionService
             throw new Exception('File not found: ' . $path);
         }
         $content = file_get_contents($path);
-        return json_decode($content, true);
+        if (is_string($content) && (str_starts_with($content, '{') || str_starts_with($content, '['))) {
+            return json_decode($content, true);
+        }
+        try {
+            return json_decode(Crypt::decryptString($content), true);
+        } catch (\Throwable $e) {
+            return json_decode($content, true);
+        }
     }
 
     public function compareFaces($embedding1, $embedding2, $threshold = 0.5)

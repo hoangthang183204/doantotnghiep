@@ -137,17 +137,14 @@ class ChamCongFaceController extends Controller
             }
 
             $this->faceService->saveEmbedding($embedding, $fullEmbeddingPath);
+            if (is_file($tempPath)) {
+                unlink($tempPath);
+            }
 
-            // Di chuyển ảnh từ temp sang face_images
-            $newImagePath = 'face_images/' . $faceId . '.jpg';
-            $newFullPath = storage_path('app/public/' . $newImagePath);
-            rename($tempPath, $newFullPath);
-
-            // Lưu vào database
             FaceData::create([
                 'nguoi_dung_id' => $user->id,
                 'embedding_path' => $embeddingPath,
-                'image_path' => $newImagePath,
+                'image_path' => null,
                 'face_id' => $faceId,
                 'metadata' => [
                     'created_by' => $user->id,
@@ -507,7 +504,34 @@ class ChamCongFaceController extends Controller
                 ], 400);
             }
 
-            // Lưu log thành công
+            // Khóa dòng chấm công trước khi ghi. Request trùng (cùng người, cùng ngày) không được thêm giờ vào/ra.
+            DB::beginTransaction();
+            $chamCong = ChamCong::where('nguoi_dung_id', $user->id)
+                ->whereDate('ngay_cham_cong', $today)
+                ->lockForUpdate()
+                ->first();
+
+            if ($request->loai == 'check_in' && $chamCong?->gio_vao) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => '❌ Bạn đã Check-in hôm nay rồi! (lúc ' . Carbon::parse($chamCong->gio_vao)->format('H:i:s') . ')',
+                ], 409);
+            }
+            if ($request->loai == 'check_out' && $chamCong?->gio_ra) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => '❌ Bạn đã Check-out hôm nay rồi! (lúc ' . Carbon::parse($chamCong->gio_ra)->format('H:i:s') . ')',
+                ], 409);
+            }
+            if (!$chamCong) {
+                $chamCong = new ChamCong([
+                    'nguoi_dung_id' => $user->id,
+                    'ngay_cham_cong' => $today,
+                ]);
+            }
+
             $chamCongFace = ChamCongFace::create([
                 'nguoi_dung_id' => $user->id,
                 'face_id' => $faceData->face_id,
@@ -518,12 +542,6 @@ class ChamCongFaceController extends Controller
                 'latitude' => $latitude,
                 'longitude' => $longitude,
                 'device_info' => ['gps' => $latitude !== null],
-            ]);
-
-            // Lưu bản ghi chấm công
-            $chamCong = ChamCong::firstOrNew([
-                'nguoi_dung_id' => $user->id,
-                'ngay_cham_cong' => $today,
             ]);
 
             if ($request->loai == 'check_in') {
@@ -592,6 +610,9 @@ class ChamCongFaceController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Face authentication error: ' . $e->getMessage(), [
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
                 'user_id' => $user->id,
                 'type' => $request->loai,
                 'trace' => $e->getTraceAsString()

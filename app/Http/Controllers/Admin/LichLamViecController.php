@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\NgayLe;
+use App\Services\DanhMucCache;
 use App\Services\LichLamViecService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -50,6 +51,7 @@ class LichLamViecController extends Controller
             $payload['created_at'] = now();
             DB::table('cau_hinh_lich_lam')->insert($payload);
         }
+        DanhMucCache::xoa();
 
         return back()->with('success', 'Đã cập nhật lịch làm việc.');
     }

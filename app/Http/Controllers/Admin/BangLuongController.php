@@ -10,8 +10,11 @@ use App\Models\KhauTruLuong;
 use App\Models\LichSuLuong;
 use App\Models\LuongNhanVien;
 use App\Models\NguoiDung;
+use App\Jobs\XuatBangLuongJob;
+use App\Services\KhoaNghiepVu;
 use App\Services\PdfService;
 use App\Services\TinhLuongService;
+use App\Support\PhamViDuLieu;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -48,6 +51,8 @@ class BangLuongController extends Controller
         $namTinh   = (int) $request->input('nam', $macDinh->year);
 
         $exists = BangLuong::where('thang', $thangTinh)->where('nam', $namTinh)->exists();
+        $hrDaChot = \App\Models\ChotDuLieuThang::where('thang', $thangTinh)->where('nam', $namTinh)->where('trang_thai', 'da_chot_hr')->exists();
+        $laSuperAdmin = \App\Support\VaiTroNghiepVu::laSuperAdmin(auth()->user());
 
         // Nhân viên chưa được tính trong tháng này
         $daTinh = LuongNhanVien::where('luong_thang', $thangTinh)
@@ -60,7 +65,7 @@ class BangLuongController extends Controller
             ->whereNotIn('id', $daTinh)
             ->get();
 
-        return view('admin.bang-luong.create', compact('thangTinh', 'namTinh', 'exists', 'nhanViens'));
+        return view('admin.bang-luong.create', compact('thangTinh', 'namTinh', 'exists', 'nhanViens', 'hrDaChot', 'laSuperAdmin'));
     }
 
     /** Thực hiện tính lương cho danh sách nhân viên đã chọn */
@@ -73,16 +78,27 @@ class BangLuongController extends Controller
             'nhan_vien_ids.*' => 'integer|exists:nguoi_dung,id',
         ]);
 
-        $bangLuong = $this->tinhLuong->taoBangLuong(
-            $data['thang'],
-            $data['nam'],
-            $data['nhan_vien_ids'],
-            auth()->id(),
-            'dang_xu_ly'
-        );
+        $hrDaChot = \App\Models\ChotDuLieuThang::where('thang', $data['thang'])->where('nam', $data['nam'])->where('trang_thai', 'da_chot_hr')->exists();
+        if (!$hrDaChot && !\App\Support\VaiTroNghiepVu::laSuperAdmin(auth()->user())) {
+            return back()->with('error', 'HR chưa chốt dữ liệu tháng ' . $data['thang'] . '/' . $data['nam'] . '. Kế toán chưa thể tính lương.');
+        }
+
+        $ketQua = KhoaNghiepVu::giu('payroll_' . $data['nam'] . '_' . $data['thang'], 180, function () use ($data) {
+            return $this->tinhLuong->taoBangLuong(
+                $data['thang'],
+                $data['nam'],
+                $data['nhan_vien_ids'],
+                auth()->id(),
+                'dang_xu_ly'
+            );
+        });
+
+        if ($ketQua === null) {
+            return back()->with('error', 'Hệ thống đang tính lương tháng ' . $data['thang'] . '/' . $data['nam'] . ', vui lòng đợi.');
+        }
 
         return redirect()
-            ->route('admin.bang-luong.show', $bangLuong->id)
+            ->route('admin.bang-luong.show', $ketQua->id)
             ->with('success', 'Đã tính lương cho ' . count($data['nhan_vien_ids']) . ' nhân viên.');
     }
 
@@ -95,6 +111,8 @@ class BangLuongController extends Controller
             'nguoiXuLy',
             'nguoiPheDuyet',
         ])->findOrFail($id);
+
+        $this->locTheoPhong($bangLuong);
 
         return view('admin.bang-luong.show', compact('bangLuong'));
     }
@@ -113,6 +131,7 @@ class BangLuongController extends Controller
             'khauTruLuongs',
             'khauTrus',
         ])->where('bang_luong_id', $id)->findOrFail($luongId);
+        $this->chanNeuNgoaiPhong($luong);
 
         return view('admin.bang-luong.chi-tiet-nhan-vien', compact('bangLuong', 'luong'));
     }
@@ -132,6 +151,7 @@ class BangLuongController extends Controller
             'phuCapLuongs.phuCap',
             'thuongLuongs',
         ])->where('bang_luong_id', $id)->findOrFail($luongId);
+        $this->chanNeuNgoaiPhong($luong);
 
         return view('admin.bang-luong.edit-nhan-vien', compact('bangLuong', 'luong'));
     }
@@ -158,7 +178,8 @@ class BangLuongController extends Controller
             'khau_tru_khac.khac' => 'nullable|numeric|min:0',
         ]);
 
-        $luong = LuongNhanVien::where('bang_luong_id', $id)->findOrFail($luongId);
+        $luong = LuongNhanVien::with('nguoiDung')->where('bang_luong_id', $id)->findOrFail($luongId);
+        $this->chanNeuNgoaiPhong($luong);
 
         $khoanKhauTruKhac = [
             'tam_ung' => (float) ($data['khau_tru_khac']['tam_ung'] ?? 0),
@@ -265,11 +286,18 @@ class BangLuongController extends Controller
             return back()->with('error', 'Bảng lương đã được chốt trước đó.');
         }
 
-        $bangLuong->update([
-            'trang_thai'          => 'da_chot',
-            'nguoi_phe_duyet_id'  => auth()->id(),
-            'thoi_gian_phe_duyet' => now(),
-        ]);
+        $khoa = KhoaNghiepVu::giu('payroll_chot_' . $bangLuong->nam . '_' . $bangLuong->thang, 60, function () use ($bangLuong) {
+            $bangLuong->update([
+                'trang_thai'          => 'da_chot',
+                'nguoi_phe_duyet_id'  => auth()->id(),
+                'thoi_gian_phe_duyet' => now(),
+            ]);
+
+            return true;
+        });
+        if ($khoa === null) {
+            return back()->with('error', 'Hệ thống đang chốt lương tháng này, vui lòng đợi.');
+        }
 
         return back()->with('success', 'Đã chốt bảng lương ' . $bangLuong->ma_bang_luong . '.');
     }
@@ -284,6 +312,13 @@ class BangLuongController extends Controller
         }
 
         $bangLuong->update(['trang_thai' => 'da_tra']);
+
+        \App\Support\VaiTroNghiepVu::thongBaoCho(
+            ['hr', 'HR'],
+            'Bảng lương đã được chi trả',
+            'Kế toán đã chi trả bảng lương tháng ' . $bangLuong->thang . '/' . $bangLuong->nam . '. HR có thể đóng hồ sơ kỳ này.',
+            route('admin.chot-du-lieu.index', ['nam' => $bangLuong->nam])
+        );
 
         return back()->with('success', 'Đã đánh dấu thanh toán bảng lương.');
     }
@@ -367,19 +402,25 @@ public function guiTatCaEmail($id)
 }
 public function export($id)
 {
-    $bangLuong = BangLuong::findOrFail($id);
-
-    $fileName = 'bang_luong_' .
-        $bangLuong->thang .
-        '_' .
-        $bangLuong->nam .
-        '.xlsx';
-
-    return Excel::download(
-        new ChiTietBangLuongExport($id),
-        $fileName
+    BangLuong::findOrFail($id);
+    XuatBangLuongJob::dispatch(
+        (int) $id,
+        (int) auth()->id(),
+        PhamViDuLieu::gioiHanPhong(auth()->user())
     );
+
+    return back()->with('success', 'Đang xuất Excel ở nền. Khi xong, mở chuông thông báo để tải file.');
 }
+
+    public function taiTep(string $ten)
+    {
+        $ten = basename($ten);
+        abort_unless(str_starts_with($ten, auth()->id() . '_'), 403);
+        $path = storage_path('app/exports/' . $ten);
+        abort_unless(is_file($path), 404);
+
+        return response()->download($path);
+    }
 
     /** Xuất báo cáo bảng lương tháng ra PDF */
     public function exportPdf($id)
@@ -388,6 +429,7 @@ public function export($id)
             'luongNhanViens.nguoiDung.ho_so',
             'luongNhanViens.nguoiDung.chuc_vu',
         ])->findOrFail($id);
+        $this->locTheoPhong($bangLuong);
 
         $fileName = 'bang_luong_' . $bangLuong->thang . '_' . $bangLuong->nam . '.pdf';
 
@@ -410,6 +452,7 @@ public function export($id)
             'khauTruLuongs',
             'khauTrus',
         ])->where('bang_luong_id', $id)->findOrFail($luongId);
+        $this->chanNeuNgoaiPhong($luong);
 
         $hoTen = trim(($luong->nguoiDung->ho_so->ho ?? '') . ' ' . ($luong->nguoiDung->ho_so->ten ?? ''))
             ?: ($luong->nguoiDung->ten_dang_nhap ?? 'NV');
@@ -421,6 +464,27 @@ public function export($id)
             ['luong' => $luong, 'hoTen' => $hoTen, 'ngayXuat' => now()->format('d/m/Y H:i')],
             $fileName,
             'portrait'
+        );
+    }
+
+    private function locTheoPhong(BangLuong $bangLuong): void
+    {
+        $gioiHan = PhamViDuLieu::gioiHanPhong(auth()->user());
+        if ($gioiHan === null) {
+            return;
+        }
+
+        $bangLuong->setRelation('luongNhanViens', $bangLuong->luongNhanViens->filter(
+            fn ($luong) => in_array((int) ($luong->nguoiDung->phong_ban_id ?? 0), $gioiHan, true)
+        )->values());
+    }
+
+    private function chanNeuNgoaiPhong(LuongNhanVien $luong): void
+    {
+        abort_unless(
+            PhamViDuLieu::duocXemNhanVien(auth()->user(), $luong->nguoiDung),
+            403,
+            'Bạn không được xem lương nhân viên phòng khác.'
         );
     }
 }

@@ -45,9 +45,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'CheckPermission' => \App\Http\Middleware\CheckPermission::class,
             'truong_phong' => \App\Http\Middleware\CheckTruongPhong::class,
             'hr.module' => \App\Http\Middleware\CheckHrModule::class,
+            'idempotent' => \App\Http\Middleware\IdempotencyMiddleware::class,
+            'ke-toan.cam' => \App\Http\Middleware\ChanKeToanSuaNhanSu::class,
         ]);
 
         $middleware->web(append: [
+            \App\Http\Middleware\ForceHttps::class,
             \App\Http\Middleware\AuditLogMiddleware::class,
         ]);
     })

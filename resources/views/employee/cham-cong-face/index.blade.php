@@ -628,6 +628,36 @@
                 }
             }
 
+            function mauNho(videoEl) {
+                const c = document.createElement('canvas');
+                c.width = 32;
+                c.height = 24;
+                const ctx = c.getContext('2d', { willReadFrequently: true });
+                ctx.drawImage(videoEl, 0, 0, 32, 24);
+                return ctx.getImageData(0, 0, 32, 24).data;
+            }
+
+            function doLechKhung(a, b) {
+                let khac = 0;
+                let n = 0;
+                for (let i = 0; i < a.length; i += 16) {
+                    const da = (a[i] + a[i + 1] + a[i + 2]) / 3;
+                    const db = (b[i] + b[i + 1] + b[i + 2]) / 3;
+                    if (Math.abs(da - db) > 12) khac++;
+                    n++;
+                }
+                return n ? khac / n : 0;
+            }
+
+            async function laNguoiThat(videoEl) {
+                if (!videoEl || !videoEl.videoWidth) return false;
+                const a = mauNho(videoEl);
+                await new Promise(function (resolve) { setTimeout(resolve, 350); });
+                const b = mauNho(videoEl);
+                const lech = doLechKhung(a, b);
+                return lech >= 0.008 && lech <= 0.7;
+            }
+
             function captureRegisterImage() {
                 const video = document.getElementById('registerVideo');
                 const canvas = document.getElementById('registerCanvas');
@@ -649,6 +679,14 @@
                 status.classList.add('hidden');
 
                 try {
+                    const song = await laNguoiThat(document.getElementById('registerVideo'));
+                    if (!song) {
+                        status.textContent = 'Không nhận ra người thật. Hãy nhìn thẳng camera và chớp mắt.';
+                        status.className =
+                            'mt-3 p-3 rounded-lg text-sm text-center bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 border border-red-200 dark:border-red-800';
+                        status.classList.remove('hidden');
+                        return;
+                    }
                     const imageData = captureRegisterImage();
 
                     const response = await fetch('{{ route('employee.cham-cong-face.register') }}', {
@@ -825,6 +863,7 @@
 
             let stream = null;
             let isProcessing = false;
+            let idemKey = null;
             let isAutoMode = true;
             let facingMode = 'user';
             let lastProcessedTime = 0;
@@ -967,6 +1006,44 @@
                 return canvas.toDataURL('image/jpeg', 0.6);
             }
 
+            function taoKhoaMotLan() {
+                if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                    const r = Math.random() * 16 | 0;
+                    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+                });
+            }
+
+            function mauNho(videoEl) {
+                const c = document.createElement('canvas');
+                c.width = 32;
+                c.height = 24;
+                const ctx = c.getContext('2d', { willReadFrequently: true });
+                ctx.drawImage(videoEl, 0, 0, 32, 24);
+                return ctx.getImageData(0, 0, 32, 24).data;
+            }
+
+            function doLechKhung(a, b) {
+                let khac = 0;
+                let n = 0;
+                for (let i = 0; i < a.length; i += 16) {
+                    const da = (a[i] + a[i + 1] + a[i + 2]) / 3;
+                    const db = (b[i] + b[i + 1] + b[i + 2]) / 3;
+                    if (Math.abs(da - db) > 12) khac++;
+                    n++;
+                }
+                return n ? khac / n : 0;
+            }
+
+            async function laNguoiThat(videoEl) {
+                if (!videoEl || !videoEl.videoWidth) return false;
+                const a = mauNho(videoEl);
+                await new Promise(function (resolve) { setTimeout(resolve, 350); });
+                const b = mauNho(videoEl);
+                const lech = doLechKhung(a, b);
+                return lech >= 0.008 && lech <= 0.7;
+            }
+
             function showResult(message, isSuccess) {
                 result.classList.remove('hidden');
                 result.className =
@@ -1020,15 +1097,26 @@
 
                 isProcessing = true;
                 overlay.classList.remove('hidden');
+                if (!idemKey) idemKey = taoKhoaMotLan();
+                const khoaLanNay = idemKey;
 
                 try {
+                    const song = await laNguoiThat(video);
+                    if (!song) {
+                        idemKey = null;
+                        showResult('Không nhận ra người thật. Hãy nhìn thẳng camera và chớp mắt.', false);
+                        faceDetectStatus.textContent = 'Cần người thật trước camera';
+                        return;
+                    }
+
                     const imageData = captureImage();
 
                     const response = await fetch('{{ route('employee.cham-cong-face.authenticate') }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Idempotency-Key': khoaLanNay
                         },
                         body: JSON.stringify({
                             image: imageData,
@@ -1041,6 +1129,7 @@
                     const data = await response.json();
 
                     if (data.success) {
+                        idemKey = null;
                         showResult(`${data.message} (Độ tin cậy: ${data.confidence}%)`, true);
 
                         if (loai === 'check_in') {
@@ -1067,6 +1156,7 @@
                         }, 2000);
 
                     } else {
+                        idemKey = null;
                         if (data.yeu_cau_tao_don) {
                             const phutVeSom = Math.round(data.so_phut_ve_som);
                             showResultWithButton(
@@ -1112,10 +1202,8 @@
                     showResult('❌ Lỗi hệ thống, vui lòng thử lại', false);
                     faceDetectStatus.textContent = '❌ Lỗi hệ thống';
                 } finally {
-                    setTimeout(() => {
-                        isProcessing = false;
-                        overlay.classList.add('hidden');
-                    }, 1000);
+                    isProcessing = false;
+                    overlay.classList.add('hidden');
                 }
             }
 

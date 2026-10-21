@@ -1285,27 +1285,14 @@
             <div id="tab5" class="tab-content hidden">
 
                 @php
-                    // Sử dụng dữ liệu đã được truyền từ Controller
-                    $luongCoBanHienTai = $luongGanNhat->luong_co_ban ?? ($hopDongHieuLuc->luong_co_ban ?? 0);
-                    $tongPhuCap = $luongGanNhat->tong_phu_cap ?? 0;
-                    $tienTangCa = $luongGanNhat->tien_tang_ca ?? 0;
-                    $tongBaoHiem = $luongGanNhat->tong_bao_hiem ?? 0;
-                    $thueTncn = $luongGanNhat->thue_thu_nhap_ca_nhan ?? 0;
-                    $tongThuNhap = $luongGanNhat->tong_luong ?? $luongCoBanHienTai + $tongPhuCap;
-                    $thucNhan = $luongGanNhat->luong_thuc_nhan ?? $tongThuNhap;
-                    $bhxh = $luongGanNhat->bhxh ?? 0;
-                    $bhyt = $luongGanNhat->bhyt ?? 0;
-                    $bhtn = $luongGanNhat->bhtn ?? 0;
-                    $soNguoiPhuThuoc = $hoSo?->nguoiPhuThuoc?->count() ?? 0;
-
-                    $giamTruBanThan = 15500000;
-                    $giamTruGiaCanh = $giamTruBanThan + 6200000 * $soNguoiPhuThuoc;
-                    $thuNhapChiuThue = max(0, $tongThuNhap - $tongBaoHiem);
-                    $thuNhapTinhThue = max(0, $thuNhapChiuThue - $giamTruGiaCanh);
-
                     $coPhuCap = $tongPhuCap > 0;
                     $coTangCa = $tienTangCa > 0;
                     $nguoiPhuThuocs = $hoSo->nguoiPhuThuoc ?? collect();
+                    $soNgayCongKy = $soNgayCongKy ?? 0;
+                    $ngayLeKy = $ngayLeKy ?? 0;
+                    $khauTruKhac = $khauTruKhac ?? 0;
+                    $khongDiLam = $khongDiLam ?? false;
+                    $mucDongBhxhHienThi = $mucDongBhxhHienThi ?? $luongCoBanHienTai;
                 @endphp
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1336,9 +1323,14 @@
                             <div class="flex justify-between py-2 border-b border-gray-100 dark:border-slate-700">
                                 <span class="text-gray-500 dark:text-gray-400">Mức lương đóng BHXH</span>
                                 <span
-                                    class="font-medium text-green-600 dark:text-green-400">{{ number_format($luongCoBanHienTai, 0, ',', '.') }}
+                                    class="font-medium text-green-600 dark:text-green-400">{{ number_format($mucDongBhxhHienThi, 0, ',', '.') }}
                                     VNĐ</span>
                             </div>
+                            @if ($khongDiLam)
+                                <p class="text-xs text-amber-700 dark:text-amber-300">
+                                    Tháng này không có ngày đi làm{{ $ngayLeKy > 0 ? ' (chỉ có ' . rtrim(rtrim(number_format($ngayLeKy, 2), '0'), '.') . ' ngày lễ)' : '' }}, nên không trừ bảo hiểm cả tháng.
+                                </p>
+                            @endif
 
                             {{-- Chi tiết đóng BH --}}
                             <div class="bg-gray-50 dark:bg-slate-700 rounded-lg p-3 mt-2">
@@ -1590,7 +1582,17 @@
                                 = {{ number_format($tongThuNhap, 0, ',', '.') }}
                                 - {{ number_format($tongBaoHiem, 0, ',', '.') }}
                                 - {{ number_format($thueTncn, 0, ',', '.') }}
+                                @if ($khauTruKhac > 0)
+                                    - {{ number_format($khauTruKhac, 0, ',', '.') }} (tạm ứng / khấu trừ khác)
+                                @endif
                             </div>
+                            @if ($khongDiLam && $khauTruKhac > 0)
+                                <p class="text-xs text-amber-700 dark:text-amber-300 mt-2">
+                                    Thực nhận âm vì khoản tạm ứng {{ number_format($khauTruKhac, 0, ',', '.') }} ₫ lớn hơn tiền lương của tháng ({{ $ngayLeKy > 0 ? 'chủ yếu là lương ngày lễ' : 'không có ngày công' }}).
+                                </p>
+                            @elseif ($khongDiLam)
+                                <p class="text-xs text-gray-500 mt-2">Tháng không có ngày công nên không phát sinh lương đi làm.</p>
+                            @endif
                             @if ($bangLuongGanNhat)
                                 <div class="text-xs text-gray-400 mt-1">
                                     📋 Kỳ lương: {{ $kyLuu }}

@@ -9,17 +9,23 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 class ChiTietBangLuongExport implements FromCollection, WithHeadings
 {
     protected $bangLuongId;
+    protected ?array $phongBanIds;
 
-    public function __construct($bangLuongId)
+    public function __construct($bangLuongId, ?array $phongBanIds = null)
     {
         $this->bangLuongId = $bangLuongId;
+        $this->phongBanIds = $phongBanIds;
     }
 
     public function collection()
     {
-        return LuongNhanVien::with('nguoiDung.hoSo')
-            ->where('bang_luong_id', $this->bangLuongId)
-            ->get()
+        $query = LuongNhanVien::with('nguoiDung.hoSo')
+            ->where('bang_luong_id', $this->bangLuongId);
+        if ($this->phongBanIds !== null) {
+            $query->whereHas('nguoiDung', fn ($q) => $q->whereIn('phong_ban_id', $this->phongBanIds));
+        }
+
+        return $query->get()
             ->map(function ($item) {
                 $hoSo = $item->nguoiDung ? $item->nguoiDung->hoSo : null;
 

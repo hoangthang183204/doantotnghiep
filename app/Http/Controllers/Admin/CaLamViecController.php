@@ -40,6 +40,20 @@ class CaLamViecController extends Controller
     {
         $tuNgay = $request->input('tu_ngay', now()->startOfWeek()->toDateString());
         $denNgay = $request->input('den_ngay', now()->endOfWeek()->toDateString());
+        $batDau = \Carbon\Carbon::parse($tuNgay)->startOfDay();
+        $ketThuc = \Carbon\Carbon::parse($denNgay)->startOfDay();
+        if ($ketThuc->lt($batDau)) {
+            $ketThuc = $batDau->copy();
+        }
+        if ($batDau->diffInDays($ketThuc) > 13) {
+            $ketThuc = $batDau->copy()->addDays(13);
+        }
+        $tuNgay = $batDau->toDateString();
+        $denNgay = $ketThuc->toDateString();
+        $ngayList = [];
+        for ($ngay = $batDau->copy(); $ngay->lte($ketThuc); $ngay->addDay()) {
+            $ngayList[] = $ngay->copy();
+        }
         $cas = CaLamViec::where('trang_thai', true)->orderBy('gio_bat_dau')->get();
         $nhanViens = NguoiDung::with('hoSo')->where('trang_thai', 1)->orderBy('id')->limit(200)->get();
         $phanCongs = PhanCongCa::with('ca')
@@ -47,16 +61,20 @@ class CaLamViecController extends Controller
             ->get()
             ->groupBy(fn ($row) => $row->nguoi_dung_id . '|' . $row->ngay->toDateString());
 
-        return view('admin.ca-lam-viec.phan-ca', compact('tuNgay', 'denNgay', 'cas', 'nhanViens', 'phanCongs'));
+        return view('admin.ca-lam-viec.phan-ca', compact('tuNgay', 'denNgay', 'cas', 'nhanViens', 'phanCongs', 'ngayList'));
     }
 
     public function storePhanCa(Request $request)
     {
         $data = $request->validate([
             'nguoi_dung_id' => 'required|integer',
-            'ca_lam_viec_id' => 'required|integer',
+            'ca_lam_viec_id' => 'nullable|integer',
             'ngay' => 'required|date',
         ]);
+        if (empty($data['ca_lam_viec_id'])) {
+            PhanCongCa::where('nguoi_dung_id', $data['nguoi_dung_id'])->whereDate('ngay', $data['ngay'])->delete();
+            return back()->with('success', 'Đã bỏ ca ngày này.');
+        }
         PhanCongCa::updateOrCreate(
             ['nguoi_dung_id' => $data['nguoi_dung_id'], 'ngay' => $data['ngay']],
             ['ca_lam_viec_id' => $data['ca_lam_viec_id']]
