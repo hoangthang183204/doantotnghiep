@@ -56,7 +56,7 @@
                         ] as [$ten, $tyLe, $soTien])
                         <tr class="border-t border-gray-100 dark:border-slate-700">
                             <td class="px-3 py-2">{{ $ten }}</td>
-                            <td class="px-3 py-2 text-right font-mono text-xs">{{ $tienTe($dg['luong_co_ban']) }}</td>
+                            <td class="px-3 py-2 text-right font-mono text-xs">{{ $tienTe($dg['muc_dong_bhxh'] ?? $dg['luong_co_ban']) }}</td>
                             <td class="px-3 py-2 text-center">{{ $phanTram($tyLe) }}</td>
                             <td class="px-3 py-2 text-right font-medium text-red-500">-{{ $tienTe($soTien) }}</td>
                         </tr>
@@ -71,13 +71,44 @@
             </div>
         </div>
 
+        <div class="px-5 py-4 bg-slate-50 dark:bg-slate-900/40">
+            <p class="font-medium text-gray-900 dark:text-white">Phần doanh nghiệp đóng (không trừ vào lương nhân viên)</p>
+            <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">
+                Căn cứ: mức đóng BHXH {{ $tienTe($dg['muc_dong_bhxh'] ?? $dg['luong_co_ban']) }}
+                (trần theo cấu hình năm). Tổng DN {{ $phanTram(($dg['ty_le_bhxh_dn'] ?? 0) + ($dg['ty_le_bhyt_dn'] ?? 0) + ($dg['ty_le_bhtn_dn'] ?? 0)) }}.
+            </p>
+            <div class="overflow-x-auto mt-3">
+                <table class="w-full text-sm">
+                    <tbody class="text-gray-700 dark:text-slate-300">
+                        @foreach ([
+                            ['BHXH doanh nghiệp', $dg['ty_le_bhxh_dn'] ?? 0, $dg['bhxh_dn'] ?? 0],
+                            ['BHYT doanh nghiệp', $dg['ty_le_bhyt_dn'] ?? 0, $dg['bhyt_dn'] ?? 0],
+                            ['BHTN doanh nghiệp', $dg['ty_le_bhtn_dn'] ?? 0, $dg['bhtn_dn'] ?? 0],
+                        ] as [$ten, $tyLe, $soTien])
+                        <tr class="border-t border-gray-100 dark:border-slate-700">
+                            <td class="px-3 py-2">{{ $ten }}</td>
+                            <td class="px-3 py-2 text-center">{{ $phanTram($tyLe) }}</td>
+                            <td class="px-3 py-2 text-right font-medium">{{ $tienTe($soTien) }}</td>
+                        </tr>
+                        @endforeach
+                        <tr class="border-t border-gray-200 dark:border-slate-600 font-semibold">
+                            <td class="px-3 py-2">Cộng doanh nghiệp đóng</td>
+                            <td></td>
+                            <td class="px-3 py-2 text-right">{{ $tienTe($dg['tong_bao_hiem_dn'] ?? 0) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         {{-- ============ B. GIẢM TRỪ GIA CẢNH ============ --}}
         <div class="px-5 py-4">
             <p class="font-medium text-gray-900 dark:text-white">Ⓑ Giảm trừ gia cảnh</p>
             <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">
                 Đây <b>không phải khoản bị trừ vào lương</b> — mà là phần thu nhập được
                 <b>miễn thuế</b>, trừ ra trước khi tính thuế TNCN.
-                (NQ 110/2025/UBTVQH15, áp dụng từ kỳ tính thuế 2026)
+                Mức áp dụng theo cấu hình năm {{ $dg['nam_cau_hinh'] ?? $luong->luong_nam }}
+                (bản thân {{ $tienTe($dg['giam_tru_ban_than']) }}, mỗi người phụ thuộc {{ $tienTe($dg['muc_giam_tru_moi_npt']) }}).
             </p>
 
             <div class="overflow-x-auto mt-3">

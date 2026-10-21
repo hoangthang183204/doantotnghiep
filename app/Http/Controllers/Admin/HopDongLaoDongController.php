@@ -628,6 +628,14 @@ class HopDongLaoDongController extends Controller
         if ($nhanVien) {
             try {
                 $nhanVien->notify(new \App\Notifications\HopDongGuiKyNotification($hopDong));
+                app(\App\Services\ThongBaoDaKenhService::class)->gui(
+                    $nhanVien,
+                    'Hợp đồng cần ký',
+                    'Bạn có hợp đồng cần ký trên điện thoại hoặc máy tính.',
+                    url('/employee/hop-dong-cua-toi'),
+                    ['zalo', 'sms', 'push'],
+                    false
+                );
             } catch (\Exception $e) {
                 Log::error('Gửi thông báo hợp đồng cho nhân viên thất bại: ' . $e->getMessage());
             }

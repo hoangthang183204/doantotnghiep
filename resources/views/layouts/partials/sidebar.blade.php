@@ -244,6 +244,31 @@
                 </li>
             @endif
 
+            @if (!$isAdmin && Route::has('employee.ca.index'))
+                <li>
+                    <a href="{{ route('employee.ca.index') }}" class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.ca.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <span class="w-5 h-5 mr-3 flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </span>
+                        <span class="font-medium menu-text">Ca của tôi</span>
+                    </a>
+                </li>
+            @endif
+            @if (!$isAdmin && Route::has('employee.danh-gia.index'))
+                <li>
+                    <a href="{{ route('employee.danh-gia.index') }}" class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ $currentRoute == 'employee.danh-gia.index' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <span class="w-5 h-5 mr-3 flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                            </svg>
+                        </span>
+                        <span class="font-medium menu-text">Đánh giá của tôi</span>
+                    </a>
+                </li>
+            @endif
+
             {{-- ========================================================== --}}
             {{-- ⭐ 4. QUẢN LÝ PHÒNG BAN (CHỈ TRƯỞNG PHÒNG - KHÔNG BAO GỒM KẾ TOÁN) --}}
             {{-- ========================================================== --}}
@@ -1055,6 +1080,44 @@
                         </details>
                     </li>
                 @endif
+            @endif
+
+            @if ($isAdminOrHR || $canViewSalary || $canViewEmployee)
+                <li>
+                    <details class="menu-details" {{ str_starts_with($currentRoute ?? '', 'admin.bhxh-thue') || str_starts_with($currentRoute ?? '', 'admin.quyet-toan') || str_starts_with($currentRoute ?? '', 'admin.lich-lam') || str_starts_with($currentRoute ?? '', 'admin.ca-lam') || str_starts_with($currentRoute ?? '', 'admin.checklist') || str_starts_with($currentRoute ?? '', 'admin.tai-san') || str_starts_with($currentRoute ?? '', 'admin.danh-gia') || str_starts_with($currentRoute ?? '', 'admin.thong-bao-kenh') || str_starts_with($currentRoute ?? '', 'admin.nhat-ky') ? 'open' : '' }}>
+                        <summary class="flex items-center w-full px-3 py-2.5 rounded-lg cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <span class="w-5 h-5 mr-3 flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </span>
+                            <span class="flex-1 text-left font-medium menu-text">Vận hành</span>
+                        </summary>
+                        <ul class="pl-10 mt-1 space-y-1">
+                            @foreach ([
+                                ['Cấu hình BHXH / thuế', 'admin.bhxh-thue.index', 'fa-solid fa-shield-halved'],
+                                ['Quyết toán TNCN', 'admin.quyet-toan-thue.index', 'fa-solid fa-file-invoice-dollar'],
+                                ['Lịch làm việc và ngày lễ', 'admin.lich-lam-viec.index', 'fa-solid fa-calendar-days'],
+                                ['Ca làm việc', 'admin.ca-lam-viec.index', 'fa-solid fa-clock'],
+                                ['Nhận việc / nghỉ việc', 'admin.checklist.index', 'fa-solid fa-list-check'],
+                                ['Tài sản', 'admin.tai-san.index', 'fa-solid fa-laptop'],
+                                ['Đánh giá KPI', 'admin.danh-gia.index', 'fa-solid fa-star'],
+                                ['Thông báo đa kênh', 'admin.thong-bao-kenh.index', 'fa-solid fa-bell'],
+                                ['Nhật ký thao tác', 'admin.nhat-ky.index', 'fa-solid fa-clipboard-list'],
+                            ] as [$menuTitle, $routeName, $menuIcon])
+                                @if (Route::has($routeName))
+                                    <li>
+                                        <a href="{{ route($routeName) }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm {{ $currentRoute == $routeName ? 'bg-blue-50 text-blue-700' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100' }}">
+                                            <i class="{{ $menuIcon }} w-4 text-center"></i>
+                                            <span class="menu-text">{{ $menuTitle }}</span>
+                                        </a>
+                                    </li>
+                                @endif
+                            @endforeach
+                        </ul>
+                    </details>
+                </li>
             @endif
 
             {{-- QUY ĐỊNH --}}

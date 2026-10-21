@@ -476,43 +476,22 @@ Route::prefix('admin')
 
         // ========== ĐÀO TẠO ==========
         Route::prefix('dao-tao')->name('dao-tao.')->middleware(['CheckPermission:hoso.edit'])->group(function () {
-
             Route::get('/', [DaoTaoController::class, 'index'])->middleware(['CheckPermission:dao-tao.index'])->name('index');
-
             Route::get('/create', [DaoTaoController::class, 'create'])->middleware(['CheckPermission:dao-tao.create'])->name('create');
-
             Route::post('/', [DaoTaoController::class, 'store'])->middleware(['CheckPermission:dao-tao.store'])->name('store');
-
-            Route::get('/thong-ke', [DaoTaoController::class, 'thongKe'])->middleware(['CheckPermission:dao-tao.thong-ke'])->name('thong-ke');
-
-            Route::get('/export/excel', [DaoTaoController::class, 'export'])->middleware(['CheckPermission:dao-tao.export'])->name('export');
-
             Route::get('/{id}', [DaoTaoController::class, 'show'])->middleware(['CheckPermission:dao-tao.show'])->name('show');
-
             Route::get('/{id}/edit', [DaoTaoController::class, 'edit'])->middleware(['CheckPermission:dao-tao.edit'])->name('edit');
-
             Route::put('/{id}', [DaoTaoController::class, 'update'])->middleware(['CheckPermission:dao-tao.update'])->name('update');
-
-            Route::delete('/{id}', [DaoTaoController::class, 'destroy'])->middleware(['CheckPermission:dao-tao.destroy'])->name('destroy');
+            Route::delete('/{id}', [DaoTaoController::class, 'destroy'])->middleware(['CheckPermission:dao-tao.delete'])->name('destroy');
         });
 
         // ========== CHỨNG CHỈ ==========
         Route::prefix('chung-chi')->name('chung-chi.')->middleware(['CheckPermission:hoso.edit'])->group(function () {
-
-            Route::get('/', [ChungChiNhanVienController::class, 'index'])->middleware(['CheckPermission:chung-chi.index'])
-                ->name('index');
-
-            Route::get('/{id}', [ChungChiNhanVienController::class, 'show'])->middleware(['CheckPermission:chung-chi.show'])
-                ->name('show');
-
-            Route::get('/{id}/edit', [ChungChiNhanVienController::class, 'edit'])->middleware(['CheckPermission:chung-chi.edit'])
-                ->name('edit');
-
-            Route::put('/{id}', [ChungChiNhanVienController::class, 'update'])->middleware(['CheckPermission:chung-chi.update'])
-                ->name('update');
-
-            Route::delete('/{id}', [ChungChiNhanVienController::class, 'destroy'])->middleware(['CheckPermission:chung-chi.destroy'])
-                ->name('destroy');
+            Route::get('/', [ChungChiNhanVienController::class, 'index'])->middleware(['CheckPermission:chung-chi.index'])->name('index');
+            Route::get('/{id}', [ChungChiNhanVienController::class, 'show'])->middleware(['CheckPermission:chung-chi.show'])->name('show');
+            Route::get('/{id}/edit', [ChungChiNhanVienController::class, 'edit'])->middleware(['CheckPermission:chung-chi.edit'])->name('edit');
+            Route::put('/{id}', [ChungChiNhanVienController::class, 'update'])->middleware(['CheckPermission:chung-chi.update'])->name('update');
+            Route::delete('/{id}', [ChungChiNhanVienController::class, 'destroy'])->middleware(['CheckPermission:chung-chi.destroy'])->name('destroy');
         });
 
         // ========== HỢP ĐỒNG - CHỈ HR VÀ ADMIN ==========
@@ -608,6 +587,51 @@ Route::prefix('admin')
             Route::put('/{id}', [ThucHienTangCaController::class, 'update'])->name('update');
         });
 
+        Route::middleware('hr.module')->group(function () {
+            Route::get('/bhxh-thue', [\App\Http\Controllers\Admin\CauHinhBhxhThueController::class, 'index'])->name('bhxh-thue.index');
+            Route::post('/bhxh-thue', [\App\Http\Controllers\Admin\CauHinhBhxhThueController::class, 'update'])->name('bhxh-thue.update');
+
+            Route::get('/quyet-toan-thue', [\App\Http\Controllers\Admin\QuyetToanThueController::class, 'index'])->name('quyet-toan-thue.index');
+            Route::get('/quyet-toan-thue/05kk', [\App\Http\Controllers\Admin\QuyetToanThueController::class, 'kk'])->name('quyet-toan-thue.kk');
+            Route::get('/quyet-toan-thue/05qtt', [\App\Http\Controllers\Admin\QuyetToanThueController::class, 'qtt'])->name('quyet-toan-thue.qtt');
+
+            Route::get('/lich-lam-viec', [\App\Http\Controllers\Admin\LichLamViecController::class, 'index'])->name('lich-lam-viec.index');
+            Route::post('/lich-lam-viec', [\App\Http\Controllers\Admin\LichLamViecController::class, 'update'])->name('lich-lam-viec.update');
+            Route::post('/lich-lam-viec/ngay-le', [\App\Http\Controllers\Admin\LichLamViecController::class, 'storeNgayLe'])->name('lich-lam-viec.ngay-le.store');
+            Route::delete('/lich-lam-viec/ngay-le/{id}', [\App\Http\Controllers\Admin\LichLamViecController::class, 'destroyNgayLe'])->name('lich-lam-viec.ngay-le.destroy');
+            Route::post('/lich-lam-viec/dia-diem', [\App\Http\Controllers\Admin\LichLamViecController::class, 'storeDiaDiem'])->name('lich-lam-viec.dia-diem.store');
+            Route::delete('/lich-lam-viec/dia-diem/{id}', [\App\Http\Controllers\Admin\LichLamViecController::class, 'destroyDiaDiem'])->name('lich-lam-viec.dia-diem.destroy');
+
+            Route::get('/nhat-ky', [\App\Http\Controllers\Admin\AuditLogController::class, 'index'])->name('nhat-ky.index');
+
+            Route::get('/ca-lam-viec', [\App\Http\Controllers\Admin\CaLamViecController::class, 'index'])->name('ca-lam-viec.index');
+            Route::post('/ca-lam-viec', [\App\Http\Controllers\Admin\CaLamViecController::class, 'store'])->name('ca-lam-viec.store');
+            Route::get('/ca-lam-viec/phan-ca', [\App\Http\Controllers\Admin\CaLamViecController::class, 'phanCa'])->name('ca-lam-viec.phan-ca');
+            Route::post('/ca-lam-viec/phan-ca', [\App\Http\Controllers\Admin\CaLamViecController::class, 'storePhanCa'])->name('ca-lam-viec.store-phan-ca');
+            Route::post('/ca-lam-viec/doi-ca/{id}', [\App\Http\Controllers\Admin\CaLamViecController::class, 'duyetDoiCa'])->name('ca-lam-viec.duyet');
+
+            Route::get('/checklist', [\App\Http\Controllers\Admin\ChecklistNhanSuController::class, 'index'])->name('checklist.index');
+            Route::post('/checklist', [\App\Http\Controllers\Admin\ChecklistNhanSuController::class, 'storePhieu'])->name('checklist.store');
+            Route::get('/checklist/{id}', [\App\Http\Controllers\Admin\ChecklistNhanSuController::class, 'show'])->name('checklist.show');
+            Route::post('/checklist/{id}/viec', [\App\Http\Controllers\Admin\ChecklistNhanSuController::class, 'storeViec'])->name('checklist.viec.store');
+            Route::put('/checklist/viec/{id}', [\App\Http\Controllers\Admin\ChecklistNhanSuController::class, 'capNhatViec'])->name('checklist.viec');
+
+            Route::get('/tai-san', [\App\Http\Controllers\Admin\TaiSanController::class, 'index'])->name('tai-san.index');
+            Route::post('/tai-san', [\App\Http\Controllers\Admin\TaiSanController::class, 'store'])->name('tai-san.store');
+            Route::post('/tai-san/{id}/cap-phat', [\App\Http\Controllers\Admin\TaiSanController::class, 'capPhat'])->name('tai-san.cap-phat');
+            Route::post('/tai-san/{id}/thu-hoi', [\App\Http\Controllers\Admin\TaiSanController::class, 'thuHoi'])->name('tai-san.thu-hoi');
+
+            Route::get('/thong-bao-kenh', [\App\Http\Controllers\Admin\ThongBaoKenhController::class, 'index'])->name('thong-bao-kenh.index');
+            Route::post('/thong-bao-kenh', [\App\Http\Controllers\Admin\ThongBaoKenhController::class, 'updateKenh'])->name('thong-bao-kenh.update');
+            Route::put('/thong-bao-kenh/mau/{id}', [\App\Http\Controllers\Admin\ThongBaoKenhController::class, 'updateMau'])->name('thong-bao-kenh.mau');
+            Route::post('/thong-bao-kenh/gui-thu', [\App\Http\Controllers\Admin\ThongBaoKenhController::class, 'guiThu'])->name('thong-bao-kenh.gui-thu');
+
+            Route::get('/danh-gia', [\App\Http\Controllers\Admin\DanhGiaController::class, 'index'])->name('danh-gia.index');
+            Route::post('/danh-gia', [\App\Http\Controllers\Admin\DanhGiaController::class, 'storeKy'])->name('danh-gia.store');
+            Route::get('/danh-gia/{id}', [\App\Http\Controllers\Admin\DanhGiaController::class, 'show'])->name('danh-gia.show');
+            Route::post('/danh-gia/{id}', [\App\Http\Controllers\Admin\DanhGiaController::class, 'storeKetQua'])->name('danh-gia.ket-qua');
+        });
+
         // ========== TEST ROUTE ==========
         Route::get('/test-mail', function () {
             Mail::raw('Test gửi mail HRFlow', function ($message) {
@@ -642,6 +666,7 @@ Route::prefix('employee')
 
         Route::prefix('cham-cong-face')->name('cham-cong-face.')->group(function () {
             Route::get('/', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'index'])->name('index');
+            Route::get('/warmup', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'warmup'])->name('warmup');
             Route::post('/authenticate', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'authenticate'])->name('authenticate');
             Route::get('/status', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'status'])->name('status');
             Route::post('/register', [App\Http\Controllers\Employee\ChamCongFaceController::class, 'registerFace'])->name('register');
@@ -774,6 +799,12 @@ Route::prefix('employee')
         Route::get('/notifications', [App\Http\Controllers\Employee\NotificationController::class, 'index'])->name('notifications.index');
         Route::get('/notifications/{id}/mark-read', [App\Http\Controllers\Employee\NotificationController::class, 'markRead'])->name('notifications.mark-read');
         Route::get('/notifications/mark-all-read', [App\Http\Controllers\Employee\NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+
+        Route::get('/ca', [\App\Http\Controllers\Employee\CaLamViecController::class, 'index'])->name('ca.index');
+        Route::post('/ca/doi', [\App\Http\Controllers\Employee\CaLamViecController::class, 'doiCa'])->name('ca.doi');
+        Route::get('/danh-gia', [\App\Http\Controllers\Employee\DanhGiaController::class, 'index'])->name('danh-gia.index');
+        Route::get('/push/vapid', [\App\Http\Controllers\Employee\PushController::class, 'vapid'])->name('push.vapid');
+        Route::post('/push/subscribe', [\App\Http\Controllers\Employee\PushController::class, 'subscribe'])->name('push.subscribe');
     });
 
 // ========== QUY ĐỊNH (CÔNG KHAI) ==========

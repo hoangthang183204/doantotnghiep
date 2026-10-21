@@ -3,7 +3,7 @@
 @section('title', 'Thưởng cuối năm')
 
 @section('content')
-<div class="p-6 max-w-7xl mx-auto space-y-6">
+<div class="hr-page max-w-7xl mx-auto space-y-6 text-gray-900 dark:text-gray-100">
 
     {{-- HEADER --}}
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
@@ -76,6 +76,7 @@
                         <th class="px-6 py-4 text-center font-medium">Khen</th>
                         <th class="px-6 py-4 text-center font-medium">Kỷ luật</th>
                         <th class="px-6 py-4 text-right font-medium">Tổng lương</th>
+                        <th class="px-6 py-4 text-center font-medium">KPI</th>
                         <th class="px-6 py-4 text-right font-medium text-emerald-600 dark:text-emerald-400">Thưởng cuối năm</th>
                     </tr>
                 </thead>
@@ -122,6 +123,9 @@
                         <td class="px-6 py-4 text-right font-medium text-gray-800 dark:text-gray-200">
                             {{ number_format($row['thuong_co_ban']) }} đ
                         </td>
+                        <td class="px-6 py-4 text-center text-sm">
+                            {{ $row['diem_kpi'] === null ? 'Chưa có' : $row['diem_kpi'] }}
+                        </td>
                         <td class="px-6 py-4 text-right">
                             <div class="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                                 {{ number_format($row['thuong_cuoi_nam']) }} đ
@@ -130,7 +134,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                        <td colspan="8" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                             <i class="fa-regular fa-folder-open text-4xl block mb-3"></i>
                             Không có dữ liệu.
                         </td>

@@ -9,6 +9,7 @@ use App\Models\ChamCongFace;
 use App\Models\CaLamViec;
 use App\Models\DonXinVeSom;
 use App\Services\FaceRecognitionService;
+use App\Services\TinhCongMotLanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -226,18 +227,11 @@ class ChamCongFaceController extends Controller
             $ca = CaLamViec::where('is_default', 1)->first();
         }
 
-        if (!$ca) {
-            return response()->json([
-                'so_phut_ve_som' => 0,
-                'is_ve_som' => false
-            ]);
-        }
-
         $now = Carbon::now('Asia/Ho_Chi_Minh');
-        $gioKetThuc = Carbon::parse($ca->gio_ket_thuc);
+        $veSom = app(TinhCongMotLanService::class)->kiemTraVeSom($now, $today, (int) ($ca?->so_phut_cho_phep_ve_som ?? 15));
 
-        if ($now->lt($gioKetThuc)) {
-            $soPhutVeSom = $gioKetThuc->diffInMinutes($now);
+        if ($veSom['ve_som']) {
+            $soPhutVeSom = $veSom['phut'];
 
             // Kiểm tra đã có đơn được duyệt chưa
             $donDaDuyet = DonXinVeSom::where('nguoi_dung_id', $user->id)
@@ -278,6 +272,8 @@ class ChamCongFaceController extends Controller
         $request->validate([
             'image' => 'required|string',
             'loai' => 'required|in:check_in,check_out',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ]);
 
         // Khởi tạo biến
@@ -307,25 +303,25 @@ class ChamCongFaceController extends Controller
             $gioHienTai = $now->format('H:i:s');
 
             // Khung giờ cho phép check-in
-            $checkinTimes = [
-                ['start' => '06:00:00', 'end' => '08:30:00'],  // Ca sáng
-                ['start' => '12:00:00', 'end' => '13:30:00'],  // Ca chiều
-            ];
+            // $checkinTimes = [
+            //     ['start' => '06:00:00', 'end' => '08:30:00'],  // Ca sáng
+            //     ['start' => '12:00:00', 'end' => '13:30:00'],  // Ca chiều
+            // ];
 
-            $isAllowed = false;
-            foreach ($checkinTimes as $timeRange) {
-                if ($gioHienTai >= $timeRange['start'] && $gioHienTai <= $timeRange['end']) {
-                    $isAllowed = true;
-                    break;
-                }
-            }
+            // $isAllowed = false;
+            // foreach ($checkinTimes as $timeRange) {
+            //     if ($gioHienTai >= $timeRange['start'] && $gioHienTai <= $timeRange['end']) {
+            //         $isAllowed = true;
+            //         break;
+            //     }
+            // }
 
-            if (!$isAllowed) {
-                return response()->json([
-                    'success' => false,
-                    'message' => '⏰ Không trong giờ Check-in! Vui lòng Check-in từ 6:00-8:30 (sáng) hoặc 12:00-13:30 (chiều).'
-                ], 400);
-            }
+            // if (!$isAllowed) {
+            //     return response()->json([
+            //         'success' => false,
+            //         'message' => '⏰ Không trong giờ Check-in! Vui lòng Check-in từ 6:00-8:30 (sáng) hoặc 12:00-13:30 (chiều).'
+            //     ], 400);
+            // }
 
             // Xác định ca làm việc
             $ca = $this->xacDinhCaLamViec($gioHienTai);
@@ -377,51 +373,24 @@ class ChamCongFaceController extends Controller
                 ], 400);
             }
 
-            // =============================================
-            // ⏰ KIỂM TRA GIỜ CHECK-OUT
-            // =============================================
-            $gioHienTai = $now->format('H:i:s');
-
-            // Khung giờ cho phép check-out
-            $checkoutTimes = [
-                ['start' => '11:00:00', 'end' => '12:30:00'],  // Ca sáng
-                ['start' => '16:30:00', 'end' => '18:30:00'],  // Ca chiều
-            ];
-
-            $isAllowed = false;
-            foreach ($checkoutTimes as $timeRange) {
-                if ($gioHienTai >= $timeRange['start'] && $gioHienTai <= $timeRange['end']) {
-                    $isAllowed = true;
-                    break;
-                }
-            }
-
-            if (!$isAllowed) {
-                return response()->json([
-                    'success' => false,
-                    'message' => '⏰ Không trong giờ Check-out! Vui lòng Check-out từ 11:00-12:30 (sáng) hoặc 16:30-18:30 (chiều).'
-                ], 400);
-            }
-
-            // =============================================
-            // ✅ KIỂM TRA VỀ SỚM
-            // =============================================
-            // Lấy ca làm việc từ bản ghi check-in
+            // Về sớm so với giờ ra chuẩn của công ty (không khóa khung 11:00 / 16:30).
             $ca = $chamCongHomNay->caLamViec;
             if (!$ca) {
                 $ca = ChamCong::xacDinhCaLamViec($chamCongHomNay->gio_vao);
             }
-
             if (!$ca) {
                 $ca = CaLamViec::where('is_default', 1)->first();
             }
 
-            if ($ca) {
-                $gioKetThuc = Carbon::parse($ca->gio_ket_thuc);
-                $isVeSom = $now->lt($gioKetThuc);
+            $veSom = app(TinhCongMotLanService::class)->kiemTraVeSom(
+                $now,
+                $today,
+                (int) ($ca?->so_phut_cho_phep_ve_som ?? 15)
+            );
+            $isVeSom = $veSom['ve_som'];
 
-                if ($isVeSom) {
-                    $soPhutVeSom = $gioKetThuc->diffInMinutes($now);
+            if ($isVeSom) {
+                $soPhutVeSom = $veSom['phut'];
 
                     // Kiểm tra đơn xin về sớm
                     $donVeSom = DonXinVeSom::where('nguoi_dung_id', $user->id)
@@ -448,45 +417,37 @@ class ChamCongFaceController extends Controller
                     } else {
                         return response()->json([
                             'success' => false,
-                            'message' => '⚠️ Bạn đang về sớm ' . $soPhutVeSom . ' phút! Vui lòng tạo đơn xin về sớm trước khi Check-out.',
+                            'message' => '⚠️ Bạn đang về sớm ' . $soPhutVeSom . ' phút so với ' . $veSom['gio_ket_thuc'] . '! Vui lòng tạo đơn xin về sớm trước khi Check-out.',
                             'yeu_cau_tao_don' => true,
                             'so_phut_ve_som' => $soPhutVeSom
                         ], 400);
                     }
-                }
             }
         }
 
         // =============================================
-        // XỬ LÝ ẢNH
+        // GPS + NHẬN DIỆN (1 lần gọi, model đã nạp sẵn)
         // =============================================
 
+        $gps = $this->kiemTraGps($request);
+        if ($gps['blocked']) {
+            return response()->json([
+                'success' => false,
+                'message' => $gps['message'],
+            ], 400);
+        }
+        $latitude = $gps['latitude'];
+        $longitude = $gps['longitude'];
+
         $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->image));
-        $tempPath = storage_path('app/temp_face_' . time() . '_' . $user->id . '.jpg');
-        file_put_contents($tempPath, $imageData);
+        if ($imageData === false || strlen($imageData) < 100) {
+            return response()->json([
+                'success' => false,
+                'message' => '❌ Ảnh không hợp lệ. Vui lòng chụp lại.'
+            ], 400);
+        }
 
         try {
-            // Kiểm tra ảnh có khuôn mặt không
-            if (!$this->faceService->isValidFaceImage($tempPath)) {
-                unlink($tempPath);
-                return response()->json([
-                    'success' => false,
-                    'message' => '❌ Không phát hiện khuôn mặt hoặc chất lượng ảnh kém. Vui lòng thử lại.'
-                ], 400);
-            }
-
-            // Lấy embedding từ ảnh vừa chụp
-            $embedding = $this->faceService->getFaceEmbedding($tempPath);
-            unlink($tempPath);
-
-            if (!$embedding) {
-                return response()->json([
-                    'success' => false,
-                    'message' => '❌ Không thể trích xuất đặc trưng khuôn mặt.'
-                ], 400);
-            }
-
-            // Lấy embedding đã đăng ký
             $faceData = FaceData::where('nguoi_dung_id', $user->id)
                 ->where('is_active', true)
                 ->first();
@@ -514,8 +475,15 @@ class ChamCongFaceController extends Controller
                 ], 400);
             }
 
-            // So sánh khuôn mặt
-            $confidence = $this->faceService->compareFaces($embedding, $savedEmbedding);
+            $match = $this->faceService->verifyBinary($imageData, $savedEmbedding);
+            if (($match['face_count'] ?? 0) < 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '❌ Không phát hiện khuôn mặt. Đưa mặt vào giữa khung hình rồi thử lại.'
+                ], 400);
+            }
+
+            $confidence = (float) $match['confidence'];
             $threshold = 0.5;
 
             if ($confidence < $threshold) {
@@ -525,8 +493,10 @@ class ChamCongFaceController extends Controller
                     'confidence' => $confidence,
                     'loai' => $request->loai,
                     'trang_thai' => 'that_bai',
-                    'ip_address' => null,
-                    'device_info' => null,
+                    'ip_address' => $request->ip(),
+                    'latitude' => $latitude,
+                    'longitude' => $longitude,
+                    'device_info' => ['gps' => $latitude !== null],
                     'error_message' => 'Độ tin cậy thấp (' . round($confidence * 100) . '%)',
                 ]);
 
@@ -544,8 +514,10 @@ class ChamCongFaceController extends Controller
                 'confidence' => $confidence,
                 'loai' => $request->loai,
                 'trang_thai' => 'thanh_cong',
-                'ip_address' => null,
-                'device_info' => null,
+                'ip_address' => $request->ip(),
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'device_info' => ['gps' => $latitude !== null],
             ]);
 
             // Lưu bản ghi chấm công
@@ -578,38 +550,22 @@ class ChamCongFaceController extends Controller
                 $chamCong->loai_cham_cong = 'check_out';
 
                 $trangThai = $chamCongHomNay ? $chamCongHomNay->trang_thai : 'dung_gio';
-
                 if ($isVeSom) {
                     $trangThai = 've_som';
-                } elseif ($ca && $now->gt(Carbon::parse($ca->gio_ket_thuc))) {
-                    $trangThai = 'tang_ca';
-                }
-
-                if ($trangThai != 'tang_ca' && ($chamCongHomNay && $chamCongHomNay->trang_thai == 'di_muon')) {
+                } elseif ($chamCongHomNay && $chamCongHomNay->trang_thai == 'di_muon') {
                     $trangThai = 'di_muon';
                 }
 
-                if ($isVeSom) {
-                    $chamCong->phut_ve_som = $soPhutVeSom;
-                    $chamCong->trang_thai = $trangThai;
-                    $chamCong->ly_do_ve_som = $lyDoVeSom;
-                    $chamCong->da_xac_nhan_ve_som = $isVeSom && !empty($lyDoVeSom);
-                } else {
-                    $chamCong->trang_thai = $trangThai;
-                    $chamCong->phut_ve_som = 0;
-                }
+                $chamCong->trang_thai = $trangThai;
+                $chamCong->phut_ve_som = $isVeSom ? $soPhutVeSom : 0;
+                $chamCong->ly_do_ve_som = $isVeSom ? $lyDoVeSom : null;
+                $chamCong->da_xac_nhan_ve_som = $isVeSom && !empty($lyDoVeSom);
 
-                if ($chamCongHomNay && $chamCongHomNay->gio_vao) {
-                    $gioVao = Carbon::parse($chamCongHomNay->gio_vao);
-                    $soPhutLam = $gioVao->diffInMinutes($now);
-                    $chamCong->so_gio_lam = round($soPhutLam / 60, 2);
-                    $chamCong->so_cong = round($chamCong->so_gio_lam / 8, 2);
-                    if ($chamCong->so_cong > 1) $chamCong->so_cong = 1;
-                }
+                $gioVaoTinh = Carbon::parse($chamCongHomNay?->gio_vao ?: $chamCong->gio_vao, 'Asia/Ho_Chi_Minh');
+                $ketQuaCong = app(TinhCongMotLanService::class)->apDung($chamCong, $gioVaoTinh, $now, $user->id);
 
-                $message = '✅ Check-out thành công!' .
-                    ($isVeSom && !$daCoDonDuyet ? " (về sớm {$soPhutVeSom} phút)" : "") .
-                    ($isVeSom && $daCoDonDuyet ? " (đã có đơn về sớm được duyệt)" : "");
+                $message = '✅ Check-out thành công! ' . $ketQuaCong['thong_bao'] .
+                    ($isVeSom && $daCoDonDuyet ? ' Đã có đơn về sớm được duyệt.' : '');
             }
 
             $chamCong->save();
@@ -635,10 +591,6 @@ class ChamCongFaceController extends Controller
                 'so_phut_lam' => $soPhutLam,
             ]);
         } catch (\Exception $e) {
-            if (file_exists($tempPath)) {
-                unlink($tempPath);
-            }
-
             Log::error('Face authentication error: ' . $e->getMessage(), [
                 'user_id' => $user->id,
                 'type' => $request->loai,
@@ -902,5 +854,76 @@ class ChamCongFaceController extends Controller
             'deleted_cham_cong' => $deletedChamCong,
             'deleted_cham_cong_face' => $deletedFace,
         ]);
+    }
+
+    public function warmup()
+    {
+        try {
+            $this->faceService->warmup();
+            return response()->json(['ready' => true]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'ready' => false,
+                'message' => $e->getMessage(),
+            ], 503);
+        }
+    }
+
+    /**
+     * Bắt buộc GPS khi công ty đã khai báo vị trí. Không chặn nếu chưa cấu hình.
+     */
+    private function kiemTraGps(Request $request): array
+    {
+        $latitude = $request->filled('latitude') ? (float) $request->latitude : null;
+        $longitude = $request->filled('longitude') ? (float) $request->longitude : null;
+
+        try {
+            $locations = DB::table('company_locations')->get();
+        } catch (\Throwable $e) {
+            $locations = collect();
+        }
+        if ($locations->isEmpty()) {
+            return ['blocked' => false, 'latitude' => $latitude, 'longitude' => $longitude, 'message' => null];
+        }
+
+        if ($latitude === null || $longitude === null) {
+            return [
+                'blocked' => true,
+                'latitude' => null,
+                'longitude' => null,
+                'message' => '❌ Cần bật định vị GPS trên điện thoại trước khi chấm công.',
+            ];
+        }
+
+        foreach ($locations as $location) {
+            $met = $this->khoangCachMet(
+                $latitude,
+                $longitude,
+                (float) $location->latitude,
+                (float) $location->longitude
+            );
+            $banKinh = (float) ($location->allowed_radius ?: 100);
+            if ($met <= $banKinh) {
+                return ['blocked' => false, 'latitude' => $latitude, 'longitude' => $longitude, 'message' => null];
+            }
+        }
+
+        return [
+            'blocked' => true,
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'message' => '❌ Bạn đang ở ngoài phạm vi công ty. Hãy đến đúng địa điểm làm việc rồi chấm công lại.',
+        ];
+    }
+
+    private function khoangCachMet(float $lat1, float $lon1, float $lat2, float $lon2): float
+    {
+        $earth = 6371000;
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+        $a = sin($dLat / 2) ** 2
+            + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon / 2) ** 2;
+
+        return 2 * $earth * asin(min(1, sqrt($a)));
     }
 }

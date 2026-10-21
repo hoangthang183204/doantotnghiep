@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#1d4ed8">
+    <link rel="manifest" href="/manifest.webmanifest">
     <title>@yield('title', 'HR Flow')</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -167,9 +169,13 @@
             .main-wrapper.collapsed {
                 margin-left: 0 !important;
             }
+            main {
+                padding-bottom: 5rem;
+            }
         }
     </style>
 
+    @include('layouts.partials.hr-page-style')
     @stack('styles')
 </head>
 
@@ -193,6 +199,21 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around py-2 text-[11px] text-gray-600">
+        @if(Route::has('employee.cham-cong-face.index'))
+            <a href="{{ route('employee.cham-cong-face.index') }}" class="flex flex-col items-center">Chấm công</a>
+        @endif
+        @if(Route::has('employee.bang-luong.index'))
+            <a href="{{ route('employee.bang-luong.index') }}" class="flex flex-col items-center">Phiếu lương</a>
+        @endif
+        @if(Route::has('employee.don-nghi.index'))
+            <a href="{{ route('employee.don-nghi.index') }}" class="flex flex-col items-center">Đơn từ</a>
+        @endif
+        @if(Route::has('employee.hop-dong.index'))
+            <a href="{{ route('employee.hop-dong.index') }}" class="flex flex-col items-center">Hợp đồng</a>
+        @endif
+        <button type="button" id="batThongBao" class="flex flex-col items-center">Thông báo</button>
+    </nav>
     <script>
         // Theme Toggle
         const themeToggle = document.getElementById('themeToggle');
@@ -305,6 +326,44 @@
         });
 
         console.log('✅ Master layout loaded');
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+        }
+        const nutThongBao = document.getElementById('batThongBao');
+        if (nutThongBao) {
+            nutThongBao.addEventListener('click', async () => {
+                const quyen = await Notification.requestPermission();
+                if (quyen !== 'granted') return;
+                const reg = await navigator.serviceWorker.ready;
+                const keyRes = await fetch('{{ route('employee.push.vapid') }}');
+                const key = await keyRes.json();
+                if (!key.publicKey) {
+                    alert('Đã bật thông báo trên thiết bị này.');
+                    return;
+                }
+                const sub = await reg.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: (function (base64String) {
+                        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+                        const raw = atob(base64);
+                        const output = new Uint8Array(raw.length);
+                        for (let i = 0; i < raw.length; ++i) output[i] = raw.charCodeAt(i);
+                        return output;
+                    })(key.publicKey)
+                });
+                await fetch('{{ route('employee.push.subscribe') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(sub)
+                });
+                alert('Đã bật thông báo đẩy.');
+            });
+        }
     </script>
     @stack('scripts')
 </body>

@@ -99,7 +99,10 @@
             <tr><td>Bảo hiểm xã hội (BHXH)</td><td class="right">{{ $pct($dg['ty_le_bhxh']) }}</td><td class="right deduct">-{{ number_format($dg['bhxh']) }}</td></tr>
             <tr><td>Bảo hiểm y tế (BHYT)</td><td class="right">{{ $pct($dg['ty_le_bhyt']) }}</td><td class="right deduct">-{{ number_format($dg['bhyt']) }}</td></tr>
             <tr><td>Bảo hiểm thất nghiệp (BHTN)</td><td class="right">{{ $pct($dg['ty_le_bhtn']) }}</td><td class="right deduct">-{{ number_format($dg['bhtn']) }}</td></tr>
-            <tr class="rowsum"><td><b>Cộng bảo hiểm bắt buộc</b></td><td class="right"><b>{{ $pct($dg['ty_le_bhxh'] + $dg['ty_le_bhyt'] + $dg['ty_le_bhtn']) }}</b></td><td class="right deduct">-{{ number_format($dg['tong_bao_hiem']) }}</td></tr>
+            <tr class="rowsum"><td><b>Cộng bảo hiểm NLĐ đóng</b></td><td class="right"><b>{{ $pct($dg['ty_le_bhxh'] + $dg['ty_le_bhyt'] + $dg['ty_le_bhtn']) }}</b></td><td class="right deduct">-{{ number_format($dg['tong_bao_hiem']) }}</td></tr>
+            <tr><td>BHXH doanh nghiệp (không trừ lương)</td><td class="right">{{ $pct($dg['ty_le_bhxh_dn'] ?? 0) }}</td><td class="right">{{ number_format($dg['bhxh_dn'] ?? 0) }}</td></tr>
+            <tr><td>BHYT doanh nghiệp</td><td class="right">{{ $pct($dg['ty_le_bhyt_dn'] ?? 0) }}</td><td class="right">{{ number_format($dg['bhyt_dn'] ?? 0) }}</td></tr>
+            <tr><td>BHTN doanh nghiệp</td><td class="right">{{ $pct($dg['ty_le_bhtn_dn'] ?? 0) }}</td><td class="right">{{ number_format($dg['bhtn_dn'] ?? 0) }}</td></tr>
         </tbody>
     </table>
 

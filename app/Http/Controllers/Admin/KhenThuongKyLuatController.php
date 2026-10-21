@@ -14,7 +14,9 @@ use App\Exports\KhenThuongKyLuatExport;
 
 class KhenThuongKyLuatController extends Controller
 {
-    // ================= INDEX =================
+    /**
+     * Danh sách khen thưởng / kỷ luật
+     */
     public function index(Request $request)
     {
         $query = KhenThuongKyLuatNhanVien::with([
@@ -22,31 +24,35 @@ class KhenThuongKyLuatController extends Controller
             'nguoiKy'
         ]);
 
+        // Tìm kiếm theo tên hoặc mã nhân viên
         if ($request->filled('search')) {
             $keyword = $request->search;
-        
             $query->whereHas('hoSo.nguoi_dung', function ($q) use ($keyword) {
-                $q->where('ma_nhan_vien', 'like', "%$keyword%") // Đoạn này sẽ khớp chính xác mã nhân viên truyền từ URL sang
+                $q->where('ma_nhan_vien', 'like', "%$keyword%")
                     ->orWhere('ho', 'like', "%$keyword%")
                     ->orWhere('ten', 'like', "%$keyword%")
                     ->orWhereRaw("CONCAT(ho,' ',ten) LIKE ?", ["%$keyword%"]);
             });
         }
 
+        // Lọc theo loại
         if ($request->filled('loai')) {
             $query->where('loai', $request->loai);
         }
 
+        // Lọc theo phòng ban
         if ($request->filled('phong_ban')) {
             $query->whereHas('hoSo.nguoi_dung', function ($q) use ($request) {
                 $q->where('phong_ban_id', $request->phong_ban);
             });
         }
 
+        // Lọc theo tháng
         if ($request->filled('thang')) {
             $query->whereMonth('ngay', $request->thang);
         }
 
+        // Lọc theo năm
         if ($request->filled('nam')) {
             $query->whereYear('ngay', $request->nam);
         }
@@ -58,10 +64,12 @@ class KhenThuongKyLuatController extends Controller
 
         $phongBans = PhongBan::orderBy('ten_phong_ban')->get();
 
+        // Thống kê
         $tongQuyetDinh = (clone $query)->count();
         $tongKhenThuong = (clone $query)->where('loai', 'khen_thuong')->count();
         $tongKyLuat = (clone $query)->where('loai', 'ky_luat')->count();
         $tongTienThuong = (clone $query)->where('loai', 'khen_thuong')->sum('so_tien');
+        $tongTienPhat = (clone $query)->where('loai', 'ky_luat')->sum('so_tien');
 
         return view('admin.khen-thuong-ky-luat.index', compact(
             'ds',
@@ -69,60 +77,63 @@ class KhenThuongKyLuatController extends Controller
             'tongQuyetDinh',
             'tongKhenThuong',
             'tongKyLuat',
-            'tongTienThuong'
+            'tongTienThuong',
+            'tongTienPhat'
         ));
     }
 
-    // ================= CREATE =================
+    /**
+     * Form tạo khen thưởng
+     */
     public function createKhenThuong()
     {
         $hoSos = HoSo::with('nguoi_dung.phongBan')
+            ->whereHas('nguoi_dung', function ($q) {
+                $q->where('trang_thai_cong_viec', 'dang_lam');
+            })
             ->orderBy('ho')
             ->orderBy('ten')
             ->get();
 
-        $nguoiKys = NguoiDung::orderBy('ten_dang_nhap')->get();
-
-        return view('admin.khen-thuong-ky-luat.create_khen_thuong', compact(
-            'hoSos',
-            'nguoiKys'
-        ));
+        return view('admin.khen-thuong-ky-luat.create_khen_thuong', compact('hoSos'));
     }
 
+    /**
+     * Form tạo kỷ luật
+     */
     public function createKyLuat()
     {
         $hoSos = HoSo::with('nguoi_dung.phongBan')
+            ->whereHas('nguoi_dung', function ($q) {
+                $q->where('trang_thai_cong_viec', 'dang_lam');
+            })
             ->orderBy('ho')
             ->orderBy('ten')
             ->get();
 
-        $nguoiKys = NguoiDung::orderBy('ten_dang_nhap')->get();
-
-        return view('admin.khen-thuong-ky-luat.create_ky_luat', compact(
-            'hoSos',
-            'nguoiKys'
-        ));
+        return view('admin.khen-thuong-ky-luat.create_ky_luat', compact('hoSos'));
     }
 
-    // ================= STORE =================
+    /**
+     * Lưu khen thưởng
+     */
     public function storeKhenThuong(Request $request)
     {
         $data = $request->validate([
             'ho_so_id' => 'required|exists:ho_so_nguoi_dung,id',
-            'ten' => 'required|max:255',
+            'ten' => 'required|string|max:255',
             'ngay' => 'required|date',
             'muc_do' => 'required|in:kha,gioi,xuat_sac',
             'so_tien' => 'nullable|numeric|min:0',
-            'hinh_thuc' => 'nullable|max:255',
-            'quyet_dinh_so' => 'nullable|max:255',
-            'nguoi_ky_id' => 'nullable|exists:nguoi_dung,id',
-            'noi_dung' => 'nullable',
-
+            'hinh_thuc' => 'nullable|string|max:255',
+            'quyet_dinh_so' => 'nullable|string|max:255',
+            'noi_dung' => 'nullable|string',
             'bang_chung' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:5120',
             'quyet_dinh_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
         $data['loai'] = 'khen_thuong';
+        $data['nguoi_ky_id'] = auth()->id(); // Tự động lấy người đang đăng nhập
 
         if ($request->hasFile('bang_chung')) {
             $data['bang_chung'] = $request->file('bang_chung')->store('bang-chung', 'public');
@@ -139,20 +150,24 @@ class KhenThuongKyLuatController extends Controller
             ->with('success', 'Thêm khen thưởng thành công');
     }
 
+    /**
+     * Lưu kỷ luật
+     */
     public function storeKyLuat(Request $request)
     {
         $data = $request->validate([
             'ho_so_id' => 'required|exists:ho_so_nguoi_dung,id',
-            'ten' => 'required|max:255',
+            'ten' => 'required|string|max:255',
             'ngay' => 'required|date',
             'muc_do' => 'required|in:canh_cao,khien_trach,sa_thai',
-            'quyet_dinh_so' => 'nullable|max:255',
-            'nguoi_ky_id' => 'nullable|exists:nguoi_dung,id',
-            'noi_dung' => 'nullable',
+            'so_tien' => 'nullable|numeric|min:0', // 👈 Cho phép nhập số tiền phạt
+            'hinh_thuc' => 'nullable|string|max:255',
+            'quyet_dinh_so' => 'nullable|string|max:255',
+            'noi_dung' => 'nullable|string',
         ]);
 
         $data['loai'] = 'ky_luat';
-        $data['so_tien'] = null;
+        $data['nguoi_ky_id'] = auth()->id(); // Tự động lấy người đang đăng nhập
 
         KhenThuongKyLuatNhanVien::create($data);
 
@@ -161,84 +176,9 @@ class KhenThuongKyLuatController extends Controller
             ->with('success', 'Thêm kỷ luật thành công');
     }
 
-    // ================= EDIT =================
-    public function edit($id)
-    {
-        $ktkl = KhenThuongKyLuatNhanVien::findOrFail($id);
-
-        $hoSos = HoSo::with('nguoi_dung.phongBan')->get();
-        $nguoiKys = NguoiDung::orderBy('ten_dang_nhap')->get();
-
-        return view('admin.khen-thuong-ky-luat.edit', compact(
-            'ktkl',
-            'hoSos',
-            'nguoiKys'
-        ));
-    }
-
-    // ================= UPDATE =================
-    public function updateKhenThuong(Request $request, $id)
-    {
-        $kt = KhenThuongKyLuatNhanVien::findOrFail($id);
-
-        $data = $request->validate([
-            'ho_so_id' => 'required|exists:ho_so_nguoi_dung,id',
-            'ten' => 'required|max:255',
-            'ngay' => 'required|date',
-            'muc_do' => 'required|in:kha,gioi,xuat_sac',
-            'so_tien' => 'nullable|numeric|min:0',
-            'hinh_thuc' => 'nullable|max:255',
-            'quyet_dinh_so' => 'nullable|max:255',
-            'nguoi_ky_id' => 'nullable|exists:nguoi_dung,id',
-            'noi_dung' => 'nullable',
-            'bang_chung' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:5120',
-            'quyet_dinh_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-        ]);
-
-        if ($request->hasFile('bang_chung')) {
-            $data['bang_chung'] = $request->file('bang_chung')
-                ->store('bang-chung', 'public');
-        }
-
-        if ($request->hasFile('quyet_dinh_file')) {
-            $data['quyet_dinh_file'] = $request->file('quyet_dinh_file')
-                ->store('quyet-dinh', 'public');
-        }
-
-        $kt->update($data);
-
-        // ✅ FIX: chuyển về index thay vì show
-        return redirect()
-            ->route('admin.khen-thuong-ky-luat.index')
-            ->with('success', 'Cập nhật thành công');
-    }
-
-    public function updateKyLuat(Request $request, $id)
-    {
-        $kt = KhenThuongKyLuatNhanVien::findOrFail($id);
-
-        $data = $request->validate([
-            'ho_so_id' => 'required|exists:ho_so_nguoi_dung,id',
-            'ten' => 'required|max:255',
-            'ngay' => 'required|date',
-            'muc_do' => 'required|in:canh_cao,khien_trach,sa_thai',
-            'hinh_thuc' => 'nullable|max:255',
-            'quyet_dinh_so' => 'nullable|max:255',
-            'nguoi_ky_id' => 'nullable|exists:nguoi_dung,id',
-            'noi_dung' => 'nullable',
-        ]);
-
-        $data['loai'] = 'ky_luat';
-        $data['so_tien'] = null;
-
-        $kt->update($data);
-
-        return redirect()
-            ->route('admin.khen-thuong-ky-luat.index')
-            ->with('success', 'Cập nhật kỷ luật thành công');
-    }
-
-    // ================= OTHER =================
+    /**
+     * Hiển thị chi tiết
+     */
     public function show($id)
     {
         $ktkl = KhenThuongKyLuatNhanVien::with([
@@ -249,14 +189,112 @@ class KhenThuongKyLuatController extends Controller
         return view('admin.khen-thuong-ky-luat.show', compact('ktkl'));
     }
 
+    /**
+     * Form sửa
+     */
+    public function edit($id)
+    {
+        $ktkl = KhenThuongKyLuatNhanVien::findOrFail($id);
+
+        $hoSos = HoSo::with('nguoi_dung.phongBan')
+            ->whereHas('nguoi_dung', function ($q) {
+                $q->where('trang_thai_cong_viec', 'dang_lam');
+            })
+            ->get();
+
+        return view('admin.khen-thuong-ky-luat.edit', compact('ktkl', 'hoSos'));
+    }
+
+    /**
+     * Cập nhật khen thưởng
+     */
+    public function updateKhenThuong(Request $request, $id)
+    {
+        $kt = KhenThuongKyLuatNhanVien::findOrFail($id);
+
+        $data = $request->validate([
+            'ho_so_id' => 'required|exists:ho_so_nguoi_dung,id',
+            'ten' => 'required|string|max:255',
+            'ngay' => 'required|date',
+            'muc_do' => 'required|in:kha,gioi,xuat_sac',
+            'so_tien' => 'nullable|numeric|min:0',
+            'hinh_thuc' => 'nullable|string|max:255',
+            'quyet_dinh_so' => 'nullable|string|max:255',
+            'noi_dung' => 'nullable|string',
+            'bang_chung' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:5120',
+            'quyet_dinh_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+        ]);
+
+        if ($request->hasFile('bang_chung')) {
+            // Xóa file cũ nếu có
+            if ($kt->bang_chung) {
+                \Storage::disk('public')->delete($kt->bang_chung);
+            }
+            $data['bang_chung'] = $request->file('bang_chung')->store('bang-chung', 'public');
+        }
+
+        if ($request->hasFile('quyet_dinh_file')) {
+            if ($kt->quyet_dinh_file) {
+                \Storage::disk('public')->delete($kt->quyet_dinh_file);
+            }
+            $data['quyet_dinh_file'] = $request->file('quyet_dinh_file')->store('quyet-dinh', 'public');
+        }
+
+        $kt->update($data);
+
+        return redirect()
+            ->route('admin.khen-thuong-ky-luat.index')
+            ->with('success', 'Cập nhật khen thưởng thành công');
+    }
+
+    /**
+     * Cập nhật kỷ luật
+     */
+    public function updateKyLuat(Request $request, $id)
+    {
+        $kt = KhenThuongKyLuatNhanVien::findOrFail($id);
+
+        $data = $request->validate([
+            'ho_so_id' => 'required|exists:ho_so_nguoi_dung,id',
+            'ten' => 'required|string|max:255',
+            'ngay' => 'required|date',
+            'muc_do' => 'required|in:canh_cao,khien_trach,sa_thai',
+            'so_tien' => 'nullable|numeric|min:0', // 👈 Cho phép cập nhật số tiền phạt
+            'hinh_thuc' => 'nullable|string|max:255',
+            'quyet_dinh_so' => 'nullable|string|max:255',
+            'noi_dung' => 'nullable|string',
+        ]);
+
+        $kt->update($data);
+
+        return redirect()
+            ->route('admin.khen-thuong-ky-luat.index')
+            ->with('success', 'Cập nhật kỷ luật thành công');
+    }
+
+    /**
+     * Xóa
+     */
     public function destroy($id)
     {
-        KhenThuongKyLuatNhanVien::findOrFail($id)->delete();
+        $kt = KhenThuongKyLuatNhanVien::findOrFail($id);
+
+        // Xóa file đính kèm nếu có
+        if ($kt->bang_chung) {
+            \Storage::disk('public')->delete($kt->bang_chung);
+        }
+        if ($kt->quyet_dinh_file) {
+            \Storage::disk('public')->delete($kt->quyet_dinh_file);
+        }
+
+        $kt->delete();
 
         return back()->with('success', 'Đã xóa thành công');
     }
 
-    // ================= EXPORT =================
+    /**
+     * Xuất Excel
+     */
     public function export(Request $request)
     {
         return Excel::download(
@@ -265,7 +303,9 @@ class KhenThuongKyLuatController extends Controller
         );
     }
 
-    // ================= THỐNG KÊ =================
+    /**
+     * Thống kê
+     */
     public function thongKe(Request $request)
     {
         $query = KhenThuongKyLuatNhanVien::query();
@@ -284,6 +324,20 @@ class KhenThuongKyLuatController extends Controller
             });
         }
 
+        $phongBans = PhongBan::orderBy('ten_phong_ban')->get();
+
+        $tongQuyetDinh = (clone $query)->count();
+        $tongKhenThuong = (clone $query)->where('loai', 'khen_thuong')->count();
+        $tongKyLuat = (clone $query)->where('loai', 'ky_luat')->count();
+        $tongTienThuong = (clone $query)->where('loai', 'khen_thuong')->sum('so_tien');
+        $tongTienPhat = (clone $query)->where('loai', 'ky_luat')->sum('so_tien');
+
+        $chartTheoThang = (clone $query)
+            ->selectRaw('MONTH(ngay) as thang, COUNT(*) as tong')
+            ->groupBy('thang')
+            ->orderBy('thang')
+            ->get();
+
         $chartPhongBan = KhenThuongKyLuatNhanVien::with('hoSo.nguoi_dung.phongBan')
             ->get()
             ->groupBy(fn($item) => $item->hoSo?->nguoi_dung?->phongBan?->ten_phong_ban)
@@ -293,32 +347,24 @@ class KhenThuongKyLuatController extends Controller
             ])
             ->values();
 
-        $phongBans = PhongBan::orderBy('ten_phong_ban')->get();
-        $tongQuyetDinh = (clone $query)->count();
-        $tongKhenThuong = (clone $query)->where('loai', 'khen_thuong')->count();
-        $tongKyLuat = (clone $query)->where('loai', 'ky_luat')->count();
-        $tongTienThuong = (clone $query)->where('loai', 'khen_thuong')->sum('so_tien');
-
-        $chartTheoThang = (clone $query)
-            ->selectRaw('MONTH(ngay) as thang, COUNT(*) as tong')
-            ->groupBy('thang')
-            ->orderBy('thang')
-            ->get();
-
         return view('admin.khen-thuong-ky-luat.thong-ke', compact(
             'phongBans',
             'tongQuyetDinh',
             'tongKhenThuong',
             'tongKyLuat',
             'tongTienThuong',
+            'tongTienPhat',
             'chartTheoThang',
             'chartPhongBan'
         ));
     }
+
+    /**
+     * Tính điểm cho 1 quyết định
+     */
     private function tinhDiem($quyetDinh)
     {
         if ($quyetDinh->loai === 'khen_thuong') {
-
             return match ($quyetDinh->muc_do) {
                 'kha' => 5,
                 'gioi' => 10,
@@ -335,6 +381,9 @@ class KhenThuongKyLuatController extends Controller
         };
     }
 
+    /**
+     * Tính thưởng cuối năm
+     */
     public function tinhThuong(Request $request)
     {
         $nam = $request->input('nam', now()->year);
@@ -342,38 +391,38 @@ class KhenThuongKyLuatController extends Controller
         $hoSos = HoSo::with([
             'nguoi_dung.phongBan',
             'khen_thuong_ky_luat'
-        ])->get();
-
+        ])->whereHas('nguoi_dung', function ($q) {
+            $q->where('trang_thai_cong_viec', 'dang_lam');
+        })->get();
 
         $ketQua = [];
 
         foreach ($hoSos as $hoSo) {
-
-            // Các quyết định trong năm
             $quyetDinhs = $hoSo->khen_thuong_ky_luat
                 ->whereBetween('ngay', [
                     $nam . '-01-01',
                     $nam . '-12-31'
                 ]);
 
-            // Tính tổng điểm
             $tongDiem = 0;
+            $tongTienPhat = 0;
 
             foreach ($quyetDinhs as $item) {
                 $tongDiem += $this->tinhDiem($item);
+                if ($item->loai === 'ky_luat' && $item->so_tien) {
+                    $tongTienPhat += $item->so_tien;
+                }
             }
 
-            // Lấy bảng lương tháng 12
             $luong = LuongNhanVien::where('nguoi_dung_id', $hoSo->nguoi_dung_id)
                 ->where('luong_nam', $nam)
                 ->orderByDesc('luong_thang')
                 ->first();
 
-            // Nếu chưa có bảng lương
             $thuongCoBan = $luong?->tong_luong ?? 0;
-
-            // Tính thưởng cuối năm
-            $thuongCuoiNam = $thuongCoBan * (1 + ($tongDiem / 100));
+            $diemKpi = \App\Models\KetQuaDanhGia::diemTrungBinhNam($hoSo->nguoi_dung_id, (int) $nam);
+            $heSoKpi = $diemKpi === null ? 1 : round($diemKpi / 100, 4);
+            $thuongCuoiNam = $thuongCoBan * (1 + ($tongDiem / 100)) * $heSoKpi;
 
             if ($thuongCuoiNam < 0) {
                 $thuongCuoiNam = 0;
@@ -384,8 +433,11 @@ class KhenThuongKyLuatController extends Controller
                 'tong_diem' => $tongDiem,
                 'thuong_co_ban' => $thuongCoBan,
                 'thuong_cuoi_nam' => $thuongCuoiNam,
+                'diem_kpi' => $diemKpi,
+                'he_so_kpi' => $heSoKpi,
                 'tong_khen_thuong' => $quyetDinhs->where('loai', 'khen_thuong')->count(),
                 'tong_ky_luat' => $quyetDinhs->where('loai', 'ky_luat')->count(),
+                'tong_tien_phat' => $tongTienPhat,
             ];
         }
 

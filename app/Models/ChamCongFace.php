@@ -20,6 +20,8 @@ class ChamCongFace extends Model
         'loai',
         'trang_thai',
         'ip_address',
+        'latitude',
+        'longitude',
         'device_info',
         'error_message'
     ];

@@ -23,10 +23,18 @@ class NotificationService
         try {
             if ($action === 'created') {
                 $admins = NguoiDung::whereHas('vaiTros', function ($q) {
-                    $q->whereIn('name', ['admin', 'Super Admin', 'Admin']);
+                    $q->whereIn('name', ['admin', 'Super Admin', 'Admin', 'hr', 'HR']);
                 })->get();
 
-                foreach ($admins as $admin) {
+                $truongPhongId = optional(optional($donNghi->nguoiDung)->phongBan)->truong_phong_id;
+                if ($truongPhongId) {
+                    $truongPhong = NguoiDung::find($truongPhongId);
+                    if ($truongPhong) {
+                        $admins->push($truongPhong);
+                    }
+                }
+
+                foreach ($admins->unique('id') as $admin) {
                     $admin->notify(new LeaveRequestNotification($donNghi, $action));
                 }
             }
@@ -60,7 +68,7 @@ class NotificationService
             if ($action === 'created') {
                 // Gửi cho Admin khi tạo mới
                 $admins = NguoiDung::whereHas('vaiTros', function ($q) {
-                    $q->whereIn('name', ['admin', 'Super Admin', 'Admin']);
+                    $q->whereIn('name', ['admin', 'Super Admin', 'Admin', 'hr', 'HR']);
                 })->get();
 
                 foreach ($admins as $admin) {
@@ -221,6 +229,15 @@ class NotificationService
         try {
             $user->notify($notification);
             Log::info('📧 Đã gửi thông báo đến user: ' . $user->email);
+            if (method_exists($notification, 'toDatabase')) {
+                $data = $notification->toDatabase($user);
+                app(\App\Services\ThongBaoDaKenhService::class)->guiNgoaiHeThong(
+                    $user,
+                    $data['title'] ?? 'Thông báo',
+                    $data['message'] ?? '',
+                    $data['url'] ?? null
+                );
+            }
         } catch (\Exception $e) {
             Log::error('❌ Lỗi gửi thông báo đến user: ' . $e->getMessage());
         }
